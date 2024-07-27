@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:14:05 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/07/27 21:17:16 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/07/27 22:40:42 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 #include "Log.hpp"
 #include <unistd.h>
 #include <limits.h>
+#include <cstdio>
 #include <sstream>
 #include <fstream>
 #include <sys/stat.h>
@@ -37,8 +38,7 @@ class Settings {
 
 		//	Load
 		static void load();
-		static void load(const std::string & Path);
-		static void exp(const std::string & Path);
+		static void load(const std::string & File, bool isReisRegen = false);
 
 		//	Global
 		static std::string get(const std::string & Key);
