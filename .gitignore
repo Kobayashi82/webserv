@@ -1,0 +1,9 @@
+*
+!Makefile
+!src
+!src/**
+!inc
+!inc/**
+!bin/conf
+!bin/www
+!.gitignore
