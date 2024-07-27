@@ -4,6 +4,8 @@
 !src/**
 !inc
 !inc/**
+!doc
+!doc/**
 !bin
 !bin/conf
 !bin/conf/**
