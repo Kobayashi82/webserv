@@ -6,5 +6,7 @@
 !inc/**
 !bin
 !bin/conf
+!bin/conf/**
 !bin/www
+!bin/www/**
 !.gitignore
