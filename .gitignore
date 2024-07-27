@@ -4,6 +4,7 @@
 !src/**
 !inc
 !inc/**
+!bin
 !bin/conf
 !bin/www
 !.gitignore
