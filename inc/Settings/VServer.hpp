@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 11:53:48 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/07/27 19:01:19 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/07/28 18:35:05 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,7 @@ class VServer {
 		std::vector<Location> location;
 		
 		//	Constructors
+		VServer() {}
 		VServer(const VServer & src) { *this = src; }
 		~VServer() { clear(); }
 

@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 14:30:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/07/27 21:19:55 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/07/28 19:11:58 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,35 @@
 //  parser settings
 //  parser mimo.types
 //  service nginx reload
+
+void printSettings() {
+    // Imprimir Settings::global
+    std::cout << "Global Settings:" << std::endl << std::endl;
+    for (std::map<std::string, std::string>::iterator it = Settings::global.begin(); it != Settings::global.end(); ++it) {
+        std::cout << it->first << ": " << it->second << std::endl;
+    }
+    std::cout << std::endl;
+
+    // Imprimir cada VServer
+    for (size_t i = 0; i < Settings::vserver.size(); ++i) {
+        const VServer& vserver = Settings::vserver[i];
+        std::cout << "VServer " << i + 1 << ":" << std::endl << std::endl;
+        for (std::map<std::string, std::string>::const_iterator it = vserver.vserver.begin(); it != vserver.vserver.end(); ++it) {
+            std::cout << it->first << ": " << it->second << std::endl;
+        }
+        std::cout << std::endl;
+
+        // Imprimir cada Location dentro del VServer
+        for (size_t j = 0; j < vserver.location.size(); ++j) {
+            const Location& location = vserver.location[j];
+            std::cout << "  Location " << j + 1 << ":" << std::endl << std::endl;
+            for (std::map<std::string, std::string>::const_iterator it = location.location.begin(); it != location.location.end(); ++it) {
+                std::cout << "    " << it->first << ": " << it->second << std::endl;
+            }
+            std::cout << std::endl;
+        }
+    }
+}
 
 void settings_test(int argc, char **argv) {
     if (argc == 2 && !strcmp(argv[1], "-t")) {                                                                                      //  Test default settings
@@ -51,7 +80,7 @@ int main(int argc, char **argv) {
     // while (Settings::terminate == -1) {
     //     printOutput();
     // } disableRawMode();
-    
+    printSettings();
     Settings::clear();
     return (Settings::terminate);
 }

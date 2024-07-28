@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:14:05 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/07/27 22:40:42 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/07/28 19:23:31 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,7 @@
 #include <fstream>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <algorithm>
 
 class Settings {
 
@@ -32,6 +33,7 @@ class Settings {
 		static std::string							program_path;
 		static std::string							config_path;
 		static int									terminate;
+		static int									bracket_lvl;
 		static bool									check_only;
 		static Timer								timer;
 

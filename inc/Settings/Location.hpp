@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 11:53:37 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/07/27 19:01:26 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/07/28 18:30:45 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,7 @@ class Location {
 		std::map<std::string, std::string> location;
 
 		//	Constructors
+		Location() {}
 		Location(const Location & src) { *this = src; }
 		~Location() { clear(); }
 

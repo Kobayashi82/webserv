@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:27:58 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/07/27 22:40:49 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/07/28 19:34:11 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,7 @@ std::vector <VServer> 				Settings::vserver;
 std::string							Settings::program_path = Settings::ProgramPath();
 std::string							Settings::config_path = Settings::ProgramPath() + "conf/";
 int 								Settings::terminate = -1;
+int									Settings::bracket_lvl = 0;
 bool 								Settings::check_only = false;
 Timer 								Settings::timer;
 
@@ -63,8 +64,177 @@ static void generate_config(const std::string & File) {
 
 #pragma region Parse Line
 
-static int parse_line(const std::string & line) {
-	std::cout << line << std::endl;
+static void trim(std::string &str) {
+    // Eliminar espacios en blanco al principio
+    std::string::iterator start = str.begin();
+    std::string::iterator end = str.end();
+
+    while (start != str.end() && std::isspace(static_cast<unsigned char>(*start))) start++;
+
+    // Encontrar el carácter '#' y ajustar el final de la cadena
+    std::string::iterator hashPos = std::find(start, str.end(), '#');
+    if (hashPos != str.end()) end = hashPos;
+
+    // Eliminar espacios en blanco al final
+    while (end != start && std::isspace(static_cast<unsigned char>(*(end - 1)))) --end;
+    str = std::string(start, end);
+}
+
+static void toLower(std::string & str) {
+    for (size_t i = 0; i < str.size(); ++i) str[i] = std::tolower(static_cast<unsigned char>(str[i]));
+}
+
+static int brackets(std::string & str) {
+	if (!str.empty() && str[str.size() - 1] == '{') {
+		str.erase(str.size() - 1);
+		Settings::bracket_lvl++;
+		return (1);
+	}
+	if (!str.empty() && str[str.size() - 1] == '}') {
+		str.erase(str.size() - 1);
+		Settings::bracket_lvl--;
+		return (-1);
+	}
+	return (0);
+}
+
+static void parse_body_size(std::string & str) {
+	if (str.empty() || std::isdigit(str[str.size() - 1])) return ;
+
+    long multiplier = 1;
+    char unit = str[str.size() - 1];
+    std::string numberPart = str.substr(0, str.size() - 1);
+
+    switch (unit) {
+        case 'K': multiplier = 1024; break;
+        case 'M': multiplier = 1024 * 1024; break;
+        case 'G': multiplier = 1024 * 1024 * 1024; break;
+    }
+
+    std::stringstream ss(numberPart);
+    long number; ss >> number; if (ss.fail()) return;
+    
+    std::stringstream resultStream;
+    resultStream << number * multiplier;
+    str = resultStream.str();
+}
+
+static void parse_errors(const std::string & firstPart, const std::string & secondPart) {
+    std::istringstream stream(secondPart);
+    std::vector<std::string> errors;
+    std::string error;
+
+    while (stream >> error) errors.push_back(error);
+    std::string filePath = errors.back(); errors.pop_back();
+
+    for (std::vector<std::string>::iterator it = errors.begin(); it != errors.end(); ++it) {
+		Settings::add(firstPart + " " + *it, filePath);
+    }
+}
+
+static void parse_errors(const std::string & firstPart, const std::string & secondPart, Location & Loc) {
+    std::istringstream stream(secondPart);
+    std::vector<std::string> errors;
+    std::string error;
+
+    while (stream >> error) errors.push_back(error);
+    std::string filePath = errors.back(); errors.pop_back();
+
+    for (std::vector<std::string>::iterator it = errors.begin(); it != errors.end(); ++it) {
+       	Loc.add(firstPart + " " + *it, filePath);
+    }
+}
+
+static void parse_errors(const std::string & firstPart, const std::string & secondPart, VServer & VServ) {
+    std::istringstream stream(secondPart);
+    std::vector<std::string> errors;
+    std::string error;
+
+    while (stream >> error) errors.push_back(error);
+    std::string filePath = errors.back(); errors.pop_back();
+
+    for (std::vector<std::string>::iterator it = errors.begin(); it != errors.end(); ++it) {
+       	VServ.add(firstPart + " " + *it, filePath);
+    }
+}
+
+    // location /api/ {
+    //     limit_except GET POST {
+    //         deny all;					# only deny or return. Si no se pone, acepta todas las directivas
+	//     return 405 /405.html;
+    //     }
+    // }
+static int parser_location(std::ifstream & infile, std::string & line, VServer & VServ) {
+	Location Loc;
+	do {
+		std::string firstPart, secondPart;
+		trim(line); if (line.empty()) continue;
+		std::istringstream stream(line);
+
+		stream >> firstPart; trim(firstPart); toLower(firstPart);
+
+		std::getline(stream, secondPart); trim(secondPart);
+
+		if (!firstPart.empty() && firstPart[firstPart.size() - 1] == ';') firstPart.erase(firstPart.size() - 1);
+		if (!secondPart.empty() && secondPart[secondPart.size() - 1] != '{' && secondPart[secondPart.size() - 1] != '}' && secondPart[secondPart.size() - 1] != ';' && firstPart != "{" && firstPart != "}") return (1);
+		if (!secondPart.empty() && secondPart[secondPart.size() - 1] == ';') secondPart.erase(secondPart.size() - 1);
+
+		if (brackets(firstPart) == -1 || brackets(secondPart) == -1) { VServ.add(Loc); break; }
+
+		if (firstPart == "client_max_body_size") parse_body_size(secondPart);
+		if (firstPart == "error_page") parse_errors(firstPart, secondPart, Loc); else Loc.add(firstPart, secondPart);
+		
+	} while (getline(infile, line));
+	return (0);
+}
+
+static int parser_server(std::ifstream & infile, std::string & line) {
+	VServer VServ;
+	do {
+		std::string firstPart, secondPart;
+		trim(line); if (line.empty()) continue;
+		std::istringstream stream(line);
+		
+		stream >> firstPart; trim(firstPart); toLower(firstPart);
+
+		if (firstPart == "location") { if (parser_location(infile, line, VServ)) return (1); else continue; }
+
+		std::getline(stream, secondPart); trim(secondPart);
+		
+		if (!firstPart.empty() && firstPart[firstPart.size() - 1] == ';') firstPart.erase(firstPart.size() - 1);
+		if (!secondPart.empty() && secondPart[secondPart.size() - 1] != '{' && secondPart[secondPart.size() - 1] != '}' && secondPart[secondPart.size() - 1] != ';' && firstPart != "{" && firstPart != "}" && firstPart != "location") return (1);
+		if (!secondPart.empty() && secondPart[secondPart.size() - 1] == ';') secondPart.erase(secondPart.size() - 1);
+		
+		if (brackets(firstPart) == -1 || brackets(secondPart) == -1) { Settings::add(VServ); break; }
+
+		if (firstPart == "client_max_body_size") parse_body_size(secondPart);
+		if (firstPart == "error_page") parse_errors(firstPart, secondPart, VServ);
+		else if (firstPart != "server") VServ.add(firstPart, secondPart);
+
+	} while (getline(infile, line));
+	return (0);
+}
+
+static int parse_line(std::ifstream & infile, std::string & line) {
+	std::string firstPart, secondPart;
+	trim(line); if (line.empty()) return (0);
+	std::istringstream stream(line);
+
+	stream >> firstPart; trim(firstPart); toLower(firstPart);
+
+	if (firstPart == "server") { return (parser_server(infile, line)); }
+
+	std::getline(stream, secondPart); trim(secondPart);
+
+	if (!firstPart.empty() && firstPart[firstPart.size() - 1] == ';') firstPart.erase(firstPart.size() - 1);
+	if (!secondPart.empty() && secondPart[secondPart.size() - 1] != '{' && secondPart[secondPart.size() - 1] != '}' && secondPart[secondPart.size() - 1] != ';' && firstPart != "{" && firstPart != "}" && firstPart != "server" && firstPart != "location") return (1);
+	if (!secondPart.empty() && secondPart[secondPart.size() - 1] == ';') secondPart.erase(secondPart.size() - 1);
+
+	brackets(firstPart); brackets(secondPart);
+
+	if (firstPart == "client_max_body_size") parse_body_size(secondPart);
+	if (firstPart == "error_page") parse_errors(firstPart, secondPart); else Settings::add(firstPart, secondPart);
+
 	return (0);
 }
 
@@ -76,18 +246,22 @@ void Settings::load(const std::string & File, bool isRegen) {
 	bool isDefault = (File == Settings::config_path + "default.cfg");
 	std::string	line;
 
+	Settings::clear();
     std::ifstream infile(File.c_str());
     if (infile.is_open()) {
         while (getline(infile, line)) {
-			if (parse_line(line)) {
+			if (parse_line(infile, line)) {
+				infile.close();
 				if (isDefault) {
 					if (!isRegen) {
 						remove(File.c_str());
+						Settings::clear();
 						Settings::add("error_log", "logs/error.log");
 						Log::log_error("Default configuration file is corrupted, generating a default config file");
 						Settings::del("error_log");
 						generate_config(File);
-						Settings::load(Settings::config_path + "default.cfg", true);
+						Settings::load(File, true);
+						return ;
 					} else {
 						Settings::add("error_log", "logs/error.log");
 						Log::log_error("Could not create the default configuration file");
@@ -97,8 +271,30 @@ void Settings::load(const std::string & File, bool isRegen) {
 					Log::log_error("Could not load the configuration file '" + File + "'");
 				}
 				Settings::terminate = 1;
+				return ;
 			}
         } infile.close();
+		if (Settings::bracket_lvl != 0) {
+			if (isDefault) {
+				if (!isRegen) {
+					remove(File.c_str());
+					Settings::clear();
+					Settings::add("error_log", "logs/error.log");
+					Log::log_error("Default configuration file is corrupted, generating a default config file");
+					Settings::del("error_log");
+					generate_config(File);
+					Settings::load(File, true);
+					return ;
+				} else {
+					Settings::add("error_log", "logs/error.log");
+					Log::log_error("Could not create the default configuration file");
+					Settings::del("error_log");
+				}
+			} else {
+				Log::log_error("Could not load the configuration file '" + File + "'");
+			}
+			Settings::terminate = 1;
+		}
 		if (isDefault)
 			Log::log_access("Default configuration file loaded succesfully");
 		else
@@ -171,7 +367,7 @@ void Settings::del(const VServer & VServ) {
 #pragma region Clear
 
 void Settings::clear() {
-	global.clear();
+	global.clear(); Settings::bracket_lvl = 0;
 	for (std::vector<VServer>::iterator it = vserver.begin(); it != vserver.end(); ++it) it->clear();
 }
 
