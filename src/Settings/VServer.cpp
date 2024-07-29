@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 11:54:43 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/07/27 16:39:01 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/07/29 13:48:58 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,4 +50,5 @@ void VServer::del(const Location & Loc) {
 void VServer::clear() {
 	vserver.clear();
 	for (std::vector<Location>::iterator it = location.begin(); it != location.end(); ++it) it->clear();
+    location.clear();
 }

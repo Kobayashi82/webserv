@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:27:58 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/07/28 19:34:11 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/07/29 14:58:20 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,7 @@ std::string							Settings::config_path = Settings::ProgramPath() + "conf/";
 int 								Settings::terminate = -1;
 int									Settings::bracket_lvl = 0;
 bool 								Settings::check_only = false;
+bool 								Settings::loaded_ok = false;
 Timer 								Settings::timer;
 
 #pragma endregion
@@ -50,13 +51,9 @@ static void generate_config(const std::string & File) {
 				<< "}" << std::endl;
       	outfile.close();
 		Settings::create_path(Settings::program_path + "www/html");
-		Settings::add("error_log", "logs/error.log");
-		Log::log_error("Default configuration file created succesfully");
-		Settings::del("error_log");
+		Log::log_error("Default configuration file created succesfully", NULL, true);
     } else {
-		Settings::add("error_log", "logs/error.log");
-		Log::log_error("Could not create the default configuration file");
-		Settings::del("error_log");
+		Log::log_error("Could not create the default configuration file", NULL, true);
 	}
 }
 
@@ -158,14 +155,8 @@ static void parse_errors(const std::string & firstPart, const std::string & seco
     }
 }
 
-    // location /api/ {
-    //     limit_except GET POST {
-    //         deny all;					# only deny or return. Si no se pone, acepta todas las directivas
-	//     return 405 /405.html;
-    //     }
-    // }
 static int parser_location(std::ifstream & infile, std::string & line, VServer & VServ) {
-	Location Loc;
+	bool inLimit = false; Location Loc;
 	do {
 		std::string firstPart, secondPart;
 		trim(line); if (line.empty()) continue;
@@ -179,8 +170,12 @@ static int parser_location(std::ifstream & infile, std::string & line, VServer &
 		if (!secondPart.empty() && secondPart[secondPart.size() - 1] != '{' && secondPart[secondPart.size() - 1] != '}' && secondPart[secondPart.size() - 1] != ';' && firstPart != "{" && firstPart != "}") return (1);
 		if (!secondPart.empty() && secondPart[secondPart.size() - 1] == ';') secondPart.erase(secondPart.size() - 1);
 
-		if (brackets(firstPart) == -1 || brackets(secondPart) == -1) { VServ.add(Loc); break; }
+		if (brackets(firstPart) == -1 || brackets(secondPart) == -1) {
+			if (inLimit) inLimit = false; else { VServ.add(Loc); break; }
+		}
 
+		if (firstPart.empty()) continue;
+		if (firstPart == "limit_except") inLimit = true;
 		if (firstPart == "client_max_body_size") parse_body_size(secondPart);
 		if (firstPart == "error_page") parse_errors(firstPart, secondPart, Loc); else Loc.add(firstPart, secondPart);
 		
@@ -207,6 +202,7 @@ static int parser_server(std::ifstream & infile, std::string & line) {
 		
 		if (brackets(firstPart) == -1 || brackets(secondPart) == -1) { Settings::add(VServ); break; }
 
+		if (firstPart.empty()) continue;
 		if (firstPart == "client_max_body_size") parse_body_size(secondPart);
 		if (firstPart == "error_page") parse_errors(firstPart, secondPart, VServ);
 		else if (firstPart != "server") VServ.add(firstPart, secondPart);
@@ -232,6 +228,7 @@ static int parse_line(std::ifstream & infile, std::string & line) {
 
 	brackets(firstPart); brackets(secondPart);
 
+	if (firstPart.empty()) return (0);
 	if (firstPart == "client_max_body_size") parse_body_size(secondPart);
 	if (firstPart == "error_page") parse_errors(firstPart, secondPart); else Settings::add(firstPart, secondPart);
 
@@ -242,12 +239,17 @@ static int parse_line(std::ifstream & infile, std::string & line) {
 
 #pragma region Load File
 
+static int file_exists(const std::string & File) {
+	if (access(File.c_str(), F_OK) < 0) return (1);
+	if (access(File.c_str(), R_OK) < 0) return (2);
+    return (0);
+}
+
 void Settings::load(const std::string & File, bool isRegen) {
 	bool isDefault = (File == Settings::config_path + "default.cfg");
-	std::string	line;
-
+	std::string	line; std::ifstream infile(File.c_str());
 	Settings::clear();
-    std::ifstream infile(File.c_str());
+
     if (infile.is_open()) {
         while (getline(infile, line)) {
 			if (parse_line(infile, line)) {
@@ -256,16 +258,12 @@ void Settings::load(const std::string & File, bool isRegen) {
 					if (!isRegen) {
 						remove(File.c_str());
 						Settings::clear();
-						Settings::add("error_log", "logs/error.log");
-						Log::log_error("Default configuration file is corrupted, generating a default config file");
-						Settings::del("error_log");
+						Log::log_error("Default configuration file is corrupted, generating a default config file", NULL, true);
 						generate_config(File);
 						Settings::load(File, true);
 						return ;
 					} else {
-						Settings::add("error_log", "logs/error.log");
-						Log::log_error("Could not create the default configuration file");
-						Settings::del("error_log");
+						Log::log_error("Could not create the default configuration file", NULL, true);
 					}
 				} else {
 					Log::log_error("Could not load the configuration file '" + File + "'");
@@ -274,38 +272,41 @@ void Settings::load(const std::string & File, bool isRegen) {
 				return ;
 			}
         } infile.close();
+
 		if (Settings::bracket_lvl != 0) {
 			if (isDefault) {
 				if (!isRegen) {
 					remove(File.c_str());
 					Settings::clear();
-					Settings::add("error_log", "logs/error.log");
-					Log::log_error("Default configuration file is corrupted, generating a default config file");
-					Settings::del("error_log");
+					Log::log_error("Default configuration file is corrupted, generating a default config file", NULL, true);
 					generate_config(File);
 					Settings::load(File, true);
 					return ;
 				} else {
-					Settings::add("error_log", "logs/error.log");
-					Log::log_error("Could not create the default configuration file");
-					Settings::del("error_log");
+					Log::log_error("Could not create the default configuration file", NULL, true);
 				}
 			} else {
 				Log::log_error("Could not load the configuration file '" + File + "'");
 			}
 			Settings::terminate = 1;
 		}
+
+		Settings::loaded_ok = true;
 		if (isDefault)
 			Log::log_access("Default configuration file loaded succesfully");
 		else
 			Log::log_access("Configuration file '" + File + "' loaded succesfully");
+
     } else {
 		if (isDefault) {
-			Settings::add("error_log", "logs/error.log");
-			Log::log_error("Could not load the default configuration file");
-			Settings::del("error_log");
+			Log::log_error("Could not create the default configuration file", NULL, true);
 		} else {
-        	Log::log_error("Could not load the configuration file '" + File + "'");
+			if (file_exists(File) == 1)
+				Log::log_error("The configuration file '" + File + "' does not exist", NULL, true);
+			else if (file_exists(File) == 2)
+				Log::log_error("Cannot read the file '" + File + "'", NULL, true);
+			else
+        		Log::log_error("Could not load the configuration file '" + File + "'", NULL, true);
 		}
 	}
 }
@@ -315,14 +316,22 @@ void Settings::load(const std::string & File, bool isRegen) {
 #pragma region Load Default
 
 void Settings::load() {
- 	std::ifstream infile((Settings::config_path + "default.cfg").c_str());
-    if (!infile.is_open()) {
-		Settings::add("error_log", "logs/error.log");
-		Log::log_error("Default config file missing, generating a default config file");
-		Settings::del("error_log");
-		generate_config(Settings::config_path + "default.cfg");
-	} infile.close();
-	Settings::load(Settings::config_path + "default.cfg");
+	std::string File = Settings::config_path + "default.cfg";
+	int FileStatus = file_exists(File);
+
+	if (FileStatus) {
+		if (FileStatus == 1)
+			Log::log_error("Default configuration file does not exist, generating a default config file", NULL, true);
+		else if (FileStatus == 2) {
+			Log::log_error("Cannot read the default configuration file, generating a default config file", NULL, true);
+			remove(File.c_str());
+		} else {
+			Log::log_error("Could not load the default configuration file, generating a default config file", NULL, true);
+			remove(File.c_str());
+		}
+		generate_config(File);
+	}
+	Settings::load(File);
 }
 
 #pragma endregion
@@ -369,6 +378,7 @@ void Settings::del(const VServer & VServ) {
 void Settings::clear() {
 	global.clear(); Settings::bracket_lvl = 0;
 	for (std::vector<VServer>::iterator it = vserver.begin(); it != vserver.end(); ++it) it->clear();
+	vserver.clear();
 }
 
 #pragma endregion

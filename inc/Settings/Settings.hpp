@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:14:05 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/07/28 19:23:31 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/07/29 15:08:51 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@
 #include <unistd.h>
 #include <limits.h>
 #include <cstdio>
+#include <cstring>			//	For strcmp()
 #include <sstream>
 #include <fstream>
 #include <sys/stat.h>
@@ -35,6 +36,7 @@ class Settings {
 		static int									terminate;
 		static int									bracket_lvl;
 		static bool									check_only;
+		static bool									loaded_ok;
 		static Timer								timer;
 
 
