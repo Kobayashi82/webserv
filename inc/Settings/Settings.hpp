@@ -6,17 +6,19 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:14:05 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/07/29 15:08:51 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/07/29 20:53:31 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
+#include "Colors.hpp"
 #include "VServer.hpp"
 #include "Timer.hpp"
 #include "Log.hpp"
 #include <unistd.h>
 #include <limits.h>
 #include <cstdio>
+#include <iostream>
 #include <cstring>			//	For strcmp()
 #include <sstream>
 #include <fstream>
@@ -41,22 +43,25 @@ class Settings {
 
 
 		//	Load
-		static void load();
-		static void load(const std::string & File, bool isReisRegen = false);
+		static void			load();
+		static void			load(const std::string & File, bool isReisRegen = false);
+		static void			load_args(int argc, char **argv);
 
 		//	Global
-		static std::string get(const std::string & Key);
-		static void set(const std::string & Key, const std::string & Value);
-		static void add(const std::string & Key, const std::string & Value) { set(Key, Value); }
-		static void del(const std::string & Key);
+		static std::string	get(const std::string & Key);
+		static void			set(const std::string & Key, const std::string & Value);
+		static void			add(const std::string & Key, const std::string & Value) { set(Key, Value); }
+		static void			del(const std::string & Key);
+		static void			clear();
 
 		//	VServer
-		static void set(const VServer & VServ);
-		static void add(const VServer & VServ) { set(VServ); }
-		static void del(const VServer & VServ);
+		static void			set(const VServer & VServ);
+		static void			add(const VServer & VServ) { set(VServ); }
+		static void			del(const VServer & VServ);
 
-		static std::string ProgramPath();
-		static void create_path(const std::string & path);
-		static void clear();
+		//	Utils
+		static std::string	programPath();
+		static void			createPath(const std::string & path);
+		static void			print();
 
 };

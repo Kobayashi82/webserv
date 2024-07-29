@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 11:59:38 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/07/26 12:12:49 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/07/29 21:06:29 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,6 @@
 #include <cstdlib>
 #include <csignal>
 
-void printOutput();
+void Output();
 void enableRawMode();
 void disableRawMode();
