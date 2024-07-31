@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:27:58 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/07/29 20:43:55 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/07/31 22:26:57 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,9 @@
 	int									Settings::bracket_lvl = 0;
 	bool 								Settings::check_only = false;
 	bool 								Settings::loaded_ok = false;
+	bool 								Settings::errors = false;
 	Timer 								Settings::timer;
+	static int							line_count = 0;
 
 #pragma endregion
 
@@ -41,15 +43,15 @@
 
 	#pragma region Create Path
 
-		void Settings::createPath(const std::string & path) {
+		int Settings::createPath(const std::string & path) {
 			size_t pos = 0; std::string dir;
 
-			if (path == "") return;
+			if (path == "") return (0);
 			while ((pos = path.find('/', pos)) != std::string::npos) {
 				dir = path.substr(0, pos++);
 				if (dir.empty()) continue;
-				mkdir(dir.c_str(), 0755);
-			}
+				if (mkdir(dir.c_str(), 0755) == -1) return (1);
+			} return (0);
 		}
 
 	#pragma endregion
@@ -160,42 +162,50 @@
 	#pragma region Brackets
 
 		static int brackets(std::string & str) {
-			if (!str.empty() && str[str.size() - 1] == '{') {
-				str.erase(str.size() - 1);
-				Settings::bracket_lvl++;
-				return (1);
+			int change = 0;
+			for (size_t i = 0; i < str.size(); ++i) {
+				if (str[i] == '{') {
+					str.erase(i, 1); --i;										//	Delete '{' and adjust index
+					Settings::bracket_lvl++;
+					change += 1;
+				} else if (str[i] == '}') {
+					str.erase(i, 1); --i;										//	Delete '}' and adjust index
+					Settings::bracket_lvl--;
+					change -= 1;
+				}
 			}
-			if (!str.empty() && str[str.size() - 1] == '}') {
-				str.erase(str.size() - 1);
-				Settings::bracket_lvl--;
-				return (-1);
-			}
-			return (0);
+			return (change);
 		}
 
 	#pragma endregion
 
 	#pragma region Parse Body Size
 
-		static void parse_body_size(std::string & str) {
-			if (str.empty() || std::isdigit(str[str.size() - 1])) return ;
+		static int parse_body_size(std::string & str, std::string & line) {
+			std::stringstream result; long multiplier = 1;
 
-			long multiplier = 1;
-			char unit = str[str.size() - 1];
-			std::string numberPart = str.substr(0, str.size() - 1);
+			if (str.empty()) { Log::log_error("Empty value for client_max_body_size - '" + line + "'", NULL, true); return (1); }
 
-			switch (unit) {
-				case 'K': multiplier = 1024; break;
-				case 'M': multiplier = 1024 * 1024; break;
-				case 'G': multiplier = 1024 * 1024 * 1024; break;
+			if (!std::isdigit(str[str.size() - 1])) {
+				result.str(str.substr(0, str.size() - 1));
+				switch (str[str.size() - 1]) {
+					case 'K': multiplier = 1024; break;
+					case 'M': multiplier = 1024 * 1024; break;
+					case 'G': multiplier = 1024 * 1024 * 1024; break;
+				}
 			}
 
-			std::stringstream ss(numberPart);
-			long number; ss >> number; if (ss.fail()) return;
+			std::stringstream ss(result.str());
+
+			std::stringstream ss_error;
+		    ss_error << "Invalid value for client_max_body_size - " << line_count << " '" << line << "'";
+
+			long number; ss >> number; if (ss.fail() || !ss.eof()) { Log::log_error(ss_error.str(), NULL, true); return (1); }
+			if (number < 1) { Log::log_error("value for client_max_body_size cannot be lower than 1 byte - '" + line + "'", NULL, true); return (1); }
+			if (number > 1024 * 1024 * 1024) { Log::log_error("Value for client_max_body_size cannot be greater than 1GB - '" + line + "'", NULL, true); return (1); }
 			
-			std::stringstream resultStream;
-			resultStream << number * multiplier;
-			str = resultStream.str();
+			result << number * multiplier; str = result.str(); if (result.fail()) { Log::log_error("Invalid value for client_max_body_size - '" + line + "'", NULL, true); return (1); }
+			return (0);
 		}
 
 	#pragma endregion
@@ -246,27 +256,29 @@
 	#pragma region Parse Location
 
 		static int parser_location(std::ifstream & infile, std::string & line, VServer & VServ) {
-			bool inLimit = false; Location Loc;
+			bool inLimit = false; Location Loc; int current_bracket = Settings::bracket_lvl;
 			do {
-				std::string firstPart, secondPart;
+				line_count++;
 				trim(line); if (line.empty()) continue;
-				std::istringstream stream(line);
+				std::string firstPart, secondPart; std::istringstream stream(line);
 
 				stream >> firstPart; trim(firstPart); toLower(firstPart);
 
 				std::getline(stream, secondPart); trim(secondPart);
 
 				if (!firstPart.empty() && firstPart[firstPart.size() - 1] == ';') firstPart.erase(firstPart.size() - 1);
-				if (!secondPart.empty() && secondPart[secondPart.size() - 1] != '{' && secondPart[secondPart.size() - 1] != '}' && secondPart[secondPart.size() - 1] != ';' && firstPart != "{" && firstPart != "}") return (1);
+				if (!secondPart.empty() && secondPart[secondPart.size() - 1] != '{' && secondPart[secondPart.size() - 1] != '}' && secondPart[secondPart.size() - 1] != ';' && firstPart != "{" && firstPart != "}" && firstPart != "location") return (1);
 				if (!secondPart.empty() && secondPart[secondPart.size() - 1] == ';') secondPart.erase(secondPart.size() - 1);
 
-				if (brackets(firstPart) == -1 || brackets(secondPart) == -1) {
-					if (inLimit) inLimit = false; else { VServ.add(Loc); break; }
+				if (brackets(firstPart) + brackets(secondPart) < 0) {
+					if (inLimit) inLimit = false;
+					if (Settings::bracket_lvl < 0) return (1);	//	Error
+					if (Settings::bracket_lvl <= current_bracket) { VServ.add(Loc); break; }
 				}
 
 				if (firstPart.empty()) continue;
 				if (firstPart == "limit_except") inLimit = true;
-				if (firstPart == "client_max_body_size") parse_body_size(secondPart);
+				if (firstPart == "client_max_body_size") parse_body_size(secondPart, line);
 				if (firstPart == "error_page") parse_errors(firstPart, secondPart, Loc); else Loc.add(firstPart, secondPart);
 				
 			} while (getline(infile, line));
@@ -278,26 +290,33 @@
 	#pragma region Parse VServer
 
 		static int parser_vserver(std::ifstream & infile, std::string & line) {
-			VServer VServ;
+			VServer VServ; int current_bracket = Settings::bracket_lvl;
 			do {
-				std::string firstPart, secondPart;
-				trim(line); if (line.empty()) continue;
-				std::istringstream stream(line);
+				trim(line); if (line.empty()) { line_count++; continue; }
+				std::string firstPart, secondPart; std::istringstream stream(line);
 				
 				stream >> firstPart; trim(firstPart); toLower(firstPart);
 
-				if (firstPart == "location") { if (parser_location(infile, line, VServ)) return (1); else continue; }
+				if (firstPart == "location") {
+					parser_location(infile, line, VServ);
+					firstPart = "";
+				}
+				
+				if (!firstPart.empty()) {
+					line_count++;
+					std::getline(stream, secondPart); trim(secondPart);
+					if (!firstPart.empty() && firstPart[firstPart.size() - 1] == ';') firstPart.erase(firstPart.size() - 1);
+					if (!secondPart.empty() && secondPart[secondPart.size() - 1] != '{' && secondPart[secondPart.size() - 1] != '}' && secondPart[secondPart.size() - 1] != ';' && firstPart != "{" && firstPart != "}" && firstPart != "location") return (1);
+					if (!secondPart.empty() && secondPart[secondPart.size() - 1] == ';') secondPart.erase(secondPart.size() - 1);
+				}
 
-				std::getline(stream, secondPart); trim(secondPart);
-				
-				if (!firstPart.empty() && firstPart[firstPart.size() - 1] == ';') firstPart.erase(firstPart.size() - 1);
-				if (!secondPart.empty() && secondPart[secondPart.size() - 1] != '{' && secondPart[secondPart.size() - 1] != '}' && secondPart[secondPart.size() - 1] != ';' && firstPart != "{" && firstPart != "}" && firstPart != "location") return (1);
-				if (!secondPart.empty() && secondPart[secondPart.size() - 1] == ';') secondPart.erase(secondPart.size() - 1);
-				
-				if (brackets(firstPart) == -1 || brackets(secondPart) == -1) { Settings::add(VServ); break; }
+				if (brackets(firstPart) + brackets(secondPart) < 0) {
+					if (Settings::bracket_lvl < 0) return (1);	//	Error
+					if (Settings::bracket_lvl <= current_bracket) { Settings::add(VServ); break; }
+				}
 
 				if (firstPart.empty()) continue;
-				if (firstPart == "client_max_body_size") parse_body_size(secondPart);
+				if (firstPart == "client_max_body_size") parse_body_size(secondPart, line);
 				if (firstPart == "error_page") parse_errors(firstPart, secondPart, VServ);
 				else if (firstPart != "server") VServ.add(firstPart, secondPart);
 
@@ -311,23 +330,29 @@
 
 		static int parse_line(std::ifstream & infile, std::string & line) {
 			std::string firstPart, secondPart;
-			trim(line); if (line.empty()) return (0);
+			trim(line); if (line.empty()) { line_count++; return (0); }
 			std::istringstream stream(line);
 
 			stream >> firstPart; trim(firstPart); toLower(firstPart);
 
-			if (firstPart == "server") { return (parser_vserver(infile, line)); }
+			if (firstPart == "server") {
+				parser_vserver(infile, line);
+				firstPart = "";
+			}
 
 			std::getline(stream, secondPart); trim(secondPart);
 
-			if (!firstPart.empty() && firstPart[firstPart.size() - 1] == ';') firstPart.erase(firstPart.size() - 1);
-			if (!secondPart.empty() && secondPart[secondPart.size() - 1] != '{' && secondPart[secondPart.size() - 1] != '}' && secondPart[secondPart.size() - 1] != ';' && firstPart != "{" && firstPart != "}" && firstPart != "server" && firstPart != "location") return (1);
-			if (!secondPart.empty() && secondPart[secondPart.size() - 1] == ';') secondPart.erase(secondPart.size() - 1);
+			if (!firstPart.empty()) {
+				line_count++;
+				if (!firstPart.empty() && firstPart[firstPart.size() - 1] == ';') firstPart.erase(firstPart.size() - 1);
+				if (!secondPart.empty() && secondPart[secondPart.size() - 1] != '{' && secondPart[secondPart.size() - 1] != '}' && secondPart[secondPart.size() - 1] != ';' && firstPart != "{" && firstPart != "}" && firstPart != "server" && firstPart != "location") return (1);
+				if (!secondPart.empty() && secondPart[secondPart.size() - 1] == ';') secondPart.erase(secondPart.size() - 1);
+			}
 
 			brackets(firstPart); brackets(secondPart);
 
 			if (firstPart.empty()) return (0);
-			if (firstPart == "client_max_body_size") parse_body_size(secondPart);
+			if (firstPart == "client_max_body_size") parse_body_size(secondPart, line);
 			if (firstPart == "error_page") parse_errors(firstPart, secondPart); else Settings::add(firstPart, secondPart);
 
 			return (0);
@@ -454,12 +479,12 @@
 				Settings::terminate = 1;
 			} else {
 				if (argc == 1) Settings::load(); else Settings::load(argv[1]);
-				if (Settings::vserver.size() == 0) {
-					if (Settings::loaded_ok) Log::log_error("There are no virtual servers in the configuration file", NULL, true);
-					std::cout << std::endl << C "\tCould not start the server, check the file:" << std::endl << std::endl
-							<< Y "\t" << Settings::program_path + "logs/error.log" NC << std::endl << std::endl;
-					Settings::terminate = 1;
-				}
+				// if (Settings::vserver.size() == 0) {
+				// 	if (Settings::loaded_ok) Log::log_error("There are no virtual servers in the configuration file", NULL, true);
+				// 	std::cout << std::endl << C "\tCould not start the server, check the file:" << std::endl << std::endl
+				// 			<< Y "\t" << Settings::program_path + "logs/error.log" NC << std::endl << std::endl;
+				// 	Settings::terminate = 1;
+				// }
 			}
 		}
 

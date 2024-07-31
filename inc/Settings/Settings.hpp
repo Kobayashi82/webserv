@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:14:05 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/07/29 20:53:31 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/07/31 20:25:06 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,6 +39,7 @@ class Settings {
 		static int									bracket_lvl;
 		static bool									check_only;
 		static bool									loaded_ok;
+		static bool									errors;
 		static Timer								timer;
 
 
@@ -61,7 +62,7 @@ class Settings {
 
 		//	Utils
 		static std::string	programPath();
-		static void			createPath(const std::string & path);
+		static int			createPath(const std::string & path);
 		static void			print();
 
 };
