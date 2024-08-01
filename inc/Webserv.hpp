@@ -6,11 +6,12 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/14 14:38:19 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/07/27 15:22:39 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/01 17:29:15 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
+
 #include "Display.hpp"
 #include "Settings.hpp"
 

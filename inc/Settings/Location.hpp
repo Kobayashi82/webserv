@@ -6,35 +6,36 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 11:53:37 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/07/29 21:10:56 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/01 17:28:53 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
-#include <iostream>
-#include <map>
+
+#include <iostream>																						//	For standard input/output stream objects like std::cin, std::cout
+#include <map>																							//	For the std::map container
 
 class Location {
 
 	public:
 
 		//	Variables
-		std::map<std::string, std::string>	location;
+		std::map<std::string, std::string>	location;													//	Values of the current Location
 
 		//	Constructors
-		Location() {}
-		Location(const Location & src) { *this = src; }
-		~Location() { clear(); }
+		Location() {}																					//	Default constructor
+		Location(const Location & src) { *this = src; }													//	Copy constructor
+		~Location() { clear(); }																		//	Destructor (Call clear() before destruction)
 
 		//	Overloads
-		Location &	operator=(const Location & rhs) { if (this != &rhs) { location = rhs.location; } return (*this); }
-		bool		operator==(const Location & rhs) const { return (location == rhs.location); }
+		Location &	operator=(const Location & rhs);													//	Overload for asignation
+		bool		operator==(const Location & rhs) const;												//	Overload for comparison
 		
 		//	Methods
-		std::string	get(const std::string & Key) const;
-		void		set(const std::string & Key, const std::string & Value);
-		void		add(const std::string & Key, const std::string & Value) { set(Key, Value); }
-		void		del(const std::string & Key);
-		void		clear();
+		std::string	get(const std::string & Key) const;													//	Get a Value from a Key
+		void		set(const std::string & Key, const std::string & Value);							//	Add or modify a Key - Value
+		void		add(const std::string & Key, const std::string & Value) { set(Key, Value); }		//	Alias for 'set'
+		void		del(const std::string & Key);														//	Delete a Key - Value
+		void		clear();																			//	Delete all Keys and his Values
 
 };

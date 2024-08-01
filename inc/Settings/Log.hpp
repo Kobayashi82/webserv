@@ -6,19 +6,52 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:32:23 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/07/31 22:08:37 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/01 23:41:54 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
+
 #include "Settings.hpp"
 
 class Log {
 
 	public:
 
-		//	Methods
-		static void log_access(const std::string & str, const VServer * VServ = NULL, bool Default = false);
-		static void log_error(const std::string & str, const VServer * VServ = NULL, bool Default = false);
+		static std::deque <std::string>	Access;
+		static std::deque <std::string>	Error;
+		static std::deque <std::string>	Both;
+
+		//	Memory Log																					//	This logs are kept in memory and lost once the server closes
+		
+		static std::string access(VServer * VServ = NULL, size_t rows = 200);							//	Return the logs in Access
+		static std::string error(VServer * VServ = NULL, size_t rows = 200);							//	Return the logs in Error
+		static std::string both(VServer * VServ = NULL, size_t rows = 200);								//	Return the logs in Both
+		static void clear();																			//	clear all logs in Access, Error and Both
+
+		//	Local Log																					//	This logs are saved to a file
+
+		static void	log_access(std::string str, VServer * VServ = NULL, bool Default = false);			//	Write to the Access log file
+		static void	log_error(std::string str, VServer * VServ = NULL, bool Default = false);			//	Write to the Error log file
 
 };
+
+//	There are 2 types of logs:
+//
+//	MEMORY LOGS
+//
+//		Memory logs are stored in variables and are lost when the server shuts down.
+//
+//		There are 3 main logs:
+//
+//			Access:     Requests, responses, and other information that are not errors.
+//			Error:      All errors, including server-specific errors.
+//			Both:       Both Access and Error logs.
+//
+//		In addition to these 3 main logs, each virtual server has the same 3 types of logs.
+//		This allows control over what happens in each virtual server.
+//
+//	LOCAL LOGS
+//
+//		Local logs are stored in files on the disk, and their location is obtained from the configuration file.
+//		It is necessary to specify the location of the log files, or they will not be saved.

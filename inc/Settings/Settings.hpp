@@ -6,25 +6,34 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:14:05 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/07/31 20:25:06 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/01 17:31:40 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
+
 #include "Colors.hpp"
 #include "VServer.hpp"
 #include "Timer.hpp"
 #include "Log.hpp"
-#include <unistd.h>
-#include <limits.h>
-#include <cstdio>
-#include <iostream>
-#include <cstring>			//	For strcmp()
-#include <sstream>
-#include <fstream>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <algorithm>
+
+#include <iostream>																						//	For standard input/output stream objects like std::cin, std::cout
+#include <sstream>																						//	For std::ostringstream to format strings
+#include <fstream>																						//	For file stream classes like std::ifstream, std::ofstream
+
+#include <algorithm>																					//	For algorithms like std::sort, std::find, etc.
+#include <vector>																						//	For the std::vector container
+#include <deque>																						//	For the std::deque container
+#include <map>																							//	For the std::map container
+
+#include <cstdio>																						//	For C-style input and output functions
+#include <cstring>																						//	For C-style string functions like strcmp()
+
+#include <unistd.h>																						//	For functions like sleep, fork, etc.
+#include <limits.h>																						//	For defining the characteristics of fundamental types
+#include <sys/stat.h>																					//	For data returned by the functions fstat(), lstat(), and stat()
+#include <sys/types.h>																					//	For data types used in system calls
+
 
 class Settings {
 

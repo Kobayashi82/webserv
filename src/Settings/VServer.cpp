@@ -6,11 +6,24 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 11:54:43 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/07/29 20:57:50 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/01 16:21:46 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "VServer.hpp"
+
+#pragma region Overloads
+
+	VServer &	VServer::operator=(const VServer & rhs) {
+        if (this != &rhs) {
+            vserver = rhs.vserver; location = rhs.location;
+            access = rhs.access; error = rhs.error; both = rhs.both;
+        } return (*this);
+    }
+
+	bool		VServer::operator==(const VServer & rhs) const { return (vserver == rhs.vserver && location == rhs.location); }
+
+#pragma endregion
 
 #pragma region VServer
 
@@ -47,7 +60,7 @@
 
         void VServer::clear() {
             for (std::vector<Location>::iterator it = location.begin(); it != location.end(); ++it) it->clear();
-            vserver.clear(); location.clear();
+            vserver.clear(); location.clear(); access.clear(); error.clear(); both.clear();
         }
 
     #pragma endregion

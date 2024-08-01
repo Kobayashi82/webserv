@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:27:58 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/07/31 22:26:57 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/01 18:03:24 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,7 +50,7 @@
 			while ((pos = path.find('/', pos)) != std::string::npos) {
 				dir = path.substr(0, pos++);
 				if (dir.empty()) continue;
-				if (mkdir(dir.c_str(), 0755) == -1) return (1);
+				if (mkdir(dir.c_str(), 0755) == -1 && errno != EEXIST) return (1);
 			} return (0);
 		}
 
@@ -90,8 +90,6 @@
 				outfile.close();
 				Settings::createPath(Settings::program_path + "www/html");
 				Log::log_error("Default configuration file created succesfully", NULL, true);
-			} else {
-				Log::log_error("Could not create the default configuration file", NULL, true);
 			}
 		}
 
@@ -267,12 +265,12 @@
 				std::getline(stream, secondPart); trim(secondPart);
 
 				if (!firstPart.empty() && firstPart[firstPart.size() - 1] == ';') firstPart.erase(firstPart.size() - 1);
-				if (!secondPart.empty() && secondPart[secondPart.size() - 1] != '{' && secondPart[secondPart.size() - 1] != '}' && secondPart[secondPart.size() - 1] != ';' && firstPart != "{" && firstPart != "}" && firstPart != "location") return (1);
+				if (!secondPart.empty() && secondPart[secondPart.size() - 1] != '{' && secondPart[secondPart.size() - 1] != '}' && secondPart[secondPart.size() - 1] != ';' && firstPart != "{" && firstPart != "}" && firstPart != "location") return (0);
 				if (!secondPart.empty() && secondPart[secondPart.size() - 1] == ';') secondPart.erase(secondPart.size() - 1);
 
 				if (brackets(firstPart) + brackets(secondPart) < 0) {
 					if (inLimit) inLimit = false;
-					if (Settings::bracket_lvl < 0) return (1);	//	Error
+					if (Settings::bracket_lvl < 0) return (0);
 					if (Settings::bracket_lvl <= current_bracket) { VServ.add(Loc); break; }
 				}
 
@@ -306,12 +304,12 @@
 					line_count++;
 					std::getline(stream, secondPart); trim(secondPart);
 					if (!firstPart.empty() && firstPart[firstPart.size() - 1] == ';') firstPart.erase(firstPart.size() - 1);
-					if (!secondPart.empty() && secondPart[secondPart.size() - 1] != '{' && secondPart[secondPart.size() - 1] != '}' && secondPart[secondPart.size() - 1] != ';' && firstPart != "{" && firstPart != "}" && firstPart != "location") return (1);
+					if (!secondPart.empty() && secondPart[secondPart.size() - 1] != '{' && secondPart[secondPart.size() - 1] != '}' && secondPart[secondPart.size() - 1] != ';' && firstPart != "{" && firstPart != "}" && firstPart != "location") return (0);
 					if (!secondPart.empty() && secondPart[secondPart.size() - 1] == ';') secondPart.erase(secondPart.size() - 1);
 				}
 
 				if (brackets(firstPart) + brackets(secondPart) < 0) {
-					if (Settings::bracket_lvl < 0) return (1);	//	Error
+					if (Settings::bracket_lvl < 0) return (0);
 					if (Settings::bracket_lvl <= current_bracket) { Settings::add(VServ); break; }
 				}
 
@@ -340,12 +338,12 @@
 				firstPart = "";
 			}
 
-			std::getline(stream, secondPart); trim(secondPart);
 
 			if (!firstPart.empty()) {
 				line_count++;
+				std::getline(stream, secondPart); trim(secondPart);
 				if (!firstPart.empty() && firstPart[firstPart.size() - 1] == ';') firstPart.erase(firstPart.size() - 1);
-				if (!secondPart.empty() && secondPart[secondPart.size() - 1] != '{' && secondPart[secondPart.size() - 1] != '}' && secondPart[secondPart.size() - 1] != ';' && firstPart != "{" && firstPart != "}" && firstPart != "server" && firstPart != "location") return (1);
+				if (!secondPart.empty() && secondPart[secondPart.size() - 1] != '{' && secondPart[secondPart.size() - 1] != '}' && secondPart[secondPart.size() - 1] != ';' && firstPart != "{" && firstPart != "}" && firstPart != "server" && firstPart != "location") return (0);
 				if (!secondPart.empty() && secondPart[secondPart.size() - 1] == ';') secondPart.erase(secondPart.size() - 1);
 			}
 
@@ -393,22 +391,21 @@
 						return ;
 					}
 				} infile.close();
-
 				if (Settings::bracket_lvl != 0) {
-					if (isDefault) {
-						if (!isRegen) {
-							remove(File.c_str());
-							Settings::clear();
-							Log::log_error("Default configuration file is corrupted, generating a default config file", NULL, true);
-							generate_config(File);
-							Settings::load(File, true);
-							return ;
-						} else {
-							Log::log_error("Could not create the default configuration file", NULL, true);
-						}
-					} else {
-						Log::log_error("Could not load the configuration file '" + File + "'");
-					}
+				// 	if (isDefault) {
+				// 		if (!isRegen) {
+				// 			remove(File.c_str());
+				// 			Settings::clear();
+				// 			Log::log_error("Default configuration file is corrupted, generating a default config file", NULL, true);
+				// 			generate_config(File);
+				// 			Settings::load(File, true);
+				// 			return ;
+				// 		} else {
+				// 			Log::log_error("Could not create the default configuration file", NULL, true);
+				// 		}
+				// 	} else {
+				// 		Log::log_error("Could not load the configuration file '" + File + "'");
+				// 	}
 					Settings::terminate = 1;
 				}
 
@@ -479,12 +476,12 @@
 				Settings::terminate = 1;
 			} else {
 				if (argc == 1) Settings::load(); else Settings::load(argv[1]);
-				// if (Settings::vserver.size() == 0) {
-				// 	if (Settings::loaded_ok) Log::log_error("There are no virtual servers in the configuration file", NULL, true);
-				// 	std::cout << std::endl << C "\tCould not start the server, check the file:" << std::endl << std::endl
-				// 			<< Y "\t" << Settings::program_path + "logs/error.log" NC << std::endl << std::endl;
-				// 	Settings::terminate = 1;
-				// }
+				if (Settings::vserver.size() == 0) {
+					if (Settings::loaded_ok) Log::log_error("There are no virtual servers in the configuration file", NULL, true);
+					std::cout << std::endl << C "\tCould not start the server, check the file:" << std::endl << std::endl
+							<< Y "\t" << Settings::program_path + "logs/error.log" NC << std::endl << std::endl;
+					Settings::terminate = 1;
+				}
 			}
 		}
 

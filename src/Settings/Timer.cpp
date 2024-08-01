@@ -6,67 +6,78 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:17:42 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/07/29 20:48:50 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/01 17:04:49 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Timer.hpp"
 
-#pragma region Elapsed Seconds
+#pragma region Overloads
 
-    //	Get the elapsed time in seconds from the start of the program
-    double Timer::elapsed_seconds() const { return static_cast<double>(std::time(0) - start_time); }
-
-#pragma endregion
-
-#pragma region Elapsed Time
-
-    //	Get the elapsed time in HH:MM:SS format
-    std::string Timer::elapsed_time() const {
-        int elapsed = static_cast<int>(std::time(0) - start_time);
-
-        int hours = elapsed / 3600;
-        int minutes = (elapsed % 3600) / 60;
-        int seconds = elapsed % 60;
-
-        std::ostringstream oss;
-        oss << std::setw(2) << std::setfill('0') << hours << ":"
-            << std::setw(2) << std::setfill('0') << minutes << ":"
-            << std::setw(2) << std::setfill('0') << seconds;
-        return (oss.str());
-    }
+	Timer &		Timer::operator=(const Timer & rhs) { if (this != &rhs) { start_time = rhs.start_time; } return (*this); }
+	bool		Timer::operator==(const Timer & rhs) const { return (start_time == rhs.start_time); }
 
 #pragma endregion
 
-#pragma region Current Time
+#pragma region Timer
 
-    //	Get the current time in HH:MM:SS format
-    std::string Timer::current_time() const {
-        std::time_t now = std::time(0);
-        std::tm * local_time = std::localtime(&now);
+    #pragma region Elapsed Seconds
 
-        int hours = local_time->tm_hour;
-        int minutes = local_time->tm_min;
-        int seconds = local_time->tm_sec;
+        //	Get the elapsed time in seconds from the start of the program
+        double Timer::elapsed_seconds() const { return static_cast<double>(std::time(0) - start_time); }
 
-        std::ostringstream oss;
-        oss << std::setw(2) << std::setfill('0') << hours << ":"
-            << std::setw(2) << std::setfill('0') << minutes << ":"
-            << std::setw(2) << std::setfill('0') << seconds;
-        return (oss.str());
-    }
+    #pragma endregion
 
-#pragma endregion
+    #pragma region Elapsed Time
 
-#pragma region Current Date
+        //	Get the elapsed time in HH:MM:SS format
+        std::string Timer::elapsed_time() const {
+            int elapsed = static_cast<int>(std::time(0) - start_time);
 
-    //	Get the current date in DD:MM:YYYY format
-    std::string Timer::current_date() const {
-        std::time_t now = std::time(0);
-        std::tm* local_time = std::localtime(&now);
-        char buffer[20]; std::strftime(buffer, sizeof(buffer), "%d/%b/%Y", local_time);
+            int hours = elapsed / 3600;
+            int minutes = (elapsed % 3600) / 60;
+            int seconds = elapsed % 60;
 
-        return (std::string(buffer));
-    }
+            std::ostringstream oss;
+            oss << std::setw(2) << std::setfill('0') << hours << ":"
+                << std::setw(2) << std::setfill('0') << minutes << ":"
+                << std::setw(2) << std::setfill('0') << seconds;
+            return (oss.str());
+        }
+
+    #pragma endregion
+
+    #pragma region Current Time
+
+        //	Get the current time in HH:MM:SS format
+        std::string Timer::current_time() const {
+            std::time_t now = std::time(0);
+            std::tm * local_time = std::localtime(&now);
+
+            int hours = local_time->tm_hour;
+            int minutes = local_time->tm_min;
+            int seconds = local_time->tm_sec;
+
+            std::ostringstream oss;
+            oss << std::setw(2) << std::setfill('0') << hours << ":"
+                << std::setw(2) << std::setfill('0') << minutes << ":"
+                << std::setw(2) << std::setfill('0') << seconds;
+            return (oss.str());
+        }
+
+    #pragma endregion
+
+    #pragma region Current Date
+
+        //	Get the current date in DD:MM:YYYY format
+        std::string Timer::current_date() const {
+            std::time_t now = std::time(0);
+            std::tm* local_time = std::localtime(&now);
+            char buffer[20]; std::strftime(buffer, sizeof(buffer), "%d/%m/%Y", local_time);
+
+            return (std::string(buffer));
+        }
+
+    #pragma endregion
 
 #pragma endregion
