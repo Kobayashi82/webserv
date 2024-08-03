@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 11:53:48 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/01 17:29:05 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/03 17:46:30 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,6 +30,7 @@ class VServer {
 		std::deque <std::string>			access;														//	Memory log for Access
 		std::deque <std::string>			error;														//	Memory log for Error
 		std::deque <std::string>			both;														//	Memory log for Both
+		bool								status;														//	Status of the VServer (Started/Stoped)
 		
 		//	Constructors
 		VServer() {}																					//	Default constructor

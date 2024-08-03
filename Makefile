@@ -6,7 +6,7 @@
 #    By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/02/20 17:51:39 by vzurera-          #+#    #+#              #
-#    Updated: 2024/07/29 15:40:13 by vzurera-         ###   ########.fr        #
+#    Updated: 2024/08/03 14:14:24 by vzurera-         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -58,7 +58,7 @@ OBJ_DIR				= ./build/obj/
 
 NAME	=	webserv
 SRCS	=	Settings/Settings.cpp Settings/VServer.cpp Settings/Location.cpp Settings/Timer.cpp Settings/Log.cpp						\
-			Display/Display.cpp																											\
+			Display/Display.cpp Display/Monitor.cpp																						\
 			main.cpp
 
 # ────────────────────────────────────────────────────────── #

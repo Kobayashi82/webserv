@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:27:58 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/01 18:03:24 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/03 19:29:34 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,10 @@
 	bool 								Settings::check_only = false;
 	bool 								Settings::loaded_ok = false;
 	bool 								Settings::errors = false;
+	bool 								Settings::status = false;
 	Timer 								Settings::timer;
+	size_t								Settings::current_vserver = 0;
+
 	static int							line_count = 0;
 
 #pragma endregion
@@ -310,7 +313,7 @@
 
 				if (brackets(firstPart) + brackets(secondPart) < 0) {
 					if (Settings::bracket_lvl < 0) return (0);
-					if (Settings::bracket_lvl <= current_bracket) { Settings::add(VServ); break; }
+					if (Settings::bracket_lvl <= current_bracket) { VServ.status = false; Settings::add(VServ); break; }
 				}
 
 				if (firstPart.empty()) continue;
@@ -478,9 +481,9 @@
 				if (argc == 1) Settings::load(); else Settings::load(argv[1]);
 				if (Settings::vserver.size() == 0) {
 					if (Settings::loaded_ok) Log::log_error("There are no virtual servers in the configuration file", NULL, true);
-					std::cout << std::endl << C "\tCould not start the server, check the file:" << std::endl << std::endl
-							<< Y "\t" << Settings::program_path + "logs/error.log" NC << std::endl << std::endl;
-					Settings::terminate = 1;
+				// 	std::cout << std::endl << C "\tCould not start the server, check the file:" << std::endl << std::endl
+				// 			<< Y "\t" << Settings::program_path + "logs/error.log" NC << std::endl << std::endl;
+				// 	Settings::terminate = 1;
 				}
 			}
 		}

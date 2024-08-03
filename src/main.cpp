@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 14:30:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/02 01:04:58 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/03 19:53:43 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,24 +38,25 @@
 int main(int argc, char **argv) {
     Settings::load_args(argc, argv); if (Settings::terminate != -1) return (Settings::terminate);
 
-    //setTerminalSize(30, 100);
     Display::enableRawMode();
     Display::Output();
     while (Settings::terminate == -1) {
         Display::Input(); usleep(10000);
     } Display::disableRawMode();
 
-    Settings::print();
-    Log::log_access("Hola caracola", &Settings::vserver[0]);
-    std::cout << std::endl << G "VSERVER (" << Settings::vserver[0].get("server_name") << ")" NC << std::endl << std::endl;
-    std::cout << Log::both(&Settings::vserver[0]) << std::endl;
+    // Log::log_access("Hola caracola", &Settings::vserver[0]);
+    // std::cout << std::endl << G "VSERVER (" << Settings::vserver[0].get("server_name") << ")" NC << std::endl << std::endl;
+    // std::cout << Log::both(&Settings::vserver[0]) << std::endl;
 
-    std::cout << std::endl << G "ACCESS " NC << std::endl << std::endl;
-    std::cout << Log::access() << std::endl;
-    std::cout << std::endl << RD "ERROR " NC << std::endl << std::endl;
-    std::cout << Log::error() << std::endl;
-    std::cout << std::endl << G "ACCESS" NC "/" RD "ERROR " NC << std::endl << std::endl;
-    std::cout << Log::both() << std::endl;
+    // std::cout << std::endl << G "ACCESS " NC << std::endl << std::endl;
+    // std::cout << Log::access() << std::endl;
+    // std::cout << std::endl << RD "ERROR " NC << std::endl << std::endl;
+    // std::cout << Log::error() << std::endl;
+    // std::cout << std::endl << G "ACCESS" NC "/" RD "ERROR " NC << std::endl << std::endl;
+    // std::cout << Log::both() << std::endl;
+	Log::log_access("WebServ 1.0 closed successfully");
+	Display::Output();
+    Settings::print();
     Settings::clear();
     return (Settings::terminate);
 }
