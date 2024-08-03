@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/14 14:37:32 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/03 20:14:35 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/04 00:45:10 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,7 @@
 	int						Display::rows = 0;
 	int						Display::log_rows = 0;
 	bool					Display::drawing = false;
+	bool					Display::redraw = false;
 
 	static struct termios	orig_termios;
 	static bool				signalRegistered = false;
@@ -83,11 +84,11 @@
 		raise(SIGSTOP);
 	}
 
-     static void resumeHandler(int signum) {
-         (void) signum;
-         Display::enableRawMode();
-         Display::Output();
-     }
+    static void resumeHandler(int signum) {
+        (void) signum;
+        Display::enableRawMode();
+        Display::Output();
+    }
 
 	static void quitHandler(int signum) {
      	Display::disableRawMode();
@@ -109,7 +110,6 @@
 				std::signal(SIGQUIT, quitHandler);
 				signalRegistered = true;
 			}
-			std::cout << CHIDE CS;
 			tcgetattr(STDIN_FILENO, &orig_termios);
 			struct termios raw = orig_termios;
 			raw.c_lflag &= ~(ECHO | ICANON);
@@ -186,8 +186,6 @@
 		//	├─┴─┤  ▒
 		//	└───┘
 
-		// 11 chars
-
 		void Display::Output() {
 			if (Display::drawing) return;
 			Display::drawing = true;
@@ -202,10 +200,10 @@
 			std::ostringstream ss; ss << Settings::vserver.size();
 			std::string temp = ss.str();
 			
-			oss << CS CUU;
+			oss << CHIDE CS CUU;
 			oss << C "┌─────────────────┬"; setLine(C, "─", (cols + 2) - 18, oss); oss << "┐" NC << std::endl; row++;
 			oss << C "│ V-Servers: " G << temp; setLine(C, " ", 5 - temp.size(), oss); oss << C "│"; setPadding("WEBSERV 1.0", Status, " ", (cols + 2) - 20, 1, oss); oss << RD "X " C "│" NC << std::endl; row++;
-			oss << C "├─────────────────┤"; setLine(Status, "▄", (cols + 2) - 18, oss); oss << C "│" NC; row++;
+			oss << C "├─────────────────┤"; setLine(Status, "▄", (cols + 2) - 18, oss); oss << C "│" NC << std::endl; row++;
 
 			if (Settings::vserver.size() > 0 && Settings::vserver[Settings::current_vserver].status) Status = G; else Status = RD;
 			if (Settings::status == false) Status = RD;
@@ -232,19 +230,21 @@
 			setPadding(temp, Status, " ", (cols + 2) - 27, 1, oss);
 			oss << "    " Y << RArrow << C "│" NC << std::endl; row++;
 
-			oss << C "├─────────────────┴"; setLine(C, "─", (cols + 2) - 18, oss); oss << "┤" NC; row++;
+			oss << C "├─────────────────┴"; setLine(C, "─", (cols + 2) - 18, oss); oss << "┤" NC << std::endl; row++;
 
 			size_t i = 0;
 			if (Log::Both.size() > static_cast<size_t>(Display::log_rows)) i = Log::Both.size() - Display::log_rows;
-			while (++row < w.ws_row - 3) {
+			while (++row < Display::rows - 3) {
 				std::string temp = ""; std::string isRD = "";
 				if (i < Log::Both.size()) temp = Log::Both[i++];
+				if (temp.empty()) { oss << C "│"; setLine(C, " ", cols + 2, oss); oss << "│" NC << std::endl; continue; }
 				if (temp.find(RD) == 0) isRD = RD;
 				if (temp.size() - isRD.size() > static_cast<size_t>(cols + 2)) temp = temp.substr(0, isRD.size() + cols - 1) + "...";
-				int length = (cols + 2) - (temp.size() - isRD.size());
+				int length = (cols + 2) - static_cast<int>(temp.size());
 				if (length < 0) length = 0;
 				oss << C "│" NC << temp;
-				setLine(C, " ", length, oss); oss << "│" NC << std::endl;
+				setLine(C, " ", length, oss);
+				oss << "│" NC << std::endl;
 			}
 
 			int	length = (cols + 2) - 9;
@@ -269,6 +269,7 @@
 
 			std::cout << oss.str();
 			Display::drawing = false;
+			Display::redraw = false;
 		}
 
 	#pragma endregion

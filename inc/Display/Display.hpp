@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 11:59:38 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/03 19:55:17 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/03 23:19:14 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,7 @@ class Display {
 		static int	rows;
 		static int	log_rows;
 		static bool	drawing;
+		static bool	redraw;
 
 		static void	Input();
 		static void	Output();
