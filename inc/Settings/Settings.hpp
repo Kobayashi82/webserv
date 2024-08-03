@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:14:05 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/03 17:41:49 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/04 00:58:09 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,7 +51,7 @@ class Settings {
 		static bool									errors;
 		static bool									status;
 		static Timer								timer;
-		static size_t								current_vserver;
+		static int									current_vserver;
 
 		//	Load
 		static void			load();

@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 11:53:48 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/03 17:46:30 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/04 00:54:41 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,6 +47,7 @@ class VServer {
 		void		add(const std::string & Key, const std::string & Value) { set(Key, Value); }		//	Alias for 'set'
 		void		del(const std::string & Key);														//	Delete a Key - Value
 		void		clear();																			//	Delete all Keys and his Values
+		void		clear_logs();																		//	Delete all logs entries
 
 		void		set(const Location & Loc);															//	Add or modify a Location
 		void		add(const Location & Loc) { set(Loc); }												//	Alias for 'set'

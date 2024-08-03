@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:27:58 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/03 19:29:34 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/04 00:58:25 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,7 @@
 	bool 								Settings::errors = false;
 	bool 								Settings::status = false;
 	Timer 								Settings::timer;
-	size_t								Settings::current_vserver = 0;
+	int									Settings::current_vserver = -1;
 
 	static int							line_count = 0;
 

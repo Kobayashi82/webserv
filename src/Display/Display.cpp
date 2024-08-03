@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/14 14:37:32 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/04 00:45:10 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/04 01:39:29 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -143,16 +143,16 @@
                 if (read(STDIN_FILENO, &seq[0], 1) == 1 && read(STDIN_FILENO, &seq[1], 1) == 1) {
                     if (seq[0] == '[') {
                         if (seq[1] == 'D') {															//	Right arrow
-							if (Settings::current_vserver == Settings::vserver.size() - 1)
-								Settings::current_vserver = 0;
-							else
-								Settings::current_vserver++;
-							Output();
-                        } else if (seq[1] == 'C') {														//	Left arrow
-							if (Settings::current_vserver == 0)
-								Settings::current_vserver = Settings::vserver.size() - 1;
+							if (Settings::current_vserver == -1)
+								Settings::current_vserver = static_cast<int>(Settings::vserver.size() - 1);
 							else
 								Settings::current_vserver--;
+							Output();
+                        } else if (seq[1] == 'C') {														//	Left arrow
+							if (Settings::current_vserver == static_cast<int>(Settings::vserver.size() - 1))
+								Settings::current_vserver = -1;
+							else
+								Settings::current_vserver++;
 							Output();
                         }
                     }
@@ -165,13 +165,25 @@
 					Log::log_access("WebServ 1.0 started");
 				Settings::status = !Settings::status; Output();
 			}
-			if (c == 'v' && Settings::status && Settings::vserver.size() > 0) {							//	(V)server start
+			if (c == 'v' && Settings::status && Settings::vserver.size() > 0 && Settings::current_vserver != -1) {							//	(V)server start
 				if (Settings::vserver[Settings::current_vserver].status)
 					Log::log_access("VServer stoped");
 				else
 					Log::log_access("VServer started");
 				Settings::vserver[Settings::current_vserver].status = !Settings::vserver[Settings::current_vserver].status; Output();
 			}
+			if (c == 'c') {																				//	(C)lear log
+				if (Settings::current_vserver == -1)
+					Log::clear();
+				else if (Settings::vserver.size() > 0)
+					Settings::vserver[Settings::current_vserver].clear_logs();
+				Output();
+			}
+			if (c == 'r') {																				//	(R)eset terminal
+				std::cout << CB CHIDE CS CUU;
+				Output();
+			}
+
 		}
 
 	#pragma endregion
@@ -190,7 +202,7 @@
 			if (Display::drawing) return;
 			Display::drawing = true;
 			std::ostringstream oss; winsize w; ioctl(0, TIOCGWINSZ, &w); int cols = w.ws_col - 4, row = 0;
-			Display::cols = cols; Display::rows = w.ws_row; Display::log_rows = Display::rows - 5;
+			Display::cols = cols; Display::rows = w.ws_row; Display::log_rows = Display::rows - 5; bool some = false;
 			std::string LArrow = "◄ "; std::string RArrow = "► ";
 			std::string Status;
 
@@ -205,7 +217,14 @@
 			oss << C "│ V-Servers: " G << temp; setLine(C, " ", 5 - temp.size(), oss); oss << C "│"; setPadding("WEBSERV 1.0", Status, " ", (cols + 2) - 20, 1, oss); oss << RD "X " C "│" NC << std::endl; row++;
 			oss << C "├─────────────────┤"; setLine(Status, "▄", (cols + 2) - 18, oss); oss << C "│" NC << std::endl; row++;
 
-			if (Settings::vserver.size() > 0 && Settings::vserver[Settings::current_vserver].status) Status = G; else Status = RD;
+			if (Settings::vserver.size() > 0 && Settings::current_vserver != -1 && Settings::vserver[Settings::current_vserver].status) Status = G;
+			else if (Settings::vserver.size() > 0 && Settings::current_vserver == -1) {
+				Status = RD;
+				for (size_t i = 0; i < Settings::vserver.size(); ++i) {
+					if (Settings::vserver[i].status) Status = G;
+					else if (!Settings::vserver[i].status) some = true;
+				}
+			} else Status = RD;
 			if (Settings::status == false) Status = RD;
 
 			temp = monitor.get_memory_str();
@@ -215,16 +234,23 @@
 			oss << C "│ CPU: " G << temp; setLine(C, " ", 11 - temp.size(), oss); oss << C "│ " Y << LArrow;
 
 			ss.str("");
-			if (Settings::vserver.size() > 0) {
-				if ((Settings::vserver[Settings::current_vserver].get("server_name").empty() || Settings::vserver[Settings::current_vserver].get("server_name") == "_") && Settings::current_vserver == 0) temp = "(0) Default";
+			if (Settings::vserver.size() > 0 && Settings::current_vserver != -1) {
+				if ((Settings::vserver[Settings::current_vserver].get("server_name").empty() || Settings::vserver[Settings::current_vserver].get("server_name") == "_") && Settings::current_vserver == 0) temp = "(1) Default";
 				else if (Settings::vserver[Settings::current_vserver].get("server_name").empty()) {
-					ss << Settings::current_vserver;
+					ss << Settings::current_vserver + 1;
 					temp = "(" + ss.str() + ") V-Server";
 				} else {
-					ss << Settings::current_vserver;
+					ss << Settings::current_vserver + 1;
 					temp = "(" + ss.str() + ") " + Settings::vserver[Settings::current_vserver].get("server_name");
 				}
-			} else
+			} else if (Status == RD)
+				temp = "Virtual servers offline";
+			else if (Settings::vserver.size() > 0 && Settings::current_vserver == -1)
+				if (some)
+					temp = "Some virtual servers";
+				else
+					temp = "All virtual servers";
+			else
 				temp = "No virtual servers available";
 
 			setPadding(temp, Status, " ", (cols + 2) - 27, 1, oss);
@@ -240,31 +266,31 @@
 				if (temp.empty()) { oss << C "│"; setLine(C, " ", cols + 2, oss); oss << "│" NC << std::endl; continue; }
 				if (temp.find(RD) == 0) isRD = RD;
 				if (temp.size() - isRD.size() > static_cast<size_t>(cols + 2)) temp = temp.substr(0, isRD.size() + cols - 1) + "...";
-				int length = (cols + 2) - static_cast<int>(temp.size());
+				int length = (cols + 2) - static_cast<int>(temp.size() - isRD.size());
 				if (length < 0) length = 0;
 				oss << C "│" NC << temp;
 				setLine(C, " ", length, oss);
 				oss << "│" NC << std::endl;
 			}
 
-			int	length = (cols + 2) - 9;
-			if (Settings::vserver.size() > 0) {
-				oss << C "├────────┬───────────┬───────────┬"; setLine(C, "─", (cols + 2) - 33, oss); oss << "┤" NC << std::endl; row++;
-				oss << C "│ " Y "(" G "E" Y ")xit " C "│" << Y " (" G "W" Y ")ebServ " C "│ " Y "(" G "V" Y ")server " C "│";
-				length = (cols + 2) - 33;
+			int	length = (cols + 2) - 23;
+			if (Settings::vserver.size() > 0 && Settings::current_vserver != -1) {
+				oss << C "├────────┬───────────┬───────────┬─────────────┬"; setLine(C, "─", (cols + 2) - 47, oss); oss << "┤" NC << std::endl; row++;
+				oss << C "│ " Y "(" G "E" Y ")xit " C "│" << Y " (" G "W" Y ")ebServ " C "│ " Y "(" G "V" Y ")server " C "│ " Y "(" G "C" Y ")lear log " C "│";
+				length = (cols + 2) - 47;
 			} else {
-				oss << C "├────────┬"; setLine(C, "─", (cols + 2) - 9, oss); oss << "┤" NC << std::endl; row++;
-				oss << C "│ " Y "(" G "E" Y ")xit " C "│";
+				oss << C "├────────┬─────────────┬"; setLine(C, "─", (cols + 2) - 23, oss); oss << "┤" NC << std::endl; row++;
+				oss << C "│ " Y "(" G "E" Y ")xit " C "│ " Y "(" G "C" Y ")lear log " C "│";
 			}
 			if (false) {
 				setLine(G, "▒", (20 * length) / 100, oss); setLine(W, "▒", (80 * length) / 100, oss); oss << C "│" NC << std::endl; row++;
 			} else {
 				setLine(NC, " ", length, oss); oss << C "│" NC << std::endl; row++;
 			}
-			if (Settings::vserver.size() > 0) {
-				oss << C "└────────┴───────────┴───────────┴"; setLine(C, "─", (cols + 2) - 33, oss); oss << "┘" NC << std::endl; row++;
+			if (Settings::vserver.size() > 0 && Settings::current_vserver != -1) {
+				oss << C "└────────┴───────────┴───────────┴─────────────┴"; setLine(C, "─", (cols + 2) - 47, oss); oss << "┘" NC << std::endl; row++;
 			} else {
-				oss << C "└────────┴"; setLine(C, "─", (cols + 2) - 9, oss); oss << "┘" NC << std::endl; row++;
+				oss << C "└────────┴─────────────┴"; setLine(C, "─", (cols + 2) - 23, oss); oss << "┘" NC << std::endl; row++;
 			}
 
 			std::cout << oss.str();
