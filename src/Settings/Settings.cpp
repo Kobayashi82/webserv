@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:27:58 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/04 00:58:25 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/05 01:37:58 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,10 @@
 	std::vector <VServer> 				Settings::vserver;
 	std::string							Settings::program_path = Settings::programPath();
 	std::string							Settings::config_path = Settings::programPath() + "conf/";
+	std::vector <std::string>			Settings::config;
+	size_t								Settings::config_index = 0;										//	Current index of the settings
+	size_t								Settings::log_index = 0;										//	Current index of main log
+	bool								Settings::config_displayed = false;								//	Is the log or the settings displayed
 	int 								Settings::terminate = -1;
 	int									Settings::bracket_lvl = 0;
 	bool 								Settings::check_only = false;
@@ -211,7 +215,7 @@
 
 	#pragma endregion
 
-	#pragma region Parse Errors
+	#pragma region Parse Error Codes
 
 		static void parse_errors(const std::string & firstPart, const std::string & secondPart) {
 			std::istringstream stream(secondPart);
@@ -223,19 +227,6 @@
 
 			for (std::vector<std::string>::iterator it = errors.begin(); it != errors.end(); ++it) {
 				Settings::add(firstPart + " " + *it, filePath);
-			}
-		}
-
-		static void parse_errors(const std::string & firstPart, const std::string & secondPart, Location & Loc) {
-			std::istringstream stream(secondPart);
-			std::vector<std::string> errors;
-			std::string error;
-
-			while (stream >> error) errors.push_back(error);
-			std::string filePath = errors.back(); errors.pop_back();
-
-			for (std::vector<std::string>::iterator it = errors.begin(); it != errors.end(); ++it) {
-				Loc.add(firstPart + " " + *it, filePath);
 			}
 		}
 
@@ -252,21 +243,39 @@
 			}
 		}
 
+		static void parse_errors(const std::string & firstPart, const std::string & secondPart, Location & Loc) {
+			std::istringstream stream(secondPart);
+			std::vector<std::string> errors;
+			std::string error;
+
+			while (stream >> error) errors.push_back(error);
+			std::string filePath = errors.back(); errors.pop_back();
+
+			for (std::vector<std::string>::iterator it = errors.begin(); it != errors.end(); ++it) {
+				Loc.add(firstPart + " " + *it, filePath);
+			}
+		}
+
 	#pragma endregion
 
 	#pragma region Parse Location
 
 		static int parser_location(std::ifstream & infile, std::string & line, VServer & VServ) {
-			bool inLimit = false; Location Loc; int current_bracket = Settings::bracket_lvl;
+			bool inLimit = false; Location Loc; int current_bracket = Settings::bracket_lvl; std::string tmp_line; std::string orig_line = line;
 			do {
-				line_count++;
-				trim(line); if (line.empty()) continue;
+				line_count++; tmp_line = line;
+				trim(line); if (line.empty()) {
+					VServ.config.push_back(line);
+					Settings::config.push_back(line);
+					continue;
+				}
 				std::string firstPart, secondPart; std::istringstream stream(line);
 
 				stream >> firstPart; trim(firstPart); toLower(firstPart);
 
 				std::getline(stream, secondPart); trim(secondPart);
 
+				if (tmp_line != orig_line) { VServ.config.push_back(tmp_line); Settings::config.push_back(tmp_line); }
 				if (!firstPart.empty() && firstPart[firstPart.size() - 1] == ';') firstPart.erase(firstPart.size() - 1);
 				if (!secondPart.empty() && secondPart[secondPart.size() - 1] != '{' && secondPart[secondPart.size() - 1] != '}' && secondPart[secondPart.size() - 1] != ';' && firstPart != "{" && firstPart != "}" && firstPart != "location") return (0);
 				if (!secondPart.empty() && secondPart[secondPart.size() - 1] == ';') secondPart.erase(secondPart.size() - 1);
@@ -291,14 +300,20 @@
 	#pragma region Parse VServer
 
 		static int parser_vserver(std::ifstream & infile, std::string & line) {
-			VServer VServ; int current_bracket = Settings::bracket_lvl;
+			VServer VServ; int current_bracket = Settings::bracket_lvl; std::string tmp_line; std::string orig_line = line;
 			do {
-				trim(line); if (line.empty()) { line_count++; continue; }
+				tmp_line = line;
+				trim(line); if (line.empty()) {
+					VServ.config.push_back(tmp_line);
+					Settings::config.push_back(tmp_line);
+					line_count++; continue;
+				}
 				std::string firstPart, secondPart; std::istringstream stream(line);
 				
 				stream >> firstPart; trim(firstPart); toLower(firstPart);
 
 				if (firstPart == "location") {
+					VServ.config.push_back(tmp_line); Settings::config.push_back(tmp_line);
 					parser_location(infile, line, VServ);
 					firstPart = "";
 				}
@@ -313,9 +328,10 @@
 
 				if (brackets(firstPart) + brackets(secondPart) < 0) {
 					if (Settings::bracket_lvl < 0) return (0);
-					if (Settings::bracket_lvl <= current_bracket) { VServ.status = false; Settings::add(VServ); break; }
+					if (Settings::bracket_lvl <= current_bracket) { Settings::add(VServ); break; }
 				}
 
+				if (!firstPart.empty() && tmp_line != orig_line) { VServ.config.push_back(tmp_line); Settings::config.push_back(tmp_line); }
 				if (firstPart.empty()) continue;
 				if (firstPart == "client_max_body_size") parse_body_size(secondPart, line);
 				if (firstPart == "error_page") parse_errors(firstPart, secondPart, VServ);
@@ -331,6 +347,7 @@
 
 		static int parse_line(std::ifstream & infile, std::string & line) {
 			std::string firstPart, secondPart;
+			Settings::config.push_back(line);
 			trim(line); if (line.empty()) { line_count++; return (0); }
 			std::istringstream stream(line);
 
@@ -340,7 +357,6 @@
 				parser_vserver(infile, line);
 				firstPart = "";
 			}
-
 
 			if (!firstPart.empty()) {
 				line_count++;
@@ -513,16 +529,17 @@
 
 	void Settings::clear() {
 		for (std::vector<VServer>::iterator it = vserver.begin(); it != vserver.end(); ++it) it->clear();
-		global.clear(); vserver.clear(); Settings::bracket_lvl = 0; Settings::loaded_ok = false;
+		global.clear(); vserver.clear(); config.clear(); Settings::bracket_lvl = 0; Settings::loaded_ok = false;
 	}
 
 #pragma endregion
 
 #pragma region VServer
 
-	void Settings::set(const VServer & VServ) {
+	void Settings::set(VServer & VServ) {
 		std::vector<VServer>::iterator it = std::find(vserver.begin(), vserver.end(), VServ);
-		if (it == vserver.end()) vserver.push_back(VServ);
+		if (it == vserver.end()) { VServ.status = false; VServ.config_displayed = false; VServ.log_index = 0; VServ.config_index = 0; vserver.push_back(VServ); }
+		else *it = VServ;
 	}
 
 	void Settings::del(const VServer & VServ) {

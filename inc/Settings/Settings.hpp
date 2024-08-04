@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:14:05 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/04 00:58:09 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/05 00:38:54 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,6 +44,10 @@ class Settings {
 		static std::vector <VServer>				vserver;
 		static std::string							program_path;
 		static std::string							config_path;
+		static std::vector <std::string>			config;												//	Settings in a vector
+		static bool									config_displayed;									//	Is the log or the settings displayed
+		static size_t								config_index;										//	Current index of the settings
+		static size_t								log_index;											//	Current index of main log
 		static int									terminate;
 		static int									bracket_lvl;
 		static bool									check_only;
@@ -66,8 +70,8 @@ class Settings {
 		static void			clear();
 
 		//	VServer
-		static void			set(const VServer & VServ);
-		static void			add(const VServer & VServ) { set(VServ); }
+		static void			set(VServer & VServ);
+		static void			add(VServer & VServ) { set(VServ); }
 		static void			del(const VServer & VServ);
 
 		//	Utils

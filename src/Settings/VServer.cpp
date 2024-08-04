@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 11:54:43 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/04 00:54:45 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/05 01:44:23 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,8 @@
 	VServer &	VServer::operator=(const VServer & rhs) {
         if (this != &rhs) {
             vserver = rhs.vserver; location = rhs.location;
-            access = rhs.access; error = rhs.error; both = rhs.both;
+            access = rhs.access; error = rhs.error; both = rhs.both; config = rhs.config;
+            config_displayed = rhs.config_displayed; config_index = rhs.config_index; log_index = rhs.log_index; status = rhs.status;
         } return (*this);
     }
 
@@ -60,7 +61,7 @@
 
         void VServer::clear() {
             for (std::vector<Location>::iterator it = location.begin(); it != location.end(); ++it) it->clear();
-            vserver.clear(); location.clear(); access.clear(); error.clear(); both.clear();
+            vserver.clear(); location.clear(); config.clear(); access.clear(); error.clear(); both.clear();
         }
 
         void VServer::clear_logs() { access.clear(); error.clear(); both.clear(); }
