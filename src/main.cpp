@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 14:30:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/05 01:31:40 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/05 18:19:06 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,7 +55,7 @@ int main(int argc, char **argv) {
     // std::cout << std::endl << G "ACCESS" NC "/" RD "ERROR " NC << std::endl << std::endl;
     // std::cout << Log::both() << std::endl;
 	Log::log_access("WebServ 1.0 closed successfully");
-	Display::Output();
+	Display::Output(); std::cout << CSHOW CDD CLL;
     Settings::clear();
     return (Settings::terminate);
 }

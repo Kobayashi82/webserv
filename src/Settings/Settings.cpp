@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:27:58 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/05 01:37:58 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/05 20:08:11 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -328,7 +328,7 @@
 
 				if (brackets(firstPart) + brackets(secondPart) < 0) {
 					if (Settings::bracket_lvl < 0) return (0);
-					if (Settings::bracket_lvl <= current_bracket) { Settings::add(VServ); break; }
+					if (Settings::bracket_lvl <= current_bracket) { Settings::config.push_back(tmp_line); Settings::add(VServ); break; }
 				}
 
 				if (!firstPart.empty() && tmp_line != orig_line) { VServ.config.push_back(tmp_line); Settings::config.push_back(tmp_line); }
