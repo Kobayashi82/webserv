@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:59:03 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/04 00:19:00 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/05 23:30:28 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 
 #define NC   	"\033[0m"		 						//	Default
 #define RD		"\033[1;31m"	 						//	Bold Red
-#define G     	"\033[1;32m"	 						//	Bold Gree
+#define G     	"\033[1;32m"	 						//	Bold Green
 #define Y     	"\033[1;33m"	 						//	Bold Yellow
 #define B     	"\033[1;34m"	 						//	Bold Blue
 #define M     	"\033[1;35m"	 						//	Bold Magenta

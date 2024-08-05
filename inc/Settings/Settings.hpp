@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:14:05 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/05 00:38:54 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/05 23:07:26 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,6 +48,7 @@ class Settings {
 		static bool									config_displayed;									//	Is the log or the settings displayed
 		static size_t								config_index;										//	Current index of the settings
 		static size_t								log_index;											//	Current index of main log
+		static bool									autolog;											//	Auto scroll logs
 		static int									terminate;
 		static int									bracket_lvl;
 		static bool									check_only;

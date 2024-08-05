@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:32:38 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/02 01:06:51 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/05 22:25:22 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -114,7 +114,6 @@
 		void Log::clear() { Access.clear(); Error.clear(); Both.clear(); }
 
 	#pragma endregion
-
 
 #pragma endregion
 

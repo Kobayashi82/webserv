@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 11:54:43 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/05 01:44:23 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/05 23:09:18 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@
         if (this != &rhs) {
             vserver = rhs.vserver; location = rhs.location;
             access = rhs.access; error = rhs.error; both = rhs.both; config = rhs.config;
-            config_displayed = rhs.config_displayed; config_index = rhs.config_index; log_index = rhs.log_index; status = rhs.status;
+            config_displayed = rhs.config_displayed; config_index = rhs.config_index; log_index = rhs.log_index; status = rhs.status; autolog = rhs.autolog;
         } return (*this);
     }
 

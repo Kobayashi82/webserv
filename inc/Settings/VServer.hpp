@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 11:53:48 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/05 00:37:38 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/05 23:08:48 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,6 +34,7 @@ class VServer {
 		bool								config_displayed;											//	Is the log or the settings displayed
 		size_t								config_index;												//	Current index of the settings
 		size_t								log_index;													//	Current index of the log
+		bool								autolog;													//	Auto scroll logs
 		bool								status;														//	Status of the VServer (Started/Stoped)
 		
 		//	Constructors

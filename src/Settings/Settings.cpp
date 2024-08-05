@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:27:58 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/05 20:08:11 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/05 23:09:53 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,7 @@
 	size_t								Settings::config_index = 0;										//	Current index of the settings
 	size_t								Settings::log_index = 0;										//	Current index of main log
 	bool								Settings::config_displayed = false;								//	Is the log or the settings displayed
+	bool								Settings::autolog = true;										//	Auto scroll logs
 	int 								Settings::terminate = -1;
 	int									Settings::bracket_lvl = 0;
 	bool 								Settings::check_only = false;
@@ -538,7 +539,7 @@
 
 	void Settings::set(VServer & VServ) {
 		std::vector<VServer>::iterator it = std::find(vserver.begin(), vserver.end(), VServ);
-		if (it == vserver.end()) { VServ.status = false; VServ.config_displayed = false; VServ.log_index = 0; VServ.config_index = 0; vserver.push_back(VServ); }
+		if (it == vserver.end()) { VServ.status = false; VServ.config_displayed = false; VServ.log_index = 0; VServ.config_index = 0; VServ.autolog = true; vserver.push_back(VServ); }
 		else *it = VServ;
 	}
 

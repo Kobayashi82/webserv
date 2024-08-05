@@ -6,14 +6,13 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/14 14:37:32 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/05 20:11:18 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/05 23:37:01 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Display.hpp"
 #include "Settings.hpp"
 #include "Monitor.hpp"
-#include <vector>
 
 #pragma region Variables
 
@@ -21,7 +20,6 @@
 	int						Display::rows = 0;
 	int						Display::log_rows = 0;
 	bool					Display::drawing = false;
-	bool					Display::redraw = false;
 
 	static struct termios	orig_termios;
 	static bool				signalRegistered = false;
@@ -138,133 +136,147 @@
 
 		void Display::Input() {
 			char c, seq[2];
-			if (read(STDIN_FILENO, &c, 1) != 1) return ;												//	This is Non-Blocking
-			if (c == 'e' || c == 'x') { disableRawMode(); Settings::terminate = 0; }
-			if (c == '\033') {																			//	Escape character
-                if (read(STDIN_FILENO, &seq[0], 1) == 1 && read(STDIN_FILENO, &seq[1], 1) == 1
-					&& seq[0] == '[') {
-                    if (Settings::vserver.size() > 1 && seq[1] == 'D') {								//	Right arrow
-						if (Settings::current_vserver == -1)
-							Settings::current_vserver = static_cast<int>(Settings::vserver.size() - 1);
-						else
-							Settings::current_vserver--;
-						Output();
-                    } else if (Settings::vserver.size() > 1 && seq[1] == 'C') {							//	Left arrow
-						if (Settings::current_vserver == static_cast<int>(Settings::vserver.size() - 1))
-							Settings::current_vserver = -1;
-						else
-							Settings::current_vserver++;
-						Output();
-                    } else if (seq[1] == 'A') {															//	Up arrow
-						if (Settings::current_vserver == -1 && Settings::config_displayed == false
-							&& Settings::log_index > 0)
-								Settings::log_index--;
-						else if (Settings::current_vserver == -1 && Settings::config_displayed == true
-							&& Settings::config_index > 0)
-								Settings::config_index--;
-						else if (Settings::vserver.size() > 1 && Settings::current_vserver != -1 && Settings::config_displayed == false
-							&& Settings::vserver[Settings::current_vserver].log_index > 0)
-								Settings::vserver[Settings::current_vserver].log_index--;
-						else if (Settings::vserver.size() > 1 && Settings::current_vserver != -1 && Settings::config_displayed == true
-							&& Settings::vserver[Settings::current_vserver].config_index > 0)
-								Settings::vserver[Settings::current_vserver].config_index--;
-						else return ;
-						Output();
-                    } else if (seq[1] == 'B') {															//	Down arrow
-						if (Settings::current_vserver == -1 && Settings::config_displayed == false
-							&& static_cast<int>(Log::Both.size()) >= Display::log_rows
-							&& Settings::log_index < Log::Both.size() - (Display::log_rows - 1))
-								Settings::log_index++;
-						else if (Settings::current_vserver == -1 && Settings::config_displayed == true
-							&& static_cast<int>(Settings::config.size()) >= Display::log_rows
-							&& Settings::config_index < Settings::config.size() - (Display::log_rows - 1))
-								Settings::config_index++;
-						else if (Settings::vserver.size() > 1 && Settings::current_vserver != -1 && Settings::config_displayed == false
-							&& static_cast<int>(Settings::vserver[Settings::current_vserver].both.size()) >= Display::log_rows
-							&& Settings::vserver[Settings::current_vserver].log_index < Settings::vserver[Settings::current_vserver].both.size() - (Display::log_rows - 1))
-								Settings::vserver[Settings::current_vserver].log_index++;
-						else if (Settings::vserver.size() > 1 && Settings::current_vserver != -1 && Settings::config_displayed == true
-							&& static_cast<int>(Settings::vserver[Settings::current_vserver].config.size()) >= Display::log_rows
-							&& Settings::vserver[Settings::current_vserver].config_index < Settings::vserver[Settings::current_vserver].config.size() - (Display::log_rows - 1))
-								Settings::vserver[Settings::current_vserver].config_index++;
-						else return ;
-						Output();
-                    } else if (seq[1] == 'H') {															//	Home
-						if (Settings::current_vserver == -1 && Settings::config_displayed == false)
-							Settings::log_index = 0;
-						else if (Settings::current_vserver == -1 && Settings::config_displayed == true)
-							Settings::config_index = 0;
-						else if (Settings::vserver.size() > 1 && Settings::current_vserver != -1 && Settings::config_displayed == false)
-								Settings::vserver[Settings::current_vserver].log_index = 0;
-						else if (Settings::vserver.size() > 1 && Settings::current_vserver != -1 && Settings::config_displayed == true)
-								Settings::vserver[Settings::current_vserver].config_index = 0;
-						else return ;
-						Output();
-                	} else if (seq[1] == 'F') {															//	End
-						if (Settings::current_vserver == -1 && Settings::config_displayed == false && Log::Both.size() > 0)
-							Settings::log_index = Log::Both.size() - (Display::log_rows - 1);
-						else if (Settings::current_vserver == -1 && Settings::config_displayed == true && Settings::config.size() > 0)
-							Settings::config_index = Settings::config.size() - (Display::log_rows - 1);
-						else if (Settings::vserver.size() > 1 && Settings::current_vserver != -1 && Settings::config_displayed == false && Settings::vserver[Settings::current_vserver].both.size() > 0)
-								Settings::vserver[Settings::current_vserver].log_index = Settings::vserver[Settings::current_vserver].both.size() - (Display::log_rows - 1);
-						else if (Settings::vserver.size() > 1 && Settings::current_vserver != -1 && Settings::config_displayed == true && Settings::vserver[Settings::current_vserver].config.size() > 0)
-								Settings::vserver[Settings::current_vserver].config_index = Settings::vserver[Settings::current_vserver].config.size() - (Display::log_rows - 1);
-						else return ;
-						Output();
-					}
-                }
+			if (read(STDIN_FILENO, &c, 1) != 1) return ;																				//	This is Non-Blocking
+			if (c == '\033' && read(STDIN_FILENO, &seq[0], 1) == 1 && read(STDIN_FILENO, &seq[1], 1) == 1 && seq[0] == '[') {
+                if (Settings::vserver.size() > 1 && seq[1] == 'D') {																	//	Right arrow
+					if (Settings::current_vserver == -1)
+						Settings::current_vserver = static_cast<int>(Settings::vserver.size() - 1);
+					else
+						Settings::current_vserver--;
+					Output();
+                } else if (Settings::vserver.size() > 1 && seq[1] == 'C') {																//	Left arrow
+					if (Settings::current_vserver == static_cast<int>(Settings::vserver.size() - 1))
+						Settings::current_vserver = -1;
+					else
+						Settings::current_vserver++;
+					Output();
+                } else if (seq[1] == 'A') {																								//	Up arrow
+					if (Settings::current_vserver == -1 && Settings::config_displayed == false
+						&& Settings::log_index > 0) {
+							Settings::log_index--; Settings::autolog = false;
+					} else if (Settings::current_vserver == -1 && Settings::config_displayed == true
+						&& Settings::config_index > 0)
+							Settings::config_index--;
+					else if (Settings::vserver.size() > 1 && Settings::current_vserver != -1 && Settings::config_displayed == false
+						&& Settings::vserver[Settings::current_vserver].log_index > 0) {
+							Settings::vserver[Settings::current_vserver].log_index--;
+							Settings::vserver[Settings::current_vserver].autolog = false;
+					} else if (Settings::vserver.size() > 1 && Settings::current_vserver != -1 && Settings::config_displayed == true
+						&& Settings::vserver[Settings::current_vserver].config_index > 0)
+							Settings::vserver[Settings::current_vserver].config_index--;
+					else return ;
+					Output();
+                } else if (seq[1] == 'B') {																								//	Down arrow
+					if (Settings::current_vserver == -1 && Settings::config_displayed == false
+						&& static_cast<int>(Log::Both.size()) >= Display::log_rows
+						&& static_cast<int>(Settings::log_index) < static_cast<int>(Log::Both.size()) - (Display::log_rows - 1)) {
+							Settings::log_index++;
+							if (Settings::log_index == Log::Both.size() - (Display::log_rows - 1)) Settings::autolog = true;
+					} else if (Settings::current_vserver == -1 && Settings::config_displayed == true
+						&& static_cast<int>(Settings::config.size()) >= Display::log_rows
+						&& static_cast<int>(Settings::config_index) < static_cast<int>(Settings::config.size()) - (Display::log_rows - 1))
+							Settings::config_index++;
+					else if (Settings::vserver.size() > 1 && Settings::current_vserver != -1 && Settings::config_displayed == false
+						&& static_cast<int>(Settings::vserver[Settings::current_vserver].both.size()) >= Display::log_rows
+						&& static_cast<int>(Settings::vserver[Settings::current_vserver].log_index) < static_cast<int>(Settings::vserver[Settings::current_vserver].both.size()) - (Display::log_rows - 1)) {
+							Settings::vserver[Settings::current_vserver].log_index++;
+							if (Settings::vserver[Settings::current_vserver].log_index == Settings::vserver[Settings::current_vserver].both.size() - (Display::log_rows - 1)) Settings::vserver[Settings::current_vserver].autolog = true;
+					} else if (Settings::vserver.size() > 1 && Settings::current_vserver != -1 && Settings::config_displayed == true
+						&& static_cast<int>(Settings::vserver[Settings::current_vserver].config.size()) >= Display::log_rows
+						&& static_cast<int>(Settings::vserver[Settings::current_vserver].config_index) < static_cast<int>(Settings::vserver[Settings::current_vserver].config.size()) - (Display::log_rows - 1))
+							Settings::vserver[Settings::current_vserver].config_index++;
+					else return ;
+					Output();
+                } else if (seq[1] == 'H') {																								//	Home
+					if (Settings::current_vserver == -1 && Settings::config_displayed == false && Settings::log_index > 0) {
+						Settings::log_index = 0;
+						Settings::autolog = false;
+					} else if (Settings::current_vserver == -1 && Settings::config_displayed == true && Settings::config_index > 0)
+						Settings::config_index = 0;
+					else if (Settings::vserver.size() > 1 && Settings::current_vserver != -1 && Settings::config_displayed == false
+						&& Settings::vserver[Settings::current_vserver].log_index > 0) {
+							Settings::vserver[Settings::current_vserver].log_index = 0;
+							Settings::vserver[Settings::current_vserver].autolog = false;
+					} else if (Settings::vserver.size() > 1 && Settings::current_vserver != -1 && Settings::config_displayed == true
+						&& Settings::vserver[Settings::current_vserver].config_index > 0)
+							Settings::vserver[Settings::current_vserver].config_index = 0;
+					else return ;
+					Output();
+            	} else if (seq[1] == 'F') {																								//	End
+					size_t temp = 0;
+					if (Settings::current_vserver == -1 && Settings::config_displayed == false && Log::Both.size() > 0
+						&& Settings::log_index != Log::Both.size() - (Display::log_rows - 1)) {
+							if (static_cast<int>(Log::Both.size()) - (Display::log_rows - 1) < 0) temp = 0;
+							else temp = static_cast<int>(Log::Both.size()) - (Display::log_rows - 1);
+							if (Settings::log_index == temp) return ; else Settings::log_index = temp;
+							if (static_cast<int>(Settings::log_index) == static_cast<int>(Log::Both.size()) - (Display::log_rows - 1)) Settings::autolog = true;
+					} else if (Settings::current_vserver == -1 && Settings::config_displayed == true && Settings::config.size() > 0) {
+						if (static_cast<int>(Settings::config.size()) - (Display::log_rows - 1) < 0) temp = 0;
+						else temp = static_cast<int>(Settings::config.size()) - (Display::log_rows - 1);
+						if (Settings::config_index == temp) return ; else Settings::config_index = temp;
+					} else if (Settings::vserver.size() > 1 && Settings::current_vserver != -1 && Settings::config_displayed == false
+						&& Settings::vserver[Settings::current_vserver].both.size() > 0) {
+							if (static_cast<int>(Settings::vserver[Settings::current_vserver].both.size()) - (Display::log_rows - 1) < 0) temp = 0;
+							else temp = static_cast<int>(Settings::vserver[Settings::current_vserver].both.size()) - (Display::log_rows - 1);
+							if (Settings::vserver[Settings::current_vserver].log_index == temp) return ; else Settings::vserver[Settings::current_vserver].log_index = temp;
+							if (static_cast<int>(Settings::vserver[Settings::current_vserver].log_index) == static_cast<int>(Settings::vserver[Settings::current_vserver].both.size()) - (Display::log_rows - 1)) Settings::vserver[Settings::current_vserver].autolog = true;
+					} else if (Settings::vserver.size() > 1 && Settings::current_vserver != -1 && Settings::config_displayed == true
+						&& Settings::vserver[Settings::current_vserver].config.size() > 0) {
+							if (static_cast<int>(Settings::vserver[Settings::current_vserver].config.size()) - (Display::log_rows - 1) < 0) temp = 0;
+							else temp = static_cast<int>(Settings::vserver[Settings::current_vserver].config.size()) - (Display::log_rows - 1);
+							if (Settings::vserver[Settings::current_vserver].config_index == temp) return ; else Settings::vserver[Settings::current_vserver].config_index = temp;
+					} else return ;
+					Output();
+				}
             }
-			if (c == '\033') {
-                if (read(STDIN_FILENO, &seq[0], 1) == 1 && read(STDIN_FILENO, &seq[1], 1) == 1 && seq[0] == '[') {
- 
-                }
-			}
-			if (c == 'w' && Settings::vserver.size() > 0) {												//	(S)tart / (S)top
+			if (c == 'w' && Settings::vserver.size() > 0) {																				//	(S)tart / (S)top
 				if (Settings::status)
 					Log::log_access("WebServ 1.0 stoped");
 				else
 					Log::log_access("WebServ 1.0 started");
-				Settings::status = !Settings::status; Output();
-			}
-			if (c == 'v' && Settings::status && Settings::vserver.size() > 0
-				&& Settings::current_vserver != -1) {													//	(V)server start
-				if (Settings::vserver[Settings::current_vserver].status)
-					Log::log_access("VServer stoped");
-				else
-					Log::log_access("VServer started");
-				Settings::vserver[Settings::current_vserver].status = !Settings::vserver[Settings::current_vserver].status; Output();
-			}
-			if (c == 'c') {																				//	(C)lear log
-				if (Settings::current_vserver == -1)
-					Log::clear();
-				else if (Settings::vserver.size() > 0)
-					Settings::vserver[Settings::current_vserver].clear_logs();
+				Settings::status = !Settings::status;
 				Output();
-			}
-			if (c == 'l') {																				//	(L)og
+			} else if (c == 'v' && Settings::status && Settings::vserver.size() > 0
+				&& Settings::current_vserver != -1) {																					//	(V)server start
+					if (Settings::vserver[Settings::current_vserver].status)
+						Log::log_access("VServer stoped");
+					else
+						Log::log_access("VServer started");
+					Settings::vserver[Settings::current_vserver].status = !Settings::vserver[Settings::current_vserver].status;
+					Output();
+			} else if (c == 'c') {																										//	(C)lear log
+				if (Settings::current_vserver == -1 && Log::Both.size() > 0)
+					Log::clear();
+				else if (Settings::current_vserver != -1 && Settings::vserver.size() > 0
+					&& Settings::vserver[Settings::current_vserver].both.size() > 0)
+						Settings::vserver[Settings::current_vserver].clear_logs();
+				else return ;
+				Output();
+			} else if (c == 'l') {																										//	(L)og
 				if (Settings::current_vserver == -1 && Settings::config_displayed == true)
 					Settings::config_displayed = false;
-				else if (Settings::current_vserver <static_cast<int>(Settings::vserver.size()) && Settings::vserver[Settings::current_vserver].config_displayed == true)
-					Settings::vserver[Settings::current_vserver].config_displayed = false;
+				else if (Settings::current_vserver <static_cast<int>(Settings::vserver.size() > 0)
+					&& Settings::vserver[Settings::current_vserver].config_displayed == true)
+						Settings::vserver[Settings::current_vserver].config_displayed = false;
 				else return ;
 				Output();
-			}
-			if (c == 's') {																				//	(S)ettings
+			} else if (c == 's') {																										//	(S)ettings
 				if (Settings::current_vserver == -1 && Settings::config_displayed == false)
 					Settings::config_displayed = true;
-				else if (Settings::current_vserver <static_cast<int>(Settings::vserver.size()) && Settings::vserver[Settings::current_vserver].config_displayed == false)
-					Settings::vserver[Settings::current_vserver].config_displayed = true;
+				else if (Settings::current_vserver <static_cast<int>(Settings::vserver.size() > 0)
+					&& Settings::vserver[Settings::current_vserver].config_displayed == false)
+						Settings::vserver[Settings::current_vserver].config_displayed = true;
 				else return ;
 				Output();
-			}
-			if (c == 'r') {																				//	(R)eset terminal
-				std::cout << CB CHIDE CS CUU;
-				Output();
-			}
-
+			} else if (c == 'e') { disableRawMode(); Settings::terminate = 0;															//	(E)xit
+			} else if (c == 'r') { std::cout << CB CHIDE CS CUU; Output(); }															//	(R)eset terminal
 		}
 
 	#pragma endregion
+
+	#pragma region Output
+
+		#pragma region Print Log
 
 		void print_log(const std::deque<std::string> & log, size_t index, std::ostringstream &oss, int &cols, int &row) {
 			while (++row < Display::rows - 3) {
@@ -281,6 +293,10 @@
 			}
 		}
 
+		#pragma endregion
+
+		#pragma region Print Config
+
 		void print_config(const std::vector <std::string> & config, size_t index, std::ostringstream & oss, int & cols, int & row) {
 			while (++row < Display::rows - 3) {
 					std::string temp = ""; std::string isRD = "";
@@ -296,111 +312,157 @@
 				}
 			}
 
-	#pragma region Output
+		#pragma endregion
 
-		//	┌───┐ ◄ ►
-		//	├─┬─┤  ▲
-		//	├─┴─┤  ▼
-		//	├─┬─┤  █
-		//	├─┼─┤
-		//	├─┴─┤  ▒
-		//	└───┘
+		#pragma region Output
 
-		void Display::Output() {
-			if (Display::drawing) return;
-			Display::drawing = true;
-			std::ostringstream oss; winsize w; ioctl(0, TIOCGWINSZ, &w); int cols = w.ws_col - 4, row = 0;
-			Display::cols = cols; Display::rows = w.ws_row; Display::log_rows = Display::rows - 9; bool some = false;
-			std::string LArrow = "◄ "; std::string RArrow = "► ";
-			std::string Status;
+			void Display::Output() {
+				if (Display::drawing) return; else Display::drawing = true;																		//	┌───┐ ◄ ►
+				winsize w; ioctl(0, TIOCGWINSZ, &w); int cols = w.ws_col - 4, row = 0;															//	├─┬─┤  ▲
+				Display::cols = cols; Display::rows = w.ws_row; Display::log_rows = Display::rows - 9;											//	├─┴─┤  ▼
+				std::ostringstream oss; std::ostringstream ss; ss << Settings::vserver.size(); std::string temp = ss.str();						//	├─┬─┤  █
+				std::string Status; std::string LArrow = "◄ "; std::string RArrow = "► ";														//	├─┼─┤
+				if (Settings::status) Status = G; else Status = RD;																				//	├─┴─┤  ▒
+				if (Settings::vserver.size() < 2) { LArrow = "  "; RArrow = "  "; }																//	└───┘
+				
+			//	TITLE
+				oss << CHIDE CS CUU;
+				oss << C "┌─────────────────┬"; setLine(C, "─", (cols + 2) - 18, oss); oss << "┐" NC << std::endl; row++;
+				oss << C "│ V-Servers: " G << temp; setLine(C, " ", 5 - temp.size(), oss); oss << C "│"; setPadding("WEBSERV 1.0", Status, " ", (cols + 2) - 20, 1, oss); oss << RD "X " C "│" NC << std::endl; row++;
+				oss << C "├─────────────────┤"; setLine(Status, "▄", (cols + 2) - 18, oss); oss << C "│" NC << std::endl; row++;
 
-			if (Settings::vserver.size() < 2) { LArrow = "  "; RArrow = "  "; }
-			if (Settings::status) Status = G; else Status = RD;
+			//	COLOR LINES
+				bool some = false;
+				if (Settings::vserver.size() > 0 && Settings::current_vserver != -1 && Settings::vserver[Settings::current_vserver].status) Status = G;
+				else if (Settings::vserver.size() > 0 && Settings::current_vserver == -1) { Status = RD;
+					for (size_t i = 0; i < Settings::vserver.size(); ++i) {
+						if (Settings::vserver[i].status) Status = G;
+						else if (!Settings::vserver[i].status) some = true;
+					}
+				} else Status = RD;
+				if (Settings::status == false) Status = RD;
 
-			std::ostringstream ss; ss << Settings::vserver.size();
-			std::string temp = ss.str();
-			
-			oss << CHIDE CS CUU;
-			oss << C "┌─────────────────┬"; setLine(C, "─", (cols + 2) - 18, oss); oss << "┐" NC << std::endl; row++;
-			oss << C "│ V-Servers: " G << temp; setLine(C, " ", 5 - temp.size(), oss); oss << C "│"; setPadding("WEBSERV 1.0", Status, " ", (cols + 2) - 20, 1, oss); oss << RD "X " C "│" NC << std::endl; row++;
-			oss << C "├─────────────────┤"; setLine(Status, "▄", (cols + 2) - 18, oss); oss << C "│" NC << std::endl; row++;
+			//	MEM & CPU
+				temp = monitor.get_memory_str();
+				oss << C "│ MEM: " G << temp; setLine(C, " ", 11 - temp.size(), oss);  oss << C "│"; setLine(Status, "▀", (cols + 2) - 18, oss); oss << C "│" NC << std::endl; row++;
+				temp = monitor.getCPUinStr();
+				oss << C "│ CPU: " G << temp; setLine(C, " ", 11 - temp.size(), oss); oss << C "│ " Y << LArrow;
 
-			if (Settings::vserver.size() > 0 && Settings::current_vserver != -1 && Settings::vserver[Settings::current_vserver].status) Status = G;
-			else if (Settings::vserver.size() > 0 && Settings::current_vserver == -1) {
-				Status = RD;
-				for (size_t i = 0; i < Settings::vserver.size(); ++i) {
-					if (Settings::vserver[i].status) Status = G;
-					else if (!Settings::vserver[i].status) some = true;
-				}
-			} else Status = RD;
-			if (Settings::status == false) Status = RD;
-
-			temp = monitor.get_memory_str();
-			oss << C "│ MEM: " G << temp; setLine(C, " ", 11 - temp.size(), oss);  oss << C "│"; setLine(Status, "▀", (cols + 2) - 18, oss); oss << C "│" NC << std::endl; row++;
-			
-			temp = monitor.getCPUinStr();
-			oss << C "│ CPU: " G << temp; setLine(C, " ", 11 - temp.size(), oss); oss << C "│ " Y << LArrow;
-
-			ss.str("");
-			if (Settings::vserver.size() > 0 && Settings::current_vserver != -1) {
-				if ((Settings::vserver[Settings::current_vserver].get("server_name").empty() || Settings::vserver[Settings::current_vserver].get("server_name") == "_") && Settings::current_vserver == 0) temp = "(1) Default";
-				else if (Settings::vserver[Settings::current_vserver].get("server_name").empty()) {
-					ss << Settings::current_vserver + 1;
-					temp = "(" + ss.str() + ") V-Server";
-				} else {
-					ss << Settings::current_vserver + 1;
-					temp = "(" + ss.str() + ") " + Settings::vserver[Settings::current_vserver].get("server_name");
-				}
-			} else if (Status == RD)
-				temp = "Virtual servers offline";
-			else if (Settings::vserver.size() > 0 && Settings::current_vserver == -1)
-				if (some)
-					temp = "Some virtual servers";
+			//	NAME
+				ss.str("");
+				if (Settings::vserver.size() > 0 && Settings::current_vserver != -1) {
+					if ((Settings::vserver[Settings::current_vserver].get("server_name").empty() || Settings::vserver[Settings::current_vserver].get("server_name") == "_") && Settings::current_vserver == 0) temp = "(1) Default";
+					else if (Settings::vserver[Settings::current_vserver].get("server_name").empty()) {
+						ss << Settings::current_vserver + 1;
+						temp = "(" + ss.str() + ") V-Server";
+					} else {
+						ss << Settings::current_vserver + 1;
+						temp = "(" + ss.str() + ") " + Settings::vserver[Settings::current_vserver].get("server_name");
+					}
+				} else if (Status == RD)
+					temp = "Virtual servers offline";
+				else if (Settings::vserver.size() > 0 && Settings::current_vserver == -1)
+					if (some)
+						temp = "Some virtual servers";
+					else
+						temp = "All virtual servers";
 				else
-					temp = "All virtual servers";
-			else
-				temp = "No virtual servers available";
+					temp = "No virtual servers available";
 
-			setPadding(temp, Status, " ", (cols + 2) - 27, 1, oss);
-			oss << "    " Y << RArrow << C "│" NC << std::endl; row++;
+				setPadding(temp, Status, " ", (cols + 2) - 27, 1, oss);
+				oss << "    " Y << RArrow << C "│" NC << std::endl; row++;
+				oss << C "├─────────────────┴"; setLine(C, "─", (cols + 2) - 18, oss); oss << "┤" NC << std::endl; row++;
 
-			oss << C "├─────────────────┴"; setLine(C, "─", (cols + 2) - 18, oss); oss << "┤" NC << std::endl; row++;
+			//	LOG & SETTINGS
+				if (Settings::current_vserver == -1 && Settings::config_displayed == false) {
+					if (Settings::autolog) {
+						if (static_cast<int>(Log::Both.size()) - (Display::log_rows - 1) < 0) Settings::log_index = 0;
+						else Settings::log_index = static_cast<int>(Log::Both.size()) - (Display::log_rows - 1);
+					}
+					print_log(Log::Both, Settings::log_index, oss, cols, row);
+				} else if (Settings::current_vserver == -1 && Settings::config_displayed == true)
+					print_config(Settings::config, Settings::config_index, oss, cols, row);
+				if (Settings::current_vserver != -1 && Settings::vserver[Settings::current_vserver].config_displayed == false)
+					print_log(Settings::vserver[Settings::current_vserver].both, Settings::vserver[Settings::current_vserver].log_index, oss, cols, row);
+				else if (Settings::current_vserver != -1 && Settings::vserver[Settings::current_vserver].config_displayed == true)
+					print_config(Settings::vserver[Settings::current_vserver].config, Settings::vserver[Settings::current_vserver].config_index, oss, cols, row);
 
+			//	BUTTONS (Main)
+				std::string Color1 = G UN; std::string Color2 = NC Y;
+				std::string top = C "├──────┬";
+				std::string middle = C "│ " + Color1 + "E" + Color2 + "xit " C "│";
+				std::string bottom = C "└──────┴";
+				int	length = (cols + 2) - 7;
 
-			if (Settings::current_vserver == -1 && Settings::config_displayed == false)
-				print_log(Log::Both, Settings::log_index, oss, cols, row);
-			else if (Settings::current_vserver == -1 && Settings::config_displayed == true)
-				print_config(Settings::config, Settings::config_index, oss, cols, row);
-			if (Settings::current_vserver != -1 && Settings::vserver[Settings::current_vserver].config_displayed == false)
-				print_log(Settings::vserver[Settings::current_vserver].both, Settings::vserver[Settings::current_vserver].log_index, oss, cols, row);
-			else if (Settings::current_vserver != -1 && Settings::vserver[Settings::current_vserver].config_displayed == true)
-				print_config(Settings::vserver[Settings::current_vserver].config, Settings::vserver[Settings::current_vserver].config_index, oss, cols, row);
+				if (Settings::vserver.size() > 0) {
+					top += C "─────────┬";
+					middle += " " + Color1 + "W" + Color2 + "ebServ " C "│";
+					bottom +=  "─────────┴";
+					length -= 10;
+				}
 
+				if (Settings::current_vserver == -1) {
+					if (Settings::config_displayed == false) {
+						top += C "──────────┬";
+						middle += " " + Color1 + "S" + Color2 + "ettings " C "│";
+						bottom +=  "──────────┴";
+						length -= 11;
+						if (Log::Both.size() > 0) {
+							top += C "───────────┬";
+							middle += " " + Color1 + "C" + Color2 + "lear log " C "│";
+							bottom +=  "───────────┴";
+							length -= 12;
+						}
+					} else {
+						top += C "─────┬";
+						middle += " " + Color1 + "L" + Color2 + "og " C "│";
+						bottom +=  "─────┴";
+						length -= 6;
+					}
+				}
+			//	BUTTONS (V-Server)
+				if (Settings::current_vserver != -1) {
+					if (Settings::status) {
+						top += C "─────────┬";
+						middle += " " + Color1 + "V" + Color2 + "server " C "│";
+						bottom +=  "─────────┴";
+						length -= 10;
+					}
+					if (Settings::vserver[Settings::current_vserver].config_displayed == false) {
+						top += C "──────────┬";
+						middle += " " + Color1 + "S" + Color2 + "ettings " C "│";
+						bottom +=  "──────────┴";
+						length -= 11;
+						if (Settings::vserver[Settings::current_vserver].both.size() > 0) {
+							top += C "───────────┬";
+							middle += " " + Color1 + "C" + Color2 + "lear log " C "│";
+							bottom +=  "───────────┴";
+							length -= 12;
+						}
+					} else {
+						top += C "─────┬";
+						middle += " " + Color1 + "L" + Color2 + "og " C "│";
+						bottom +=  "─────┴";
+						length -= 6;
+					}
+				}
 
-			int	length = (cols + 2) - 23;
-			if (Settings::vserver.size() > 0 && Settings::current_vserver != -1) {
-				oss << C "├────────┬───────────┬───────────┬─────────────┬"; setLine(C, "─", (cols + 2) - 47, oss); oss << "┤" NC << std::endl; row++;
-				oss << C "│ " Y "(" G "E" Y ")xit " C "│" << Y " (" G "W" Y ")ebServ " C "│ " Y "(" G "V" Y ")server " C "│ " Y "(" G "C" Y ")lear log " C "│";
-				length = (cols + 2) - 47;
-			} else {
-				oss << C "├────────┬─────────────┬"; setLine(C, "─", (cols + 2) - 23, oss); oss << "┤" NC << std::endl; row++;
-				oss << C "│ " Y "(" G "E" Y ")xit " C "│ " Y "(" G "C" Y ")lear log " C "│";
+			//	BUTTONS
+				oss << top; setLine(C, "─", length, oss); oss << "┤" NC << std::endl; row++;
+				oss << middle;
+				//	Progress (maybe not)
+				if (false) {
+					setLine(G, "▒", (20 * length) / 100, oss); setLine(W, "▒", (80 * length) / 100, oss); oss << C "│" NC << std::endl; row++;
+				} else {
+					setLine(NC, " ", length, oss); oss << C "│" NC << std::endl; row++;
+				}
+				oss << bottom; setLine(C, "─", length, oss); oss << "┘" NC << std::endl; row++;
+
+				std::cout << oss.str();
+				Display::drawing = false;
 			}
-			if (false) {
-				setLine(G, "▒", (20 * length) / 100, oss); setLine(W, "▒", (80 * length) / 100, oss); oss << C "│" NC << std::endl; row++;
-			} else {
-				setLine(NC, " ", length, oss); oss << C "│" NC << std::endl; row++;
-			}
-			if (Settings::vserver.size() > 0 && Settings::current_vserver != -1) {
-				oss << C "└────────┴───────────┴───────────┴─────────────┴"; setLine(C, "─", (cols + 2) - 47, oss); oss << "┘" NC << std::endl; row++;
-			} else {
-				oss << C "└────────┴─────────────┴"; setLine(C, "─", (cols + 2) - 23, oss); oss << "┘" NC << std::endl; row++;
-			}
 
-			std::cout << oss.str();
-			Display::drawing = false;
-			Display::redraw = false;
-		}
+		#pragma endregion
 
 	#pragma endregion
 
