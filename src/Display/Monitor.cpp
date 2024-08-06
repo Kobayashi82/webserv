@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/03 14:10:10 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/03 14:47:05 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/06 00:37:03 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,7 @@
 Monitor::Monitor() {
 	_prev_time = std::time(0);
 	_prev_cpu_time = std::clock();
-	_CPUinStr = "0.00 %";
+	_CPUinStr = "0.08 %";
 	_CPU = 0;
 	_bytes_sent = 0;
 	_bytes_received = 0;

@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:27:58 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/05 23:09:53 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/06 01:08:51 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -97,7 +97,7 @@
 						<< "}" << std::endl;
 				outfile.close();
 				Settings::createPath(Settings::program_path + "www/html");
-				Log::log_error("Default configuration file created succesfully", NULL, true);
+				Log::log_error("Default configuration file created succesfully");
 			}
 		}
 
@@ -190,7 +190,7 @@
 		static int parse_body_size(std::string & str, std::string & line) {
 			std::stringstream result; long multiplier = 1;
 
-			if (str.empty()) { Log::log_error("Empty value for client_max_body_size - '" + line + "'", NULL, true); return (1); }
+			if (str.empty()) { Log::log_error("Empty value for client_max_body_size - '" + line + "'"); return (1); }
 
 			if (!std::isdigit(str[str.size() - 1])) {
 				result.str(str.substr(0, str.size() - 1));
@@ -206,11 +206,11 @@
 			std::stringstream ss_error;
 		    ss_error << "Invalid value for client_max_body_size - " << line_count << " '" << line << "'";
 
-			long number; ss >> number; if (ss.fail() || !ss.eof()) { Log::log_error(ss_error.str(), NULL, true); return (1); }
-			if (number < 1) { Log::log_error("value for client_max_body_size cannot be lower than 1 byte - '" + line + "'", NULL, true); return (1); }
-			if (number > 1024 * 1024 * 1024) { Log::log_error("Value for client_max_body_size cannot be greater than 1GB - '" + line + "'", NULL, true); return (1); }
+			long number; ss >> number; if (ss.fail() || !ss.eof()) { Log::log_error(ss_error.str()); return (1); }
+			if (number < 1) { Log::log_error("value for client_max_body_size cannot be lower than 1 byte - '" + line + "'"); return (1); }
+			if (number > 1024 * 1024 * 1024) { Log::log_error("Value for client_max_body_size cannot be greater than 1GB - '" + line + "'"); return (1); }
 			
-			result << number * multiplier; str = result.str(); if (result.fail()) { Log::log_error("Invalid value for client_max_body_size - '" + line + "'", NULL, true); return (1); }
+			result << number * multiplier; str = result.str(); if (result.fail()) { Log::log_error("Invalid value for client_max_body_size - '" + line + "'"); return (1); }
 			return (0);
 		}
 
@@ -397,12 +397,12 @@
 							if (!isRegen) {
 								remove(File.c_str());
 								Settings::clear();
-								Log::log_error("Default configuration file is corrupted, generating a default config file", NULL, true);
+								Log::log_error("Default configuration file is corrupted, generating a default config file");
 								generate_config(File);
 								Settings::load(File, true);
 								return ;
 							} else {
-								Log::log_error("Could not create the default configuration file", NULL, true);
+								Log::log_error("Could not create the default configuration file");
 							}
 						} else {
 							Log::log_error("Could not load the configuration file '" + File + "'");
@@ -416,12 +416,12 @@
 				// 		if (!isRegen) {
 				// 			remove(File.c_str());
 				// 			Settings::clear();
-				// 			Log::log_error("Default configuration file is corrupted, generating a default config file", NULL, true);
+				// 			Log::log_error("Default configuration file is corrupted, generating a default config file");
 				// 			generate_config(File);
 				// 			Settings::load(File, true);
 				// 			return ;
 				// 		} else {
-				// 			Log::log_error("Could not create the default configuration file", NULL, true);
+				// 			Log::log_error("Could not create the default configuration file");
 				// 		}
 				// 	} else {
 				// 		Log::log_error("Could not load the configuration file '" + File + "'");
@@ -437,14 +437,14 @@
 
 			} else {
 				if (isDefault) {
-					Log::log_error("Could not create the default configuration file", NULL, true);
+					Log::log_error("Could not create the default configuration file");
 				} else {
 					if (file_exists(File) == 1)
-						Log::log_error("The configuration file '" + File + "' does not exist", NULL, true);
+						Log::log_error("The configuration file '" + File + "' does not exist");
 					else if (file_exists(File) == 2)
-						Log::log_error("Cannot read the file '" + File + "'", NULL, true);
+						Log::log_error("Cannot read the file '" + File + "'");
 					else
-						Log::log_error("Could not load the configuration file '" + File + "'", NULL, true);
+						Log::log_error("Could not load the configuration file '" + File + "'");
 				}
 			}
 		}
@@ -459,12 +459,12 @@
 
 			if (FileStatus) {
 				if (FileStatus == 1)
-					Log::log_error("Default configuration file does not exist, generating a default config file", NULL, true);
+					Log::log_error("Default configuration file does not exist, generating a default config file");
 				else if (FileStatus == 2) {
-					Log::log_error("Cannot read the default configuration file, generating a default config file", NULL, true);
+					Log::log_error("Cannot read the default configuration file, generating a default config file");
 					remove(File.c_str());
 				} else {
-					Log::log_error("Could not load the default configuration file, generating a default config file", NULL, true);
+					Log::log_error("Could not load the default configuration file, generating a default config file");
 					remove(File.c_str());
 				}
 				generate_config(File);
@@ -497,7 +497,7 @@
 			} else {
 				if (argc == 1) Settings::load(); else Settings::load(argv[1]);
 				if (Settings::vserver.size() == 0) {
-					if (Settings::loaded_ok) Log::log_error("There are no virtual servers in the configuration file", NULL, true);
+					if (Settings::loaded_ok) Log::log_error("There are no virtual servers in the configuration file");
 				// 	std::cout << std::endl << C "\tCould not start the server, check the file:" << std::endl << std::endl
 				// 			<< Y "\t" << Settings::program_path + "logs/error.log" NC << std::endl << std::endl;
 				// 	Settings::terminate = 1;

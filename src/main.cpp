@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 14:30:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/05 18:19:06 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/06 02:21:54 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,14 +14,12 @@
 
 //  *       service nginx reload
 
-//  TODO    Terminal interface
 
 //  TODO    Parse mimo.types
 //  TODO    Parse error codes
 
 //  TODO    No identifier
 //  TODO    No Repeat
-//  TODO    Count { }
 //  TODO    client_max_body_size not valid
 //  TODO    port not valid
 //  TODO    error_page must be numeric and between a range
@@ -31,31 +29,17 @@
 //  TODO    If root + *.html dont exist
 //  TODO    alias dont exist
 //  TODO    limit_except must be valid (deny and return too)
-//  TODO    Log all errors
-//  TODO    If errors, dont load and log
+
+//	TODO	Send/Received data
+//	TODO	Active conections
 
 //  Entry point
 int main(int argc, char **argv) {
     Settings::load_args(argc, argv); if (Settings::terminate != -1) return (Settings::terminate);
-
+	
     Display::enableRawMode();
-    Display::Output();
-    while (Settings::terminate == -1) {
-        Display::Input(); usleep(10000);
-    } Display::disableRawMode();
-
-    // Log::log_access("Hola caracola", &Settings::vserver[0]);
-    // std::cout << std::endl << G "VSERVER (" << Settings::vserver[0].get("server_name") << ")" NC << std::endl << std::endl;
-    // std::cout << Log::both(&Settings::vserver[0]) << std::endl;
-
-    // std::cout << std::endl << G "ACCESS " NC << std::endl << std::endl;
-    // std::cout << Log::access() << std::endl;
-    // std::cout << std::endl << RD "ERROR " NC << std::endl << std::endl;
-    // std::cout << Log::error() << std::endl;
-    // std::cout << std::endl << G "ACCESS" NC "/" RD "ERROR " NC << std::endl << std::endl;
-    // std::cout << Log::both() << std::endl;
+    while (Settings::terminate == -1) { Display::Input(); usleep(10000); }
 	Log::log_access("WebServ 1.0 closed successfully");
-	Display::Output(); std::cout << CSHOW CDD CLL;
-    Settings::clear();
+    Display::disableRawMode(); Settings::clear();
     return (Settings::terminate);
 }

@@ -6,10 +6,11 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:32:38 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/05 22:25:22 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/06 01:06:50 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include "Display.hpp"
 #include "Log.hpp"
 
 #pragma region Variables
@@ -139,28 +140,28 @@
 
 	#pragma region Log Access
 
-		void Log::log_access(std::string str, VServer * VServ, bool Default) {
+		void Log::log_access(std::string str, VServer * VServ) {
 			if (str.empty()) return ;
 			str = "[" + Settings::timer.current_date() + " " + Settings::timer.current_time() + "] - " + str;
 			both_add(str); access_add(str);
 			if (VServ) { both_add(str, VServ); access_add(str, VServ); }
-			if (Default) log_to_file(str, Settings::program_path + "logs/access.log");
-			else if (VServ && VServ->get("access_log") != "") log_to_file(str, VServ->get("access_log"));
+			if (VServ && VServ->get("access_log") != "") log_to_file(str, VServ->get("access_log"));
 			else log_to_file(str, Settings::get("access_log"));
+			Display::Output();
 		}
 
 	#pragma endregion
 
 	#pragma region Log Error
 
-		void Log::log_error(std::string str, VServer * VServ, bool Default) {
+		void Log::log_error(std::string str, VServer * VServ) {
 			if (str.empty()) return ;
 			str = "[" + Settings::timer.current_date() + " " + Settings::timer.current_time() + "] - " + str;
 			both_add(RD + str); error_add(str);
 			if (VServ) { both_add(str, VServ); error_add(str, VServ); }
-			if (Default) log_to_file(str, Settings::program_path + "logs/error.log");
-			else if (VServ && VServ->get("error_log") != "") log_to_file(str, VServ->get("error_log"));
+			if (VServ && VServ->get("error_log") != "") log_to_file(str, VServ->get("error_log"));
 			else log_to_file(str, Settings::get("error_log"));
+			Display::Output();
 		}
 
 	#pragma endregion

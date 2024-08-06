@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:32:23 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/01 23:41:54 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/06 01:07:11 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,8 +31,8 @@ class Log {
 
 		//	Local Log																					//	This logs are saved to a file
 
-		static void	log_access(std::string str, VServer * VServ = NULL, bool Default = false);			//	Write to the Access log file
-		static void	log_error(std::string str, VServer * VServ = NULL, bool Default = false);			//	Write to the Error log file
+		static void	log_access(std::string str, VServer * VServ = NULL);								//	Write to the Access log file
+		static void	log_error(std::string str, VServer * VServ = NULL);									//	Write to the Error log file
 
 };
 
