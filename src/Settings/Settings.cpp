@@ -6,33 +6,33 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:27:58 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/06 01:08:51 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/08 15:39:42 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Settings.hpp"
 
 #pragma region Variables
-
-	std::map <std::string, std::string>	Settings::global;
-	std::vector <VServer> 				Settings::vserver;
-	std::string							Settings::program_path = Settings::programPath();
-	std::string							Settings::config_path = Settings::programPath() + "conf/";
-	std::vector <std::string>			Settings::config;
-	size_t								Settings::config_index = 0;										//	Current index of the settings
-	size_t								Settings::log_index = 0;										//	Current index of main log
+	Timer 								Settings::timer;												//	Class to obtain time and date related data
+	std::string							Settings::program_path = Settings::programPath();				//	Path of the executable
+	std::string							Settings::config_path = Settings::programPath() + "conf/";		//	Path of the default configuration file
+	std::map <int, std::string>			Settings::error_codes;											//	Error codes in a map
+	std::map <std::string, std::string>	Settings::global;												//	Global settings in a map
+	std::vector <VServer> 				Settings::vserver;												//	V-Servers in a vector
+	std::vector <std::string>			Settings::config;												//	Configuration file in a vector
 	bool								Settings::config_displayed = false;								//	Is the log or the settings displayed
-	bool								Settings::autolog = true;										//	Auto scroll logs
-	int 								Settings::terminate = -1;
-	int									Settings::bracket_lvl = 0;
-	bool 								Settings::check_only = false;
-	bool 								Settings::loaded_ok = false;
-	bool 								Settings::errors = false;
-	bool 								Settings::status = false;
-	Timer 								Settings::timer;
-	int									Settings::current_vserver = -1;
+	size_t								Settings::config_index = 0;										//	Current index of the settings
+	size_t								Settings::log_index = 0;										//	Current index of the main log
+	bool								Settings::autolog = true;										//	Auto-Scroll logs
+	bool 								Settings::check_only = false;									//	Check the config file, but don't start the server
+	bool 								Settings::loaded_ok = false;									//	The config file loaded successfully (but may contains errors)
+	bool 								Settings::status = false;										//	Status of the server (On/Off)
+	bool 								Settings::BadConfig = false;									//	Indicate if there are errors in the config file
+	int									Settings::current_vserver = -1;									//	Current selected V-Server (-1 = None)
+	int 								Settings::terminate = -1;										//	Flag the program to exit with the value in terminate (the default value of -1 don't exit)
 
-	static int							line_count = 0;
+	static int							line_count = 0;													//	Number of the current line of the configuration file (use to indicate the line of an error in the configuration file)
+	static int							bracket_lvl = 0;												//	Level of the bracket (use to parse the configuration file)
 
 #pragma endregion
 
@@ -128,42 +128,20 @@
 
 	#pragma endregion
 
-	#pragma region Print
-
-	void Settings::print() {
-		// Imprimir Settings::global
-		std::cout << "Global Settings:" << std::endl << std::endl;
-		for (std::map<std::string, std::string>::iterator it = Settings::global.begin(); it != Settings::global.end(); ++it) {
-			std::cout << it->first << ": " << it->second << std::endl;
-		}
-		std::cout << std::endl;
-
-		// Imprimir cada VServer
-		for (size_t i = 0; i < Settings::vserver.size(); ++i) {
-			const VServer& vserver = Settings::vserver[i];
-			std::cout << "VServer " << i + 1 << ":" << std::endl << std::endl;
-			for (std::map<std::string, std::string>::const_iterator it = vserver.vserver.begin(); it != vserver.vserver.end(); ++it) {
-				std::cout << it->first << ": " << it->second << std::endl;
-			}
-			std::cout << std::endl;
-
-			// Imprimir cada Location dentro del VServer
-			for (size_t j = 0; j < vserver.location.size(); ++j) {
-				const Location& location = vserver.location[j];
-				std::cout << "  Location " << j + 1 << ":" << std::endl << std::endl;
-				for (std::map<std::string, std::string>::const_iterator it = location.location.begin(); it != location.location.end(); ++it) {
-					std::cout << "    " << it->first << ": " << it->second << std::endl;
-				}
-				std::cout << std::endl;
-			}
-		}
-	}
-
-	#pragma endregion
-
 #pragma endregion
 
 #pragma region Parser
+
+	std::string Settings::itos(long number) {
+		std::stringstream ss; ss << number;
+		if (ss.fail()) return ("");
+		return (ss.str());
+	}
+
+	bool stol(const std::string & str, long & number) {
+		std::stringstream ss(str);
+		ss >> number; return ((ss.fail() || !ss.eof()));
+	}
 
 	#pragma region Brackets
 
@@ -172,11 +150,11 @@
 			for (size_t i = 0; i < str.size(); ++i) {
 				if (str[i] == '{') {
 					str.erase(i, 1); --i;										//	Delete '{' and adjust index
-					Settings::bracket_lvl++;
+					bracket_lvl++;
 					change += 1;
 				} else if (str[i] == '}') {
 					str.erase(i, 1); --i;										//	Delete '}' and adjust index
-					Settings::bracket_lvl--;
+					bracket_lvl--;
 					change -= 1;
 				}
 			}
@@ -185,32 +163,61 @@
 
 	#pragma endregion
 
+	#pragma region Parse Path
+
+		static int parse_path(std::string & firstPart, std::string & str, bool isFile = false, bool check_path = false) {
+			std::string n_line = "[" Y + Settings::itos(line_count - 1) + RD "] "; struct stat info;
+
+			if (str.empty())										Log::log_error(n_line + "Empty value for '" Y + firstPart + RD "'" NC);
+			if (str[0] != '/') str = Settings::program_path + str;
+
+			if (isFile && check_path) {
+				std::string dir_path = str.substr(0, str.find_last_of('/'));
+				if (stat(dir_path.c_str(), &info) != 0) {
+					if (errno == ENOENT)							Log::log_error(n_line + "The path '" Y + dir_path + RD "' does not exist" NC);
+					else if (errno == EACCES)						Log::log_error(n_line + "No permission to access '" Y + dir_path + RD "'" NC);
+					else											Log::log_error(n_line + "Cannot access '" Y + dir_path + RD "'" NC);
+					return (1);
+				} else {
+					if (!(info.st_mode & S_IFDIR)) {				Log::log_error(n_line + "'" Y + dir_path + RD "' is not a valid directory" NC); return (1); }
+					else if (access(dir_path.c_str(), W_OK) != 0) {	Log::log_error(n_line + "No write permission for '" Y + dir_path + RD "'" NC); return (1); }
+					else if (access(str.c_str(), F_OK) == 0
+						&& access(str.c_str(), W_OK) != 0) {		Log::log_error(n_line + "No write permission for '" Y + str + RD "'" NC); return (1); }
+				}
+			} else if (stat(str.c_str(), &info) != 0) {
+				if (errno == ENOENT)								Log::log_error(n_line + "The path '" Y + str + RD "' does not exist" NC);
+				else if (errno == EACCES)							Log::log_error(n_line + "No permission to access '" Y + str + RD "'" NC);
+				else 												Log::log_error(n_line + "Cannot access '" Y + str + RD "'" NC);
+				return (1);
+			} else {
+				if (isFile && !(info.st_mode & S_IFREG)) { 			Log::log_error(n_line + "'" Y + str + RD "' is not a valid file" NC); return (1); return (1); }
+				else if (!isFile && !(info.st_mode & S_IFDIR)) { 	Log::log_error(n_line + "'" Y + str + RD "' is not a valid directory" NC); return (1); }
+			}
+			return (0);
+		}
+
+	#pragma endregion
+
 	#pragma region Parse Body Size
 
-		static int parse_body_size(std::string & str, std::string & line) {
-			std::stringstream result; long multiplier = 1;
+		static int parse_body_size(std::string & str) {
+			long multiplier = 1; std::string n_line = "[" Y + Settings::itos(line_count - 1) + RD "] ";
 
-			if (str.empty()) { Log::log_error("Empty value for client_max_body_size - '" + line + "'"); return (1); }
-
+			if (str.empty()) { Log::log_error(n_line + "Empty value for '" Y "client_max_body_size" RD "'" NC); return (1); }
+			if (str.size() > 1 && !std::isdigit(str[str.size() - 1]) && !std::isdigit(str[str.size() - 2]) && str[str.size() - 1] == 'B') str.erase(str.size() - 1);
 			if (!std::isdigit(str[str.size() - 1])) {
-				result.str(str.substr(0, str.size() - 1));
 				switch (str[str.size() - 1]) {
 					case 'K': multiplier = 1024; break;
 					case 'M': multiplier = 1024 * 1024; break;
 					case 'G': multiplier = 1024 * 1024 * 1024; break;
-				}
+					case 'B' : break;
+					default : { Log::log_error(n_line + "Invalid value for '" Y "client_max_body_size" RD "'" NC); return (1); }
+				} str.erase(str.size() - 1);
 			}
 
-			std::stringstream ss(result.str());
-
-			std::stringstream ss_error;
-		    ss_error << "Invalid value for client_max_body_size - " << line_count << " '" << line << "'";
-
-			long number; ss >> number; if (ss.fail() || !ss.eof()) { Log::log_error(ss_error.str()); return (1); }
-			if (number < 1) { Log::log_error("value for client_max_body_size cannot be lower than 1 byte - '" + line + "'"); return (1); }
-			if (number > 1024 * 1024 * 1024) { Log::log_error("Value for client_max_body_size cannot be greater than 1GB - '" + line + "'"); return (1); }
-			
-			result << number * multiplier; str = result.str(); if (result.fail()) { Log::log_error("Invalid value for client_max_body_size - '" + line + "'"); return (1); }
+			long number; if (stol(str, number) || (str = Settings::itos(number * multiplier)) == "") { Log::log_error(n_line + "Invalid value for '" Y "client_max_body_size" RD "'" NC); return (1); }
+			if (number < 1) { Log::log_error(n_line + "Value for '" Y "client_max_body_size" RD "' cannot be lower than 1 byte" NC); return (1); }
+			if (number > 1024 * 1024 * 1024) { Log::log_error(n_line + "Value for '" Y "client_max_body_size" RD "' cannot be greater than 1GB" NC); return (1); }
 			return (0);
 		}
 
@@ -218,43 +225,73 @@
 
 	#pragma region Parse Error Codes
 
-		static void parse_errors(const std::string & firstPart, const std::string & secondPart) {
+		static int parse_errors(const std::string & firstPart, const std::string & secondPart) {
+			std::string n_line = "[" Y + Settings::itos(line_count - 1) + RD "] ";
 			std::istringstream stream(secondPart);
 			std::vector<std::string> errors;
 			std::string error;
 
 			while (stream >> error) errors.push_back(error);
+			if (errors.size() < 2) { Log::log_error(n_line + "Empty value for '" Y "error_page" RD "'" NC); return (1); }
 			std::string filePath = errors.back(); errors.pop_back();
-
 			for (std::vector<std::string>::iterator it = errors.begin(); it != errors.end(); ++it) {
+				long code; if (stol(*it, code) || (Settings::error_codes.find(code) == Settings::error_codes.end())) {
+					Log::log_error(n_line + "Invalid error number '" Y +  *it + RD "' for '" Y "error_page" RD "'" NC); Settings::BadConfig = true;
+				}
 				Settings::add(firstPart + " " + *it, filePath);
 			}
+			return (0);
 		}
 
-		static void parse_errors(const std::string & firstPart, const std::string & secondPart, VServer & VServ) {
+		static int parse_errors(const std::string & firstPart, const std::string & secondPart, VServer & VServ) {
+			std::string n_line = "[" Y + Settings::itos(line_count - 1) + RD "] ";
 			std::istringstream stream(secondPart);
 			std::vector<std::string> errors;
 			std::string error;
 
 			while (stream >> error) errors.push_back(error);
+			if (errors.size() < 2) { Log::log_error(n_line + "Empty value for '" Y "error_page" RD "'" NC); return (1); }
 			std::string filePath = errors.back(); errors.pop_back();
 
 			for (std::vector<std::string>::iterator it = errors.begin(); it != errors.end(); ++it) {
+				long code; if (stol(*it, code) || (Settings::error_codes.find(code) == Settings::error_codes.end())) {
+					Log::log_error(n_line + "Invalid error number '" Y +  *it + RD "' for '" Y "error_page" RD "'" NC); Settings::BadConfig = true;
+				}
 				VServ.add(firstPart + " " + *it, filePath);
 			}
+			return (0);
 		}
 
-		static void parse_errors(const std::string & firstPart, const std::string & secondPart, Location & Loc) {
+		static int parse_errors(const std::string & firstPart, const std::string & secondPart, Location & Loc) {
+			std::string n_line = "[" Y + Settings::itos(line_count - 1) + RD "] ";
 			std::istringstream stream(secondPart);
 			std::vector<std::string> errors;
 			std::string error;
 
 			while (stream >> error) errors.push_back(error);
+			if (errors.size() < 2) { Log::log_error(n_line + "Empty value for '" Y "error_page" RD "'" NC); return (1); }
 			std::string filePath = errors.back(); errors.pop_back();
 
 			for (std::vector<std::string>::iterator it = errors.begin(); it != errors.end(); ++it) {
+				long code; if (stol(*it, code) || (Settings::error_codes.find(code) == Settings::error_codes.end())) {
+					Log::log_error(n_line + "Invalid error number '" Y +  *it + RD "' for '" Y "error_page" RD "'" NC); Settings::BadConfig = true;
+				}
 				Loc.add(firstPart + " " + *it, filePath);
 			}
+			return (0);
+		}
+
+	#pragma endregion
+
+	#pragma region Parse Autoindex
+
+		static int parse_autoindex(std::string & str) {
+			std::string n_line = "[" Y + Settings::itos(line_count - 1) + RD "] ";
+
+			if (str.empty()) { Log::log_error(n_line + "Empty value for " Y "'autoindex'" NC); return (1); }
+			if (str != "on" && str != "off") { Log::log_error(n_line + "Invalid value for " Y "'autoindex'" NC); return (1); }
+			
+			return (0);
 		}
 
 	#pragma endregion
@@ -262,12 +299,12 @@
 	#pragma region Parse Location
 
 		static int parser_location(std::ifstream & infile, std::string & line, VServer & VServ) {
-			bool inLimit = false; Location Loc; int current_bracket = Settings::bracket_lvl; std::string tmp_line; std::string orig_line = line;
+			bool inLimit = false; Location Loc; int current_bracket = bracket_lvl; std::string tmp_line; std::string orig_line = line;
 			do {
 				line_count++; tmp_line = line;
 				trim(line); if (line.empty()) {
-					VServ.config.push_back(line);
-					Settings::config.push_back(line);
+					VServ.config.push_back(tmp_line);
+					Settings::config.push_back(tmp_line);
 					continue;
 				}
 				std::string firstPart, secondPart; std::istringstream stream(line);
@@ -283,14 +320,19 @@
 
 				if (brackets(firstPart) + brackets(secondPart) < 0) {
 					if (inLimit) inLimit = false;
-					if (Settings::bracket_lvl < 0) return (0);
-					if (Settings::bracket_lvl <= current_bracket) { VServ.add(Loc); break; }
+					if (bracket_lvl < 0) return (0);
+					if (bracket_lvl <= current_bracket) { VServ.add(Loc); break; }
 				}
 
 				if (firstPart.empty()) continue;
 				if (firstPart == "limit_except") inLimit = true;
-				if (firstPart == "client_max_body_size") parse_body_size(secondPart, line);
-				if (firstPart == "error_page") parse_errors(firstPart, secondPart, Loc); else Loc.add(firstPart, secondPart);
+
+				if (firstPart == "access_log" || firstPart == "error_log") parse_path(firstPart, secondPart, true, true);
+				if (firstPart == "root" && parse_path(firstPart, secondPart, false, false))										Settings::BadConfig = true;
+				if (firstPart == "client_max_body_size" && parse_body_size(secondPart))											Settings::BadConfig = true;
+				if (firstPart == "autoindex" && parse_autoindex(secondPart))													Settings::BadConfig = true;
+				if (firstPart == "error_page") parse_errors(firstPart, secondPart, Loc);
+				if (firstPart != "error_page") Loc.add(firstPart, secondPart);
 				
 			} while (getline(infile, line));
 			return (0);
@@ -301,7 +343,7 @@
 	#pragma region Parse VServer
 
 		static int parser_vserver(std::ifstream & infile, std::string & line) {
-			VServer VServ; int current_bracket = Settings::bracket_lvl; std::string tmp_line; std::string orig_line = line;
+			VServer VServ; int current_bracket = bracket_lvl; std::string tmp_line; std::string orig_line = line;
 			do {
 				tmp_line = line;
 				trim(line); if (line.empty()) {
@@ -328,15 +370,19 @@
 				}
 
 				if (brackets(firstPart) + brackets(secondPart) < 0) {
-					if (Settings::bracket_lvl < 0) return (0);
-					if (Settings::bracket_lvl <= current_bracket) { Settings::config.push_back(tmp_line); Settings::add(VServ); break; }
+					if (bracket_lvl < 0) return (0);
+					if (bracket_lvl <= current_bracket) { Settings::config.push_back(tmp_line); Settings::add(VServ); break; }
 				}
 
 				if (!firstPart.empty() && tmp_line != orig_line) { VServ.config.push_back(tmp_line); Settings::config.push_back(tmp_line); }
 				if (firstPart.empty()) continue;
-				if (firstPart == "client_max_body_size") parse_body_size(secondPart, line);
+
+				if (firstPart == "access_log" || firstPart == "error_log") parse_path(firstPart, secondPart, true, true);
+				if (firstPart == "root" && parse_path(firstPart, secondPart, false, false))										Settings::BadConfig = true;
+				if (firstPart == "client_max_body_size" && parse_body_size(secondPart))											Settings::BadConfig = true;
+				if (firstPart == "autoindex" && parse_autoindex(secondPart))													Settings::BadConfig = true;
 				if (firstPart == "error_page") parse_errors(firstPart, secondPart, VServ);
-				else if (firstPart != "server") VServ.add(firstPart, secondPart);
+				if (firstPart != "server" && firstPart == "error_page") VServ.add(firstPart, secondPart);
 
 			} while (getline(infile, line));
 			return (0);
@@ -370,8 +416,13 @@
 			brackets(firstPart); brackets(secondPart);
 
 			if (firstPart.empty()) return (0);
-			if (firstPart == "client_max_body_size") parse_body_size(secondPart, line);
-			if (firstPart == "error_page") parse_errors(firstPart, secondPart); else Settings::add(firstPart, secondPart);
+
+			if (firstPart == "access_log" || firstPart == "error_log") parse_path(firstPart, secondPart, true, true);
+			if (firstPart == "root" && parse_path(firstPart, secondPart, false, false))											Settings::BadConfig = true;
+			if (firstPart == "client_max_body_size" && parse_body_size(secondPart))												Settings::BadConfig = true;
+			if (firstPart == "autoindex" && parse_autoindex(secondPart))														Settings::BadConfig = true;
+			if (firstPart == "error_page") parse_errors(firstPart, secondPart);
+			if (firstPart != "error_page") Settings::add(firstPart, secondPart);
 
 			return (0);
 		}
@@ -411,7 +462,7 @@
 						return ;
 					}
 				} infile.close();
-				if (Settings::bracket_lvl != 0) {
+				if (bracket_lvl != 0) {
 				// 	if (isDefault) {
 				// 		if (!isRegen) {
 				// 			remove(File.c_str());
@@ -477,18 +528,31 @@
 	#pragma region Load Args
 
 		void Settings::load_args(int argc, char **argv) {
+			load_error_codes();
 			if (argc == 2 && !strcmp(argv[1], "-t")) {                                                                                      //  Test default settings
 				Settings::check_only = true;
+				std::cout << std::endl;
 				Settings::load();
+				if (Settings::vserver.size() == 0 && Settings::loaded_ok && Log::error.size() == 0) Log::log_error("There are no " Y "virtual servers" RD " in the configuration file");
+				if (Log::error.size() == 0)			std::cout << C "\tThe configuration file is correct" NC << std::endl;
+				else if (Log::error.size() == 1)	std::cout << std::endl << C "\t\tThere is "  << Log::error.size() << " error in total" NC << std::endl;
+				else 								std::cout << std::endl << C "\t\tThere are " << Log::error.size() << " errors in total" NC << std::endl;
+				std::cout << std::endl;
 				Settings::terminate = 0;
 			} else if (argc == 3 && (!strcmp(argv[1], "-t") || !strcmp(argv[2], "-t"))) {                                                   //  Test indicated settings
 				Settings::check_only = true;
+				std::cout << std::endl;
 				if (!strcmp(argv[1], "-t") && !strcmp(argv[2], "-t")) {
-					std::cout << std::endl << RD "\t\t     Test config file" << std::endl << std::endl
+					std::cout << RD "\t\t     Test config file" << std::endl << std::endl
 							<< C "\tUsage: " Y "./webserv -t [" B "Opional " G "settings file" Y "]" NC << std::endl << std::endl;
 				}
 				else if (strcmp(argv[1], "-t")) Settings::load(argv[1]);
 				else if (strcmp(argv[2], "-t")) Settings::load(argv[2]);
+				if (Settings::vserver.size() == 0 && Settings::loaded_ok && Log::error.size() == 0) Log::log_error("There are no " Y "virtual servers" RD " in the configuration file");
+				if (Log::error.size() == 0)			std::cout << C "\tThe configuration file is correct" NC << std::endl;
+				else if (Log::error.size() == 1)	std::cout << std::endl << C "\t\tThere is "  << Log::error.size() << " error in total" NC << std::endl;
+				else 								std::cout << std::endl << C "\t\tThere are " << Log::error.size() << " errors in total" NC << std::endl;
+				std::cout << std::endl;
 				Settings::terminate = 0;
 			} else if (argc > 2) {
 				std::cout << std::endl << RD "\t     Incorrect number of arguments" << std::endl << std::endl
@@ -530,7 +594,7 @@
 
 	void Settings::clear() {
 		for (std::vector<VServer>::iterator it = vserver.begin(); it != vserver.end(); ++it) it->clear();
-		global.clear(); vserver.clear(); config.clear(); Settings::bracket_lvl = 0; Settings::loaded_ok = false;
+		global.clear(); vserver.clear(); config.clear(); bracket_lvl = 0; Settings::loaded_ok = false;
 	}
 
 #pragma endregion
@@ -539,7 +603,7 @@
 
 	void Settings::set(VServer & VServ) {
 		std::vector<VServer>::iterator it = std::find(vserver.begin(), vserver.end(), VServ);
-		if (it == vserver.end()) { VServ.status = false; VServ.config_displayed = false; VServ.log_index = 0; VServ.config_index = 0; VServ.autolog = true; vserver.push_back(VServ); }
+		if (it == vserver.end()) { vserver.push_back(VServ); }
 		else *it = VServ;
 	}
 
@@ -549,3 +613,30 @@
 	}
 
 #pragma endregion
+
+
+//	GLOBAL
+
+//	✓	access_log										/var/log/nginx/access.log;
+//	✓	error_log										/var/log/nginx/error.log;
+//	✓	client_max_body_size							10M;
+//		error_page 404									/404.html;										error_page 404 =200 /about/index.html;
+//	✓	autoindex										on;
+
+//	SERVER	(server {)
+
+//		listen											80;												Empty or not valid range or number
+//		server_name										example.com www.example.com;
+//		root											/mnt/c/www/html/example.com;					Error lectura
+//		index											index.html index.htm index.php;					Empty
+
+//		LOCATION
+//
+//			location 									= /404.html {	(Diferencia con el = y ~)
+//			internal;
+//			alias										/mnt/c/www/html/error_pages/404.html;
+//			try_files									$uri $uri/ =404;								$uri $uri/ /file.html;
+//			return										301 https://example.com$request_uri;
+//			limit_except								GET POST {
+//				deny									all;
+//				return									405 /405.html;

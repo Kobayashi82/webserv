@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:32:38 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/06 01:06:50 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/08 15:10:48 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,9 +16,9 @@
 #pragma region Variables
 
 	static size_t				_maxSize = 200;
-	std::deque <std::string>	Log::Access;
-	std::deque <std::string>	Log::Error;
-	std::deque <std::string>	Log::Both;
+	std::deque <std::string>	Log::access;
+	std::deque <std::string>	Log::error;
+	std::deque <std::string>	Log::both;
 
 #pragma endregion
 
@@ -31,8 +31,8 @@
 				if (VServ->access.size() == _maxSize) VServ->access.pop_front();
 				VServ->access.push_back(str);
 			} else {
-				if (Log::Access.size() == _maxSize) Log::Access.pop_front();
-				Log::Access.push_back(str);
+				if (Log::access.size() == _maxSize) Log::access.pop_front();
+				Log::access.push_back(str);
 			}
 		}
 
@@ -41,8 +41,8 @@
 				if (VServ->error.size() == _maxSize) VServ->error.pop_front();
 				VServ->error.push_back(str);
 			} else {
-				if (Log::Error.size() == _maxSize) Log::Error.pop_front();
-				Log::Error.push_back(str);
+				if (Log::error.size() == _maxSize) Log::error.pop_front();
+				Log::error.push_back(str);
 			}
 		}
 
@@ -51,8 +51,8 @@
 				if (VServ->both.size() == _maxSize) VServ->both.pop_front();
 				VServ->both.push_back(str);
 			} else {
-				if (Log::Both.size() == _maxSize) Log::Both.pop_front();
-				Log::Both.push_back(str);
+				if (Log::both.size() == _maxSize) Log::both.pop_front();
+				Log::both.push_back(str);
 			}
 		}
 
@@ -60,7 +60,7 @@
 
 	#pragma region Print
 
-		std::string Log::access(VServer * VServ, size_t rows) {
+		std::string Log::get_access(VServer * VServ, size_t rows) {
 			std::ostringstream stream;
 			if (VServ) {
 				for (size_t i = 0; i < rows && i < VServ->access.size(); ++i) {
@@ -68,15 +68,15 @@
 					if (i + 1 != VServ->access.size()) stream << NC << std::endl;
 				}
 			} else {
-				for (size_t i = 0; i < rows && i < Access.size(); ++i) {
-					stream << Access[i];
-					if (i + 1 != Access.size()) stream << NC << std::endl;
+				for (size_t i = 0; i < rows && i < access.size(); ++i) {
+					stream << access[i];
+					if (i + 1 != access.size()) stream << NC << std::endl;
 				}
 			}
 			return (stream.str());
 		}
 
-		std::string Log::error(VServer * VServ, size_t rows) {
+		std::string Log::get_error(VServer * VServ, size_t rows) {
 			std::ostringstream stream;
 			if (VServ) {
 				for (size_t i = 0; i < rows && i < VServ->error.size(); ++i) {
@@ -84,15 +84,15 @@
 					if (i + 1 != VServ->error.size()) stream << NC << std::endl;
 				}
 			} else {
-				for (size_t i = 0; i < rows && i < Error.size(); ++i) {
-					stream << Error[i];
-					if (i + 1 != Error.size()) stream << NC << std::endl;
+				for (size_t i = 0; i < rows && i < error.size(); ++i) {
+					stream << error[i];
+					if (i + 1 != error.size()) stream << NC << std::endl;
 				}
 			}
 			return (stream.str());
 		}
 
-		std::string Log::both(VServer * VServ, size_t rows) {
+		std::string Log::get_both(VServer * VServ, size_t rows) {
 			std::ostringstream stream;
 			if (VServ) {
 				for (size_t i = 0; i < rows && i < VServ->both.size(); ++i) {
@@ -100,9 +100,9 @@
 					if (i + 1 != VServ->both.size()) stream << NC << std::endl;
 				}
 			} else {
-				for (size_t i = 0; i < rows && i < Both.size(); ++i) {
-					stream << Both[i];
-					if (i + 1 != Both.size()) stream << NC << std::endl;
+				for (size_t i = 0; i < rows && i < both.size(); ++i) {
+					stream << both[i];
+					if (i + 1 != both.size()) stream << NC << std::endl;
 				}
 			}
 			return (stream.str());
@@ -112,7 +112,7 @@
 
 	#pragma region Clear
 
-		void Log::clear() { Access.clear(); Error.clear(); Both.clear(); }
+		void Log::clear() { access.clear(); error.clear(); both.clear(); }
 
 	#pragma endregion
 
@@ -126,7 +126,6 @@
 			if (Settings::check_only) std::cout << str << std::endl;
 			else {
 				if (path != "" && path[0] != '/') path = Settings::program_path + path;
-				Settings::createPath(path);
 				std::ofstream outfile;
 				outfile.open(path.c_str(), std::ios_base::app);
 				if (outfile.is_open()) {
@@ -141,7 +140,7 @@
 	#pragma region Log Access
 
 		void Log::log_access(std::string str, VServer * VServ) {
-			if (str.empty()) return ;
+			if (str.empty() || Settings::check_only) return ;
 			str = "[" + Settings::timer.current_date() + " " + Settings::timer.current_time() + "] - " + str;
 			both_add(str); access_add(str);
 			if (VServ) { both_add(str, VServ); access_add(str, VServ); }
@@ -156,8 +155,9 @@
 
 		void Log::log_error(std::string str, VServer * VServ) {
 			if (str.empty()) return ;
-			str = "[" + Settings::timer.current_date() + " " + Settings::timer.current_time() + "] - " + str;
-			both_add(RD + str); error_add(str);
+			if (!Settings::check_only) str = "[" + Settings::timer.current_date() + " " + Settings::timer.current_time() + "] - " RD + str;
+			else str = "\t" RD + str + NC;
+			both_add(str); error_add(str);
 			if (VServ) { both_add(str, VServ); error_add(str, VServ); }
 			if (VServ && VServ->get("error_log") != "") log_to_file(str, VServ->get("error_log"));
 			else log_to_file(str, Settings::get("error_log"));

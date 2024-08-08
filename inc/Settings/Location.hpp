@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 11:53:37 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/01 17:28:53 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/08 15:05:13 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,9 +23,9 @@ class Location {
 		std::map<std::string, std::string>	location;													//	Values of the current Location
 
 		//	Constructors
-		Location() {}																					//	Default constructor
-		Location(const Location & src) { *this = src; }													//	Copy constructor
-		~Location() { clear(); }																		//	Destructor (Call clear() before destruction)
+		Location();																						//	Default constructor
+		Location(const Location & src);																	//	Copy constructor
+		~Location();																					//	Destructor (Call clear() before destruction)
 
 		//	Overloads
 		Location &	operator=(const Location & rhs);													//	Overload for asignation

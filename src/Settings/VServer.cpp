@@ -6,11 +6,21 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 11:54:43 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/05 23:09:18 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/08 15:02:22 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "VServer.hpp"
+
+#pragma region Constructors
+
+    VServer::VServer() : config_displayed(false), config_index(0), log_index(0), autolog(true), status(false) {}
+
+    VServer::VServer(const VServer & src) { *this = src; }
+
+    VServer::~VServer() { clear(); }
+
+#pragma endregion
 
 #pragma region Overloads
 

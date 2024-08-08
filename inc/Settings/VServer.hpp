@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 11:53:48 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/05 23:08:48 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/08 15:06:05 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,9 +38,9 @@ class VServer {
 		bool								status;														//	Status of the VServer (Started/Stoped)
 		
 		//	Constructors
-		VServer() {}																					//	Default constructor
-		VServer(const VServer & src) { *this = src; }													//	Copy constructor
-		~VServer() { clear(); }																			//	Destructor (Call clear() before destruction)
+		VServer();																						//	Default constructor
+		VServer(const VServer & src);																	//	Copy constructor
+		~VServer();																						//	Destructor (Call clear() before destruction)
 
 		//	Overloads
 		VServer &	operator=(const VServer & rhs);														//	Overload for asignation

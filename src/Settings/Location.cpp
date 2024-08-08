@@ -6,11 +6,21 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 11:54:47 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/01 16:36:59 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/08 15:02:56 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Location.hpp"
+
+#pragma region Constructors
+
+    Location::Location() {}
+
+    Location::Location(const Location & src) { *this = src; }
+
+    Location::~Location() { clear(); }
+
+#pragma endregion
 
 #pragma region Overloads
 

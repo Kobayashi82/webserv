@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 11:59:38 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/06 00:36:40 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/08 15:49:00 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,15 +27,11 @@ class Display {
 
 	public:
 
-		static int	cols;
-		static int	rows;
-		static int	log_rows;
-		static bool	drawing;
-
-		static void	Input();
-		static void	Output();
-		static void	enableRawMode();
-		static void	disableRawMode();
-		static void	setTerminalSize(size_t rows, size_t cols);
+		//	Methods
+		static void	Input();																			//	Manage user input
+		static void	Output();																			//	Manage output to the terminal
+		static void	enableRawMode();																	//	Enable raw un-buffered mode for the terminal
+		static void	disableRawMode();																	//	Disable raw un-buffered mode for the terminal
+		static void	setTerminalSize(size_t rows, size_t cols);											//	Set the terminal size (a little big buggy)
 
 };

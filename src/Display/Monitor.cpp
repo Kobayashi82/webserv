@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/03 14:10:10 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/06 00:37:03 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/08 16:06:47 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,14 +67,14 @@ double Monitor::getCPU() {
 
 //	sysconf(_SC_PAGESIZE) obtains the system's page size at runtime and multiplies it by resident to calculate the total size in bytes.
 
-size_t Monitor::get_memory() {
+size_t Monitor::getMEM() {
     std::ifstream statm("/proc/self/statm");                                                            //  Open the /proc/self/statm file for reading
     size_t size, resident, share, text, lib, data, dt;
     statm >> size >> resident >> share >> text >> lib >> data >> dt;                                    //  Read the values from the file into the variables
     return (resident * sysconf(_SC_PAGESIZE));															//  Calculate and return the resident memory size in bytes
 }
 
-std::string Monitor::get_memory_str() {
+std::string Monitor::getMEMinStr() {
     std::ifstream statm("/proc/self/statm");                                                            //  Open the /proc/self/statm file for reading
     size_t size, resident, share, text, lib, data, dt;
     statm >> size >> resident >> share >> text >> lib >> data >> dt;                                    //  Read the values from the file into the variables
@@ -94,7 +94,7 @@ std::string Monitor::get_bytes_received_str() { return (formatSize(_bytes_receiv
 
 
 
-std::string Monitor::valueToString(double Value) {                                                                               // Convert a number to a string
+std::string Monitor::valueToString(double Value) {																		// Convert a number to a string
     std::ostringstream oss; oss << std::fixed << std::setprecision(2) << Value; std::string Result = oss.str();         // Convert to string with sufficient precision
 
     size_t decimalPos = Result.find('.');
