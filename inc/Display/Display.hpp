@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 11:59:38 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/08 15:49:00 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/09 00:11:35 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,10 +14,10 @@
 
 #include "Colors.hpp"
 
-#include <iostream>																						//	For standard input/output stream objects like std::cin, std::cout
-#include <sstream>																						//	For std::ostringstream to format strings
+#include <iostream>																						//	For strings and standard input/output like std::cin, std::cout
+#include <sstream>																						//	For std::stringstream to format strings
 #include <iomanip>																						//	For stream manipulators like std::setw and std::setfill
-#include <csignal>																						//	For signal handling functions like std::signal
+#include <csignal>																						//	For signal handling like std::signal
 
 #include <fcntl.h>																						//	For file control options like fcntl to set non-blocking mode
 #include <termios.h>																					//	For terminal I/O interfaces to enable/disable raw mode
