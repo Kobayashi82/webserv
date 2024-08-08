@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 11:53:48 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/08 15:06:05 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/08 22:56:45 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,10 +15,10 @@
 #include "Location.hpp"
 
 #include <iostream>																						//	For standard input/output stream objects like std::cin, std::cout
-#include <algorithm>																					//	For algorithms like std::sort, std::find, etc.
-#include <vector>																						//	For the std::vector container
-#include <deque>																						//	For the std::deque container
-#include <map>																							//	For the std::map container
+#include <algorithm>																					//	For std::find()
+#include <vector>																						//	For std::vector container
+#include <deque>																						//	For std::deque container
+#include <map>																							//	For std::map container
 
 class VServer {
 

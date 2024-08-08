@@ -6,21 +6,23 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/03 13:52:15 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/08 16:08:10 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/08 23:18:30 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
-#include <iostream>																						//	For standard input/output stream objects like std::cin, std::cout
+#include "Utils.hpp"
+
+#include <iostream>																						//	For strings and standard input/output like std::cin, std::cout
 #include <fstream>																						//	For file stream classes like std::ifstream, std::ofstream
-#include <sstream>																						//	For std::ostringstream to format strings
+#include <sstream>																						//	For std::stringstream to format strings
 #include <iomanip>																						//	For stream manipulators like std::setw and std::setfill
 
 #include <ctime>																						//	For time-related functions and types
 #include <cmath>																						//	For standard math functions
 
-#include <unistd.h>																						//	For functions like sleep, fork, etc.
+#include <unistd.h>																						//	For sysconf() to calculate the page size
 
 class Monitor {
 
@@ -40,9 +42,11 @@ class Monitor {
 
 		//	Constructor
     	Monitor();
+		Monitor(const Monitor & src);																	//	Copy constructor
 		~Monitor() {}
 
-		//	Add Overloads
+		//	Overloads
+		Monitor &	operator=(const Monitor & rhs);														//	Overload for asignation
 
 		//	CPU
 		std::string	getCPUinStr();																		//	Get the CPU usage as a string
@@ -61,10 +65,6 @@ class Monitor {
 
 		std::string	get_bytes_sent_str();																//
 		std::string	get_bytes_received_str();															//
-
-		//	Utils
-		std::string	valueToString(double Value);														//	Convert a number to string
-		std::string	formatSize(size_t bytes);															//	Format a size to string (byte, KB, MB, GB, TB)
 
 };
 

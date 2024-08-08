@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:32:38 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/08 15:10:48 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/08 23:52:01 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -155,8 +155,8 @@
 
 		void Log::log_error(std::string str, VServer * VServ) {
 			if (str.empty()) return ;
-			if (!Settings::check_only) str = "[" + Settings::timer.current_date() + " " + Settings::timer.current_time() + "] - " RD + str;
-			else str = "\t" RD + str + NC;
+			if (!Settings::check_only) str = "[" + Settings::timer.current_date() + " " + Settings::timer.current_time() + "] - " + str;
+			else str = "\t" + str + NC;
 			both_add(str); error_add(str);
 			if (VServ) { both_add(str, VServ); error_add(str, VServ); }
 			if (VServ && VServ->get("error_log") != "") log_to_file(str, VServ->get("error_log"));

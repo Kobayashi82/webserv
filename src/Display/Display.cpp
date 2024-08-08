@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/14 14:37:32 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/08 16:09:17 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/08 23:55:50 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -228,20 +228,20 @@
 					Output();
 				}
             }
-			if (c == 'w' && Settings::vserver.size() > 0) {																				//	(S)tart / (S)top
+			if ((c == 'w' || c == 'W') && Settings::vserver.size() > 0) {																				//	(S)tart / (S)top
 				Settings::status = !Settings::status;
 				if (Settings::status)
 					Log::log_access("WebServ 1.0 stoped");
 				else
 					Log::log_access("WebServ 1.0 started");
-			} else if (c == 'v' && Settings::status && Settings::vserver.size() > 0
+			} else if ((c == 'v' || c == 'V') && Settings::status && Settings::vserver.size() > 0
 				&& Settings::current_vserver != -1) {																					//	(V)server start
 					Settings::vserver[Settings::current_vserver].status = !Settings::vserver[Settings::current_vserver].status;
 					if (Settings::vserver[Settings::current_vserver].status)
 						Log::log_access("VServer started", &Settings::vserver[Settings::current_vserver]);
 					else
 						Log::log_access("VServer stoped", &Settings::vserver[Settings::current_vserver]);
-			} else if (c == 'c') {																										//	(C)lear log
+			} else if ((c == 'c' || c == 'C')) {																										//	(C)lear log
 				if (Settings::current_vserver == -1 && Log::both.size() > 0)
 					Log::clear();
 				else if (Settings::current_vserver != -1 && Settings::vserver.size() > 0
@@ -249,7 +249,7 @@
 						Settings::vserver[Settings::current_vserver].clear_logs();
 				else return ;
 				Output();
-			} else if (c == 'l') {																										//	(L)og
+			} else if ((c == 'l' || c == 'L')) {																										//	(L)og
 				if (Settings::current_vserver == -1 && Settings::config_displayed == true)
 					Settings::config_displayed = false;
 				else if (Settings::current_vserver != -1 && Settings::vserver.size() > 0
@@ -257,7 +257,7 @@
 						Settings::vserver[Settings::current_vserver].config_displayed = false;
 				else return ;
 				Output();
-			} else if (c == 's') {																										//	(S)ettings
+			} else if ((c == 's' || c == 'S')) {																										//	(S)ettings
 				if (Settings::current_vserver == -1 && Settings::config_displayed == false)
 					Settings::config_displayed = true;
 				else if (Settings::current_vserver != -1 && Settings::vserver.size() > 0
@@ -265,8 +265,8 @@
 						Settings::vserver[Settings::current_vserver].config_displayed = true;
 				else return ;
 				Output();
-			} else if (c == 'e') { disableRawMode(); Settings::terminate = 0;															//	(E)xit
-			} else if (c == 'r') { std::cout << CB CHIDE CS CUU; Output(); }															//	(R)eset terminal
+			} else if ((c == 'e' || c == 'E')) { disableRawMode(); Settings::terminate = 0;															//	(E)xit
+			} else if ((c == 'r' || c == 'R')) { std::cout << CB CHIDE CS CUU; Output(); }															//	(R)eset terminal
 		}
 
 	#pragma endregion

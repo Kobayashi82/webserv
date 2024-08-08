@@ -6,14 +6,14 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 11:53:37 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/08 15:05:13 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/08 22:56:07 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
-#include <iostream>																						//	For standard input/output stream objects like std::cin, std::cout
-#include <map>																							//	For the std::map container
+#include <iostream>																						//	For strings and standard input/output like std::cin, std::cout
+#include <map>																							//	For std::map container
 
 class Location {
 
