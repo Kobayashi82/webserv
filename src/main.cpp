@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 14:30:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/08 14:02:34 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/09 23:20:05 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,10 @@ int main(int argc, char **argv) {
     Settings::load_args(argc, argv); if (Settings::terminate != -1) return (Settings::terminate);
 	
     Display::enableRawMode();
-    while (Settings::terminate == -1) { Display::Input(); usleep(10000); }
+    while (Settings::terminate == -1) { Display::Input(); usleep(10000);
+		Log::log_access("Mensajito");
+	}
+	usleep(100000); std::cout.flush(); std::cout.clear(); Display::maxFails = 10; Display::failCount = 0; Display::drawing = false;
 	Log::log_access("WebServ 1.0 closed successfully");
     Display::disableRawMode(); Settings::clear();
     return (Settings::terminate);

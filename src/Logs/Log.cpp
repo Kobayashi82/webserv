@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:32:38 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/08 23:52:01 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/09 17:28:17 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -129,7 +129,7 @@
 				std::ofstream outfile;
 				outfile.open(path.c_str(), std::ios_base::app);
 				if (outfile.is_open()) {
-					outfile << str << std::endl;
+					outfile << Utils::str_nocolor(str) << std::endl;
 					outfile.close();
 				}
 			}

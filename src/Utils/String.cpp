@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:36:49 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/08 23:11:12 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/09 22:25:13 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,9 +60,9 @@
 
 #pragma endregion
 
-#pragma region stod
+#pragma region dtos
 
-	std::string Utils::stod(double number) {
+	std::string Utils::dtos(double number) {
 		std::ostringstream oss; oss << std::fixed << std::setprecision(2) << number; std::string Result = oss.str();		// Convert to string with sufficient precision
 
 		size_t decimalPos = Result.find('.');
@@ -82,7 +82,62 @@
 
 		while (size >= 1024 && suffix < 4) { size /= 1024; ++suffix; }
 		if (size > 1 && suffix == 0) s = "s";
-		return (stod(size) + " " + suffixes[suffix] + s);
+		return (dtos(size) + " " + suffixes[suffix] + s);
+	}
+
+#pragma endregion
+
+#pragma region STR NoColor
+
+	std::string Utils::str_nocolor(const std::string & str) {
+		std::string result; int length = str.size();
+		int visible_length = 0;
+		for (size_t i = 0; i < str.size(); ++i) {
+			if (str[i] == '\033' && i + 1 < str.size() && str[i + 1] == '[') {
+				while (i < str.size() && str[i] != 'm') ++i;
+			} else {
+				if (visible_length < length) {
+					result += str[i];
+					++visible_length;
+				} else {
+					result += "...";
+					break;
+				}
+			}
+		}
+		return result;
+	}
+
+#pragma endregion
+
+#pragma region STR NoColor Trunc
+
+	std::string Utils::str_nocolor_trunc(const std::string & str, int length) {
+		std::string result; int visible_length = 0;
+		for (size_t i = 0; i < str.size(); ++i) {
+			if (str[i] == '\033' && i + 1 < str.size() && str[i + 1] == '[') {
+				while (i < str.size() && str[i] != 'm') result += str[i++];
+				result += str[i];
+			} else {
+				if (visible_length < length) { result += str[i]; ++visible_length; }
+				else { result += "..."; break; }
+			}
+		}
+		return (result);
+	}
+
+#pragma endregion
+
+#pragma region STR NoColor Length
+
+	int Utils::str_nocolor_length(const std::string & str) {
+	    int length = 0;
+		for (size_t i = 0; i < str.size(); ++i) {
+			if (str[i] == '\033' && i + 1 < str.size() && str[i + 1] == '[') {
+				while (i < str.size() && str[i] != 'm') ++i;
+			} else ++length;
+		}
+		return (length);
 	}
 
 #pragma endregion

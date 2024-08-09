@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 11:59:38 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/09 00:11:35 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/09 23:13:22 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,10 @@
 class Display {
 
 	public:
+
+		static bool	drawing;
+		static int	failCount;
+		static int	maxFails;
 
 		//	Methods
 		static void	Input();																			//	Manage user input

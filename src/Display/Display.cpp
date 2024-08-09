@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/14 14:37:32 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/08 23:55:50 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/09 23:13:09 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,13 +16,18 @@
 
 #pragma region Variables
 
-	static					Monitor monitor;															//	Class to obtain MEM and CPU ussage
+	bool					Display::drawing = false;													//	Is in the middle of an Output()
+	int						Display::failCount = 0;														// Contador de fallos
+	int						Display::maxFails = 3;														// Número máximo de fallos permitidos
+
+	static Monitor			monitor;																	//	Class to obtain MEM and CPU ussage
 	static struct termios	orig_termios;																//	Structure for terminal information
 	static bool				signalRegistered = false;													//	Signals already registered
 	static int				total_cols = 0;																//	Number of columns in the terminal
 	static int				total_rows = 0;																//	Number of rows in the terminal
 	static int				log_rows = 0;																//	Number of rows available for logs or settings
-	static bool				drawing = false;															//	Is in the middle of an Output()
+	static bool				redraw = false;																//	Is in the middle of an Output()
+
 
 #pragma endregion
 
@@ -67,12 +72,12 @@
 #pragma region Signals
 
 	static void killHandler(int signum) {
-		Display::disableRawMode();
 		Settings::terminate = signum + 128;
 	}
 
 	static void resizeHandler(int signum) {
 		(void) signum;
+		if (Display::drawing) { redraw = true; return; }
 		Display::Output();
 	}
 
@@ -89,7 +94,6 @@
     }
 
 	static void quitHandler(int signum) {
-     	Display::disableRawMode();
 		Settings::terminate = signum + 128;
  	}
 
@@ -265,46 +269,13 @@
 						Settings::vserver[Settings::current_vserver].config_displayed = true;
 				else return ;
 				Output();
-			} else if ((c == 'e' || c == 'E')) { disableRawMode(); Settings::terminate = 0;															//	(E)xit
-			} else if ((c == 'r' || c == 'R')) { std::cout << CB CHIDE CS CUU; Output(); }															//	(R)eset terminal
+			} else if ((c == 'e' || c == 'E')) { Settings::terminate = 0;										//	(E)xit
+			} else if ((c == 'r' || c == 'R')) { std::cout << CB CHIDE CS CUU; std::cout.clear();  drawing = false; failCount = 0; Output(); }			//	(R)eset terminal
 		}
 
 	#pragma endregion
 
 	#pragma region Output
-
-			static int str_length(const std::string & str) {
-			    int length = 0;
-				for (size_t i = 0; i < str.size(); ++i) {
-					if (str[i] == '\033' && i + 1 < str.size() && str[i + 1] == '[') {
-						while (i < str.size() && str[i] != 'm') ++i;
-					} else ++length;
-				}
-				return (length);
-			}
-
-			std::string truncate_string(const std::string & str, int max_length) {
-				int visible_length = 0;
-				std::string result;
-				for (size_t i = 0; i < str.size(); ++i) {
-					if (str[i] == '\033' && i + 1 < str.size() && str[i + 1] == '[') {
-						// Append the escape sequence to the result
-						while (i < str.size() && str[i] != 'm') {
-							result += str[i++];
-						}
-						result += str[i]; // Append the 'm'
-					} else {
-						if (visible_length < max_length) {
-							result += str[i];
-							++visible_length;
-						} else {
-							result += "...";
-							break;
-						}
-					}
-				}
-				return result;
-			}
 
 		#pragma region Print Log
 
@@ -313,9 +284,9 @@
 					int length = 0; std::string temp = "";
 					if (index < log.size()) temp = log[index++];
 					if (temp.empty()) { oss << C "│"; setLine(C, " ", cols + 2, oss); oss << C "│" NC << std::endl; continue; }
-					length = str_length(temp);
-					if (length > cols + 2) temp = truncate_string(temp, cols - 1);
-					length = (cols + 2) - str_length(temp);
+					length = Utils::str_nocolor_length(temp);
+					if (length > cols + 2) temp = Utils::str_nocolor_trunc(temp, cols - 1);
+					length = (cols + 2) - Utils::str_nocolor_length(temp);
 					if (length < 0) length = 0;
 					oss << C "│" NC << temp;
 					setLine(C, " ", length, oss);
@@ -337,9 +308,9 @@
 
 					if (index < config.size()) temp = ss.str() + "  " + config[index]; index++;
 					if (temp.empty()) { oss << C "│"; setLine(C, " ", cols + 2, oss); oss << "│" NC << std::endl; continue; }
-					length = str_length(temp);
-					if (length > cols + 2) temp = truncate_string(temp, cols - 1);
-					length = (cols + 2) - str_length(temp);
+					length = Utils::str_nocolor_length(temp);
+					if (length > cols + 2) temp = Utils::str_nocolor_trunc(temp, cols - 1);
+					length = (cols + 2) - Utils::str_nocolor_length(temp);
 					if (length < 0) length = 0;
 					oss << C "│" NC << temp;
 					setLine(C, " ", length, oss);
@@ -462,9 +433,9 @@
 
 			void Display::Output() {
 				if (Settings::check_only) return ;
-				if (drawing) return; else drawing = true;																		//	┌───┐ ◄ ►
+				if (drawing) return; else drawing = true;																						//	┌───┐ ◄ ►
 				winsize w; ioctl(0, TIOCGWINSZ, &w); int cols = w.ws_col - 4, row = 0;															//	├─┬─┤  ▲
-				total_cols = cols; total_rows = w.ws_row; log_rows = total_rows - 9;											//	├─┴─┤  ▼
+				total_cols = cols; total_rows = w.ws_row; log_rows = total_rows - 9;															//	├─┴─┤  ▼
 				std::ostringstream oss; std::ostringstream ss; ss << Settings::vserver.size(); std::string temp = ss.str();						//	├─┬─┤  █
 				std::string Status; std::string Color = RD; std::string LArrow = "◄ "; std::string RArrow = "► ";								//	├─┼─┤
 				if (Settings::vserver.size() > 0) Color = G;																					//	├─┴─┤  ▒
@@ -472,7 +443,7 @@
 				if (Settings::vserver.size() == 0) { LArrow = "  "; RArrow = "  "; }
 				
 			//	TITLE
-				oss << CHIDE CS CUU;
+				oss << CHIDE CUU;
 				oss << C "┌─────────────────┬"; setLine(C, "─", (cols + 2) - 18, oss); oss << "┐" NC << std::endl; row++;
 				oss << C "│ V-Servers: " << Color << temp; setLine(C, " ", 5 - temp.size(), oss); oss << C "│"; setPadding("WEBSERV 1.0", Status, " ", (cols + 2) - 20, 1, oss); oss << RD "X " C "│" NC << std::endl; row++;
 				oss << C "├─────────────────┤"; setLine(Status, "▄", (cols + 2) - 18, oss); oss << C "│" NC << std::endl; row++;
@@ -541,7 +512,13 @@
 			// BUTTONS
 				print_buttons(oss, cols, row);
 
-				std::cout << oss.str();
+				if (redraw) { drawing = false; redraw = false; std::cout.flush(); std::cout.clear(); failCount = 0; Output(); return; }
+				std::cout << oss.str(); std::cout.flush();
+				if (std::cout.fail()) {
+					std::cout.clear(); drawing = false; failCount++;
+					if (failCount < maxFails) { Output(); return; }
+				}
+				failCount = 0;
 				drawing = false;
 			}
 

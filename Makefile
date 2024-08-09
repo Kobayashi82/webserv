@@ -6,7 +6,7 @@
 #    By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/02/20 17:51:39 by vzurera-          #+#    #+#              #
-#    Updated: 2024/08/09 00:09:01 by vzurera-         ###   ########.fr        #
+#    Updated: 2024/08/09 22:39:52 by vzurera-         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -42,7 +42,7 @@ COUNTER 			= 0
 # ─────────── #
 
 CC					= clang++
-FLAGS				= -Wall -Wextra -Werror -std=c++98 -g
+FLAGS				= -Wall -Wextra -Werror -std=c++98 -g # -fsanitize=thread
 
 # ───────────────── #
 # ── DIRECTORIES ── #

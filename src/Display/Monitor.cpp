@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/03 14:10:10 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/08 23:19:20 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/09 22:40:52 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,8 @@
 		_prev_cpu_time = std::clock();
 		_CPUinStr = "0.08 %";
 		_CPU = 0;
+		_MEMinStr = "0.00 MB";
+		_MEM = 0;
 		_bytes_sent = 0;
 		_bytes_received = 0;
 	}
@@ -89,16 +91,20 @@
 
 	size_t Monitor::getMEM() {
 		std::ifstream statm("/proc/self/statm");														//  Open the /proc/self/statm file for reading
+		if (!statm.is_open()) return (_MEM);
 		size_t size, resident, share, text, lib, data, dt;
 		statm >> size >> resident >> share >> text >> lib >> data >> dt;								//  Read the values from the file into the variables
-		return (resident * sysconf(_SC_PAGESIZE));														//  Calculate and return the resident memory size in bytes
+		_MEM = resident * sysconf(_SC_PAGESIZE);														//  Calculate and return the resident memory size in bytes
+		return (_MEM);
 	}
 
 	std::string Monitor::getMEMinStr() {
 		std::ifstream statm("/proc/self/statm");														//  Open the /proc/self/statm file for reading
+		if (!statm.is_open()) return (_MEMinStr);
 		size_t size, resident, share, text, lib, data, dt;
 		statm >> size >> resident >> share >> text >> lib >> data >> dt;								//  Read the values from the file into the variables
-		return (Utils::formatSize(resident * sysconf(_SC_PAGESIZE)));									//  Calculate and return the resident memory size in bytes
+		_MEMinStr = Utils::formatSize(resident * sysconf(_SC_PAGESIZE));								//  Calculate and return the resident memory size in bytes
+		return (_MEMinStr);
 	}
 
 #pragma endregion
