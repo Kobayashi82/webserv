@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 11:59:38 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/09 23:13:22 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/10 13:09:48 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,6 +30,8 @@ class Display {
 		static bool	drawing;
 		static int	failCount;
 		static int	maxFails;
+		static bool	RawModeDisabled;
+		static bool	ForceRawModeDisabled;
 
 		//	Methods
 		static void	Input();																			//	Manage user input

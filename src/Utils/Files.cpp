@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 22:23:52 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/08 22:55:21 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/10 22:51:11 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,6 +49,24 @@
 		if (access(File.c_str(), F_OK) < 0) return (1);
 		if (access(File.c_str(), R_OK) < 0) return (2);
 		return (0);
+	}
+
+#pragma endregion
+
+#pragma region IsFile
+
+	bool Utils::isFile(const std::string & path) {
+		struct stat path_stat; stat(path.c_str(), &path_stat);
+		return (S_ISREG(path_stat.st_mode));
+	}
+
+#pragma endregion
+
+#pragma region IsDirectory
+
+	bool Utils::isDirectory(const std::string & path) {
+		struct stat path_stat; stat(path.c_str(), &path_stat);
+		return (S_ISDIR(path_stat.st_mode));
 	}
 
 #pragma endregion

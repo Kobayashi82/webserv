@@ -6,13 +6,14 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:14:05 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/08 23:44:21 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/10 22:52:45 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
 #include "Colors.hpp"
+#include "Display.hpp"
 #include "Utils.hpp"
 #include "Timer.hpp"
 #include "VServer.hpp"
@@ -33,7 +34,6 @@ class Settings {
 	private:
 
 		//	Variables
-		static bool									loaded_ok;											//	The config file loaded successfully (but may contains errors)
 		static bool									BadConfig;											//	Indicate if there are errors in the config file
 		static int									line_count;											//	Number of the current line of the configuration file (use to indicate the line of an error in the configuration file)
 		static int									bracket_lvl;										//	Level of the bracket (use to parse the configuration file)
@@ -50,6 +50,11 @@ class Settings {
 		static int	parse_errors(const std::string & firstPart, const std::string & secondPart, VServer & VServ);
 		static int	parse_errors(const std::string & firstPart, const std::string & secondPart, Location & Loc);
 		static int	parse_autoindex(std::string & str);
+		static int	parse_index(std::string & str);
+		static int	parse_listen(std::string & str);
+		static int	parse_return(std::string & str);
+		static int	parse_alias(std::string & firstPart, std::string & str);
+
 		static int	parser_location(std::ifstream & infile, std::string & line, VServer & VServ);
 		static int	parser_vserver(std::ifstream & infile, std::string & line);
 		static int	parse_global(std::ifstream & infile, std::string & line);
@@ -70,6 +75,7 @@ class Settings {
 		static size_t								log_index;											//	Current index of the main log
 		static bool									autolog;											//	Auto-Scroll logs
 		static bool									check_only;											//	Check the config file, but don't start the server
+		static bool									loaded_ok;											//	The config file loaded successfully (but may contains errors)
 		static bool									status;												//	Status of the server (On/Off)
 		static int									current_vserver;									//	Current selected V-Server (-1 = None)
 		static int									terminate;											//	Flag the program to exit with the value in terminate (the default value of -1 don't exit)

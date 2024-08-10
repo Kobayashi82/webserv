@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:32:38 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/09 17:28:17 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/10 17:44:11 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -123,7 +123,8 @@
 	#pragma region Log to File
 
 		static void log_to_file(const std::string & str, std::string path = "") {
-			if (Settings::check_only) std::cout << str << std::endl;
+			if (str.empty()) return;
+			if (Settings::check_only || Display::RawModeDisabled || Display::ForceRawModeDisabled) std::cout << str << std::endl;
 			else {
 				if (path != "" && path[0] != '/') path = Settings::program_path + path;
 				std::ofstream outfile;
@@ -155,7 +156,7 @@
 
 		void Log::log_error(std::string str, VServer * VServ) {
 			if (str.empty()) return ;
-			if (!Settings::check_only) str = "[" + Settings::timer.current_date() + " " + Settings::timer.current_time() + "] - " + str;
+			if (!(Settings::check_only || Display::RawModeDisabled || Display::ForceRawModeDisabled) && !Settings::loaded_ok) str = "[" + Settings::timer.current_date() + " " + Settings::timer.current_time() + "] - " + str;
 			else str = "\t" + str + NC;
 			both_add(str); error_add(str);
 			if (VServ) { both_add(str, VServ); error_add(str, VServ); }

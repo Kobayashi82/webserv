@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:36:49 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/09 22:25:13 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/10 18:25:49 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,9 +53,9 @@
 
 #pragma region stol
 
-	long Utils::stol(const std::string & str, long & number) {
-		std::stringstream ss(str);
-		ss >> number; return ((ss.fail() || !ss.eof()));
+	long Utils::stol(const std::string & str, long & number, bool ignore_eof) {
+		std::stringstream ss(str); ss >> number;
+		return ((ss.fail() || (!ignore_eof && !ss.eof())));
 	}
 
 #pragma endregion
@@ -112,14 +112,41 @@
 
 #pragma region STR NoColor Trunc
 
+	static std::string replace_tabs_with_spaces(const std::string & str, int spaces_per_tab = 8) {
+		std::string result;
+		for (size_t i = 0; i < str.size(); ++i) {
+			if (str[i] == '\t') { for (int j = 0; j < spaces_per_tab; ++j) result += ' ';}
+			else result += str[i];
+		}
+		return (result);
+	}
+
+	// std::string Utils::str_nocolor_trunc(const std::string & str, int length) {
+	// 	std::string result; int visible_length = 0;
+	// 	for (size_t i = 0; i < str.size(); ++i) {
+	// 		if (str[i] == '\033' && i + 1 < str.size() && str[i + 1] == '[') {
+	// 			while (i < str.size() && str[i] != 'm') result += str[i++];
+	// 			result += str[i];
+	// 		} else if (str[i] == '\t') {
+	// 			if (visible_length + 8 < length) { result += str[i]; visible_length+= 8; }
+	// 			else { result += "..."; break; }
+	// 		} else {
+	// 			if (visible_length < length) { result += str[i]; ++visible_length; }
+	// 			else { result += "..."; break; }
+	// 		}
+	// 	}
+	// 	return (result);
+	// }
+
 	std::string Utils::str_nocolor_trunc(const std::string & str, int length) {
 		std::string result; int visible_length = 0;
-		for (size_t i = 0; i < str.size(); ++i) {
-			if (str[i] == '\033' && i + 1 < str.size() && str[i + 1] == '[') {
-				while (i < str.size() && str[i] != 'm') result += str[i++];
-				result += str[i];
+		std::string temp = replace_tabs_with_spaces(str);
+		for (size_t i = 0; i < temp.size(); ++i) {
+			if (temp[i] == '\033' && i + 1 < temp.size() && temp[i + 1] == '[') {
+				while (i < temp.size() && temp[i] != 'm') result += temp[i++];
+				result += temp[i];
 			} else {
-				if (visible_length < length) { result += str[i]; ++visible_length; }
+				if (visible_length < length) { result += temp[i]; ++visible_length; }
 				else { result += "..."; break; }
 			}
 		}
@@ -131,11 +158,12 @@
 #pragma region STR NoColor Length
 
 	int Utils::str_nocolor_length(const std::string & str) {
+		std::string temp = replace_tabs_with_spaces(str);
 	    int length = 0;
-		for (size_t i = 0; i < str.size(); ++i) {
-			if (str[i] == '\033' && i + 1 < str.size() && str[i + 1] == '[') {
-				while (i < str.size() && str[i] != 'm') ++i;
-			} else ++length;
+		for (size_t i = 0; i < temp.size(); ++i) {
+			if (temp[i] == '\033' && i + 1 < temp.size() && temp[i + 1] == '[')
+				while (i < temp.size() && temp[i] != 'm') ++i;
+			else ++length;
 		}
 		return (length);
 	}

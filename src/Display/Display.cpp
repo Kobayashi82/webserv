@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/14 14:37:32 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/09 23:13:09 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/10 21:49:06 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,8 @@
 	bool					Display::drawing = false;													//	Is in the middle of an Output()
 	int						Display::failCount = 0;														// Contador de fallos
 	int						Display::maxFails = 3;														// Número máximo de fallos permitidos
+	bool					Display::RawModeDisabled = true;
+	bool					Display::ForceRawModeDisabled = false;
 
 	static Monitor			monitor;																	//	Class to obtain MEM and CPU ussage
 	static struct termios	orig_termios;																//	Structure for terminal information
@@ -72,6 +74,7 @@
 #pragma region Signals
 
 	static void killHandler(int signum) {
+		if (Settings::check_only || Display::RawModeDisabled || Display::ForceRawModeDisabled) std::cout << CL CL "  ";
 		Settings::terminate = signum + 128;
 	}
 
@@ -94,6 +97,7 @@
     }
 
 	static void quitHandler(int signum) {
+		if (Settings::check_only || Display::RawModeDisabled || Display::ForceRawModeDisabled) std::cout << CL CL "  ";
 		Settings::terminate = signum + 128;
  	}
 
@@ -112,12 +116,15 @@
 				std::signal(SIGQUIT, quitHandler);
 				signalRegistered = true;
 			}
-			tcgetattr(STDIN_FILENO, &orig_termios);
-			struct termios raw = orig_termios;
-			raw.c_lflag &= ~(ECHO | ICANON);
-			tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
+			std::cout << CHIDE;
+			if (Settings::check_only || ForceRawModeDisabled) return;
+			if (tcgetattr(STDIN_FILENO, &orig_termios) == -1) return;
+			struct termios raw = orig_termios; raw.c_lflag &= ~(ECHO | ICANON);
+			if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == -1) { disableRawMode(); return; }
 			int flags = fcntl(STDIN_FILENO, F_GETFL, 0);
-			fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK);
+			if (flags == -1) { disableRawMode(); return; }
+			if (fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK) == -1) { disableRawMode(); return; }
+			RawModeDisabled = false;
 		}
 
 	#pragma endregion
@@ -125,8 +132,12 @@
 	#pragma region Disable
 
 		void Display::disableRawMode() {
-			tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios);
-			std::cout << CSHOW CDD CLL;
+			if (!Settings::check_only && !RawModeDisabled && !ForceRawModeDisabled) {
+				tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios);
+				RawModeDisabled = true;
+				std::cout << CDD CLL;
+			}
+			std::cout << CSHOW;
 		}
 
 	#pragma endregion
@@ -138,6 +149,7 @@
 	#pragma region Input
 
 		void Display::Input() {
+			if (RawModeDisabled) return;
 			char c, seq[2];
 			if (read(STDIN_FILENO, &c, 1) != 1) return ;																				//	This is Non-Blocking
 			if (c == '\033' && read(STDIN_FILENO, &seq[0], 1) == 1 && read(STDIN_FILENO, &seq[1], 1) == 1 && seq[0] == '[') {
@@ -146,13 +158,13 @@
 						Settings::current_vserver = static_cast<int>(Settings::vserver.size() - 1);
 					else
 						Settings::current_vserver--;
-					Output();
+					if (Display::drawing) { redraw = true; return; } Output();
                 } else if (Settings::vserver.size() > 0 && seq[1] == 'C') {																//	Left arrow
 					if (Settings::current_vserver == static_cast<int>(Settings::vserver.size() - 1))
 						Settings::current_vserver = -1;
 					else
 						Settings::current_vserver++;
-					Output();
+					if (Display::drawing) { redraw = true; return; } Output();
                 } else if (seq[1] == 'A') {																								//	Up arrow
 					if (Settings::current_vserver == -1 && Settings::config_displayed == false
 						&& Settings::log_index > 0) {
@@ -168,7 +180,7 @@
 						&& Settings::vserver[Settings::current_vserver].config_index > 0)
 							Settings::vserver[Settings::current_vserver].config_index--;
 					else return ;
-					Output();
+					if (Display::drawing) { redraw = true; return; } Output();
                 } else if (seq[1] == 'B') {																								//	Down arrow
 					if (Settings::current_vserver == -1 && Settings::config_displayed == false
 						&& static_cast<int>(Log::both.size()) >= log_rows
@@ -189,7 +201,7 @@
 						&& static_cast<int>(Settings::vserver[Settings::current_vserver].config_index) < static_cast<int>(Settings::vserver[Settings::current_vserver].config.size()) - (log_rows - 1))
 							Settings::vserver[Settings::current_vserver].config_index++;
 					else return ;
-					Output();
+					if (Display::drawing) { redraw = true; return; } Output();
                 } else if (seq[1] == 'H') {																								//	Home
 					if (Settings::current_vserver == -1 && Settings::config_displayed == false && Settings::log_index > 0) {
 						Settings::log_index = 0;
@@ -204,7 +216,7 @@
 						&& Settings::vserver[Settings::current_vserver].config_index > 0)
 							Settings::vserver[Settings::current_vserver].config_index = 0;
 					else return ;
-					Output();
+					if (Display::drawing) { redraw = true; return; } Output();
             	} else if (seq[1] == 'F') {																								//	End
 					size_t temp = 0;
 					if (Settings::current_vserver == -1 && Settings::config_displayed == false && Log::both.size() > 0
@@ -229,7 +241,7 @@
 							else temp = static_cast<int>(Settings::vserver[Settings::current_vserver].config.size()) - (log_rows - 1);
 							if (Settings::vserver[Settings::current_vserver].config_index == temp) return ; else Settings::vserver[Settings::current_vserver].config_index = temp;
 					} else return ;
-					Output();
+					if (Display::drawing) { redraw = true; return; } Output();
 				}
             }
 			if ((c == 'w' || c == 'W') && Settings::vserver.size() > 0) {																				//	(S)tart / (S)top
@@ -269,7 +281,7 @@
 						Settings::vserver[Settings::current_vserver].config_displayed = true;
 				else return ;
 				Output();
-			} else if ((c == 'e' || c == 'E')) { Settings::terminate = 0;										//	(E)xit
+			} else if ((c == 'e' || c == 'E')) { Settings::terminate = 0;																				//	(E)xit
 			} else if ((c == 'r' || c == 'R')) { std::cout << CB CHIDE CS CUU; std::cout.clear();  drawing = false; failCount = 0; Output(); }			//	(R)eset terminal
 		}
 
@@ -299,8 +311,7 @@
 		#pragma region Print Config
 
 			void print_config(const std::vector <std::string> & config, size_t index, std::ostringstream & oss, int & cols, int & row) {
-				int width = 1;
-				if (config.size() > 9) width = 2; else if (config.size() > 99) width = 3; else if (config.size() > 999) width = 4;
+				int width = 1; if (config.size() > 9) width = 2; else if (config.size() > 99) width = 3; else if (config.size() > 999) width = 4;
 
 				while (++row < total_rows - 3) {
 					int length = 0; std::string temp = "";
@@ -432,7 +443,7 @@
 		#pragma region Output
 
 			void Display::Output() {
-				if (Settings::check_only) return ;
+				if (Settings::check_only || RawModeDisabled || ForceRawModeDisabled) return;
 				if (drawing) return; else drawing = true;																						//	┌───┐ ◄ ►
 				winsize w; ioctl(0, TIOCGWINSZ, &w); int cols = w.ws_col - 4, row = 0;															//	├─┬─┤  ▲
 				total_cols = cols; total_rows = w.ws_row; log_rows = total_rows - 9;															//	├─┴─┤  ▼
@@ -469,7 +480,7 @@
 			//	NAME
 				ss.str("");
 				if (Settings::vserver.size() > 0 && Settings::current_vserver != -1) {
-					if ((Settings::vserver[Settings::current_vserver].get("server_name").empty() || Settings::vserver[Settings::current_vserver].get("server_name") == "_") && Settings::current_vserver == 0) temp = "(1) Default";
+					if (Settings::vserver[Settings::current_vserver].get("server_name").empty() && Settings::current_vserver == 0) temp = "(1) Default";
 					else if (Settings::vserver[Settings::current_vserver].get("server_name").empty()) {
 						ss << Settings::current_vserver + 1;
 						temp = "(" + ss.str() + ") V-Server";

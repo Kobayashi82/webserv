@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:27:58 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/08 23:50:47 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/10 23:07:22 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,7 @@
 
 	Timer 								Settings::timer;												//	Class to obtain time and date related data
 	std::string							Settings::program_path = Utils::programPath();					//	Path of the executable
-	std::string							Settings::config_path = Utils::programPath() + "conf/";			//	Path of the default configuration file
+	std::string							Settings::config_path = Utils::programPath();					//	Path of the default configuration file
 	std::map <int, std::string>			Settings::error_codes;											//	Error codes in a map
 	std::map <std::string, std::string>	Settings::mime_types;											//	MIME types in a map
 	std::map <std::string, std::string>	Settings::global;												//	Global settings in a map
@@ -79,6 +79,7 @@
 				infile.close();
 				if (bracket_lvl != 0) Log::log_error(RD "Brackets error");
 				loaded_ok = true;
+				if ((Display::RawModeDisabled || Display::ForceRawModeDisabled) && Log::error.size() > 0) return;
 				if (isDefault)
 					Log::log_access(G "Default configuration file loaded" NC);
 				else
@@ -107,12 +108,12 @@
 
 			if (FileStatus) {
 				if (FileStatus == 1)
-					Log::log_error("Default configuration file does not exist, generating a default config file");
+					Log::log_error(RD "Default configuration file does not exist, generating a default config file" NC);
 				else if (FileStatus == 2) {
-					Log::log_error("Cannot read the default configuration file, generating a default config file");
+					Log::log_error(RD "Cannot read the default configuration file, generating a default config file" NC);
 					remove(File.c_str());
 				} else {
-					Log::log_error("Could not load the default configuration file, generating a default config file");
+					Log::log_error(RD "Could not load the default configuration file, generating a default config file" NC);
 					remove(File.c_str());
 				}
 				generate_config(File, program_path);
@@ -126,6 +127,7 @@
 
 		void Settings::load_args(int argc, char **argv) {
 			load_error_codes(); load_mime_types();
+			if ((argc == 2 && !strcmp(argv[1], "-i")) || (argc == 3 && (!strcmp(argv[2], "-i")))) { Display::RawModeDisabled = true; Display::ForceRawModeDisabled = true; argc--;}
 			if (argc == 2 && !strcmp(argv[1], "-t")) {                                                                                      //  Test default settings
 				check_only = true;
 				std::cout << std::endl;
@@ -158,8 +160,11 @@
 						  << C "\tUsage: " Y "./webserv [" B "Opional " G "settings file" Y "]" NC << std::endl << std::endl;
 				terminate = 1;
 			} else {
+				Display::enableRawMode();
+				if (Display::RawModeDisabled || Display::ForceRawModeDisabled) std::cout << std::endl;
 				if (argc == 1) load(); else load(argv[1]);
 				if (vserver.size() == 0 && loaded_ok) Log::log_error("There are no virtual servers in the configuration file");
+				if ((Display::RawModeDisabled || Display::ForceRawModeDisabled) && Log::error.size() > 0) terminate = 1;
 			}
 		}
 
@@ -208,29 +213,28 @@
 
 #pragma endregion
 
-
 //	GLOBAL
 
 //	✓	access_log										/var/log/nginx/access.log;
-//	✓	error_log										/var/log/nginx/error.log;
+//	✓	error_log										error.log;
 //	✓	client_max_body_size							10M;
-//		error_page 404									/404.html;										error_page 404 =200 /about/index.html;
+//	✓	error_page 404 500								=200 /about/index.html;
 //	✓	autoindex										on;
 
 //	SERVER	(server {)
 
-//		listen											80;												Empty or not valid range or number
-//		server_name										example.com www.example.com;
-//		root											/mnt/c/www/html/example.com;					Error lectura
-//		index											index.html index.htm index.php;					Empty
+//	✓	listen											80;
+//	✓	server_name										example.com www.example.com;
+//	✓	root											/mnt/c/www/html/example.com;
+//	✓	index											index.html index.htm index.php;
 
 //		LOCATION
 //
 //			location 									= /404.html {	(Diferencia con el = y ~)
-//			internal;
-//			alias										/mnt/c/www/html/error_pages/404.html;
+//	✓		internal;
+//	✓		alias										/mnt/c/www/html/error_pages/404.html;
 //			try_files									$uri $uri/ =404;								$uri $uri/ /file.html;
-//			return										301 https://example.com$request_uri;
+//	✓		return										301 https://example.com$request_uri;			$request_uri;
 //			limit_except								GET POST {
 //				deny									all;
 //				return									405 /405.html;
