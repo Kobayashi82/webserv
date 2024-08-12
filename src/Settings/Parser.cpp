@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:30:57 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/10 23:07:16 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/12 18:37:53 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,10 +39,10 @@
 
 	#pragma region Path
 
-		int Settings::parse_path(std::string & firstPart, std::string & str, bool isFile = false, bool check_path = false) {
+		int Settings::parse_path(const std::string & firstPart, std::string & str, bool isFile = false, bool check_path = false, bool check_write = false) {
 			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] "; struct stat info;
 
-			if (str.empty())										Log::log_error(RD + n_line + "Empty value for " Y + firstPart + NC);
+			if (str.empty()) {										Log::log_error(RD + n_line + "Empty value for " Y + firstPart + NC); return (1); }
 			if (str[0] != '/') str = program_path + str;
 
 			if (isFile && check_path) {
@@ -54,12 +54,14 @@
 					return (1);
 				} else {
 					if (!(info.st_mode & S_IFDIR)) {				Log::log_error(RD + n_line + dir_path + RD " is not a valid directory" NC); return (1); }
-					else if (access(dir_path.c_str(), W_OK) != 0) {	Log::log_error(RD + n_line + "No write permission for " Y + dir_path + NC); return (1); }
-					else if (access(str.c_str(), F_OK) == 0
-						&& access(str.c_str(), W_OK) != 0) {		Log::log_error(RD + n_line + "No write permission for " Y + str + NC); return (1); }
+					else if (access(str.c_str(), F_OK) != 0) {		Log::log_error(RD + n_line + "The " Y + firstPart + RD " path " Y + str + RD " does not exist" NC); return (1); }
+					else if (check_write &&
+						access(dir_path.c_str(), W_OK) != 0) {		Log::log_error(RD + n_line + "No write permission for " Y + dir_path + NC); return (1); }
+					else if (check_write && access(str.c_str(), F_OK) == 0 &&
+						access(str.c_str(), W_OK) != 0) {			Log::log_error(RD + n_line + "No write permission for " Y + str + NC); return (1); }
 				}
 			} else if (stat(str.c_str(), &info) != 0) {
-				if (errno == ENOENT)								Log::log_error(RD + n_line + "The path " Y + str + RD " does not exist" NC);
+				if (errno == ENOENT)								Log::log_error(RD + n_line + "The " Y + firstPart + RD " path " Y + str + RD " does not exist" NC);
 				else if (errno == EACCES)							Log::log_error(RD + n_line + "No permission to access " Y + str + NC);
 				else 												Log::log_error(RD + n_line + "Cannot access " Y + str + NC);
 				return (1);
@@ -103,20 +105,22 @@
 		int Settings::parse_errors(const std::string & firstPart, const std::string & secondPart) {
 			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
 			std::istringstream stream(secondPart);
-			std::vector<std::string> errors;
-			std::string error;
+			std::vector<std::string> errors; std::string error;
 
 			while (stream >> error) errors.push_back(error);
-			if (errors.size() < 2) { Log::log_error(RD + n_line + "Empty value for " Y "error_page" NC); return (1); }
+			if (errors.size() < 2) { Log::log_error(RD + n_line + "Empty value for " Y "error_page" NC); BadConfig = true; return (1); }
 			std::string filePath = errors.back(); errors.pop_back();
-			if (filePath.empty() || filePath[0] != '/') { Log::log_error(RD + n_line + "Invalid path for " Y "error_page" NC); return (1); }
-			if (errors.size() > 1 && errors.back()[0] == '=') { filePath = errors.back() + filePath; errors.pop_back(); }
+			if (filePath.empty() || filePath[0] != '/') { Log::log_error(RD + n_line + "Invalid path for " Y "error_page" NC); BadConfig = true; return (1); }
+			if (errors.size() > 1 && errors.back()[0] == '=') {
+				long code; if (Utils::stol(errors.back().substr(1), code) || (error_codes.find(code) == error_codes.end())) {
+					Log::log_error(RD + n_line + "Invalid status code " Y + errors.back().substr(1) + RD " for " Y "error_page" NC); BadConfig = true; }
+				filePath = errors.back() + filePath; errors.pop_back();
+			}
 
 			for (std::vector<std::string>::iterator it = errors.begin(); it != errors.end(); ++it) {
 				long code; if (Utils::stol(*it, code) || (error_codes.find(code) == error_codes.end())) {
-					Log::log_error(RD + n_line + "Invalid status code " Y +  *it + RD " for " Y "error_page" NC); BadConfig = true;
-				}
-				add(firstPart + " " + *it, filePath);
+					Log::log_error(RD + n_line + "Invalid status code " Y +  *it + RD " for " Y "error_page" NC); BadConfig = true; }
+				else add(firstPart + " " + *it, filePath);
 			}
 			return (0);
 		}
@@ -124,20 +128,22 @@
 		int Settings::parse_errors(const std::string & firstPart, const std::string & secondPart, VServer & VServ) {
 			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
 			std::istringstream stream(secondPart);
-			std::vector<std::string> errors;
-			std::string error;
+			std::vector<std::string> errors; std::string error;
 
 			while (stream >> error) errors.push_back(error);
-			if (errors.size() < 2) { Log::log_error(RD + n_line + "Empty value for " Y "error_page" NC); return (1); }
+			if (errors.size() < 2) { Log::log_error(RD + n_line + "Empty value for " Y "error_page" NC); BadConfig = true; return (1); }
 			std::string filePath = errors.back(); errors.pop_back();
-			if (filePath.empty() || filePath[0] != '/') { Log::log_error(RD + n_line + "Invalid path for " Y "error_page" NC); return (1); }
-			if (errors.size() > 1 && errors.back()[0] == '=') { filePath = errors.back() + filePath; errors.pop_back(); }
+			if (filePath.empty() || filePath[0] != '/') { Log::log_error(RD + n_line + "Invalid path for " Y "error_page" NC); BadConfig = true; return (1); }
+			if (errors.size() > 1 && errors.back()[0] == '=') {
+				long code; if (Utils::stol(errors.back().substr(1), code) || (error_codes.find(code) == error_codes.end())) {
+					Log::log_error(RD + n_line + "Invalid status code " Y + errors.back().substr(1) + RD " for " Y "error_page" NC); BadConfig = true; }
+				filePath = errors.back() + filePath; errors.pop_back();
+			}
 
 			for (std::vector<std::string>::iterator it = errors.begin(); it != errors.end(); ++it) {
 				long code; if (Utils::stol(*it, code) || (error_codes.find(code) == error_codes.end())) {
-					Log::log_error(RD + n_line + "Invalid status code " Y +  *it + RD " for " Y "error_page" NC); BadConfig = true;
-				}
-				VServ.add(firstPart + " " + *it, filePath);
+					Log::log_error(RD + n_line + "Invalid status code " Y +  *it + RD " for " Y "error_page" NC); BadConfig = true; }
+				else VServ.add(firstPart + " " + *it, filePath);
 			}
 			return (0);
 		}
@@ -145,20 +151,22 @@
 		int Settings::parse_errors(const std::string & firstPart, const std::string & secondPart, Location & Loc) {
 			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
 			std::istringstream stream(secondPart);
-			std::vector<std::string> errors;
-			std::string error;
+			std::vector<std::string> errors; std::string error;
 
 			while (stream >> error) errors.push_back(error);
-			if (errors.size() < 2) { Log::log_error(RD + n_line + "Empty value for " Y "error_page" NC); return (1); }
+			if (errors.size() < 2) { Log::log_error(RD + n_line + "Empty value for " Y "error_page" NC); BadConfig = true; return (1); }
 			std::string filePath = errors.back(); errors.pop_back();
-			if (filePath.empty() || filePath[0] != '/') { Log::log_error(RD + n_line + "Invalid path for " Y "error_page" NC); return (1); }
-			if (errors.size() > 1 && errors.back()[0] == '=') { filePath = errors.back() + filePath; errors.pop_back(); }
+			if (filePath.empty() || filePath[0] != '/') { Log::log_error(RD + n_line + "Invalid path for " Y "error_page" NC); BadConfig = true; return (1); }
+			if (errors.size() > 1 && errors.back()[0] == '=') {
+				long code; if (Utils::stol(errors.back().substr(1), code) || (error_codes.find(code) == error_codes.end())) {
+					Log::log_error(RD + n_line + "Invalid status code " Y + errors.back().substr(1) + RD " for " Y "error_page" NC); BadConfig = true; }
+				filePath = errors.back() + filePath; errors.pop_back();
+			}
 
 			for (std::vector<std::string>::iterator it = errors.begin(); it != errors.end(); ++it) {
 				long code; if (Utils::stol(*it, code) || (error_codes.find(code) == error_codes.end())) {
-					Log::log_error(RD + n_line + "Invalid status code " Y +  *it + RD " for " Y "error_page" NC); BadConfig = true;
-				}
-				Loc.add(firstPart + " " + *it, filePath);
+					Log::log_error(RD + n_line + "Invalid status code " Y +  *it + RD " for " Y "error_page" NC); BadConfig = true; }
+				else Loc.add(firstPart + " " + *it, filePath);
 			}
 			return (0);
 		}
@@ -193,14 +201,39 @@
 
 	#pragma region Listen
 
-		int Settings::parse_listen(std::string & str) {
+		int Settings::parse_listen(std::string & str, VServer & VServ) {
 			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
 			std::string temp; std::istringstream stream(str); stream >> temp;
+			std::string port; std::string::size_type slashPos = temp.find(':');
+			
+			if (temp.empty()) { 																		Log::log_error(RD + n_line + "Empty value for " Y "listen" NC); return (1); }
 
-			if (temp.empty()) { Log::log_error(RD + n_line + "Empty value for " Y "listen" NC); return (1); }
-			long number; if (Utils::stol(temp, number)) { Log::log_error(RD + n_line + "Invalid value for " Y "listen" NC); return (1); }
-			if (number < 1) { Log::log_error(RD + n_line + "Value for " Y "listen" RD " cannot be " Y "lower" RD " than " Y "1" NC); return (1); }
-			if (number > 65535) { Log::log_error(RD + n_line + "Value for " Y "listen" RD " cannot be " Y "greater" RD " than " Y "65535" NC); return (1); }
+			if (slashPos != std::string::npos) {
+				port = temp.substr(slashPos + 1);
+				temp = temp.substr(0, slashPos);
+
+				if (temp.empty()) {																		Log::log_error(RD + n_line + "Invalid IP for " Y "listen" NC); return (1); }
+				slashPos = temp.find('/');
+				if (slashPos != std::string::npos) {
+					std::string ip = temp.substr(0, slashPos);
+					std::string mask = temp.substr(slashPos + 1);
+					if (ip.empty()) {																	Log::log_error(RD + n_line + "Invalid IP for " Y "listen" NC); return (1); }
+					if (Utils::isValidIP(temp.substr(0, slashPos)) == false) {							Log::log_error(RD + n_line + "Invalid IP " Y + temp.substr(0, slashPos) + RD " for " Y "listen" NC); return (1); }
+					if (mask.empty()) {																	Log::log_error(RD + n_line + "Invalid mask for " Y "listen" NC); return (1); }
+					if (mask.find('.') != std::string::npos) { if (Utils::isValidIP(mask) == false) {	Log::log_error(RD + n_line + "Invalid mask " Y + temp.substr(slashPos + 1) + RD " for " Y "listen" NC); return (1); }}
+					else { long number; if (Utils::stol(mask, number) || number < 0 || number > 32) {	Log::log_error(RD + n_line + "Invalid mask " Y + temp.substr(slashPos + 1) + RD " for " Y "listen" NC); return (1); }}
+					VServ.add("IP", temp);
+				} else {
+					if (Utils::isValidIP(temp) == false) {												Log::log_error(RD + n_line + "Invalid IP " Y + temp + RD " for " Y "listen" NC); return (1); }
+					VServ.add("IP", temp);
+				}
+			} else port = temp;
+
+			if (port.empty()) { 																		Log::log_error(RD + n_line + "There is no port for " Y "listen" NC); return (1); }
+			long number; if (Utils::stol(port, number)) { 												Log::log_error(RD + n_line + "Invalid port " Y + port + RD " for " Y "listen" NC); return (1); }
+			if (number < 1) { 																			Log::log_error(RD + n_line + "Invalid port " Y + port + RD " for " Y "listen" RD " cannot be " Y "lower" RD " than " Y "1" NC); return (1); }
+			if (number > 65535) { 																		Log::log_error(RD + n_line + "Invalid port " Y + port + RD " for " Y "listen" RD " cannot be " Y "greater" RD " than " Y "65535" NC); return (1); }
+			VServ.add("Listen", port);
 			return (0);
 		}
 
@@ -233,7 +266,7 @@
 		int Settings::parse_alias(std::string & firstPart, std::string & str) {
 			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
 			
-			if (str.empty()) {			Log::log_error(RD + n_line + "Empty value for " Y + firstPart + NC); return (1); }
+			if (str.empty()) {			Log::log_error(RD + n_line + "Empty value for " Y + "alias" + NC); return (1); }
 
 			if (Utils::isFile(str)) return (parse_path(firstPart, str, true, true));
 			else if (Utils::isDirectory(str)) return (parse_path(firstPart, str));
@@ -245,6 +278,170 @@
 
 	#pragma endregion
 
+	#pragma region Try_Files
+
+		int Settings::parse_try_files(std::string & str) {
+			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
+			std::istringstream stream(str); std::string code;
+			if (str.empty()) {			Log::log_error(RD + n_line + "Empty value for " Y + "try_files" + NC); return (1); }
+
+			while (stream >> code) {
+				if (!code.empty() && code[0] == '=') {
+					long ncode; if (Utils::stol(code.substr(1), ncode) || (error_codes.find(ncode) == error_codes.end())) {
+					Log::log_error(RD + n_line + "Invalid status code " Y + code.substr(1) + RD " for " Y "try_files" NC); return (1); }
+				}
+			}
+
+			return (0);
+		}
+
+	#pragma endregion
+
+	#pragma region CGI
+
+		int Settings::parse_cgi(const std::string & firstPart, const std::string & secondPart) {
+			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
+			std::istringstream stream(secondPart); std::vector<std::string> values; std::string value;
+
+			while (stream >> value) values.push_back(value);
+			if (values.size() < 2) { Log::log_error(RD + n_line + "Empty value for " Y "cgi" NC); BadConfig = true; return (1); }
+			std::string filePath = values.back(); values.pop_back();
+			if (filePath.empty() || filePath[0] != '/') { Log::log_error(RD + n_line + "Invalid path for " Y "cgi" NC); BadConfig = true; }
+			if (parse_path(firstPart, filePath, true, true)) { BadConfig = true; }
+
+			for (std::vector<std::string>::iterator it = values.begin(); it != values.end(); ++it) {
+				value = *it; if (value.empty() || value[0] != '.') { Log::log_error(RD + n_line + "Invalid extension " Y + value + RD " for " Y "cgi" NC); BadConfig = true; }
+				else add(firstPart + " " + *it, filePath);
+			}
+			return (0);
+		}
+
+		int Settings::parse_cgi(const std::string & firstPart, const std::string & secondPart, VServer & VServ) {
+			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
+			std::istringstream stream(secondPart); std::vector<std::string> values; std::string value;
+
+			while (stream >> value) values.push_back(value);
+			if (values.size() < 2) { Log::log_error(RD + n_line + "Empty value for " Y "cgi" NC); BadConfig = true; return (1); }
+			std::string filePath = values.back(); values.pop_back();
+			if (filePath.empty() || filePath[0] != '/') { Log::log_error(RD + n_line + "Invalid path for " Y "cgi" NC); BadConfig = true; }
+			if (parse_path(filePath, value, true, true)) { BadConfig = true; }
+
+			for (std::vector<std::string>::iterator it = values.begin(); it != values.end(); ++it) {
+				value = *it; if (value.empty() || value[0] != '.') { Log::log_error(RD + n_line + "Invalid extension " Y + value + RD " for " Y "cgi" NC); BadConfig = true; }
+				else VServ.add(firstPart + " " + *it, filePath);
+			}
+			return (0);
+		}
+
+		int Settings::parse_cgi(const std::string & firstPart, const std::string & secondPart, Location & Loc) {
+			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
+			std::istringstream stream(secondPart); std::vector<std::string> values; std::string value;
+
+			while (stream >> value) values.push_back(value);
+			if (values.size() < 2) { Log::log_error(RD + n_line + "Empty value for " Y "cgi" NC); BadConfig = true; return (1); }
+			std::string filePath = values.back(); values.pop_back();
+			if (filePath.empty() || filePath[0] != '/') { Log::log_error(RD + n_line + "Invalid path for " Y "cgi" NC); BadConfig = true; }
+			if (parse_path(firstPart, filePath, true, true)) { BadConfig = true; }
+
+			for (std::vector<std::string>::iterator it = values.begin(); it != values.end(); ++it) {
+				value = *it; if (value.empty() || value[0] != '.') { Log::log_error(RD + n_line + "Invalid extension " Y + value + RD " for " Y "cgi" NC); BadConfig = true; }
+				else Loc.add(firstPart + " " + *it, filePath);
+			}
+			return (0);
+		}
+	#pragma endregion
+
+	#pragma region Allow
+
+		int Settings::parse_allow(std::string & str) {
+			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
+			std::string temp; std::istringstream stream(str); stream >> temp;
+			std::string::size_type slashPos;
+			
+			if (temp.empty()) { 																	Log::log_error(RD + n_line + "Empty value for " Y "allow" NC); return (1); }
+			if (temp == "all") return (0);
+			slashPos = temp.find('/');
+			if (slashPos != std::string::npos) {
+				std::string ip = temp.substr(0, slashPos);
+				std::string mask = temp.substr(slashPos + 1);
+				if (ip.empty()) {																	Log::log_error(RD + n_line + "Invalid IP for " Y "allow" NC); return (1); }
+				if (Utils::isValidIP(temp.substr(0, slashPos)) == false) {							Log::log_error(RD + n_line + "Invalid IP " Y + temp.substr(0, slashPos) + RD " for " Y "allow" NC); return (1); }
+				if (mask.empty()) {																	Log::log_error(RD + n_line + "Invalid mask for " Y "allow" NC); return (1); }
+				if (mask.find('.') != std::string::npos) { if (Utils::isValidIP(mask) == false) {	Log::log_error(RD + n_line + "Invalid mask " Y + temp.substr(slashPos + 1) + RD " for " Y "allow" NC); return (1); }}
+				else { long number; if (Utils::stol(mask, number) || number < 0 || number > 32) {	Log::log_error(RD + n_line + "Invalid mask " Y + temp.substr(slashPos + 1) + RD " for " Y "allow" NC); return (1); }}
+			} else {
+				if (Utils::isValidIP(temp) == false) {												Log::log_error(RD + n_line + "Invalid IP " Y + temp + RD " for " Y "allow" NC); return (1); }
+			}
+			return (0);
+		}
+
+	#pragma endregion
+
+	#pragma region Deny
+
+		int Settings::parse_deny(std::string & str) {
+			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
+			std::string temp; std::istringstream stream(str); stream >> temp;
+			std::string::size_type slashPos;
+			
+			if (temp.empty()) { 																	Log::log_error(RD + n_line + "Empty value for " Y "deny" NC); return (1); }
+			if (temp == "all") return (0);
+			slashPos = temp.find('/');
+			if (slashPos != std::string::npos) {
+				std::string ip = temp.substr(0, slashPos);
+				std::string mask = temp.substr(slashPos + 1);
+				if (ip.empty()) {																	Log::log_error(RD + n_line + "Invalid IP for " Y "deny" NC); return (1); }
+				if (Utils::isValidIP(temp.substr(0, slashPos)) == false) {							Log::log_error(RD + n_line + "Invalid IP " Y + temp.substr(0, slashPos) + RD " for " Y "deny" NC); return (1); }
+				if (mask.empty()) {																	Log::log_error(RD + n_line + "Invalid mask for " Y "deny" NC); return (1); }
+				if (mask.find('.') != std::string::npos) { if (Utils::isValidIP(mask) == false) {	Log::log_error(RD + n_line + "Invalid mask " Y + temp.substr(slashPos + 1) + RD " for " Y "deny" NC); return (1); }}
+				else { long number; if (Utils::stol(mask, number) || number < 0 || number > 32) {	Log::log_error(RD + n_line + "Invalid mask " Y + temp.substr(slashPos + 1) + RD " for " Y "deny" NC); return (1); }}
+			} else {
+				if (Utils::isValidIP(temp) == false) {												Log::log_error(RD + n_line + "Invalid IP " Y + temp + RD " for " Y "deny" NC); return (1); }
+			}
+			return (0);
+		}
+
+	#pragma endregion
+
+	#pragma region Limit_Except
+
+		int Settings::parse_limit_except(std::string & str) {
+			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
+			
+			if (str.empty()) {			Log::log_error(RD + n_line + "Empty value for " Y + "limit_except" + NC); return (1); }
+
+			std::istringstream stream(str); std::string method;
+
+			while (stream >> method) {
+				if (method.empty()) {	Log::log_error(RD + n_line + "Empty method for " Y + "limit_except" + NC); return (1); }
+				if (method != "GET" && method != "POST" && method != "DELETE" && method != "PUT" && method != "HEAD") {
+					Log::log_error(RD + n_line + "Invalid method " Y + method + RD " for " Y + "limit_except" + NC); return (1); }
+			}
+
+			return (0);
+		}
+
+	#pragma endregion
+
+	#pragma region Location
+
+		int Settings::parse_location(std::string & str) {
+			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
+			
+			if (str.empty()) {			Log::log_error(RD + n_line + "Empty value for " Y + "Location" + NC); return (1); }
+
+			// std::istringstream stream(str); std::string method;
+
+			// while (stream >> method) {
+			// 	if (method.empty()) {	Log::log_error(RD + n_line + "Empty method for " Y + "limit_except" + NC); return (1); }
+			// 	if (method != "GET" && method != "POST" && method != "DELETE" && method != "PUT" && method != "HEAD") {
+			// 		Log::log_error(RD + n_line + "Invalid method " Y + method + RD " for " Y + "limit_except" + NC); return (1); }
+			// }
+
+			return (0);
+		}
+
+	#pragma endregion
 
 	#pragma region Invalid
 
@@ -253,10 +450,15 @@
 			if (firstPart == "access_log") return (0);
 			if (firstPart == "error_log") return (0);
 			if (firstPart == "root") return (0);
+			if (firstPart == "uploads") return (0);
 			if (firstPart == "client_max_body_size") return (0);
 			if (firstPart == "autoindex") return (0);
+			if (firstPart == "allow") return (0);
+			if (firstPart == "deny") return (0);
 			if (firstPart == "error_page") return (0);
+			if (firstPart == "cgi") return (0);
 			if (Section == "Global") {
+				if (firstPart == "http") return (0);
 			} else if (Section == "VServer") {
 				if (firstPart == "server") return (0);
 				if (firstPart == "listen") return (0);
@@ -314,18 +516,44 @@
 				if (firstPart.empty()) continue;
 				if (firstPart == "limit_except") inLimit = true;
 
-				if (firstPart == "access_log" || firstPart == "error_log") parse_path(firstPart, secondPart, true, true);
-				if (firstPart == "root" && parse_path(firstPart, secondPart, false, false))	BadConfig = true;
-				if (firstPart == "client_max_body_size" && parse_body_size(secondPart))		BadConfig = true;
-				if (firstPart == "autoindex" && parse_autoindex(secondPart))				BadConfig = true;
-				if (firstPart == "index" && parse_index(secondPart))						BadConfig = true;
-				if (firstPart == "return" && parse_return(secondPart))						BadConfig = true;
-				if (firstPart == "alias" && parse_alias(firstPart, secondPart))				BadConfig = true;
-				if (firstPart == "error_page") parse_errors(firstPart, secondPart, Loc);
-				if (invalid_directive(firstPart, line_count, "Location"))					BadConfig = true;
+				if (firstPart == "location") {
+					bool isSet = false;
+					for (std::vector<Location>::iterator it = VServ.location.begin(); it != VServ.location.end(); ++it) {
+						Location Loc = *it;
+						if (Loc.get("location") == secondPart) {
+							std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
+							Log::log_error(RD + n_line + "Directive " Y + firstPart + RD " is already set" + NC);
+							BadConfig = true; isSet = true; break;
+						}
+					} if (isSet) continue;
+				}
 
-				if (firstPart != "error_page") Loc.add(firstPart, secondPart);
-					
+				if (Loc.get(firstPart) != "" && firstPart != "allow" && firstPart != "deny") {
+					std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
+					Log::log_error(RD + n_line + "Directive " Y + firstPart + RD " is already set" + NC);
+					BadConfig = true; continue;
+				}
+
+				if (firstPart == "location" && parse_location(secondPart))						BadConfig = true;
+				if (firstPart == "access_log" || firstPart == "error_log") parse_path(firstPart, secondPart, true, true);
+				if (firstPart == "root" && parse_path(firstPart, secondPart, false, false))		BadConfig = true;
+				if (firstPart == "uploads" && parse_path(firstPart, secondPart, false, false))	BadConfig = true;
+				if (firstPart == "client_max_body_size" && parse_body_size(secondPart))			BadConfig = true;
+				if (firstPart == "autoindex" && parse_autoindex(secondPart))					BadConfig = true;
+				if (firstPart == "index" && parse_index(secondPart))							BadConfig = true;
+				if (firstPart == "return" && parse_return(secondPart))							BadConfig = true;
+				if (firstPart == "alias" && parse_alias(firstPart, secondPart))					BadConfig = true;
+				if (firstPart == "try_files" && parse_try_files(secondPart))					BadConfig = true;
+				if (firstPart == "allow" && parse_allow(secondPart))							BadConfig = true;
+				if (firstPart == "deny" && parse_deny(secondPart))								BadConfig = true;
+				if (firstPart == "limit_except" && parse_limit_except(secondPart))				BadConfig = true;
+				if (firstPart == "error_page") parse_errors(firstPart, secondPart, Loc);
+				if (firstPart == "cgi") parse_cgi(firstPart, secondPart, Loc);
+				if (invalid_directive(firstPart, line_count, "Location"))						BadConfig = true;
+				else {
+					if (firstPart == "allow" || firstPart == "deny")			Loc.add(firstPart, secondPart, true);
+					else if (firstPart != "error_page" && firstPart != "cgi")	Loc.add(firstPart, secondPart);
+				}
 			} while (getline(infile, line));
 			return (0);
 		}
@@ -369,19 +597,31 @@
 				if (!firstPart.empty() && tmp_line != orig_line) { VServ.config.push_back(tmp_line); config.push_back(tmp_line); }
 				if (firstPart.empty()) continue;
 
+				if (VServ.get(firstPart) != "" && firstPart != "allow" && firstPart != "deny") {
+					std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
+					Log::log_error(RD + n_line + "Directive " Y + firstPart + RD " is already set" + NC);
+					continue;
+				}
+
 				if (firstPart == "access_log" || firstPart == "error_log") parse_path(firstPart, secondPart, true, true);
-				if (firstPart == "root" && parse_path(firstPart, secondPart, false, false))	BadConfig = true;
-				if (firstPart == "client_max_body_size" && parse_body_size(secondPart))		BadConfig = true;
-				if (firstPart == "autoindex" && parse_autoindex(secondPart))				BadConfig = true;
-				if (firstPart == "index" && parse_index(secondPart))						BadConfig = true;
-				if (firstPart == "return" && parse_return(secondPart))						BadConfig = true;
-				if (firstPart == "root" && parse_path(firstPart, secondPart, false, false))	BadConfig = true;
+				if (firstPart == "root" && parse_path(firstPart, secondPart, false, false))		BadConfig = true;
+				if (firstPart == "uploads" && parse_path(firstPart, secondPart, false, false))	BadConfig = true;
+				if (firstPart == "client_max_body_size" && parse_body_size(secondPart))			BadConfig = true;
+				if (firstPart == "autoindex" && parse_autoindex(secondPart))					BadConfig = true;
+				if (firstPart == "index" && parse_index(secondPart))							BadConfig = true;
+				if (firstPart == "return" && parse_return(secondPart))							BadConfig = true;
+				if (firstPart == "listen" && parse_listen(secondPart, VServ))					BadConfig = true;
+				if (firstPart == "allow" && parse_allow(secondPart))							BadConfig = true;
+				if (firstPart == "deny" && parse_deny(secondPart))								BadConfig = true;
+				if (firstPart == "limit_except" && parse_limit_except(secondPart))				BadConfig = true;
 				if (firstPart == "error_page") parse_errors(firstPart, secondPart, VServ);
-				if (firstPart == "listen" && parse_listen(secondPart))						BadConfig = true;
-				if (invalid_directive(firstPart, line_count, "VServer"))					BadConfig = true;
-
-				if (firstPart != "server" && firstPart == "error_page") VServ.add(firstPart, secondPart);
-
+				if (firstPart == "cgi") parse_cgi(firstPart, secondPart, VServ);
+				if (invalid_directive(firstPart, line_count, "VServer"))						BadConfig = true;
+				else {
+					if (firstPart == "allow" || firstPart == "deny") VServ.add(firstPart, secondPart, true);
+					else if (firstPart != "server" && firstPart == "error_page" && firstPart != "listen" && firstPart != "cgi")
+						VServ.add(firstPart, secondPart);
+				}
 			} while (getline(infile, line));
 			return (0);
 		}
@@ -397,6 +637,11 @@
 			std::istringstream stream(line);
 
 			stream >> firstPart; Utils::trim(firstPart); Utils::toLower(firstPart);
+			
+			if (firstPart == "http" && bracket_lvl != 0) {
+				std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
+				Log::log_error(RD + n_line + "Invalid directive " Y + firstPart + NC);
+			}
 
 			if (firstPart == "server") {
 				parser_vserver(infile, line);
@@ -415,15 +660,27 @@
 
 			if (firstPart.empty()) return (0);
 
-			if (firstPart == "access_log" || firstPart == "error_log") parse_path(firstPart, secondPart, true, true);
-			if (firstPart == "root" && parse_path(firstPart, secondPart, false, false))	BadConfig = true;
-			if (firstPart == "client_max_body_size" && parse_body_size(secondPart))		BadConfig = true;
-			if (firstPart == "autoindex" && parse_autoindex(secondPart))				BadConfig = true;
-			if (firstPart == "index" && parse_index(secondPart))						BadConfig = true;
-			if (firstPart == "error_page") parse_errors(firstPart, secondPart);
-			if (invalid_directive(firstPart, line_count))								BadConfig = true;
+			if (get(firstPart) != "" && firstPart != "allow" && firstPart != "deny") {
+				std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
+				Log::log_error(RD + n_line + "Directive " Y + firstPart + RD " is already set" + NC);
+				return (0);
+			}
 
-			if (firstPart != "error_page") add(firstPart, secondPart);
+			if (firstPart == "access_log" || firstPart == "error_log") parse_path(firstPart, secondPart, true, true);
+			if (firstPart == "root" && parse_path(firstPart, secondPart, false, false))		BadConfig = true;
+			if (firstPart == "uploads" && parse_path(firstPart, secondPart, false, false))	BadConfig = true;
+			if (firstPart == "client_max_body_size" && parse_body_size(secondPart))			BadConfig = true;
+			if (firstPart == "autoindex" && parse_autoindex(secondPart))					BadConfig = true;
+			if (firstPart == "index" && parse_index(secondPart))							BadConfig = true;
+			if (firstPart == "allow" && parse_allow(secondPart))							BadConfig = true;
+			if (firstPart == "deny" && parse_deny(secondPart))								BadConfig = true;
+			if (firstPart == "error_page") parse_errors(firstPart, secondPart);
+			if (firstPart == "cgi") parse_cgi(firstPart, secondPart);
+			if (invalid_directive(firstPart, line_count))									BadConfig = true;
+			else {
+				if (firstPart == "allow" || firstPart == "deny")			add(firstPart, secondPart, true);
+				else if (firstPart != "http" && firstPart != "error_page" && firstPart != "cgi")	add(firstPart, secondPart);
+			}
 
 			return (0);
 		}
@@ -431,3 +688,10 @@
 	#pragma endregion
 
 #pragma endregion
+
+//	Check servers if repeteas at the end
+//	Falta ;
+//	limit_except in a sub container
+
+//			location 									= /404.html {		(Diferencia con el = y ~)		Server
+//			limit_except								GET POST DELETE PUT HEAD {							Server y Location

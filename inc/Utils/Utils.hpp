@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:37:20 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/10 22:50:13 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/12 17:34:42 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,11 +30,17 @@ class Utils {
 		static std::string	str_nocolor_trunc(const std::string & str, int length);						//	Get a string truncated to the length without counting colors chars
 		static std::string	str_nocolor(const std::string & str);										//	Get a string without the colors chars
 
+		//	Network
+		static bool			isValidIP(const std::string & IP);											//	Validate an IP
+		static bool			isIPInRange(const std::string & IP, const std::string & range);				//	Check if an IP is in a given range
+		static bool			isValidPort(std::string port);												//	Validate a Port in string format
+		static bool			isValidPort(int port);														//	Validate a Port in numeric format
+
 		//	Files
 		static std::string	programPath();																//	Get the path of the executable (return '/' if fails)
 		static int 			createPath(const std::string & path);										//	Create the indicated path (return 0 if success)
 		static int 			file_exists(const std::string & File);										//	Check if a file exists (0 = Exists, 1 = Don't Exists, 2 = No read permissions)
-		static bool			isFile(const std::string & path);
-		static bool			isDirectory(const std::string & path);
+		static bool			isFile(const std::string & path);											//	Check if a Path is a file
+		static bool			isDirectory(const std::string & path);										//	Check if a Path is a directory
 
 };

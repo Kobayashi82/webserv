@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/03 13:52:15 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/09 22:18:43 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/12 17:39:21 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,16 +29,16 @@ class Monitor {
 	private:
 
 		//	Variables (CPU)
-		std::time_t		_prev_time;
-		std::clock_t	_prev_cpu_time;
-		std::string		_CPUinStr;
-		double			_CPU;
-		std::string		_MEMinStr;
-		size_t			_MEM;
+		std::time_t		_prev_time;																		//	
+		std::clock_t	_prev_cpu_time;																	//	
+		std::string		_CPUinStr;																		//	
+		double			_CPU;																			//	
+		std::string		_MEMinStr;																		//	
+		size_t			_MEM;																			//	
 
 		//	Variables (DATA)
-		size_t			_bytes_sent;
-		size_t			_bytes_received;
+		size_t			_bytes_sent;																	//	
+		size_t			_bytes_received;																//	
 
 	public:
 

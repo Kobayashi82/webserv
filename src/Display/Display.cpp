@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/14 14:37:32 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/10 21:49:06 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/12 19:17:52 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,6 +86,7 @@
 
 	static void stopHandler(int signum) {
 		(void) signum;
+		if (Settings::check_only || Display::RawModeDisabled || Display::ForceRawModeDisabled) std::cout << CL CL "  ";
 		Display::disableRawMode();
 		raise(SIGSTOP);
 	}
@@ -94,6 +95,7 @@
         (void) signum;
         Display::enableRawMode();
         Display::Output();
+		if (Settings::check_only || Display::RawModeDisabled || Display::ForceRawModeDisabled) Display::Logo();
     }
 
 	static void quitHandler(int signum) {
@@ -124,6 +126,7 @@
 			int flags = fcntl(STDIN_FILENO, F_GETFL, 0);
 			if (flags == -1) { disableRawMode(); return; }
 			if (fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK) == -1) { disableRawMode(); return; }
+			std::cout.flush();
 			RawModeDisabled = false;
 		}
 
@@ -138,6 +141,7 @@
 				std::cout << CDD CLL;
 			}
 			std::cout << CSHOW;
+			std::cout.flush();
 		}
 
 	#pragma endregion
@@ -534,6 +538,21 @@
 			}
 
 		#pragma endregion
+
+	#pragma endregion
+
+	#pragma region Logo
+
+		void Display::Logo() {
+			std::cout << C	<< std::endl << std::endl
+					  << 	" ██╗    ██╗███████╗██████╗ ███████╗███████╗██████╗ ██╗   ██╗" 	<< std::endl
+					  << 	" ██║    ██║██╔════╝██╔══██╗██╔════╝██╔════╝██╔══██╗██║   ██║" << std::endl
+					  << 	" ██║ █╗ ██║█████╗  ██████╔╝███████╗█████╗  ██████╔╝██║   ██║" << std::endl
+					  << 	" ██║███╗██║██╔══╝  ██╔══██╗╚════██║██╔══╝  ██╔══██╗╚██╗ ██╔╝" << std::endl
+					  << 	" ╚███╔███╔╝███████╗██████╔╝███████║███████╗██║  ██║ ╚████╔╝ " << std::endl
+					  << 	"  ╚══╝╚══╝ ╚══════╝╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝  ╚═══╝  " << std::endl
+					  << NC	<< std::endl;
+		}
 
 	#pragma endregion
 

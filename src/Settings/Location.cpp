@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 11:54:47 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/08 15:02:56 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/12 17:28:27 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,34 +31,36 @@
 
 #pragma region Location
 
-	#pragma region Get
+    #pragma region Get
 
-		std::string Location::get(const std::string & Key) const {
-			std::map<std::string, std::string>::const_iterator it = location.find(Key);
-			if (it == location.end()) throw std::out_of_range("Key not found");
-			return (it->second);
-		}
+        std::string Location::get(const std::string & Key) {
+			for (std::vector<std::pair<std::string, std::string> >::iterator it = location.begin(); it != location.end(); ++it)
+			if (it->first == Key) return (it->second);
+			return ("");
+        }
 
-	#pragma endregion
+    #pragma endregion
 
-	#pragma region Set
+    #pragma region Set/Add
 
-		void Location::set(const std::string & Key, const std::string & Value) {
-			std::map<std::string, std::string>::iterator it = location.find(Key);
-			if (it != location.end()) it->second = Value;
-			if (it == location.end()) location[Key] = Value;
-		}
+        void Location::set(const std::string & Key, const std::string & Value, bool Force) {
+			for (std::vector<std::pair<std::string, std::string> >::iterator it = location.begin(); it != location.end(); ++it)
+			if (!Force && it->first == Key) { it->second = Value; return; }
+			location.push_back(std::make_pair(Key, Value));
+        }
 
-	#pragma endregion
+		void Location::add(const std::string & Key, const std::string & Value, bool Force) { set(Key, Value, Force); }
 
-	#pragma region Del
+    #pragma endregion
 
-		void Location::del(const std::string & Key) {
-			std::map<std::string, std::string>::iterator it = location.find(Key);
-			if (it != location.end()) location.erase(it);
-		}
+    #pragma region Del
 
-	#pragma endregion
+        void Location::del(const std::string & Key) {
+			for (std::vector<std::pair<std::string, std::string> >::iterator it = location.begin(); it != location.end(); ++it)
+			if (it->first == Key) { location.erase(it); }
+        }
+
+    #pragma endregion
 
 	#pragma region Clear
 

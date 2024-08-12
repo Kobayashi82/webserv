@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:32:38 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/10 17:44:11 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/12 18:57:36 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -124,7 +124,7 @@
 
 		static void log_to_file(const std::string & str, std::string path = "") {
 			if (str.empty()) return;
-			if (Settings::check_only || Display::RawModeDisabled || Display::ForceRawModeDisabled) std::cout << str << std::endl;
+			if (Settings::check_only || Display::RawModeDisabled || Display::ForceRawModeDisabled) std::cout << " " << str << std::endl;
 			else {
 				if (path != "" && path[0] != '/') path = Settings::program_path + path;
 				std::ofstream outfile;

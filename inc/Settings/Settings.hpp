@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:14:05 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/10 22:52:45 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/12 18:10:40 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,16 +44,24 @@ class Settings {
 
 		//	Parser
 		static int	brackets(std::string & str);
-		static int	parse_path(std::string & firstPart, std::string & str, bool isFile, bool check_path );
+		static int	parse_path(const std::string & firstPart, std::string & str, bool isFile, bool check_path, bool check_write);
 		static int	parse_body_size(std::string & str);
 		static int	parse_errors(const std::string & firstPart, const std::string & secondPart);
 		static int	parse_errors(const std::string & firstPart, const std::string & secondPart, VServer & VServ);
 		static int	parse_errors(const std::string & firstPart, const std::string & secondPart, Location & Loc);
 		static int	parse_autoindex(std::string & str);
 		static int	parse_index(std::string & str);
-		static int	parse_listen(std::string & str);
+		static int	parse_listen(std::string & str, VServer & VServ);
 		static int	parse_return(std::string & str);
 		static int	parse_alias(std::string & firstPart, std::string & str);
+		static int	parse_try_files(std::string & str);
+		static int	parse_allow(std::string & str);
+		static int	parse_deny(std::string & str);
+		static int	parse_limit_except(std::string & str);
+		static int	parse_location(std::string & str);
+		static int	parse_cgi(const std::string & firstPart, const std::string & secondPart);
+		static int	parse_cgi(const std::string & firstPart, const std::string & secondPart, VServer & VServ);
+		static int	parse_cgi(const std::string & firstPart, const std::string & secondPart, Location & Loc);
 
 		static int	parser_location(std::ifstream & infile, std::string & line, VServer & VServ);
 		static int	parser_vserver(std::ifstream & infile, std::string & line);
@@ -66,7 +74,7 @@ class Settings {
 		static std::string							program_path;										//	Path of the executable
 		static std::map <int, std::string>			error_codes;										//	Error codes in a map
 		static std::map <std::string, std::string>	mime_types;											//	MIME types in a map
-		static std::map <std::string, std::string>	global;												//	Global settings in a map
+		static std::vector <std::pair<std::string, std::string> > global;								//	Global settings in a pair vector
 		static std::vector <VServer>				vserver;											//	V-Servers in a vector
 		static std::vector <std::string>			config;												//	Configuration file in a vector
 		static std::string							config_path;										//	Path of the default configuration file
@@ -87,8 +95,8 @@ class Settings {
 
 		//	Global
 		static std::string	get(const std::string & Key);												//	Get a Value from a Key
-		static void			set(const std::string & Key, const std::string & Value);					//	Add or modify a Key - Value
-		static void			add(const std::string & Key, const std::string & Value) { set(Key, Value); }//	Alias for 'set'
+		static void			set(const std::string & Key, const std::string & Value, bool Force = false);//	Add or modify a Key - Value
+		static void			add(const std::string & Key, const std::string & Value, bool Force = false);//	Alias for 'set'
 		static void			del(const std::string & Key);												//	Delete a Key - Value
 		static void			clear();																	//	Delete all Keys and his Values
 
@@ -96,9 +104,5 @@ class Settings {
 		static void			set(VServer & VServ);														//	Add or modify a V-Server
 		static void			add(VServer & VServ) { set(VServ); }										//	Alias for 'set'
 		static void			del(const VServer & VServ);													//	Delete a V-Server
-	
-		//	Utils
-		static std::string	programPath();																//	Get the path of the executable
-		static int			createPath(const std::string & path);										//	Create a path
 
 };

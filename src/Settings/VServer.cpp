@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 11:54:43 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/08 15:02:22 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/12 17:27:10 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,29 +40,31 @@
 
     #pragma region Get
 
-        std::string VServer::get(const std::string & Key) const {
-            std::map<std::string, std::string>::const_iterator it = vserver.find(Key);
-            if (it == vserver.end()) return ("");
-            return (it->second);
+        std::string VServer::get(const std::string & Key) {
+			for (std::vector<std::pair<std::string, std::string> >::iterator it = vserver.begin(); it != vserver.end(); ++it)
+			if (it->first == Key) return (it->second);
+			return ("");
         }
 
     #pragma endregion
 
-    #pragma region Set
+    #pragma region Set/Add
 
-        void VServer::set(const std::string & Key, const std::string & Value) {
-            std::map<std::string, std::string>::iterator it = vserver.find(Key);
-            if (it != vserver.end()) it->second = Value;
-            if (it == vserver.end()) vserver[Key] = Value;
+        void VServer::set(const std::string & Key, const std::string & Value, bool Force) {
+			for (std::vector<std::pair<std::string, std::string> >::iterator it = vserver.begin(); it != vserver.end(); ++it)
+			if (!Force && it->first == Key) { it->second = Value; return; }
+			vserver.push_back(std::make_pair(Key, Value));
         }
+
+		void VServer::add(const std::string & Key, const std::string & Value, bool Force) { set(Key, Value, Force); }
 
     #pragma endregion
 
     #pragma region Del
 
         void VServer::del(const std::string & Key) {
-            std::map<std::string, std::string>::iterator it = vserver.find(Key);
-            if (it != vserver.end()) vserver.erase(it);
+			for (std::vector<std::pair<std::string, std::string> >::iterator it = vserver.begin(); it != vserver.end(); ++it)
+			if (it->first == Key) { vserver.erase(it); }
         }
 
     #pragma endregion

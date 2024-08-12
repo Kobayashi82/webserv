@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:27:58 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/10 23:07:22 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/12 19:01:33 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@
 	std::string							Settings::config_path = Utils::programPath();					//	Path of the default configuration file
 	std::map <int, std::string>			Settings::error_codes;											//	Error codes in a map
 	std::map <std::string, std::string>	Settings::mime_types;											//	MIME types in a map
-	std::map <std::string, std::string>	Settings::global;												//	Global settings in a map
+	std::vector <std::pair<std::string, std::string> >	Settings::global;								//	Global settings in a pair vector
 	std::vector <VServer> 				Settings::vserver;												//	V-Servers in a vector
 	std::vector <std::string>			Settings::config;												//	Configuration file in a vector
 	bool								Settings::config_displayed = false;								//	Is the log or the settings displayed
@@ -34,6 +34,65 @@
 	int 								Settings::terminate = -1;										//	Flag the program to exit with the value in terminate (the default value of -1 don't exit)
 	int									Settings::line_count = 0;										//	Number of the current line of the configuration file (use to indicate the line of an error in the configuration file)
 	int									Settings::bracket_lvl = 0;										//	Level of the bracket (use to parse the configuration file)
+
+#pragma endregion
+
+#pragma region Global
+
+    #pragma region Get
+
+		std::string Settings::get(const std::string & Key) {
+			for (std::vector<std::pair<std::string, std::string> >::iterator it = global.begin(); it != global.end(); ++it)
+				if (it->first == Key) return (it->second);
+			return ("");
+		}
+
+    #pragma endregion
+
+    #pragma region Set/Add
+
+		void Settings::set(const std::string & Key, const std::string & Value, bool Force) {
+			for (std::vector<std::pair<std::string, std::string> >::iterator it = global.begin(); it != global.end(); ++it)
+				if (!Force && it->first == Key) { it->second = Value; return; }
+			global.push_back(std::make_pair(Key, Value));
+		}
+
+		void Settings::add(const std::string & Key, const std::string & Value, bool Force) { set(Key, Value, Force); }
+
+    #pragma endregion
+
+	#pragma region Del
+
+		void Settings::del(const std::string & Key) {
+			for (std::vector<std::pair<std::string, std::string> >::iterator it = global.begin(); it != global.end(); ++it)
+				if (it->first == Key) { global.erase(it); }
+		}
+
+    #pragma endregion
+
+    #pragma region Clear
+
+		void Settings::clear() {
+			for (std::vector<VServer>::iterator it = vserver.begin(); it != vserver.end(); ++it) it->clear();
+			global.clear(); vserver.clear(); config.clear(); bracket_lvl = 0; loaded_ok = false;
+		}
+
+	#pragma endregion
+
+#pragma endregion
+
+#pragma region VServer
+
+	void Settings::set(VServer & VServ) {
+		std::vector<VServer>::iterator it = std::find(vserver.begin(), vserver.end(), VServ);
+		if (it == vserver.end()) { vserver.push_back(VServ); }
+		else *it = VServ;
+	}
+
+	void Settings::del(const VServer & VServ) {
+		std::vector<VServer>::iterator it = std::find(vserver.begin(), vserver.end(), VServ);
+		if (it != vserver.end()) { it->clear(); vserver.erase(it); }
+	}
 
 #pragma endregion
 
@@ -127,7 +186,8 @@
 
 		void Settings::load_args(int argc, char **argv) {
 			load_error_codes(); load_mime_types();
-			if ((argc == 2 && !strcmp(argv[1], "-i")) || (argc == 3 && (!strcmp(argv[2], "-i")))) { Display::RawModeDisabled = true; Display::ForceRawModeDisabled = true; argc--;}
+			if ((argc == 2 && !strcmp(argv[1], "-i")) || (argc == 3 && (!strcmp(argv[2], "-i")))) {
+				Display::RawModeDisabled = true; Display::ForceRawModeDisabled = true; argc--; Display::Logo(); }
 			if (argc == 2 && !strcmp(argv[1], "-t")) {                                                                                      //  Test default settings
 				check_only = true;
 				std::cout << std::endl;
@@ -171,70 +231,3 @@
 #pragma endregion
 
 #pragma endregion
-
-#pragma region Global
-
-	std::string Settings::get(const std::string & Key) {
-		std::map<std::string, std::string>::const_iterator it = global.find(Key);
-		if (it == global.end()) return ("");
-		return (it->second);
-	}
-
-	void Settings::set(const std::string & Key, const std::string & Value) {
-		std::map<std::string, std::string>::iterator it = global.find(Key);
-		if (it != global.end()) it->second = Value;
-		if (it == global.end()) global[Key] = Value;
-	}
-
-	void Settings::del(const std::string & Key) {
-		std::map<std::string, std::string>::iterator it = global.find(Key);
-		if (it != global.end()) global.erase(it);
-	}
-
-	void Settings::clear() {
-		for (std::vector<VServer>::iterator it = vserver.begin(); it != vserver.end(); ++it) it->clear();
-		global.clear(); vserver.clear(); config.clear(); bracket_lvl = 0; loaded_ok = false;
-	}
-
-#pragma endregion
-
-#pragma region VServer
-
-	void Settings::set(VServer & VServ) {
-		std::vector<VServer>::iterator it = std::find(vserver.begin(), vserver.end(), VServ);
-		if (it == vserver.end()) { vserver.push_back(VServ); }
-		else *it = VServ;
-	}
-
-	void Settings::del(const VServer & VServ) {
-		std::vector<VServer>::iterator it = std::find(vserver.begin(), vserver.end(), VServ);
-		if (it != vserver.end()) { it->clear(); vserver.erase(it); }
-	}
-
-#pragma endregion
-
-//	GLOBAL
-
-//	✓	access_log										/var/log/nginx/access.log;
-//	✓	error_log										error.log;
-//	✓	client_max_body_size							10M;
-//	✓	error_page 404 500								=200 /about/index.html;
-//	✓	autoindex										on;
-
-//	SERVER	(server {)
-
-//	✓	listen											80;
-//	✓	server_name										example.com www.example.com;
-//	✓	root											/mnt/c/www/html/example.com;
-//	✓	index											index.html index.htm index.php;
-
-//		LOCATION
-//
-//			location 									= /404.html {	(Diferencia con el = y ~)
-//	✓		internal;
-//	✓		alias										/mnt/c/www/html/error_pages/404.html;
-//			try_files									$uri $uri/ =404;								$uri $uri/ /file.html;
-//	✓		return										301 https://example.com$request_uri;			$request_uri;
-//			limit_except								GET POST {
-//				deny									all;
-//				return									405 /405.html;

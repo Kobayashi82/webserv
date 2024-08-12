@@ -6,7 +6,7 @@
 #    By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/02/20 17:51:39 by vzurera-          #+#    #+#              #
-#    Updated: 2024/08/09 22:39:52 by vzurera-         ###   ########.fr        #
+#    Updated: 2024/08/12 14:04:43 by vzurera-         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -60,7 +60,7 @@ NAME	=	webserv
 SRCS	=	Logs/Timer.cpp Logs/Log.cpp																					\
 			Settings/Settings.cpp Settings/VServer.cpp Settings/Location.cpp Settings/Codes.cpp Settings/Parser.cpp		\
 			Display/Display.cpp Display/Monitor.cpp																		\
-			Utils/String.cpp Utils/Files.cpp																			\
+			Utils/String.cpp Utils/Network.cpp Utils/Files.cpp															\
 			main.cpp
 
 # ────────────────────────────────────────────────────────── #
