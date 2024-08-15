@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:30:57 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/12 18:37:53 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/15 18:36:44 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,36 @@
 
 #include <unistd.h>																						//	For access()
 #include <sys/stat.h>																					//	For stat()
+
+static int remove_semicolon(std::string & str, int line_count, bool all = false) {
+    size_t pos; std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
+
+	if (str.empty()) return (0);
+	while ((pos = str.find("{;")) != std::string::npos) str.erase(pos + 1, 1);
+	while ((pos = str.find("};")) != std::string::npos) str.erase(pos + 1, 1);
+
+	if (all) {
+		std::string firstPart; std::istringstream stream(str);
+		stream >> firstPart; Utils::trim(firstPart); Utils::toLower(firstPart);
+
+		if (str[str.size() - 1] != '{' && str[str.size() - 1] != '}' && str[str.size() - 1] != ';'
+		&& firstPart != "http" && firstPart != "server" && firstPart != "location" && firstPart != "limit_except") {
+			Log::log_error(RD + n_line + "no termina correctamente"); return (1); }
+
+		while ((pos = str.find(";")) != std::string::npos) str.erase(pos, 1);
+	}
+
+	return (0);
+}
+
+static int check_multiline(const std::string & str, int line_count) {
+    size_t pos; std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
+
+    if ((pos = str.find(";")) != std::string::npos && (str.find("{") != std::string::npos || str.find("}") != std::string::npos || str.find(";", pos + 1) != std::string::npos)) {
+        Log::log_error(RD + n_line + "Found ';{' in the string"); return (1); }
+
+	return (0);
+}
 
 #pragma region Brackets
 
@@ -54,7 +84,8 @@
 					return (1);
 				} else {
 					if (!(info.st_mode & S_IFDIR)) {				Log::log_error(RD + n_line + dir_path + RD " is not a valid directory" NC); return (1); }
-					else if (access(str.c_str(), F_OK) != 0) {		Log::log_error(RD + n_line + "The " Y + firstPart + RD " path " Y + str + RD " does not exist" NC); return (1); }
+					else if (firstPart != "access_log" && firstPart != "error_log" && access(str.c_str(), F_OK) != 0) {
+																	Log::log_error(RD + n_line + "The " Y + firstPart + RD " path " Y + str + RD " does not exist" NC); return (1); }
 					else if (check_write &&
 						access(dir_path.c_str(), W_OK) != 0) {		Log::log_error(RD + n_line + "No write permission for " Y + dir_path + NC); return (1); }
 					else if (check_write && access(str.c_str(), F_OK) == 0 &&
@@ -120,7 +151,7 @@
 			for (std::vector<std::string>::iterator it = errors.begin(); it != errors.end(); ++it) {
 				long code; if (Utils::stol(*it, code) || (error_codes.find(code) == error_codes.end())) {
 					Log::log_error(RD + n_line + "Invalid status code " Y +  *it + RD " for " Y "error_page" NC); BadConfig = true; }
-				else add(firstPart + " " + *it, filePath);
+				else global.add(firstPart + " " + *it, filePath);
 			}
 			return (0);
 		}
@@ -311,7 +342,7 @@
 
 			for (std::vector<std::string>::iterator it = values.begin(); it != values.end(); ++it) {
 				value = *it; if (value.empty() || value[0] != '.') { Log::log_error(RD + n_line + "Invalid extension " Y + value + RD " for " Y "cgi" NC); BadConfig = true; }
-				else add(firstPart + " " + *it, filePath);
+				else global.add(firstPart + " " + *it, filePath);
 			}
 			return (0);
 		}
@@ -428,15 +459,17 @@
 		int Settings::parse_location(std::string & str) {
 			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
 			
-			if (str.empty()) {			Log::log_error(RD + n_line + "Empty value for " Y + "Location" + NC); return (1); }
+			if (str.empty()) {										Log::log_error(RD + n_line + "Empty value for " Y "Location" NC); return (1); }
 
-			// std::istringstream stream(str); std::string method;
+			std::istringstream stream(str); std::string exact, path;
 
-			// while (stream >> method) {
-			// 	if (method.empty()) {	Log::log_error(RD + n_line + "Empty method for " Y + "limit_except" + NC); return (1); }
-			// 	if (method != "GET" && method != "POST" && method != "DELETE" && method != "PUT" && method != "HEAD") {
-			// 		Log::log_error(RD + n_line + "Invalid method " Y + method + RD " for " Y + "limit_except" + NC); return (1); }
-			// }
+			stream >> exact; stream >> path;
+
+			if (exact == "=" && path.empty()) {						Log::log_error(RD + n_line + "Empty value for " Y "Location" NC); return (1); }
+			if (exact != "=" && !path.empty()) {					Log::log_error(RD + n_line + "Invalid value " Y + exact + RD " for " Y + "Location" NC); return (1); }
+			if (exact.empty()) {									Log::log_error(RD + n_line + "Empty value for " Y "Location" NC); return (1); }
+			if (exact == "=" && !path.empty() && path[0] != '/') {	Log::log_error(RD + n_line + "Invalid value " Y + exact + RD "for " Y + "Location" NC); return (1); }
+			if (exact != "=" && exact[0] != '/') {					Log::log_error(RD + n_line + "Invalid value " Y + exact + RD "for " Y + "Location" NC); return (1); }
 
 			return (0);
 		}
@@ -471,9 +504,9 @@
 				if (firstPart == "try_files") return (0);
 				if (firstPart == "alias") return (0);
 				if (firstPart == "internal") return (0);
-				if (firstPart == "limit_except") return (0);
-				if (firstPart == "deny") return (0);
 				if (firstPart == "return") return (0);
+			} else if (Section == "Method") {
+				if (firstPart == "limit_except") return (0);
 			}
 			Log::log_error(RD + n_line + "Invalid directive " Y + firstPart + NC);
 			return (1);
@@ -485,44 +518,117 @@
 
 #pragma region Config File
 
-	#pragma region Location
+	#pragma region Method
 
-		int Settings::parser_location(std::ifstream & infile, std::string & line, VServer & VServ) {
-			bool inLimit = false; Location Loc; int current_bracket = bracket_lvl; std::string tmp_line; std::string orig_line = line;
+		int Settings::parser_method(std::ifstream & infile, std::string & line, VServer VServ, Location & Loc) {
+			Method Met; int current_bracket = bracket_lvl; std::string tmp_line; std::string orig_line = line;
 			do {
 				line_count++; tmp_line = line;
 				Utils::trim(line); if (line.empty()) {
 					VServ.config.push_back(tmp_line);
-					config.push_back(tmp_line);
+					global.config.push_back(tmp_line);
 					continue;
 				}
-				std::string firstPart, secondPart; std::istringstream stream(line);
 
+				remove_semicolon(line, line_count);
+				if (check_multiline(line, line_count))			BadConfig = true;
+				if (remove_semicolon(line, line_count, true))	BadConfig = true;
+				std::string firstPart, secondPart; std::istringstream stream(line);
 				stream >> firstPart; Utils::trim(firstPart); Utils::toLower(firstPart);
 
 				std::getline(stream, secondPart); Utils::trim(secondPart);
 
-				if (tmp_line != orig_line) { VServ.config.push_back(tmp_line); config.push_back(tmp_line); }
-				if (!firstPart.empty() && firstPart[firstPart.size() - 1] == ';') firstPart.erase(firstPart.size() - 1);
-				if (!secondPart.empty() && secondPart[secondPart.size() - 1] != '{' && secondPart[secondPart.size() - 1] != '}' && secondPart[secondPart.size() - 1] != ';' && firstPart != "{" && firstPart != "}" && firstPart != "location") return (0);
-				if (!secondPart.empty() && secondPart[secondPart.size() - 1] == ';') secondPart.erase(secondPart.size() - 1);
+				if (tmp_line != orig_line) { VServ.config.push_back(tmp_line); global.config.push_back(tmp_line); }
 
 				if (brackets(firstPart) + brackets(secondPart) < 0) {
-					if (inLimit) inLimit = false;
+					if (bracket_lvl < 0) return (0);
+					if (bracket_lvl <= current_bracket) { Loc.add(Met); break; }
+				}
+
+				Utils::trim(firstPart); Utils::trim(secondPart);
+
+				if (firstPart.empty()) continue;
+
+				if (firstPart == "limit_except") {
+					bool isSet = false;
+					for (std::vector <Method>::iterator it = Loc.method.begin(); it != Loc.method.end(); ++it) {
+						Method Met = *it;
+						if (Met.get("limit_except") == secondPart) {
+							std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
+							Log::log_error(RD + n_line + "Directive " Y + firstPart + RD " is already set" + NC);
+							BadConfig = true; isSet = true; break;
+						}
+					} if (isSet) continue;
+				}
+
+				if (Met.get(firstPart) != "" && firstPart != "allow" && firstPart != "deny") {
+					std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
+					Log::log_error(RD + n_line + "Directive " Y + firstPart + RD " is already set" + NC);
+					BadConfig = true; continue;
+				}
+
+				if (firstPart == "limit_except" && parse_limit_except(secondPart))	BadConfig = true;
+			
+				if (firstPart == "allow" && parse_allow(secondPart))				BadConfig = true;
+				if (firstPart == "deny" && parse_deny(secondPart))					BadConfig = true;
+				if (firstPart == "return" && parse_return(secondPart))				BadConfig = true;
+				if (invalid_directive(firstPart, line_count, "Method"))				BadConfig = true;
+				else {
+					if (firstPart == "allow" || firstPart == "deny")				Met.add(firstPart, secondPart, true);
+					else 															Met.add(firstPart, secondPart);
+				}
+			} while (getline(infile, line));
+			return (0);
+		}
+
+	#pragma endregion
+
+	#pragma region Location
+
+		int Settings::parser_location(std::ifstream & infile, std::string & line, VServer & VServ) {
+			Location Loc; int current_bracket = bracket_lvl; std::string tmp_line; std::string orig_line = line;
+			do {
+				tmp_line = line;
+				Utils::trim(line); if (line.empty()) {
+					VServ.config.push_back(tmp_line);
+					global.config.push_back(tmp_line);
+					line_count++; continue;
+				}
+
+				remove_semicolon(line, line_count);
+				if (check_multiline(line, line_count))			BadConfig = true;
+				if (remove_semicolon(line, line_count, true))	BadConfig = true;
+				std::string firstPart, secondPart; std::istringstream stream(line);
+				stream >> firstPart; Utils::trim(firstPart); Utils::toLower(firstPart);
+
+				if (firstPart == "limit_except") {
+					VServ.config.push_back(tmp_line); global.config.push_back(tmp_line);
+					parser_method(infile, line, VServ, Loc);
+					firstPart = "ignore_me";
+				}
+
+				if (firstPart != "ignore_me") {
+					line_count++;
+					std::getline(stream, secondPart); Utils::trim(secondPart);
+					if (!firstPart.empty() && tmp_line != orig_line) { VServ.config.push_back(tmp_line); global.config.push_back(tmp_line); }
+				}
+
+				if (brackets(firstPart) + brackets(secondPart) < 0) {
 					if (bracket_lvl < 0) return (0);
 					if (bracket_lvl <= current_bracket) { VServ.add(Loc); break; }
 				}
 
-				if (firstPart.empty()) continue;
-				if (firstPart == "limit_except") inLimit = true;
+				Utils::trim(firstPart); Utils::trim(secondPart);
+
+				if (firstPart.empty() || firstPart == "ignore_me") continue;
 
 				if (firstPart == "location") {
 					bool isSet = false;
-					for (std::vector<Location>::iterator it = VServ.location.begin(); it != VServ.location.end(); ++it) {
+					for (std::vector <Location>::iterator it = VServ.location.begin(); it != VServ.location.end(); ++it) {
 						Location Loc = *it;
 						if (Loc.get("location") == secondPart) {
 							std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
-							Log::log_error(RD + n_line + "Directive " Y + firstPart + RD " is already set" + NC);
+							Log::log_error(RD + n_line + "Directive " Y + firstPart + " " + secondPart + RD " is already set" + NC);
 							BadConfig = true; isSet = true; break;
 						}
 					} if (isSet) continue;
@@ -546,7 +652,6 @@
 				if (firstPart == "try_files" && parse_try_files(secondPart))					BadConfig = true;
 				if (firstPart == "allow" && parse_allow(secondPart))							BadConfig = true;
 				if (firstPart == "deny" && parse_deny(secondPart))								BadConfig = true;
-				if (firstPart == "limit_except" && parse_limit_except(secondPart))				BadConfig = true;
 				if (firstPart == "error_page") parse_errors(firstPart, secondPart, Loc);
 				if (firstPart == "cgi") parse_cgi(firstPart, secondPart, Loc);
 				if (invalid_directive(firstPart, line_count, "Location"))						BadConfig = true;
@@ -568,34 +673,36 @@
 				tmp_line = line;
 				Utils::trim(line); if (line.empty()) {
 					VServ.config.push_back(tmp_line);
-					config.push_back(tmp_line);
+					global.config.push_back(tmp_line);
 					line_count++; continue;
 				}
-				std::string firstPart, secondPart; std::istringstream stream(line);
-					
+
+				remove_semicolon(line, line_count);
+				if (check_multiline(line, line_count))			BadConfig = true;
+				if (remove_semicolon(line, line_count, true))	BadConfig = true;
+				std::string firstPart, secondPart; std::istringstream stream(line);				
 				stream >> firstPart; Utils::trim(firstPart); Utils::toLower(firstPart);
 
 				if (firstPart == "location") {
-					VServ.config.push_back(tmp_line); config.push_back(tmp_line);
+					VServ.config.push_back(tmp_line); global.config.push_back(tmp_line);
 					parser_location(infile, line, VServ);
-					firstPart = "";
+					firstPart = "ignore_me";
 				}
 					
-				if (!firstPart.empty()) {
+				if (firstPart != "ignore_me") {
 					line_count++;
 					std::getline(stream, secondPart); Utils::trim(secondPart);
-					if (!firstPart.empty() && firstPart[firstPart.size() - 1] == ';') firstPart.erase(firstPart.size() - 1);
-					if (!secondPart.empty() && secondPart[secondPart.size() - 1] != '{' && secondPart[secondPart.size() - 1] != '}' && secondPart[secondPart.size() - 1] != ';' && firstPart != "{" && firstPart != "}" && firstPart != "location") return (0);
-					if (!secondPart.empty() && secondPart[secondPart.size() - 1] == ';') secondPart.erase(secondPart.size() - 1);
+					if (!firstPart.empty() && tmp_line != orig_line) { VServ.config.push_back(tmp_line); global.config.push_back(tmp_line); }
 				}
 
 				if (brackets(firstPart) + brackets(secondPart) < 0) {
 					if (bracket_lvl < 0) return (0);
-					if (bracket_lvl <= current_bracket) { config.push_back(tmp_line); add(VServ); break; }
+					if (bracket_lvl <= current_bracket) { add(VServ); break; }
 				}
 
-				if (!firstPart.empty() && tmp_line != orig_line) { VServ.config.push_back(tmp_line); config.push_back(tmp_line); }
-				if (firstPart.empty()) continue;
+				Utils::trim(firstPart); Utils::trim(secondPart);
+
+				if (firstPart.empty() || firstPart == "ignore_me") continue;
 
 				if (VServ.get(firstPart) != "" && firstPart != "allow" && firstPart != "deny") {
 					std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
@@ -631,11 +738,13 @@
 	#pragma region Global
 
 		int Settings::parse_global(std::ifstream & infile, std::string & line) {
-			std::string firstPart, secondPart;
-			config.push_back(line);
+			global.config.push_back(line);
 			Utils::trim(line); if (line.empty()) { line_count++; return (0); }
-			std::istringstream stream(line);
 
+			remove_semicolon(line, line_count);
+			if (check_multiline(line, line_count))			BadConfig = true;
+			if (remove_semicolon(line, line_count, true))	BadConfig = true;
+			std::string firstPart, secondPart; std::istringstream stream(line);
 			stream >> firstPart; Utils::trim(firstPart); Utils::toLower(firstPart);
 			
 			if (firstPart == "http" && bracket_lvl != 0) {
@@ -651,16 +760,15 @@
 			if (!firstPart.empty()) {
 				line_count++;
 				std::getline(stream, secondPart); Utils::trim(secondPart);
-				if (!firstPart.empty() && firstPart[firstPart.size() - 1] == ';') firstPart.erase(firstPart.size() - 1);
-				if (!secondPart.empty() && secondPart[secondPart.size() - 1] != '{' && secondPart[secondPart.size() - 1] != '}' && secondPart[secondPart.size() - 1] != ';' && firstPart != "{" && firstPart != "}" && firstPart != "server" && firstPart != "location") return (0);
-				if (!secondPart.empty() && secondPart[secondPart.size() - 1] == ';') secondPart.erase(secondPart.size() - 1);
 			}
 
 			brackets(firstPart); brackets(secondPart);
 
+			Utils::trim(firstPart); Utils::trim(secondPart);
+
 			if (firstPart.empty()) return (0);
 
-			if (get(firstPart) != "" && firstPart != "allow" && firstPart != "deny") {
+			if (global.get(firstPart) != "" && firstPart != "allow" && firstPart != "deny") {
 				std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
 				Log::log_error(RD + n_line + "Directive " Y + firstPart + RD " is already set" + NC);
 				return (0);
@@ -678,8 +786,8 @@
 			if (firstPart == "cgi") parse_cgi(firstPart, secondPart);
 			if (invalid_directive(firstPart, line_count))									BadConfig = true;
 			else {
-				if (firstPart == "allow" || firstPart == "deny")			add(firstPart, secondPart, true);
-				else if (firstPart != "http" && firstPart != "error_page" && firstPart != "cgi")	add(firstPart, secondPart);
+				if (firstPart == "allow" || firstPart == "deny")			global.add(firstPart, secondPart, true);
+				else if (firstPart != "http" && firstPart != "error_page" && firstPart != "cgi")	global.add(firstPart, secondPart);
 			}
 
 			return (0);
@@ -689,9 +797,8 @@
 
 #pragma endregion
 
-//	Check servers if repeteas at the end
-//	Falta ;
-//	limit_except in a sub container
-
-//			location 									= /404.html {		(Diferencia con el = y ~)		Server
-//			limit_except								GET POST DELETE PUT HEAD {							Server y Location
+//	si hay ; y { o } o ; log_error multi-line
+//	brackets() y despues si no es http, server, location or limit_except y no termina en ; log_error
+//	server_name check duplicates
+//	server ip y puerto check duplicates
+//	crear clase de variables con map $request_uri $uri

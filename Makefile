@@ -6,7 +6,7 @@
 #    By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/02/20 17:51:39 by vzurera-          #+#    #+#              #
-#    Updated: 2024/08/12 14:04:43 by vzurera-         ###   ########.fr        #
+#    Updated: 2024/08/15 18:38:57 by vzurera-         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -49,7 +49,7 @@ FLAGS				= -Wall -Wextra -Werror -std=c++98 -g # -fsanitize=thread
 # ───────────────── #
 
 SRC_DIR				= ./src/
-INC_DIR				= -I./inc -I./inc/Logs -I./inc/Settings -I./inc/Display -I./inc/Utils
+INC_DIR				= -I./inc -I./inc/Log -I./inc/Settings -I./inc/Display -I./inc/Utils
 OBJ_DIR				= ./build/obj/
 
 # ────────── #
@@ -57,8 +57,9 @@ OBJ_DIR				= ./build/obj/
 # ────────── #
 
 NAME	=	webserv
-SRCS	=	Logs/Timer.cpp Logs/Log.cpp																					\
-			Settings/Settings.cpp Settings/VServer.cpp Settings/Location.cpp Settings/Codes.cpp Settings/Parser.cpp		\
+SRCS	=	Log/Timer.cpp Log/Log.cpp																					\
+			Settings/Settings.cpp Settings/VServer.cpp Settings/Location.cpp Settings/Method.cpp Settings/Codes.cpp		\
+			Settings/Parser.cpp																							\
 			Display/Display.cpp Display/Monitor.cpp																		\
 			Utils/String.cpp Utils/Network.cpp Utils/Files.cpp															\
 			main.cpp

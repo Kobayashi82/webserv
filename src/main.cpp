@@ -6,16 +6,13 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 14:30:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/12 19:20:22 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/15 19:11:01 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Webserv.hpp"
 
 //  *       service nginx reload
-
-//  TODO    limit_except
-//	TODO	Handle ;
 
 //	TODO	Send/Received data
 //	TODO	Active conections
@@ -25,6 +22,7 @@ int main(int argc, char **argv) {
     Settings::load_args(argc, argv);
 
     while (Settings::terminate == -1) {
+		if (Display::Resized) { if (Display::drawing) Display::redraw = true; else Display::Output(); }
 		Display::Input(); usleep(10000);
 	}
 
@@ -55,12 +53,12 @@ int main(int argc, char **argv) {
 
 //		LOCATION
 //
-//			location 									= /404.html {	(Diferencia con el = y ~)
+//	✓		location 									= /404.html {
 //	✓		internal;
 //	✓		alias										/mnt/c/www/html/error_pages/404.html;
 //	✓		try_files									$uri $uri/ file1.html /file2.html =404;								$uri $uri/ /file.html;
 //	✓		return										301 https://example.com$request_uri;			$request_uri;
-//			limit_except								GET POST {											Server y Location
+//	✓		limit_except								GET POST {											Server y Location
 //	✓			deny									all;												Global, Server y Location
 //	✓			allow									192.168.1.0/24;		 192.168.1.0/255.255.255.0;		Global, Server y Location
 //	✓			return									405 /405.html;
@@ -70,3 +68,5 @@ int main(int argc, char **argv) {
 //	✓	uploads /path
 //	✓	cgi .py /usr/bin/python3;
 //	✓	cgi .php .otro /usr/bin/php;
+
+//	Variables $request_uri $uri

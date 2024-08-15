@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 11:59:38 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/12 19:00:21 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/15 18:49:18 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,6 +32,8 @@ class Display {
 		static int	maxFails;																			//	Maximum numbers of retries to print in the terminal if something fails
 		static bool	RawModeDisabled;																	//	Status of the terminal (false if in raw mode)
 		static bool	ForceRawModeDisabled;																//	Force terminal in normal mode (not raw mode)
+		static bool	Resized;																			//	True if the terminal has been resized
+		static bool	redraw;																				//	Is in the middle of an Output()
 
 		//	Methods
 		static void	Logo();																				//	Print the Webserv logo

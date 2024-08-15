@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/14 14:37:32 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/12 19:17:52 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/15 18:35:05 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,10 +17,12 @@
 #pragma region Variables
 
 	bool					Display::drawing = false;													//	Is in the middle of an Output()
-	int						Display::failCount = 0;														// Contador de fallos
-	int						Display::maxFails = 3;														// Número máximo de fallos permitidos
-	bool					Display::RawModeDisabled = true;
-	bool					Display::ForceRawModeDisabled = false;
+	int						Display::failCount = 0;														//	Current number of fails when printing in the the terminal
+	int						Display::maxFails = 3;														//	Maximum numbers of retries to print in the terminal if something fails
+	bool					Display::RawModeDisabled = true;											//	Status of the terminal (false if in raw mode)
+	bool					Display::ForceRawModeDisabled = false;										//	Force terminal in normal mode (not raw mode)
+	bool					Display::Resized = false;													//	True if the terminal has been resized
+	bool					Display::redraw = false;													//	Is in the middle of an Output()
 
 	static Monitor			monitor;																	//	Class to obtain MEM and CPU ussage
 	static struct termios	orig_termios;																//	Structure for terminal information
@@ -28,7 +30,6 @@
 	static int				total_cols = 0;																//	Number of columns in the terminal
 	static int				total_rows = 0;																//	Number of rows in the terminal
 	static int				log_rows = 0;																//	Number of rows available for logs or settings
-	static bool				redraw = false;																//	Is in the middle of an Output()
 
 
 #pragma endregion
@@ -80,8 +81,7 @@
 
 	static void resizeHandler(int signum) {
 		(void) signum;
-		if (Display::drawing) { redraw = true; return; }
-		Display::Output();
+		Display::Resized = true;
 	}
 
 	static void stopHandler(int signum) {
@@ -170,76 +170,76 @@
 						Settings::current_vserver++;
 					if (Display::drawing) { redraw = true; return; } Output();
                 } else if (seq[1] == 'A') {																								//	Up arrow
-					if (Settings::current_vserver == -1 && Settings::config_displayed == false
-						&& Settings::log_index > 0) {
-							Settings::log_index--; Settings::autolog = false;
-					} else if (Settings::current_vserver == -1 && Settings::config_displayed == true
-						&& Settings::config_index > 0)
-							Settings::config_index--;
-					else if (Settings::vserver.size() > 1 && Settings::current_vserver != -1 && Settings::config_displayed == false
+					if (Settings::current_vserver == -1 && Settings::global.config_displayed == false
+						&& Settings::global.log_index > 0) {
+							Settings::global.log_index--; Settings::global.autolog = false;
+					} else if (Settings::current_vserver == -1 && Settings::global.config_displayed == true
+						&& Settings::global.config_index > 0)
+							Settings::global.config_index--;
+					else if (Settings::vserver.size() > 1 && Settings::current_vserver != -1 && Settings::global.config_displayed == false
 						&& Settings::vserver[Settings::current_vserver].log_index > 0) {
 							Settings::vserver[Settings::current_vserver].log_index--;
 							Settings::vserver[Settings::current_vserver].autolog = false;
-					} else if (Settings::vserver.size() > 1 && Settings::current_vserver != -1 && Settings::config_displayed == true
+					} else if (Settings::vserver.size() > 1 && Settings::current_vserver != -1 && Settings::global.config_displayed == true
 						&& Settings::vserver[Settings::current_vserver].config_index > 0)
 							Settings::vserver[Settings::current_vserver].config_index--;
 					else return ;
 					if (Display::drawing) { redraw = true; return; } Output();
                 } else if (seq[1] == 'B') {																								//	Down arrow
-					if (Settings::current_vserver == -1 && Settings::config_displayed == false
-						&& static_cast<int>(Log::both.size()) >= log_rows
-						&& static_cast<int>(Settings::log_index) < static_cast<int>(Log::both.size()) - (log_rows - 1)) {
-							Settings::log_index++;
-							if (Settings::log_index == Log::both.size() - (log_rows - 1)) Settings::autolog = true;
-					} else if (Settings::current_vserver == -1 && Settings::config_displayed == true
-						&& static_cast<int>(Settings::config.size()) >= log_rows
-						&& static_cast<int>(Settings::config_index) < static_cast<int>(Settings::config.size()) - (log_rows - 1))
-							Settings::config_index++;
-					else if (Settings::vserver.size() > 1 && Settings::current_vserver != -1 && Settings::config_displayed == false
-						&& static_cast<int>(Settings::vserver[Settings::current_vserver].both.size()) >= log_rows
-						&& static_cast<int>(Settings::vserver[Settings::current_vserver].log_index) < static_cast<int>(Settings::vserver[Settings::current_vserver].both.size()) - (log_rows - 1)) {
+					if (Settings::current_vserver == -1 && Settings::global.config_displayed == false
+						&& static_cast<int>(Settings::global.log.both.size()) >= log_rows
+						&& static_cast<int>(Settings::global.log_index) < static_cast<int>(Settings::global.log.both.size()) - (log_rows - 1)) {
+							Settings::global.log_index++;
+							if (Settings::global.log_index == Settings::global.log.both.size() - (log_rows - 1)) Settings::global.autolog = true;
+					} else if (Settings::current_vserver == -1 && Settings::global.config_displayed == true
+						&& static_cast<int>(Settings::global.config.size()) >= log_rows
+						&& static_cast<int>(Settings::global.config_index) < static_cast<int>(Settings::global.config.size()) - (log_rows - 1))
+							Settings::global.config_index++;
+					else if (Settings::vserver.size() > 1 && Settings::current_vserver != -1 && Settings::global.config_displayed == false
+						&& static_cast<int>(Settings::vserver[Settings::current_vserver].log.both.size()) >= log_rows
+						&& static_cast<int>(Settings::vserver[Settings::current_vserver].log_index) < static_cast<int>(Settings::vserver[Settings::current_vserver].log.both.size()) - (log_rows - 1)) {
 							Settings::vserver[Settings::current_vserver].log_index++;
-							if (Settings::vserver[Settings::current_vserver].log_index == Settings::vserver[Settings::current_vserver].both.size() - (log_rows - 1)) Settings::vserver[Settings::current_vserver].autolog = true;
-					} else if (Settings::vserver.size() > 1 && Settings::current_vserver != -1 && Settings::config_displayed == true
+							if (Settings::vserver[Settings::current_vserver].log_index == Settings::vserver[Settings::current_vserver].log.both.size() - (log_rows - 1)) Settings::vserver[Settings::current_vserver].autolog = true;
+					} else if (Settings::vserver.size() > 1 && Settings::current_vserver != -1 && Settings::global.config_displayed == true
 						&& static_cast<int>(Settings::vserver[Settings::current_vserver].config.size()) >= log_rows
 						&& static_cast<int>(Settings::vserver[Settings::current_vserver].config_index) < static_cast<int>(Settings::vserver[Settings::current_vserver].config.size()) - (log_rows - 1))
 							Settings::vserver[Settings::current_vserver].config_index++;
 					else return ;
 					if (Display::drawing) { redraw = true; return; } Output();
                 } else if (seq[1] == 'H') {																								//	Home
-					if (Settings::current_vserver == -1 && Settings::config_displayed == false && Settings::log_index > 0) {
-						Settings::log_index = 0;
-						Settings::autolog = false;
-					} else if (Settings::current_vserver == -1 && Settings::config_displayed == true && Settings::config_index > 0)
-						Settings::config_index = 0;
-					else if (Settings::vserver.size() > 1 && Settings::current_vserver != -1 && Settings::config_displayed == false
+					if (Settings::current_vserver == -1 && Settings::global.config_displayed == false && Settings::global.log_index > 0) {
+						Settings::global.log_index = 0;
+						Settings::global.autolog = false;
+					} else if (Settings::current_vserver == -1 && Settings::global.config_displayed == true && Settings::global.config_index > 0)
+						Settings::global.config_index = 0;
+					else if (Settings::vserver.size() > 1 && Settings::current_vserver != -1 && Settings::global.config_displayed == false
 						&& Settings::vserver[Settings::current_vserver].log_index > 0) {
 							Settings::vserver[Settings::current_vserver].log_index = 0;
 							Settings::vserver[Settings::current_vserver].autolog = false;
-					} else if (Settings::vserver.size() > 1 && Settings::current_vserver != -1 && Settings::config_displayed == true
+					} else if (Settings::vserver.size() > 1 && Settings::current_vserver != -1 && Settings::global.config_displayed == true
 						&& Settings::vserver[Settings::current_vserver].config_index > 0)
 							Settings::vserver[Settings::current_vserver].config_index = 0;
 					else return ;
 					if (Display::drawing) { redraw = true; return; } Output();
             	} else if (seq[1] == 'F') {																								//	End
 					size_t temp = 0;
-					if (Settings::current_vserver == -1 && Settings::config_displayed == false && Log::both.size() > 0
-						&& Settings::log_index != Log::both.size() - (log_rows - 1)) {
-							if (static_cast<int>(Log::both.size()) - (log_rows - 1) < 0) temp = 0;
-							else temp = static_cast<int>(Log::both.size()) - (log_rows - 1);
-							if (Settings::log_index == temp) return ; else Settings::log_index = temp;
-							if (static_cast<int>(Settings::log_index) == static_cast<int>(Log::both.size()) - (log_rows - 1)) Settings::autolog = true;
-					} else if (Settings::current_vserver == -1 && Settings::config_displayed == true && Settings::config.size() > 0) {
-						if (static_cast<int>(Settings::config.size()) - (log_rows - 1) < 0) temp = 0;
-						else temp = static_cast<int>(Settings::config.size()) - (log_rows - 1);
-						if (Settings::config_index == temp) return ; else Settings::config_index = temp;
-					} else if (Settings::vserver.size() > 1 && Settings::current_vserver != -1 && Settings::config_displayed == false
-						&& Settings::vserver[Settings::current_vserver].both.size() > 0) {
-							if (static_cast<int>(Settings::vserver[Settings::current_vserver].both.size()) - (log_rows - 1) < 0) temp = 0;
-							else temp = static_cast<int>(Settings::vserver[Settings::current_vserver].both.size()) - (log_rows - 1);
+					if (Settings::current_vserver == -1 && Settings::global.config_displayed == false && Settings::global.log.both.size() > 0
+						&& Settings::global.log_index != Settings::global.log.both.size() - (log_rows - 1)) {
+							if (static_cast<int>(Settings::global.log.both.size()) - (log_rows - 1) < 0) temp = 0;
+							else temp = static_cast<int>(Settings::global.log.both.size()) - (log_rows - 1);
+							if (Settings::global.log_index == temp) return ; else Settings::global.log_index = temp;
+							if (static_cast<int>(Settings::global.log_index) == static_cast<int>(Settings::global.log.both.size()) - (log_rows - 1)) Settings::global.autolog = true;
+					} else if (Settings::current_vserver == -1 && Settings::global.config_displayed == true && Settings::global.config.size() > 0) {
+						if (static_cast<int>(Settings::global.config.size()) - (log_rows - 1) < 0) temp = 0;
+						else temp = static_cast<int>(Settings::global.config.size()) - (log_rows - 1);
+						if (Settings::global.config_index == temp) return ; else Settings::global.config_index = temp;
+					} else if (Settings::vserver.size() > 1 && Settings::current_vserver != -1 && Settings::global.config_displayed == false
+						&& Settings::vserver[Settings::current_vserver].log.both.size() > 0) {
+							if (static_cast<int>(Settings::vserver[Settings::current_vserver].log.both.size()) - (log_rows - 1) < 0) temp = 0;
+							else temp = static_cast<int>(Settings::vserver[Settings::current_vserver].log.both.size()) - (log_rows - 1);
 							if (Settings::vserver[Settings::current_vserver].log_index == temp) return ; else Settings::vserver[Settings::current_vserver].log_index = temp;
-							if (static_cast<int>(Settings::vserver[Settings::current_vserver].log_index) == static_cast<int>(Settings::vserver[Settings::current_vserver].both.size()) - (log_rows - 1)) Settings::vserver[Settings::current_vserver].autolog = true;
-					} else if (Settings::vserver.size() > 1 && Settings::current_vserver != -1 && Settings::config_displayed == true
+							if (static_cast<int>(Settings::vserver[Settings::current_vserver].log_index) == static_cast<int>(Settings::vserver[Settings::current_vserver].log.both.size()) - (log_rows - 1)) Settings::vserver[Settings::current_vserver].autolog = true;
+					} else if (Settings::vserver.size() > 1 && Settings::current_vserver != -1 && Settings::global.config_displayed == true
 						&& Settings::vserver[Settings::current_vserver].config.size() > 0) {
 							if (static_cast<int>(Settings::vserver[Settings::current_vserver].config.size()) - (log_rows - 1) < 0) temp = 0;
 							else temp = static_cast<int>(Settings::vserver[Settings::current_vserver].config.size()) - (log_rows - 1);
@@ -249,12 +249,12 @@
 				}
             }
 			if ((c == 'w' || c == 'W') && Settings::vserver.size() > 0) {																				//	(S)tart / (S)top
-				Settings::status = !Settings::status;
-				if (Settings::status)
+				Settings::global.status = !Settings::global.status;
+				if (Settings::global.status)
 					Log::log_access("WebServ 1.0 stoped");
 				else
 					Log::log_access("WebServ 1.0 started");
-			} else if ((c == 'v' || c == 'V') && Settings::status && Settings::vserver.size() > 0
+			} else if ((c == 'v' || c == 'V') && Settings::global.status && Settings::vserver.size() > 0
 				&& Settings::current_vserver != -1) {																					//	(V)server start
 					Settings::vserver[Settings::current_vserver].status = !Settings::vserver[Settings::current_vserver].status;
 					if (Settings::vserver[Settings::current_vserver].status)
@@ -262,24 +262,24 @@
 					else
 						Log::log_access("VServer stoped", &Settings::vserver[Settings::current_vserver]);
 			} else if ((c == 'c' || c == 'C')) {																										//	(C)lear log
-				if (Settings::current_vserver == -1 && Log::both.size() > 0)
-					Log::clear();
+				if (Settings::current_vserver == -1 && Settings::global.log.both.size() > 0)
+					Settings::global.log.clear();
 				else if (Settings::current_vserver != -1 && Settings::vserver.size() > 0
-					&& Settings::vserver[Settings::current_vserver].both.size() > 0)
+					&& Settings::vserver[Settings::current_vserver].log.both.size() > 0)
 						Settings::vserver[Settings::current_vserver].clear_logs();
 				else return ;
 				Output();
 			} else if ((c == 'l' || c == 'L')) {																										//	(L)og
-				if (Settings::current_vserver == -1 && Settings::config_displayed == true)
-					Settings::config_displayed = false;
+				if (Settings::current_vserver == -1 && Settings::global.config_displayed == true)
+					Settings::global.config_displayed = false;
 				else if (Settings::current_vserver != -1 && Settings::vserver.size() > 0
 					&& Settings::vserver[Settings::current_vserver].config_displayed == true)
 						Settings::vserver[Settings::current_vserver].config_displayed = false;
 				else return ;
 				Output();
 			} else if ((c == 's' || c == 'S')) {																										//	(S)ettings
-				if (Settings::current_vserver == -1 && Settings::config_displayed == false)
-					Settings::config_displayed = true;
+				if (Settings::current_vserver == -1 && Settings::global.config_displayed == false)
+					Settings::global.config_displayed = true;
 				else if (Settings::current_vserver != -1 && Settings::vserver.size() > 0
 					&& Settings::vserver[Settings::current_vserver].config_displayed == false)
 						Settings::vserver[Settings::current_vserver].config_displayed = true;
@@ -353,12 +353,12 @@
 				}
 
 				if (Settings::current_vserver == -1) {
-					if (Settings::config_displayed == false) {
+					if (Settings::global.config_displayed == false) {
 						top += C "──────────┬";
 						middle += " " + Color1 + "S" + Color2 + "ettings " C "│";
 						bottom +=  "──────────┴";
 						length -= 11;
-						if (Log::both.size() > 0) {
+						if (Settings::global.log.both.size() > 0) {
 							top += C "───────────┬";
 							middle += " " + Color1 + "C" + Color2 + "lear log " C "│";
 							bottom +=  "───────────┴";
@@ -373,7 +373,7 @@
 				}
 			//	V-SERVER
 				if (Settings::current_vserver != -1) {
-					if (Settings::status) {
+					if (Settings::global.status) {
 						top += C "─────────┬";
 						middle += " " + Color1 + "V" + Color2 + "server " C "│";
 						bottom +=  "─────────┴";
@@ -384,7 +384,7 @@
 						middle += " " + Color1 + "S" + Color2 + "ettings " C "│";
 						bottom +=  "──────────┴";
 						length -= 11;
-						if (Settings::vserver[Settings::current_vserver].both.size() > 0) {
+						if (Settings::vserver[Settings::current_vserver].log.both.size() > 0) {
 							top += C "───────────┬";
 							middle += " " + Color1 + "C" + Color2 + "lear log " C "│";
 							bottom +=  "───────────┴";
@@ -454,7 +454,7 @@
 				std::ostringstream oss; std::ostringstream ss; ss << Settings::vserver.size(); std::string temp = ss.str();						//	├─┬─┤  █
 				std::string Status; std::string Color = RD; std::string LArrow = "◄ "; std::string RArrow = "► ";								//	├─┼─┤
 				if (Settings::vserver.size() > 0) Color = G;																					//	├─┴─┤  ▒
-				if (Settings::status) Status = G; else Status = RD;																				//	└───┘ ↑ ↓
+				if (Settings::global.status) Status = G; else Status = RD;																				//	└───┘ ↑ ↓
 				if (Settings::vserver.size() == 0) { LArrow = "  "; RArrow = "  "; }
 				
 			//	TITLE
@@ -472,7 +472,7 @@
 						else if (!Settings::vserver[i].status) some = true;
 					}
 				} else Status = RD;
-				if (Settings::status == false) Status = RD;
+				if (Settings::global.status == false) Status = RD;
 				if (Status != RD && some) Status = Y;
 
 			//	MEM & CPU
@@ -508,20 +508,20 @@
 				oss << C "├─────────────────┴"; setLine(C, "─", (cols + 2) - 18, oss); oss << "┤" NC << std::endl; row++;
 
 			//	LOG & SETTINGS
-				if (Settings::current_vserver == -1 && Settings::config_displayed == false) {
-					if (Settings::autolog) {
-						if (static_cast<int>(Log::both.size()) - (log_rows - 1) < 0) Settings::log_index = 0;
-						else Settings::log_index = static_cast<int>(Log::both.size()) - (log_rows - 1);
+				if (Settings::current_vserver == -1 && Settings::global.config_displayed == false) {
+					if (Settings::global.autolog) {
+						if (static_cast<int>(Settings::global.log.both.size()) - (log_rows - 1) < 0) Settings::global.log_index = 0;
+						else Settings::global.log_index = static_cast<int>(Settings::global.log.both.size()) - (log_rows - 1);
 					}
-					print_log(Log::both, Settings::log_index, oss, cols, row);
-				} else if (Settings::current_vserver == -1 && Settings::config_displayed == true)
-					print_config(Settings::config, Settings::config_index, oss, cols, row);
+					print_log(Settings::global.log.both, Settings::global.log_index, oss, cols, row);
+				} else if (Settings::current_vserver == -1 && Settings::global.config_displayed == true)
+					print_config(Settings::global.config, Settings::global.config_index, oss, cols, row);
 				if (Settings::current_vserver != -1 && Settings::vserver[Settings::current_vserver].config_displayed == false) {
 					if (Settings::vserver[Settings::current_vserver].autolog) {
-						if (static_cast<int>(Settings::vserver[Settings::current_vserver].both.size()) - (log_rows - 1) < 0) Settings::vserver[Settings::current_vserver].log_index = 0;
-						else Settings::vserver[Settings::current_vserver].log_index = static_cast<int>(Settings::vserver[Settings::current_vserver].both.size()) - (log_rows - 1);
+						if (static_cast<int>(Settings::vserver[Settings::current_vserver].log.both.size()) - (log_rows - 1) < 0) Settings::vserver[Settings::current_vserver].log_index = 0;
+						else Settings::vserver[Settings::current_vserver].log_index = static_cast<int>(Settings::vserver[Settings::current_vserver].log.both.size()) - (log_rows - 1);
 					}
-					print_log(Settings::vserver[Settings::current_vserver].both, Settings::vserver[Settings::current_vserver].log_index, oss, cols, row);
+					print_log(Settings::vserver[Settings::current_vserver].log.both, Settings::vserver[Settings::current_vserver].log_index, oss, cols, row);
 				} else if (Settings::current_vserver != -1 && Settings::vserver[Settings::current_vserver].config_displayed == true)
 					print_config(Settings::vserver[Settings::current_vserver].config, Settings::vserver[Settings::current_vserver].config_index, oss, cols, row);
 			// BUTTONS

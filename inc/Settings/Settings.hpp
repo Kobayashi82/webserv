@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:14:05 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/12 18:10:40 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/15 19:04:54 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,6 @@
 #include "Utils.hpp"
 #include "Timer.hpp"
 #include "VServer.hpp"
-#include "Log.hpp"
 
 #include <iostream>																						//	For strings and standard input/output like std::cin, std::cout
 #include <sstream>																						//	For std::stringstream to format strings
@@ -63,6 +62,7 @@ class Settings {
 		static int	parse_cgi(const std::string & firstPart, const std::string & secondPart, VServer & VServ);
 		static int	parse_cgi(const std::string & firstPart, const std::string & secondPart, Location & Loc);
 
+		static int	parser_method(std::ifstream & infile, std::string & line, VServer VServ, Location & Loc);
 		static int	parser_location(std::ifstream & infile, std::string & line, VServer & VServ);
 		static int	parser_vserver(std::ifstream & infile, std::string & line);
 		static int	parse_global(std::ifstream & infile, std::string & line);
@@ -72,19 +72,16 @@ class Settings {
 		//	Variables
 		static Timer								timer;												//	Class to obtain time and date related data
 		static std::string							program_path;										//	Path of the executable
+		static std::string							config_path;										//	Path of the default configuration file
+
+		static VServer								global;												//	Global settings in a vector
+		static std::vector <VServer>				vserver;											//	V-Servers in a vector
+
 		static std::map <int, std::string>			error_codes;										//	Error codes in a map
 		static std::map <std::string, std::string>	mime_types;											//	MIME types in a map
-		static std::vector <std::pair<std::string, std::string> > global;								//	Global settings in a pair vector
-		static std::vector <VServer>				vserver;											//	V-Servers in a vector
-		static std::vector <std::string>			config;												//	Configuration file in a vector
-		static std::string							config_path;										//	Path of the default configuration file
-		static bool									config_displayed;									//	Is the log or the settings displayed
-		static size_t								config_index;										//	Current index of the settings
-		static size_t								log_index;											//	Current index of the main log
-		static bool									autolog;											//	Auto-Scroll logs
+
 		static bool									check_only;											//	Check the config file, but don't start the server
 		static bool									loaded_ok;											//	The config file loaded successfully (but may contains errors)
-		static bool									status;												//	Status of the server (On/Off)
 		static int									current_vserver;									//	Current selected V-Server (-1 = None)
 		static int									terminate;											//	Flag the program to exit with the value in terminate (the default value of -1 don't exit)
 
@@ -94,15 +91,12 @@ class Settings {
 		static void			load_args(int argc, char **argv);											//	Load a configuration file based on the defined arguments
 
 		//	Global
-		static std::string	get(const std::string & Key);												//	Get a Value from a Key
-		static void			set(const std::string & Key, const std::string & Value, bool Force = false);//	Add or modify a Key - Value
-		static void			add(const std::string & Key, const std::string & Value, bool Force = false);//	Alias for 'set'
-		static void			del(const std::string & Key);												//	Delete a Key - Value
-		static void			clear();																	//	Delete all Keys and his Values
+		static void			clear(bool reset = false);															//	Delete all Keys, his Values and optionally reset config data
 
 		//	V-Server
 		static void			set(VServer & VServ);														//	Add or modify a V-Server
-		static void			add(VServer & VServ) { set(VServ); }										//	Alias for 'set'
+		static void			add(VServer & VServ);														//	Alias for 'set'
 		static void			del(const VServer & VServ);													//	Delete a V-Server
+		static void			vserver_clear();															//	Delete all V-Servers
 
 };

@@ -6,40 +6,38 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 11:53:48 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/12 17:27:06 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/15 19:05:15 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
+#include "Log.hpp"
 #include "Location.hpp"
 
 #include <iostream>																						//	For standard input/output stream objects like std::cin, std::cout
 #include <algorithm>																					//	For std::find()
 #include <vector>																						//	For std::vector container
-#include <deque>																						//	For std::deque container
 
 class VServer {
 
 	public:
 
 		//	Variables
-		std::vector <std::pair<std::string, std::string> > vserver;										//	Values of the current VServer
-		std::vector<Location>				location;													//	Locations of the current VServer
-		std::deque <std::string>			access;														//	Memory log for Access
-		std::deque <std::string>			error;														//	Memory log for Error
-		std::deque <std::string>			both;														//	Memory log for Both
+		std::vector <std::pair<std::string, std::string> > data;										//	Values of the current VServer
+		std::vector <Location>				location;													//	Locations of the current VServer
 		std::vector <std::string>			config;														//	Settings in a vector of the current VServer
 		bool								config_displayed;											//	Is the log or the settings displayed
 		size_t								config_index;												//	Current index of the settings
 		size_t								log_index;													//	Current index of the log
 		bool								autolog;													//	Auto scroll logs
+		Log									log;														//	Logs (access, error and both)
 		bool								status;														//	Status of the VServer (Started/Stoped)
 		
 		//	Constructors
 		VServer();																						//	Default constructor
 		VServer(const VServer & src);																	//	Copy constructor
-		~VServer();																						//	Destructor (Call clear() before destruction)
+		~VServer();																						//	Destructor
 
 		//	Overloads
 		VServer &	operator=(const VServer & rhs);														//	Overload for asignation
@@ -54,7 +52,7 @@ class VServer {
 		void		clear_logs();																		//	Delete all logs entries
 
 		void		set(const Location & Loc);															//	Add or modify a Location
-		void		add(const Location & Loc) { set(Loc); }												//	Alias for 'set'
+		void		add(const Location & Loc);															//	Alias for 'set'
 		void		del(const Location & Loc);															//	Delete a Location
 
 };
