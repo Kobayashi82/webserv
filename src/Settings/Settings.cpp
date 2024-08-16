@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:27:58 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/15 18:37:36 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/16 18:16:34 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,7 @@
 	std::map <std::string, std::string>	Settings::mime_types;											//	MIME types in a map
 
 	bool 								Settings::check_only = false;									//	Check the config file, but don't start the server
-	bool 								Settings::loaded_ok = false;									//	The config file loaded successfully (but may contains errors)
+	bool 								Settings::loaded = false;										//	The config file loaded successfully (but may contains errors)
 	int									Settings::current_vserver = -1;									//	Current selected V-Server (-1 = None)
 	int 								Settings::terminate = -1;										//	Flag the program to exit with the value in terminate (the default value of -1 don't exit)
 
@@ -39,7 +39,7 @@
 
     #pragma region Clear
 
-		void Settings::clear(bool reset) { vserver_clear(); global.data.clear(); if (reset) { bracket_lvl = 0; loaded_ok = false; }}
+		void Settings::clear(bool reset) { vserver_clear(); global.data.clear(); if (reset) { bracket_lvl = 0; loaded = false; }}
 
 	#pragma endregion
 
@@ -116,11 +116,9 @@
 			bool isDefault = (File == config_path + "default.cfg"); clear();
 			std::string	line; std::ifstream infile(File.c_str());
 
-			if (infile.is_open()) {
-				while (getline(infile, line)) parse_global(infile, line);
-				infile.close();
+			if (infile.is_open()) { parser(infile); infile.close();
 				if (bracket_lvl != 0) Log::log_error(RD "Brackets error");
-				loaded_ok = true;
+				loaded = true;
 				if (global.log.error.size() > 0) { vserver_clear(); return; }
 				//if ((Display::RawModeDisabled || Display::ForceRawModeDisabled) && global.log.error.size() > 0) return;
 				if (isDefault)
@@ -181,7 +179,7 @@
 				check_only = true;
 				std::cout << std::endl;
 				load();
-				if (vserver.size() == 0 && loaded_ok && global.log.error.size() == 0) Log::log_error("There are no " Y "virtual servers" RD " in the configuration file");
+				if (vserver.size() == 0 && loaded && global.log.error.size() == 0) Log::log_error("There are no " Y "virtual servers" RD " in the configuration file");
 				if (global.log.error.size() == 0)			std::cout << C "\tThe configuration file is correct" NC << std::endl;
 				else if (global.log.error.size() == 1)	std::cout << std::endl << C "\t\tThere is "  Y << global.log.error.size() << C " error in total" NC << std::endl;
 				else 								std::cout << std::endl << C "\t\tThere are " Y << global.log.error.size() << C " errors in total" NC << std::endl;
@@ -196,7 +194,7 @@
 				else if (strcmp(argv[1], "-t")) load(argv[1]);
 				else if (strcmp(argv[2], "-t")) load(argv[2]);
 
-				if (vserver.size() == 0 && loaded_ok && global.log.error.size() == 0) Log::log_error("There are no " Y "virtual servers" RD " in the configuration file");
+				if (vserver.size() == 0 && loaded && global.log.error.size() == 0) Log::log_error("There are no " Y "virtual servers" RD " in the configuration file");
 
 				if (global.log.error.size() == 0)			std::cout << C "\tThe configuration file is correct" NC << std::endl;
 				else if (global.log.error.size() == 1)	std::cout << std::endl << C "\t\tThere is "  Y << global.log.error.size() << C " error in total" NC << std::endl;
@@ -210,7 +208,7 @@
 				Display::enableRawMode();
 				if (Display::RawModeDisabled || Display::ForceRawModeDisabled) std::cout << std::endl;
 				if (argc == 1) load(); else load(argv[1]);
-				if (global.log.error.size() == 0 && vserver.size() == 0 && loaded_ok)	Log::log_error(RD "There are no virtual servers in the configuration file");
+				if (global.log.error.size() == 0 && vserver.size() == 0 && loaded)	Log::log_error(RD "There are no virtual servers in the configuration file");
 				else if (vserver.size() == 0) {
 					if (Display::RawModeDisabled || Display::ForceRawModeDisabled) std::cout << std::endl;
 					Log::log_error(RD "Could not load configuration file");

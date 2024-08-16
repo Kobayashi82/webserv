@@ -6,62 +6,18 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:30:57 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/15 18:36:44 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/16 18:29:52 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Settings.hpp"
 
-#include <unistd.h>																						//	For access()
-#include <sys/stat.h>																					//	For stat()
+#include <unistd.h>																						//	For access() to checks the accessibility of a file or directory
+#include <sys/stat.h>																					//	For stat() to retrieves information about a file or directory
 
-static int remove_semicolon(std::string & str, int line_count, bool all = false) {
-    size_t pos; std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
+#pragma region Variables
 
-	if (str.empty()) return (0);
-	while ((pos = str.find("{;")) != std::string::npos) str.erase(pos + 1, 1);
-	while ((pos = str.find("};")) != std::string::npos) str.erase(pos + 1, 1);
-
-	if (all) {
-		std::string firstPart; std::istringstream stream(str);
-		stream >> firstPart; Utils::trim(firstPart); Utils::toLower(firstPart);
-
-		if (str[str.size() - 1] != '{' && str[str.size() - 1] != '}' && str[str.size() - 1] != ';'
-		&& firstPart != "http" && firstPart != "server" && firstPart != "location" && firstPart != "limit_except") {
-			Log::log_error(RD + n_line + "no termina correctamente"); return (1); }
-
-		while ((pos = str.find(";")) != std::string::npos) str.erase(pos, 1);
-	}
-
-	return (0);
-}
-
-static int check_multiline(const std::string & str, int line_count) {
-    size_t pos; std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
-
-    if ((pos = str.find(";")) != std::string::npos && (str.find("{") != std::string::npos || str.find("}") != std::string::npos || str.find(";", pos + 1) != std::string::npos)) {
-        Log::log_error(RD + n_line + "Found ';{' in the string"); return (1); }
-
-	return (0);
-}
-
-#pragma region Brackets
-
-	int Settings::brackets(std::string & str) {
-		int change = 0;
-		for (size_t i = 0; i < str.size(); ++i) {
-			if (str[i] == '{') {
-				str.erase(i, 1); --i;																	//	Delete '{' and adjust index
-				bracket_lvl++;
-				change += 1;
-			} else if (str[i] == '}') {
-				str.erase(i, 1); --i;																	//	Delete '}' and adjust index
-				bracket_lvl--;
-				change -= 1;
-			}
-		}
-		return (change);
-	}
+	enum e_section { GLOBAL, SERVER, LOCATION, METHOD };
 
 #pragma endregion
 
@@ -468,8 +424,8 @@ static int check_multiline(const std::string & str, int line_count) {
 			if (exact == "=" && path.empty()) {						Log::log_error(RD + n_line + "Empty value for " Y "Location" NC); return (1); }
 			if (exact != "=" && !path.empty()) {					Log::log_error(RD + n_line + "Invalid value " Y + exact + RD " for " Y + "Location" NC); return (1); }
 			if (exact.empty()) {									Log::log_error(RD + n_line + "Empty value for " Y "Location" NC); return (1); }
-			if (exact == "=" && !path.empty() && path[0] != '/') {	Log::log_error(RD + n_line + "Invalid value " Y + exact + RD "for " Y + "Location" NC); return (1); }
-			if (exact != "=" && exact[0] != '/') {					Log::log_error(RD + n_line + "Invalid value " Y + exact + RD "for " Y + "Location" NC); return (1); }
+			if (exact == "=" && !path.empty() && path[0] != '/') {	Log::log_error(RD + n_line + "Invalid path " Y + path + RD " for " Y + "Location" NC); return (1); }
+			if (exact != "=" && exact[0] != '/') {					Log::log_error(RD + n_line + "Invalid value " Y + exact + RD " for " Y + "Location" NC); return (1); }
 
 			return (0);
 		}
@@ -478,34 +434,37 @@ static int check_multiline(const std::string & str, int line_count) {
 
 	#pragma region Invalid
 
-		static int invalid_directive(std::string firstPart, int line_count, std::string Section = "Global") {
+		static int invalid_directive(std::string firstPart, int line_count, int section) {
 			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
-			if (firstPart == "access_log") return (0);
-			if (firstPart == "error_log") return (0);
-			if (firstPart == "root") return (0);
-			if (firstPart == "uploads") return (0);
-			if (firstPart == "client_max_body_size") return (0);
-			if (firstPart == "autoindex") return (0);
-			if (firstPart == "allow") return (0);
-			if (firstPart == "deny") return (0);
-			if (firstPart == "error_page") return (0);
-			if (firstPart == "cgi") return (0);
-			if (Section == "Global") {
+			if (section == GLOBAL || section == SERVER || section == LOCATION) {
+				if (firstPart == "access_log") return (0);
+				if (firstPart == "error_log") return (0);
+				if (firstPart == "root") return (0);
+				if (firstPart == "index") return (0);
+				if (firstPart == "uploads") return (0);
+				if (firstPart == "client_max_body_size") return (0);
+				if (firstPart == "autoindex") return (0);
+				if (firstPart == "allow") return (0);
+				if (firstPart == "deny") return (0);
+				if (firstPart == "error_page") return (0);
+				if (firstPart == "cgi") return (0);
+			}
+			if (section == GLOBAL) {
 				if (firstPart == "http") return (0);
-			} else if (Section == "VServer") {
+			} else if (section == SERVER) {
 				if (firstPart == "server") return (0);
-				if (firstPart == "listen") return (0);
 				if (firstPart == "server_name") return (0);
-				if (firstPart == "index") return (0);
+				if (firstPart == "listen") return (0);
 				if (firstPart == "return") return (0);
-			} else if (Section == "Location") {
+			} else if (section == LOCATION) {
 				if (firstPart == "location") return (0);
-				if (firstPart == "index") return (0);
 				if (firstPart == "try_files") return (0);
 				if (firstPart == "alias") return (0);
 				if (firstPart == "internal") return (0);
 				if (firstPart == "return") return (0);
-			} else if (Section == "Method") {
+			} else if (section == METHOD) {
+				if (firstPart == "allow") return (0);
+				if (firstPart == "deny") return (0);
 				if (firstPart == "limit_except") return (0);
 			}
 			Log::log_error(RD + n_line + "Invalid directive " Y + firstPart + NC);
@@ -516,289 +475,116 @@ static int check_multiline(const std::string & str, int line_count) {
 
 #pragma endregion
 
-#pragma region Config File
+#pragma region Parser
 
-	#pragma region Method
+	void Settings::parser(std::ifstream & infile) {
+		std::string line; std::string oline; line_count = 0; VServer VServ; Location Loc; Method Met;
+		bool is_http = false; int section = 0; int section_bracket_lvl[4] = {0, 0, 0, 0};
 
-		int Settings::parser_method(std::ifstream & infile, std::string & line, VServer VServ, Location & Loc) {
-			Method Met; int current_bracket = bracket_lvl; std::string tmp_line; std::string orig_line = line;
-			do {
-				line_count++; tmp_line = line;
-				Utils::trim(line); if (line.empty()) {
-					VServ.config.push_back(tmp_line);
-					global.config.push_back(tmp_line);
-					continue;
+		while (getline(infile, line)) {
+			std::string temp; oline = line; ++line_count; global.config.push_back(oline);
+			Utils::trim(line); if (line.empty()) { if (section != GLOBAL) VServ.config.push_back(oline); continue; }
+
+			while (!line.empty()) {
+				int bracket_mode = 0;
+				size_t pos = line.find_first_of("{};");
+				if (pos != std::string::npos) {
+					temp = line.substr(0, pos + 1);
+					line = line.substr(pos + 1);
+				} else {
+					temp = line; line.clear(); if (temp.empty()) continue;
+					if (temp.find("http") != 0 && temp.find("server") != 0 && temp.find("location") != 0 && temp.find("limit_except") != 0) {
+						Log::log_error("missing ;"); BadConfig = true; continue; }
 				}
 
-				remove_semicolon(line, line_count);
-				if (check_multiline(line, line_count))			BadConfig = true;
-				if (remove_semicolon(line, line_count, true))	BadConfig = true;
-				std::string firstPart, secondPart; std::istringstream stream(line);
-				stream >> firstPart; Utils::trim(firstPart); Utils::toLower(firstPart);
+				Utils::trim(line);
+				if (temp[temp.size() - 1] == ';') temp.erase(temp.size() - 1);
+				if (temp[temp.size() - 1] == '{') { bracket_mode = 1; temp.erase(temp.size() - 1); }
+				if (temp[temp.size() - 1] == '}') { bracket_mode = -1; temp.erase(temp.size() - 1); }
+				Utils::trim(temp);
 
-				std::getline(stream, secondPart); Utils::trim(secondPart);
+				std::string firstPart, secondPart; std::istringstream stream(temp);
+				stream >> firstPart; std::getline(stream, secondPart);
+				Utils::trim(firstPart); Utils::toLower(firstPart); Utils::trim(secondPart);
 
-				if (tmp_line != orig_line) { VServ.config.push_back(tmp_line); global.config.push_back(tmp_line); }
-
-				if (brackets(firstPart) + brackets(secondPart) < 0) {
-					if (bracket_lvl < 0) return (0);
-					if (bracket_lvl <= current_bracket) { Loc.add(Met); break; }
+				if (firstPart == "http" && section == GLOBAL) {
+					if (is_http == true) { Log::log_error("http in http"); bracket_lvl += bracket_mode; BadConfig = true; continue; }
+					if (bracket_lvl != 0 || Settings::global.data.size() != 0) { Log::log_error("http not at begining"); bracket_lvl += bracket_mode; BadConfig = true; continue; }
+					is_http = true;
 				}
 
-				Utils::trim(firstPart); Utils::trim(secondPart);
+				if (firstPart == "server" && section == GLOBAL) { section = SERVER; section_bracket_lvl[1] = bracket_lvl; VServ.clear(); }
+				if (firstPart == "location" && section == SERVER) { section = LOCATION; section_bracket_lvl[2] = bracket_lvl; Loc.clear(); }
+				if (firstPart == "limit_except" && section == LOCATION) { section = METHOD; section_bracket_lvl[3] = bracket_lvl; Met.clear(); }
 
-				if (firstPart.empty()) continue;
+				if (section != GLOBAL) VServ.config.push_back(oline);
 
-				if (firstPart == "limit_except") {
-					bool isSet = false;
-					for (std::vector <Method>::iterator it = Loc.method.begin(); it != Loc.method.end(); ++it) {
-						Method Met = *it;
-						if (Met.get("limit_except") == secondPart) {
-							std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
-							Log::log_error(RD + n_line + "Directive " Y + firstPart + RD " is already set" + NC);
-							BadConfig = true; isSet = true; break;
-						}
-					} if (isSet) continue;
+				if ((section == GLOBAL || section == SERVER || section == LOCATION) && !firstPart.empty()) {
+					if (firstPart == "access_log" || firstPart == "error_log") parse_path(firstPart, secondPart, true, true);
+					if (firstPart == "root" && parse_path(firstPart, secondPart, false, false))										BadConfig = true;
+					if (firstPart == "uploads" && parse_path(firstPart, secondPart, false, false))									BadConfig = true;
+					if (firstPart == "client_max_body_size" && parse_body_size(secondPart))											BadConfig = true;
+					if (firstPart == "autoindex" && parse_autoindex(secondPart))													BadConfig = true;
+					if (firstPart == "index" && parse_index(secondPart))															BadConfig = true;
+					if (firstPart == "allow" && parse_allow(secondPart))															BadConfig = true;
+					if (firstPart == "deny" && parse_deny(secondPart))																BadConfig = true;
 				}
 
-				if (Met.get(firstPart) != "" && firstPart != "allow" && firstPart != "deny") {
-					std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
-					Log::log_error(RD + n_line + "Directive " Y + firstPart + RD " is already set" + NC);
-					BadConfig = true; continue;
+				if (section == GLOBAL && !firstPart.empty()) {
+					if (firstPart == "error_page") parse_errors(firstPart, secondPart);
+					if (firstPart == "cgi") parse_cgi(firstPart, secondPart);
+
+					if (invalid_directive(firstPart, line_count, section))															BadConfig = true;
+					else if (firstPart == "allow" || firstPart == "deny")															global.add(firstPart, secondPart, true);
+					else if (firstPart != "http" && firstPart != "error_page" && firstPart != "cgi")								global.add(firstPart, secondPart);
 				}
 
-				if (firstPart == "limit_except" && parse_limit_except(secondPart))	BadConfig = true;
-			
-				if (firstPart == "allow" && parse_allow(secondPart))				BadConfig = true;
-				if (firstPart == "deny" && parse_deny(secondPart))					BadConfig = true;
-				if (firstPart == "return" && parse_return(secondPart))				BadConfig = true;
-				if (invalid_directive(firstPart, line_count, "Method"))				BadConfig = true;
-				else {
-					if (firstPart == "allow" || firstPart == "deny")				Met.add(firstPart, secondPart, true);
-					else 															Met.add(firstPart, secondPart);
+				if (section == SERVER && !firstPart.empty()) {
+					if (firstPart == "listen" && parse_listen(secondPart, VServ))													BadConfig = true;
+					if (firstPart == "return" && parse_return(secondPart))															BadConfig = true;
+					if (firstPart == "error_page") parse_errors(firstPart, secondPart, VServ);
+					if (firstPart == "cgi") parse_cgi(firstPart, secondPart, VServ);
+
+					if (invalid_directive(firstPart, line_count, section))															BadConfig = true;
+					else if (firstPart == "allow" || firstPart == "deny") 															VServ.add(firstPart, secondPart, true);
+					else if (firstPart != "server" && firstPart == "error_page" && firstPart != "listen" && firstPart != "cgi")		VServ.add(firstPart, secondPart);
 				}
-			} while (getline(infile, line));
-			return (0);
+
+				if (section == LOCATION && !firstPart.empty()) {
+					if (firstPart == "location" && parse_location(secondPart))														BadConfig = true;
+					if (firstPart == "alias" && parse_alias(firstPart, secondPart))													BadConfig = true;
+					if (firstPart == "try_files" && parse_try_files(secondPart))													BadConfig = true;
+					if (firstPart == "return" && parse_return(secondPart))															BadConfig = true;
+					if (firstPart == "error_page") parse_errors(firstPart, secondPart, Loc);
+					if (firstPart == "cgi") parse_cgi(firstPart, secondPart, VServ);
+
+					if (invalid_directive(firstPart, line_count, section))															BadConfig = true;
+					else if (firstPart == "allow" || firstPart == "deny")															Loc.add(firstPart, secondPart, true);
+					else if (firstPart != "error_page" && firstPart != "cgi")														Loc.add(firstPart, secondPart);
+				}
+
+				if (section == METHOD && !firstPart.empty()) {
+					if (firstPart == "limit_except" && parse_limit_except(secondPart))												BadConfig = true;
+					if (firstPart == "allow" && parse_allow(secondPart))															BadConfig = true;
+					if (firstPart == "deny" && parse_deny(secondPart))																BadConfig = true;
+					if (firstPart == "return" && parse_return(secondPart))															BadConfig = true;
+
+					if (invalid_directive(firstPart, line_count, section))															BadConfig = true;
+					else if (firstPart == "allow" || firstPart == "deny")															Met.add(firstPart, secondPart, true);
+					else	 																										Met.add(firstPart, secondPart);
+				}
+
+				if (bracket_mode != 0) { bracket_lvl += bracket_mode;
+					if (section == METHOD && section_bracket_lvl[3] == bracket_lvl) { section = LOCATION; section_bracket_lvl[3] = 0; Loc.add(Met); }
+					if (section == LOCATION && section_bracket_lvl[2] == bracket_lvl) { section = SERVER; section_bracket_lvl[2] = 0; VServ.add(Loc); }
+					if (section == SERVER && section_bracket_lvl[1] == bracket_lvl) { section = GLOBAL; section_bracket_lvl[1] = 0; Settings::add(VServ); }
+				}
+			}
 		}
-
-	#pragma endregion
-
-	#pragma region Location
-
-		int Settings::parser_location(std::ifstream & infile, std::string & line, VServer & VServ) {
-			Location Loc; int current_bracket = bracket_lvl; std::string tmp_line; std::string orig_line = line;
-			do {
-				tmp_line = line;
-				Utils::trim(line); if (line.empty()) {
-					VServ.config.push_back(tmp_line);
-					global.config.push_back(tmp_line);
-					line_count++; continue;
-				}
-
-				remove_semicolon(line, line_count);
-				if (check_multiline(line, line_count))			BadConfig = true;
-				if (remove_semicolon(line, line_count, true))	BadConfig = true;
-				std::string firstPart, secondPart; std::istringstream stream(line);
-				stream >> firstPart; Utils::trim(firstPart); Utils::toLower(firstPart);
-
-				if (firstPart == "limit_except") {
-					VServ.config.push_back(tmp_line); global.config.push_back(tmp_line);
-					parser_method(infile, line, VServ, Loc);
-					firstPart = "ignore_me";
-				}
-
-				if (firstPart != "ignore_me") {
-					line_count++;
-					std::getline(stream, secondPart); Utils::trim(secondPart);
-					if (!firstPart.empty() && tmp_line != orig_line) { VServ.config.push_back(tmp_line); global.config.push_back(tmp_line); }
-				}
-
-				if (brackets(firstPart) + brackets(secondPart) < 0) {
-					if (bracket_lvl < 0) return (0);
-					if (bracket_lvl <= current_bracket) { VServ.add(Loc); break; }
-				}
-
-				Utils::trim(firstPart); Utils::trim(secondPart);
-
-				if (firstPart.empty() || firstPart == "ignore_me") continue;
-
-				if (firstPart == "location") {
-					bool isSet = false;
-					for (std::vector <Location>::iterator it = VServ.location.begin(); it != VServ.location.end(); ++it) {
-						Location Loc = *it;
-						if (Loc.get("location") == secondPart) {
-							std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
-							Log::log_error(RD + n_line + "Directive " Y + firstPart + " " + secondPart + RD " is already set" + NC);
-							BadConfig = true; isSet = true; break;
-						}
-					} if (isSet) continue;
-				}
-
-				if (Loc.get(firstPart) != "" && firstPart != "allow" && firstPart != "deny") {
-					std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
-					Log::log_error(RD + n_line + "Directive " Y + firstPart + RD " is already set" + NC);
-					BadConfig = true; continue;
-				}
-
-				if (firstPart == "location" && parse_location(secondPart))						BadConfig = true;
-				if (firstPart == "access_log" || firstPart == "error_log") parse_path(firstPart, secondPart, true, true);
-				if (firstPart == "root" && parse_path(firstPart, secondPart, false, false))		BadConfig = true;
-				if (firstPart == "uploads" && parse_path(firstPart, secondPart, false, false))	BadConfig = true;
-				if (firstPart == "client_max_body_size" && parse_body_size(secondPart))			BadConfig = true;
-				if (firstPart == "autoindex" && parse_autoindex(secondPart))					BadConfig = true;
-				if (firstPart == "index" && parse_index(secondPart))							BadConfig = true;
-				if (firstPart == "return" && parse_return(secondPart))							BadConfig = true;
-				if (firstPart == "alias" && parse_alias(firstPart, secondPart))					BadConfig = true;
-				if (firstPart == "try_files" && parse_try_files(secondPart))					BadConfig = true;
-				if (firstPart == "allow" && parse_allow(secondPart))							BadConfig = true;
-				if (firstPart == "deny" && parse_deny(secondPart))								BadConfig = true;
-				if (firstPart == "error_page") parse_errors(firstPart, secondPart, Loc);
-				if (firstPart == "cgi") parse_cgi(firstPart, secondPart, Loc);
-				if (invalid_directive(firstPart, line_count, "Location"))						BadConfig = true;
-				else {
-					if (firstPart == "allow" || firstPart == "deny")			Loc.add(firstPart, secondPart, true);
-					else if (firstPart != "error_page" && firstPart != "cgi")	Loc.add(firstPart, secondPart);
-				}
-			} while (getline(infile, line));
-			return (0);
-		}
-
-	#pragma endregion
-
-	#pragma region VServer
-
-		int Settings::parser_vserver(std::ifstream & infile, std::string & line) {
-			VServer VServ; int current_bracket = bracket_lvl; std::string tmp_line; std::string orig_line = line;
-			do {
-				tmp_line = line;
-				Utils::trim(line); if (line.empty()) {
-					VServ.config.push_back(tmp_line);
-					global.config.push_back(tmp_line);
-					line_count++; continue;
-				}
-
-				remove_semicolon(line, line_count);
-				if (check_multiline(line, line_count))			BadConfig = true;
-				if (remove_semicolon(line, line_count, true))	BadConfig = true;
-				std::string firstPart, secondPart; std::istringstream stream(line);				
-				stream >> firstPart; Utils::trim(firstPart); Utils::toLower(firstPart);
-
-				if (firstPart == "location") {
-					VServ.config.push_back(tmp_line); global.config.push_back(tmp_line);
-					parser_location(infile, line, VServ);
-					firstPart = "ignore_me";
-				}
-					
-				if (firstPart != "ignore_me") {
-					line_count++;
-					std::getline(stream, secondPart); Utils::trim(secondPart);
-					if (!firstPart.empty() && tmp_line != orig_line) { VServ.config.push_back(tmp_line); global.config.push_back(tmp_line); }
-				}
-
-				if (brackets(firstPart) + brackets(secondPart) < 0) {
-					if (bracket_lvl < 0) return (0);
-					if (bracket_lvl <= current_bracket) { add(VServ); break; }
-				}
-
-				Utils::trim(firstPart); Utils::trim(secondPart);
-
-				if (firstPart.empty() || firstPart == "ignore_me") continue;
-
-				if (VServ.get(firstPart) != "" && firstPart != "allow" && firstPart != "deny") {
-					std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
-					Log::log_error(RD + n_line + "Directive " Y + firstPart + RD " is already set" + NC);
-					continue;
-				}
-
-				if (firstPart == "access_log" || firstPart == "error_log") parse_path(firstPart, secondPart, true, true);
-				if (firstPart == "root" && parse_path(firstPart, secondPart, false, false))		BadConfig = true;
-				if (firstPart == "uploads" && parse_path(firstPart, secondPart, false, false))	BadConfig = true;
-				if (firstPart == "client_max_body_size" && parse_body_size(secondPart))			BadConfig = true;
-				if (firstPart == "autoindex" && parse_autoindex(secondPart))					BadConfig = true;
-				if (firstPart == "index" && parse_index(secondPart))							BadConfig = true;
-				if (firstPart == "return" && parse_return(secondPart))							BadConfig = true;
-				if (firstPart == "listen" && parse_listen(secondPart, VServ))					BadConfig = true;
-				if (firstPart == "allow" && parse_allow(secondPart))							BadConfig = true;
-				if (firstPart == "deny" && parse_deny(secondPart))								BadConfig = true;
-				if (firstPart == "limit_except" && parse_limit_except(secondPart))				BadConfig = true;
-				if (firstPart == "error_page") parse_errors(firstPart, secondPart, VServ);
-				if (firstPart == "cgi") parse_cgi(firstPart, secondPart, VServ);
-				if (invalid_directive(firstPart, line_count, "VServer"))						BadConfig = true;
-				else {
-					if (firstPart == "allow" || firstPart == "deny") VServ.add(firstPart, secondPart, true);
-					else if (firstPart != "server" && firstPart == "error_page" && firstPart != "listen" && firstPart != "cgi")
-						VServ.add(firstPart, secondPart);
-				}
-			} while (getline(infile, line));
-			return (0);
-		}
-
-	#pragma endregion
-
-	#pragma region Global
-
-		int Settings::parse_global(std::ifstream & infile, std::string & line) {
-			global.config.push_back(line);
-			Utils::trim(line); if (line.empty()) { line_count++; return (0); }
-
-			remove_semicolon(line, line_count);
-			if (check_multiline(line, line_count))			BadConfig = true;
-			if (remove_semicolon(line, line_count, true))	BadConfig = true;
-			std::string firstPart, secondPart; std::istringstream stream(line);
-			stream >> firstPart; Utils::trim(firstPart); Utils::toLower(firstPart);
-			
-			if (firstPart == "http" && bracket_lvl != 0) {
-				std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
-				Log::log_error(RD + n_line + "Invalid directive " Y + firstPart + NC);
-			}
-
-			if (firstPart == "server") {
-				parser_vserver(infile, line);
-				firstPart = "";
-			}
-
-			if (!firstPart.empty()) {
-				line_count++;
-				std::getline(stream, secondPart); Utils::trim(secondPart);
-			}
-
-			brackets(firstPart); brackets(secondPart);
-
-			Utils::trim(firstPart); Utils::trim(secondPart);
-
-			if (firstPart.empty()) return (0);
-
-			if (global.get(firstPart) != "" && firstPart != "allow" && firstPart != "deny") {
-				std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
-				Log::log_error(RD + n_line + "Directive " Y + firstPart + RD " is already set" + NC);
-				return (0);
-			}
-
-			if (firstPart == "access_log" || firstPart == "error_log") parse_path(firstPart, secondPart, true, true);
-			if (firstPart == "root" && parse_path(firstPart, secondPart, false, false))		BadConfig = true;
-			if (firstPart == "uploads" && parse_path(firstPart, secondPart, false, false))	BadConfig = true;
-			if (firstPart == "client_max_body_size" && parse_body_size(secondPart))			BadConfig = true;
-			if (firstPart == "autoindex" && parse_autoindex(secondPart))					BadConfig = true;
-			if (firstPart == "index" && parse_index(secondPart))							BadConfig = true;
-			if (firstPart == "allow" && parse_allow(secondPart))							BadConfig = true;
-			if (firstPart == "deny" && parse_deny(secondPart))								BadConfig = true;
-			if (firstPart == "error_page") parse_errors(firstPart, secondPart);
-			if (firstPart == "cgi") parse_cgi(firstPart, secondPart);
-			if (invalid_directive(firstPart, line_count))									BadConfig = true;
-			else {
-				if (firstPart == "allow" || firstPart == "deny")			global.add(firstPart, secondPart, true);
-				else if (firstPart != "http" && firstPart != "error_page" && firstPart != "cgi")	global.add(firstPart, secondPart);
-			}
-
-			return (0);
-		}
-
-	#pragma endregion
+	}
 
 #pragma endregion
 
-//	si hay ; y { o } o ; log_error multi-line
-//	brackets() y despues si no es http, server, location or limit_except y no termina en ; log_error
 //	server_name check duplicates
 //	server ip y puerto check duplicates
 //	crear clase de variables con map $request_uri $uri

@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/14 14:37:32 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/15 18:35:05 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/16 17:58:50 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -176,11 +176,11 @@
 					} else if (Settings::current_vserver == -1 && Settings::global.config_displayed == true
 						&& Settings::global.config_index > 0)
 							Settings::global.config_index--;
-					else if (Settings::vserver.size() > 1 && Settings::current_vserver != -1 && Settings::global.config_displayed == false
+					else if (Settings::vserver.size() > 1 && Settings::current_vserver != -1 && Settings::vserver[Settings::current_vserver].config_displayed == false
 						&& Settings::vserver[Settings::current_vserver].log_index > 0) {
 							Settings::vserver[Settings::current_vserver].log_index--;
 							Settings::vserver[Settings::current_vserver].autolog = false;
-					} else if (Settings::vserver.size() > 1 && Settings::current_vserver != -1 && Settings::global.config_displayed == true
+					} else if (Settings::vserver.size() > 1 && Settings::current_vserver != -1 && Settings::vserver[Settings::current_vserver].config_displayed == true
 						&& Settings::vserver[Settings::current_vserver].config_index > 0)
 							Settings::vserver[Settings::current_vserver].config_index--;
 					else return ;
@@ -195,12 +195,13 @@
 						&& static_cast<int>(Settings::global.config.size()) >= log_rows
 						&& static_cast<int>(Settings::global.config_index) < static_cast<int>(Settings::global.config.size()) - (log_rows - 1))
 							Settings::global.config_index++;
-					else if (Settings::vserver.size() > 1 && Settings::current_vserver != -1 && Settings::global.config_displayed == false
+
+					else if (Settings::vserver.size() > 1 && Settings::current_vserver != -1 && Settings::vserver[Settings::current_vserver].config_displayed == false
 						&& static_cast<int>(Settings::vserver[Settings::current_vserver].log.both.size()) >= log_rows
 						&& static_cast<int>(Settings::vserver[Settings::current_vserver].log_index) < static_cast<int>(Settings::vserver[Settings::current_vserver].log.both.size()) - (log_rows - 1)) {
 							Settings::vserver[Settings::current_vserver].log_index++;
 							if (Settings::vserver[Settings::current_vserver].log_index == Settings::vserver[Settings::current_vserver].log.both.size() - (log_rows - 1)) Settings::vserver[Settings::current_vserver].autolog = true;
-					} else if (Settings::vserver.size() > 1 && Settings::current_vserver != -1 && Settings::global.config_displayed == true
+					} else if (Settings::vserver.size() > 1 && Settings::current_vserver != -1 && Settings::vserver[Settings::current_vserver].config_displayed == true
 						&& static_cast<int>(Settings::vserver[Settings::current_vserver].config.size()) >= log_rows
 						&& static_cast<int>(Settings::vserver[Settings::current_vserver].config_index) < static_cast<int>(Settings::vserver[Settings::current_vserver].config.size()) - (log_rows - 1))
 							Settings::vserver[Settings::current_vserver].config_index++;
@@ -212,11 +213,11 @@
 						Settings::global.autolog = false;
 					} else if (Settings::current_vserver == -1 && Settings::global.config_displayed == true && Settings::global.config_index > 0)
 						Settings::global.config_index = 0;
-					else if (Settings::vserver.size() > 1 && Settings::current_vserver != -1 && Settings::global.config_displayed == false
+					else if (Settings::vserver.size() > 1 && Settings::current_vserver != -1 && Settings::vserver[Settings::current_vserver].config_displayed == false
 						&& Settings::vserver[Settings::current_vserver].log_index > 0) {
 							Settings::vserver[Settings::current_vserver].log_index = 0;
 							Settings::vserver[Settings::current_vserver].autolog = false;
-					} else if (Settings::vserver.size() > 1 && Settings::current_vserver != -1 && Settings::global.config_displayed == true
+					} else if (Settings::vserver.size() > 1 && Settings::current_vserver != -1 && Settings::vserver[Settings::current_vserver].config_displayed == true
 						&& Settings::vserver[Settings::current_vserver].config_index > 0)
 							Settings::vserver[Settings::current_vserver].config_index = 0;
 					else return ;
@@ -233,13 +234,13 @@
 						if (static_cast<int>(Settings::global.config.size()) - (log_rows - 1) < 0) temp = 0;
 						else temp = static_cast<int>(Settings::global.config.size()) - (log_rows - 1);
 						if (Settings::global.config_index == temp) return ; else Settings::global.config_index = temp;
-					} else if (Settings::vserver.size() > 1 && Settings::current_vserver != -1 && Settings::global.config_displayed == false
+					} else if (Settings::vserver.size() > 1 && Settings::current_vserver != -1 && Settings::vserver[Settings::current_vserver].config_displayed == false
 						&& Settings::vserver[Settings::current_vserver].log.both.size() > 0) {
 							if (static_cast<int>(Settings::vserver[Settings::current_vserver].log.both.size()) - (log_rows - 1) < 0) temp = 0;
 							else temp = static_cast<int>(Settings::vserver[Settings::current_vserver].log.both.size()) - (log_rows - 1);
 							if (Settings::vserver[Settings::current_vserver].log_index == temp) return ; else Settings::vserver[Settings::current_vserver].log_index = temp;
 							if (static_cast<int>(Settings::vserver[Settings::current_vserver].log_index) == static_cast<int>(Settings::vserver[Settings::current_vserver].log.both.size()) - (log_rows - 1)) Settings::vserver[Settings::current_vserver].autolog = true;
-					} else if (Settings::vserver.size() > 1 && Settings::current_vserver != -1 && Settings::global.config_displayed == true
+					} else if (Settings::vserver.size() > 1 && Settings::current_vserver != -1 && Settings::vserver[Settings::current_vserver].config_displayed == true
 						&& Settings::vserver[Settings::current_vserver].config.size() > 0) {
 							if (static_cast<int>(Settings::vserver[Settings::current_vserver].config.size()) - (log_rows - 1) < 0) temp = 0;
 							else temp = static_cast<int>(Settings::vserver[Settings::current_vserver].config.size()) - (log_rows - 1);

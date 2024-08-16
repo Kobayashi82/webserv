@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:14:05 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/15 19:04:54 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/16 18:20:07 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,7 +42,6 @@ class Settings {
 		static void load_mime_types();																	//	Load MIME types in a map
 
 		//	Parser
-		static int	brackets(std::string & str);
 		static int	parse_path(const std::string & firstPart, std::string & str, bool isFile, bool check_path, bool check_write);
 		static int	parse_body_size(std::string & str);
 		static int	parse_errors(const std::string & firstPart, const std::string & secondPart);
@@ -62,10 +61,7 @@ class Settings {
 		static int	parse_cgi(const std::string & firstPart, const std::string & secondPart, VServer & VServ);
 		static int	parse_cgi(const std::string & firstPart, const std::string & secondPart, Location & Loc);
 
-		static int	parser_method(std::ifstream & infile, std::string & line, VServer VServ, Location & Loc);
-		static int	parser_location(std::ifstream & infile, std::string & line, VServer & VServ);
-		static int	parser_vserver(std::ifstream & infile, std::string & line);
-		static int	parse_global(std::ifstream & infile, std::string & line);
+		static void	parser(std::ifstream & infile);
 		
 	public:
 
@@ -81,7 +77,7 @@ class Settings {
 		static std::map <std::string, std::string>	mime_types;											//	MIME types in a map
 
 		static bool									check_only;											//	Check the config file, but don't start the server
-		static bool									loaded_ok;											//	The config file loaded successfully (but may contains errors)
+		static bool									loaded;												//	The config file loaded successfully (but may contains errors)
 		static int									current_vserver;									//	Current selected V-Server (-1 = None)
 		static int									terminate;											//	Flag the program to exit with the value in terminate (the default value of -1 don't exit)
 
