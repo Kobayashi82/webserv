@@ -6,12 +6,18 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:32:38 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/15 19:06:34 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/17 18:59:04 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Settings.hpp"
 #include "Log.hpp"
+
+#pragma region Variables
+
+	size_t	Log::_log_days = 30;
+
+#pragma endregion
 
 #pragma region Constructors
 
@@ -57,6 +63,81 @@
 #pragma endregion
 
 #pragma region Local Logs
+
+	#pragma region Check Logs
+
+		#pragma region Valid Date
+
+			static bool valid_date(const std::string & date, int log_days) {
+				struct tm dateTm = {}; int day, month, year;
+				if (sscanf(date.c_str(), "%d/%d/%d", &day, &month, &year) != 3) return (false);
+				 if (day < 1 || day > 31 || month < 1 || month > 12 || year < 1900) return (false);
+				dateTm.tm_mday = day; dateTm.tm_mon = month - 1; dateTm.tm_year = year - 1900;
+
+				time_t timeDate = mktime(&dateTm);
+				if (timeDate == -1) return (false);
+				
+				time_t timeCurr = time(NULL);
+				double diff = difftime(timeCurr, timeDate);
+				double secondsMax = (log_days + 1) * 24 * 60 * 60;
+				return (diff <= secondsMax);
+			}
+
+		#pragma endregion
+
+		#pragma region Clear Log
+
+			static void clear_log(const std::string & log_file, int log_days) {
+				std::string line;
+				std::ifstream orig_file(log_file.c_str()); if (!orig_file.is_open()) return;
+				std::ofstream temp_file((log_file + "_temp").c_str()); if (!temp_file.is_open()) { orig_file.close(); return; }
+
+				while (std::getline(orig_file, line))
+					if (valid_date(line.substr(1, 11), log_days)) temp_file << line << std::endl;
+				
+				orig_file.close(); temp_file.close();
+
+				std::remove(log_file.c_str());
+				std::rename((log_file + "_temp").c_str(), log_file.c_str());
+			}
+
+		#pragma endregion
+
+		#pragma region Check Logs
+
+			void Log::check_logs() {
+				if (!Settings::global.data.empty()) {
+					long log_days; if (Utils::stol(Settings::global.get("log_days"), log_days)) log_days = _log_days;
+					std::string access = Settings::global.get("access_log");
+					std::string error = Settings::global.get("error_log");
+					if (!access.empty()) clear_log(access, log_days);
+					if (!error.empty()) clear_log(error, log_days);
+				}
+
+				for (std::vector<VServer>::iterator server = Settings::vserver.begin(); server != Settings::vserver.end(); ++server) {
+					if (!server->data.empty()) {
+						long log_days; if (Utils::stol(server->get("log_days"), log_days)) log_days = _log_days;
+						std::string access = server->get("access_log");
+						std::string error = server->get("error_log");
+						if (!access.empty()) clear_log(access, log_days);
+						if (!error.empty()) clear_log(error, log_days);
+					}
+
+					for (std::vector<Location>::iterator location = server->location.begin(); location != server->location.end(); ++location) {
+						if (!location->data.empty()) {
+							long log_days; if (Utils::stol(location->get("log_days"), log_days)) log_days = _log_days;
+							std::string access = location->get("access_log");
+							std::string error = location->get("error_log");
+							if (!access.empty()) clear_log(access, log_days);
+							if (!error.empty()) clear_log(error, log_days);
+						}
+					}
+				}
+			}
+
+		#pragma endregion
+
+	#pragma endregion
 
 	#pragma region Log to File
 

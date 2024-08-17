@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:27:58 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/16 18:16:34 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/17 18:54:11 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -119,8 +119,8 @@
 			if (infile.is_open()) { parser(infile); infile.close();
 				if (bracket_lvl != 0) Log::log_error(RD "Brackets error");
 				loaded = true;
+				Log::check_logs();
 				if (global.log.error.size() > 0) { vserver_clear(); return; }
-				//if ((Display::RawModeDisabled || Display::ForceRawModeDisabled) && global.log.error.size() > 0) return;
 				if (isDefault)
 					Log::log_access(G "Default configuration file loaded" NC);
 				else

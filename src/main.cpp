@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 14:30:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/15 19:11:01 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/17 19:02:03 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,8 @@
 
 //	TODO	Send/Received data
 //	TODO	Active conections
+
+//	TODO	Interface tabs
 
 //  Entry point
 int main(int argc, char **argv) {
@@ -70,3 +72,4 @@ int main(int argc, char **argv) {
 //	✓	cgi .php .otro /usr/bin/php;
 
 //	Variables $request_uri $uri
+//	crear clase de variables con map $request_uri $uri

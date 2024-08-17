@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 11:53:37 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/15 17:54:15 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/17 16:40:23 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@ class Method {
 	public:
 
 		//	Variables
-		std::vector <std::pair<std::string, std::string> >	method;										//	Values of the current Method
+		std::vector <std::pair<std::string, std::string> >	data;										//	Values of the current Method
 
 		//	Constructors
 		Method();																						//	Default constructor

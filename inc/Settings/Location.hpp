@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 11:53:37 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/15 17:52:14 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/17 16:40:19 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,7 @@ class Location {
 	public:
 
 		//	Variables
-		std::vector <std::pair<std::string, std::string> >	location;									//	Values of the current Location
+		std::vector <std::pair<std::string, std::string> >	data;										//	Values of the current Location
 		std::vector <Method>								method;										//	Locations of the current VServer
 
 		//	Constructors

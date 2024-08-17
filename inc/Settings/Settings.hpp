@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:14:05 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/16 18:20:07 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/17 16:12:18 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,6 +43,7 @@ class Settings {
 
 		//	Parser
 		static int	parse_path(const std::string & firstPart, std::string & str, bool isFile, bool check_path, bool check_write);
+		static int	parse_log_days(std::string & str);
 		static int	parse_body_size(std::string & str);
 		static int	parse_errors(const std::string & firstPart, const std::string & secondPart);
 		static int	parse_errors(const std::string & firstPart, const std::string & secondPart, VServer & VServ);

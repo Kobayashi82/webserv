@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:32:23 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/15 19:07:01 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/17 18:58:11 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,8 @@ class Log {
 
 	private:
 
-		size_t _maxSize;																				//	Maximum number of logs for each memory log
+		size_t			_maxSize;																		//	Maximum number of logs for each memory log
+		static size_t	_log_days;																		//	Maximum number of days to keep in local logs
 
 	public:
 
@@ -44,8 +45,9 @@ class Log {
 		void clear();																					//	clear all logs in 'access', 'error' and 'both'
 
 		//	Local Log																					//	This logs are saved to a file (and also added to memory logs)
-		static void	log_access(std::string str, VServer * VServ = NULL);
-		static void	log_error(std::string str, VServer * VServ = NULL);
+		static void	check_logs();																		//	Delete logs based on log_days config (default to 30 days)
+		static void	log_access(std::string str, VServer * VServ = NULL);								//	Log to access
+		static void	log_error(std::string str, VServer * VServ = NULL);									//	Log to error
 
 };
 

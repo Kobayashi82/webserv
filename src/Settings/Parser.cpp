@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:30:57 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/16 18:29:52 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/17 19:01:13 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@
 
 #pragma region Variables
 
-	enum e_section { GLOBAL, SERVER, LOCATION, METHOD };
+	enum e_section { ROOT, GLOBAL, SERVER, LOCATION, METHOD };
 
 #pragma endregion
 
@@ -62,19 +62,34 @@
 
 	#pragma endregion
 
+	#pragma region Log Days
+
+		int Settings::parse_log_days(std::string & str) {
+			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
+
+			if (str.empty()) { 								Log::log_error(RD + n_line + "There is no value for " Y "log_days" NC); return (1); }
+			long number; if (Utils::stol(str, number)) { 	Log::log_error(RD + n_line + "Invalid value " Y + str + RD " for " Y "log_days" NC); return (1); }
+			if (number < 0) { 								Log::log_error(RD + n_line + "Invalid value " Y + str + RD " for " Y "log_days" RD " cannot be " Y "lower" RD " than " Y "0" NC); return (1); }
+			if (number > 365) { 							Log::log_error(RD + n_line + "Invalid value " Y + str + RD " for " Y "log_days" RD " cannot be " Y "greater" RD " than " Y "365" NC); return (1); }
+
+			return (0);
+		}
+
+	#pragma endregion
+
 	#pragma region Body Size
 
 		int Settings::parse_body_size(std::string & str) {
 			long multiplier = 1; std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
 
 			if (str.empty()) { Log::log_error(RD + n_line + "Empty value for " Y "client_max_body_size" NC); return (1); }
-			if (str.size() > 1 && !std::isdigit(str[str.size() - 1]) && !std::isdigit(str[str.size() - 2]) && str[str.size() - 1] == 'B') str.erase(str.size() - 1);
+			if (str.size() > 1 && !std::isdigit(str[str.size() - 1]) && !std::isdigit(str[str.size() - 2]) && std::tolower(str[str.size() - 1]) == 'b') str.erase(str.size() - 1);
 			if (!std::isdigit(str[str.size() - 1])) {
-				switch (str[str.size() - 1]) {
-					case 'K': multiplier = 1024; break;
-					case 'M': multiplier = 1024 * 1024; break;
-					case 'G': multiplier = 1024 * 1024 * 1024; break;
-					case 'B' : break;
+				switch ( std::tolower(str[str.size() - 1])) {
+					case 'k': multiplier = 1024; break;
+					case 'm': multiplier = 1024 * 1024; break;
+					case 'g': multiplier = 1024 * 1024 * 1024; break;
+					case 'b' : break;
 					default : { Log::log_error(RD + n_line + "Invalid value for " Y "client_max_body_size" NC); return (1); }
 				} str.erase(str.size() - 1);
 			}
@@ -191,7 +206,8 @@
 		int Settings::parse_listen(std::string & str, VServer & VServ) {
 			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
 			std::string temp; std::istringstream stream(str); stream >> temp;
-			std::string port; std::string::size_type slashPos = temp.find(':');
+			std::string IP; std::string port; std::string::size_type slashPos = temp.find(':');
+			
 			
 			if (temp.empty()) { 																		Log::log_error(RD + n_line + "Empty value for " Y "listen" NC); return (1); }
 
@@ -209,10 +225,10 @@
 					if (mask.empty()) {																	Log::log_error(RD + n_line + "Invalid mask for " Y "listen" NC); return (1); }
 					if (mask.find('.') != std::string::npos) { if (Utils::isValidIP(mask) == false) {	Log::log_error(RD + n_line + "Invalid mask " Y + temp.substr(slashPos + 1) + RD " for " Y "listen" NC); return (1); }}
 					else { long number; if (Utils::stol(mask, number) || number < 0 || number > 32) {	Log::log_error(RD + n_line + "Invalid mask " Y + temp.substr(slashPos + 1) + RD " for " Y "listen" NC); return (1); }}
-					VServ.add("IP", temp);
+					IP = temp;
 				} else {
 					if (Utils::isValidIP(temp) == false) {												Log::log_error(RD + n_line + "Invalid IP " Y + temp + RD " for " Y "listen" NC); return (1); }
-					VServ.add("IP", temp);
+					IP = temp;
 				}
 			} else port = temp;
 
@@ -220,7 +236,9 @@
 			long number; if (Utils::stol(port, number)) { 												Log::log_error(RD + n_line + "Invalid port " Y + port + RD " for " Y "listen" NC); return (1); }
 			if (number < 1) { 																			Log::log_error(RD + n_line + "Invalid port " Y + port + RD " for " Y "listen" RD " cannot be " Y "lower" RD " than " Y "1" NC); return (1); }
 			if (number > 65535) { 																		Log::log_error(RD + n_line + "Invalid port " Y + port + RD " for " Y "listen" RD " cannot be " Y "greater" RD " than " Y "65535" NC); return (1); }
-			VServ.add("Listen", port);
+			if (IP.empty()) VServ.add_address("0.0.0.0/0", number);
+			else VServ.add_address(IP, number);
+		
 			return (0);
 		}
 
@@ -395,14 +413,14 @@
 		int Settings::parse_limit_except(std::string & str) {
 			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
 			
-			if (str.empty()) {			Log::log_error(RD + n_line + "Empty value for " Y + "limit_except" + NC); return (1); }
+			if (str.empty()) {			Log::log_error(RD + n_line + "Empty value for " Y + "limit_except" NC); return (1); }
 
 			std::istringstream stream(str); std::string method;
 
 			while (stream >> method) {
-				if (method.empty()) {	Log::log_error(RD + n_line + "Empty method for " Y + "limit_except" + NC); return (1); }
+				if (method.empty()) {	Log::log_error(RD + n_line + "Empty method for " Y + "limit_except" NC); return (1); }
 				if (method != "GET" && method != "POST" && method != "DELETE" && method != "PUT" && method != "HEAD") {
-					Log::log_error(RD + n_line + "Invalid method " Y + method + RD " for " Y + "limit_except" + NC); return (1); }
+					Log::log_error(RD + n_line + "Invalid method " Y + method + RD " for " Y + "limit_except" NC); return (1); }
 			}
 
 			return (0);
@@ -432,13 +450,31 @@
 
 	#pragma endregion
 
+	#pragma region Repeated
+
+		static int repeated_directive(const std::string & str, const std::vector<std::pair<std::string, std::string> > & data, int line_count) {
+			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
+
+			if (str.empty() || data.size() == 0 || str == "listen" || str == "allow" || str == "deny") return (0);
+
+			for (std::vector <std::pair<std::string, std::string> >::const_iterator it = data.begin(); it != data.end(); ++it)
+				if (it->first == str) { Log::log_error(RD + n_line + "Directive " Y + str + RD " repeated" NC); return (1); }
+
+			return (0);
+		}
+
+	#pragma endregion
+
 	#pragma region Invalid
 
 		static int invalid_directive(std::string firstPart, int line_count, int section) {
 			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
+
+			if (firstPart.empty()) return (0);
 			if (section == GLOBAL || section == SERVER || section == LOCATION) {
 				if (firstPart == "access_log") return (0);
 				if (firstPart == "error_log") return (0);
+				if (firstPart == "log_days") return (0);
 				if (firstPart == "root") return (0);
 				if (firstPart == "index") return (0);
 				if (firstPart == "uploads") return (0);
@@ -467,8 +503,7 @@
 				if (firstPart == "deny") return (0);
 				if (firstPart == "limit_except") return (0);
 			}
-			Log::log_error(RD + n_line + "Invalid directive " Y + firstPart + NC);
-			return (1);
+			Log::log_error(RD + n_line + "Invalid directive " Y + firstPart + NC); return (1);
 		}
 
 	#pragma endregion
@@ -482,11 +517,10 @@
 		bool is_http = false; int section = 0; int section_bracket_lvl[4] = {0, 0, 0, 0};
 
 		while (getline(infile, line)) {
-			std::string temp; oline = line; ++line_count; global.config.push_back(oline);
-			Utils::trim(line); if (line.empty()) { if (section != GLOBAL) VServ.config.push_back(oline); continue; }
+			bool NoAdd = false; std::string temp; oline = line; ++line_count; global.config.push_back(oline);
+			Utils::trim(line); if (line.empty()) { if (section != ROOT && section != GLOBAL) VServ.config.push_back(oline); continue; }
 
-			while (!line.empty()) {
-				int bracket_mode = 0;
+			while (!line.empty()) { int bracket_mode = 0;
 				size_t pos = line.find_first_of("{};");
 				if (pos != std::string::npos) {
 					temp = line.substr(0, pos + 1);
@@ -494,7 +528,9 @@
 				} else {
 					temp = line; line.clear(); if (temp.empty()) continue;
 					if (temp.find("http") != 0 && temp.find("server") != 0 && temp.find("location") != 0 && temp.find("limit_except") != 0) {
-						Log::log_error("missing ;"); BadConfig = true; continue; }
+						std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
+						Log::log_error(RD + n_line + "Missing '" Y ";" RD "' at the end of the statement"); BadConfig = true; continue;
+					}
 				}
 
 				Utils::trim(line);
@@ -507,84 +543,81 @@
 				stream >> firstPart; std::getline(stream, secondPart);
 				Utils::trim(firstPart); Utils::toLower(firstPart); Utils::trim(secondPart);
 
-				if (firstPart == "http" && section == GLOBAL) {
-					if (is_http == true) { Log::log_error("http in http"); bracket_lvl += bracket_mode; BadConfig = true; continue; }
-					if (bracket_lvl != 0 || Settings::global.data.size() != 0) { Log::log_error("http not at begining"); bracket_lvl += bracket_mode; BadConfig = true; continue; }
-					is_http = true;
-				}
-
+				if (firstPart == "http" && section == ROOT && is_http == false) { section = GLOBAL; section_bracket_lvl[0] = bracket_lvl; Settings::clear(); }
 				if (firstPart == "server" && section == GLOBAL) { section = SERVER; section_bracket_lvl[1] = bracket_lvl; VServ.clear(); }
 				if (firstPart == "location" && section == SERVER) { section = LOCATION; section_bracket_lvl[2] = bracket_lvl; Loc.clear(); }
 				if (firstPart == "limit_except" && section == LOCATION) { section = METHOD; section_bracket_lvl[3] = bracket_lvl; Met.clear(); }
 
-				if (section != GLOBAL) VServ.config.push_back(oline);
+				if (section != ROOT && section != GLOBAL) VServ.config.push_back(oline);
+
+				if (firstPart == "http" && is_http == false) is_http = true;
+				else if (firstPart == "http" && is_http == true) invalid_directive(firstPart, line_count, ROOT);
+				else if (section == GLOBAL && repeated_directive(firstPart, Settings::global.data, line_count)) 							NoAdd = true;
+				else if (section == SERVER && repeated_directive(firstPart, VServ.data, line_count)) 										NoAdd = true;
+				else if (section == LOCATION && repeated_directive(firstPart, Loc.data, line_count)) 										NoAdd = true;
+				else if (section == METHOD && repeated_directive(firstPart, Met.data, line_count)) 											NoAdd = true;
+				else if (invalid_directive(firstPart, line_count, section))	{																NoAdd = true; BadConfig = true; }
 
 				if ((section == GLOBAL || section == SERVER || section == LOCATION) && !firstPart.empty()) {
 					if (firstPart == "access_log" || firstPart == "error_log") parse_path(firstPart, secondPart, true, true);
-					if (firstPart == "root" && parse_path(firstPart, secondPart, false, false))										BadConfig = true;
-					if (firstPart == "uploads" && parse_path(firstPart, secondPart, false, false))									BadConfig = true;
-					if (firstPart == "client_max_body_size" && parse_body_size(secondPart))											BadConfig = true;
-					if (firstPart == "autoindex" && parse_autoindex(secondPart))													BadConfig = true;
-					if (firstPart == "index" && parse_index(secondPart))															BadConfig = true;
-					if (firstPart == "allow" && parse_allow(secondPart))															BadConfig = true;
-					if (firstPart == "deny" && parse_deny(secondPart))																BadConfig = true;
+					if (!NoAdd && firstPart == "log_days") parse_log_days(secondPart);
+					if (!NoAdd && firstPart == "root" && parse_path(firstPart, secondPart, false, false))									BadConfig = true;
+					if (!NoAdd && firstPart == "uploads" && parse_path(firstPart, secondPart, false, false))								BadConfig = true;
+					if (!NoAdd && firstPart == "client_max_body_size" && parse_body_size(secondPart))										BadConfig = true;
+					if (!NoAdd && firstPart == "autoindex" && parse_autoindex(secondPart))													BadConfig = true;
+					if (!NoAdd && firstPart == "index" && parse_index(secondPart))															BadConfig = true;
+					if (!NoAdd && firstPart == "allow" && parse_allow(secondPart))															BadConfig = true;
+					if (!NoAdd && firstPart == "deny" && parse_deny(secondPart))															BadConfig = true;
 				}
 
 				if (section == GLOBAL && !firstPart.empty()) {
-					if (firstPart == "error_page") parse_errors(firstPart, secondPart);
-					if (firstPart == "cgi") parse_cgi(firstPart, secondPart);
+					if (!NoAdd && firstPart == "error_page") parse_errors(firstPart, secondPart);
+					if (!NoAdd && firstPart == "cgi") parse_cgi(firstPart, secondPart);
 
-					if (invalid_directive(firstPart, line_count, section))															BadConfig = true;
-					else if (firstPart == "allow" || firstPart == "deny")															global.add(firstPart, secondPart, true);
-					else if (firstPart != "http" && firstPart != "error_page" && firstPart != "cgi")								global.add(firstPart, secondPart);
+					if (!NoAdd && (firstPart == "allow" || firstPart == "deny"))															global.add(firstPart, secondPart, true);
+					else if (!NoAdd && firstPart != "http" && firstPart != "error_page" && firstPart != "cgi")								global.add(firstPart, secondPart);
 				}
 
 				if (section == SERVER && !firstPart.empty()) {
-					if (firstPart == "listen" && parse_listen(secondPart, VServ))													BadConfig = true;
-					if (firstPart == "return" && parse_return(secondPart))															BadConfig = true;
-					if (firstPart == "error_page") parse_errors(firstPart, secondPart, VServ);
-					if (firstPart == "cgi") parse_cgi(firstPart, secondPart, VServ);
+					if (!NoAdd && firstPart == "listen" && parse_listen(secondPart, VServ))													BadConfig = true;
+					if (!NoAdd && firstPart == "return" && parse_return(secondPart))														BadConfig = true;
+					if (!NoAdd && firstPart == "error_page") parse_errors(firstPart, secondPart, VServ);
+					if (!NoAdd && firstPart == "cgi") parse_cgi(firstPart, secondPart, VServ);
 
-					if (invalid_directive(firstPart, line_count, section))															BadConfig = true;
-					else if (firstPart == "allow" || firstPart == "deny") 															VServ.add(firstPart, secondPart, true);
-					else if (firstPart != "server" && firstPart == "error_page" && firstPart != "listen" && firstPart != "cgi")		VServ.add(firstPart, secondPart);
+					if (!NoAdd && (firstPart == "listen" || firstPart == "allow" || firstPart == "deny"))									VServ.add(firstPart, secondPart, true);
+					else if (!NoAdd && firstPart != "server" && firstPart == "error_page" && firstPart != "listen" && firstPart != "cgi")	VServ.add(firstPart, secondPart);
 				}
 
 				if (section == LOCATION && !firstPart.empty()) {
-					if (firstPart == "location" && parse_location(secondPart))														BadConfig = true;
-					if (firstPart == "alias" && parse_alias(firstPart, secondPart))													BadConfig = true;
-					if (firstPart == "try_files" && parse_try_files(secondPart))													BadConfig = true;
-					if (firstPart == "return" && parse_return(secondPart))															BadConfig = true;
-					if (firstPart == "error_page") parse_errors(firstPart, secondPart, Loc);
-					if (firstPart == "cgi") parse_cgi(firstPart, secondPart, VServ);
+					if (!NoAdd && firstPart == "location" && parse_location(secondPart))													BadConfig = true;
+					if (!NoAdd && firstPart == "alias" && parse_alias(firstPart, secondPart))												BadConfig = true;
+					if (!NoAdd && firstPart == "try_files" && parse_try_files(secondPart))													BadConfig = true;
+					if (!NoAdd && firstPart == "return" && parse_return(secondPart))														BadConfig = true;
+					if (!NoAdd && firstPart == "error_page") parse_errors(firstPart, secondPart, Loc);
+					if (!NoAdd && firstPart == "cgi") parse_cgi(firstPart, secondPart, VServ);
 
-					if (invalid_directive(firstPart, line_count, section))															BadConfig = true;
-					else if (firstPart == "allow" || firstPart == "deny")															Loc.add(firstPart, secondPart, true);
-					else if (firstPart != "error_page" && firstPart != "cgi")														Loc.add(firstPart, secondPart);
+					if (!NoAdd && (firstPart == "allow" || firstPart == "deny"))															Loc.add(firstPart, secondPart, true);
+					else if (!NoAdd && firstPart != "error_page" && firstPart != "cgi")														Loc.add(firstPart, secondPart);
 				}
 
 				if (section == METHOD && !firstPart.empty()) {
-					if (firstPart == "limit_except" && parse_limit_except(secondPart))												BadConfig = true;
-					if (firstPart == "allow" && parse_allow(secondPart))															BadConfig = true;
-					if (firstPart == "deny" && parse_deny(secondPart))																BadConfig = true;
-					if (firstPart == "return" && parse_return(secondPart))															BadConfig = true;
+					if (!NoAdd && firstPart == "limit_except" && parse_limit_except(secondPart))											BadConfig = true;
+					if (!NoAdd && firstPart == "allow" && parse_allow(secondPart))															BadConfig = true;
+					if (!NoAdd && firstPart == "deny" && parse_deny(secondPart))															BadConfig = true;
+					if (!NoAdd && firstPart == "return" && parse_return(secondPart))														BadConfig = true;
 
-					if (invalid_directive(firstPart, line_count, section))															BadConfig = true;
-					else if (firstPart == "allow" || firstPart == "deny")															Met.add(firstPart, secondPart, true);
-					else	 																										Met.add(firstPart, secondPart);
+					if (!NoAdd && (firstPart == "allow" || firstPart == "deny"))															Met.add(firstPart, secondPart, true);
+					else	 																												Met.add(firstPart, secondPart);
 				}
 
 				if (bracket_mode != 0) { bracket_lvl += bracket_mode;
 					if (section == METHOD && section_bracket_lvl[3] == bracket_lvl) { section = LOCATION; section_bracket_lvl[3] = 0; Loc.add(Met); }
 					if (section == LOCATION && section_bracket_lvl[2] == bracket_lvl) { section = SERVER; section_bracket_lvl[2] = 0; VServ.add(Loc); }
 					if (section == SERVER && section_bracket_lvl[1] == bracket_lvl) { section = GLOBAL; section_bracket_lvl[1] = 0; Settings::add(VServ); }
+					if (section == GLOBAL && section_bracket_lvl[0] == bracket_lvl) { section = ROOT; section_bracket_lvl[0] = 0; }
 				}
 			}
 		}
 	}
 
 #pragma endregion
-
-//	server_name check duplicates
-//	server ip y puerto check duplicates
-//	crear clase de variables con map $request_uri $uri

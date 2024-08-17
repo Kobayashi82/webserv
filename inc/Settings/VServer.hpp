@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 11:53:48 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/15 19:05:15 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/17 17:44:02 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,15 +24,16 @@ class VServer {
 	public:
 
 		//	Variables
-		std::vector <std::pair<std::string, std::string> > data;										//	Values of the current VServer
-		std::vector <Location>				location;													//	Locations of the current VServer
-		std::vector <std::string>			config;														//	Settings in a vector of the current VServer
-		bool								config_displayed;											//	Is the log or the settings displayed
-		size_t								config_index;												//	Current index of the settings
-		size_t								log_index;													//	Current index of the log
-		bool								autolog;													//	Auto scroll logs
-		Log									log;														//	Logs (access, error and both)
-		bool								status;														//	Status of the VServer (Started/Stoped)
+		std::vector <std::pair<std::string, std::string> >	data;										//	Values of the current VServer
+		std::vector <std::pair<std::string, int> >			addresses;									//	Values of the current VServer
+		std::vector <Location>								location;									//	Locations of the current VServer
+		std::vector <std::string>							config;										//	Settings in a vector of the current VServer
+		bool												config_displayed;							//	Is the log or the settings displayed
+		size_t												config_index;								//	Current index of the settings
+		size_t												log_index;									//	Current index of the log
+		bool												autolog;									//	Auto scroll logs
+		Log													log;										//	Logs (access, error and both)
+		bool												status;										//	Status of the VServer (Started/Stoped)
 		
 		//	Constructors
 		VServer();																						//	Default constructor
@@ -50,6 +51,10 @@ class VServer {
 		void		del(const std::string & Key);														//	Delete a Key - Value
 		void		clear();																			//	Delete all Keys and his Values
 		void		clear_logs();																		//	Delete all logs entries
+
+		void		set_address(const std::string & IP, const int & Port);								//	Add an address (IP - Port)
+		void		add_address(const std::string & IP, const int & Port);								//	Alias for 'set_address'
+		void		del_address(const std::string & IP, const int & Port);								//	Delete an address (IP - Port)
 
 		void		set(const Location & Loc);															//	Add or modify a Location
 		void		add(const Location & Loc);															//	Alias for 'set'

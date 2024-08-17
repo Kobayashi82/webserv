@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/12 13:59:39 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/12 16:25:36 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/17 17:58:28 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,7 @@
 		for (std::vector <std::string>::const_iterator it = segments.begin(); it != segments.end(); ++it) {
 			if (static_cast<std::string>(*it).empty()) return (false);
 			if ((*it).length() > 1 && (*it)[0] == '0') return (false);
+			if ((*it).length() > 0 && !std::isdigit((*it)[0])) return (false);
 			long number; if (Utils::stol(*it, number) || number < 0 || number > 255) return (false);
 		}
 		return (true);

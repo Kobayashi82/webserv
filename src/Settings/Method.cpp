@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 11:54:47 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/15 19:08:15 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/17 17:48:05 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,8 +22,8 @@
 
 #pragma region Overloads
 
-	Method &	Method::operator=(const Method & rhs) { if (this != &rhs) { method = rhs.method; } return (*this); }
-	bool		Method::operator==(const Method & rhs) const { return (method == rhs.method); }
+	Method &	Method::operator=(const Method & rhs) { if (this != &rhs) { data = rhs.data; } return (*this); }
+	bool		Method::operator==(const Method & rhs) const { return (data == rhs.data); }
 
 #pragma endregion
 
@@ -32,8 +32,8 @@
     #pragma region Get
 
         std::string Method::get(const std::string & Key) {
-			for (std::vector <std::pair<std::string, std::string> >::iterator it = method.begin(); it != method.end(); ++it)
-			if (it->first == Key) return (it->second);
+			for (std::vector <std::pair<std::string, std::string> >::iterator it = data.begin(); it != data.end(); ++it)
+				if (it->first == Key) return (it->second);
 			return ("");
         }
 
@@ -42,9 +42,9 @@
     #pragma region Set/Add
 
         void Method::set(const std::string & Key, const std::string & Value, bool Force) {
-			for (std::vector <std::pair<std::string, std::string> >::iterator it = method.begin(); it != method.end(); ++it)
-			if (!Force && it->first == Key) { it->second = Value; return; }
-			method.push_back(std::make_pair(Key, Value));
+			for (std::vector <std::pair<std::string, std::string> >::iterator it = data.begin(); it != data.end(); ++it)
+				if (!Force && it->first == Key) { it->second = Value; return; }
+			data.push_back(std::make_pair(Key, Value));
         }
 
 		void Method::add(const std::string & Key, const std::string & Value, bool Force) { set(Key, Value, Force); }
@@ -54,15 +54,15 @@
     #pragma region Del
 
         void Method::del(const std::string & Key) {
-			for (std::vector <std::pair<std::string, std::string> >::iterator it = method.begin(); it != method.end(); ++it)
-			if (it->first == Key) { method.erase(it); }
+			for (std::vector <std::pair<std::string, std::string> >::iterator it = data.begin(); it != data.end(); ++it)
+				if (it->first == Key) { data.erase(it); }
         }
 
     #pragma endregion
 
 	#pragma region Clear
 
-		void Method::clear() { method.clear(); }
+		void Method::clear() { data.clear(); }
 
 	#pragma endregion
 

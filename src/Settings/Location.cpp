@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 11:54:47 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/15 19:08:02 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/17 17:48:38 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,8 +22,8 @@
 
 #pragma region Overloads
 
-	Location &	Location::operator=(const Location & rhs) { if (this != &rhs) { location = rhs.location; method = rhs.method; } return (*this); }
-	bool		Location::operator==(const Location & rhs) const { return (location == rhs.location && method == rhs.method); }
+	Location &	Location::operator=(const Location & rhs) { if (this != &rhs) { data = rhs.data; method = rhs.method; } return (*this); }
+	bool		Location::operator==(const Location & rhs) const { return (data == rhs.data && method == rhs.method); }
 
 #pragma endregion
 
@@ -32,8 +32,8 @@
     #pragma region Get
 
         std::string Location::get(const std::string & Key) {
-			for (std::vector <std::pair<std::string, std::string> >::iterator it = location.begin(); it != location.end(); ++it)
-			if (it->first == Key) return (it->second);
+			for (std::vector <std::pair<std::string, std::string> >::iterator it = data.begin(); it != data.end(); ++it)
+				if (it->first == Key) return (it->second);
 			return ("");
         }
 
@@ -42,9 +42,9 @@
     #pragma region Set/Add
 
         void Location::set(const std::string & Key, const std::string & Value, bool Force) {
-			for (std::vector <std::pair<std::string, std::string> >::iterator it = location.begin(); it != location.end(); ++it)
-			if (!Force && it->first == Key) { it->second = Value; return; }
-			location.push_back(std::make_pair(Key, Value));
+			for (std::vector <std::pair<std::string, std::string> >::iterator it = data.begin(); it != data.end(); ++it)
+				if (!Force && it->first == Key) { it->second = Value; return; }
+			data.push_back(std::make_pair(Key, Value));
         }
 
 		void Location::add(const std::string & Key, const std::string & Value, bool Force) { set(Key, Value, Force); }
@@ -54,8 +54,8 @@
     #pragma region Del
 
         void Location::del(const std::string & Key) {
-			for (std::vector <std::pair<std::string, std::string> >::iterator it = location.begin(); it != location.end(); ++it)
-			if (it->first == Key) { location.erase(it); }
+			for (std::vector <std::pair<std::string, std::string> >::iterator it = data.begin(); it != data.end(); ++it)
+				if (it->first == Key) { data.erase(it); }
         }
 
     #pragma endregion
@@ -64,7 +64,7 @@
 
 		void Location::clear() {
 			for (std::vector <Method>::iterator it = method.begin(); it != method.end(); ++it) it->clear();
-			location.clear(); method.clear();
+			data.clear(); method.clear();
 		}
 
 	#pragma endregion
