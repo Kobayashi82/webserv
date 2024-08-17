@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:30:57 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/17 19:01:13 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/17 23:03:46 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -206,8 +206,7 @@
 		int Settings::parse_listen(std::string & str, VServer & VServ) {
 			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
 			std::string temp; std::istringstream stream(str); stream >> temp;
-			std::string IP; std::string port; std::string::size_type slashPos = temp.find(':');
-			
+			std::string IP; std::string port; std::string::size_type slashPos = temp.find(':');	
 			
 			if (temp.empty()) { 																		Log::log_error(RD + n_line + "Empty value for " Y "listen" NC); return (1); }
 
@@ -236,8 +235,8 @@
 			long number; if (Utils::stol(port, number)) { 												Log::log_error(RD + n_line + "Invalid port " Y + port + RD " for " Y "listen" NC); return (1); }
 			if (number < 1) { 																			Log::log_error(RD + n_line + "Invalid port " Y + port + RD " for " Y "listen" RD " cannot be " Y "lower" RD " than " Y "1" NC); return (1); }
 			if (number > 65535) { 																		Log::log_error(RD + n_line + "Invalid port " Y + port + RD " for " Y "listen" RD " cannot be " Y "greater" RD " than " Y "65535" NC); return (1); }
-			if (IP.empty()) VServ.add_address("0.0.0.0/0", number);
-			else VServ.add_address(IP, number);
+			if (IP.empty()) Utils::add_address("0.0.0.0", number, VServ);
+			else Utils::add_address(IP, number, VServ);
 		
 			return (0);
 		}

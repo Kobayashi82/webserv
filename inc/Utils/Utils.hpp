@@ -6,11 +6,13 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:37:20 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/12 17:34:42 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/17 22:56:51 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
+
+#include "VServer.hpp"
 
 #include <iostream>																						//	For strings and standard input/output like std::cin, std::cout
 
@@ -33,6 +35,7 @@ class Utils {
 		//	Network
 		static bool			isValidIP(const std::string & IP);											//	Validate an IP
 		static bool			isIPInRange(const std::string & IP, const std::string & range);				//	Check if an IP is in a given range
+		static void			add_address(const std::string & IP, long port, VServer & VServ);
 		static bool			isValidPort(std::string port);												//	Validate a Port in string format
 		static bool			isValidPort(int port);														//	Validate a Port in numeric format
 
