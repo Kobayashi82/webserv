@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 11:54:47 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/17 17:48:38 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/18 14:34:48 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,7 +63,7 @@
 	#pragma region Clear
 
 		void Location::clear() {
-			for (std::vector <Method>::iterator it = method.begin(); it != method.end(); ++it) it->clear();
+			for (std::deque <Method>::iterator it = method.begin(); it != method.end(); ++it) it->clear();
 			data.clear(); method.clear();
 		}
 
@@ -76,7 +76,7 @@
     #pragma region Set/Add
 
         void Location::set(const Method & Met) {
-            std::vector <Method>::iterator it = std::find(method.begin(), method.end(), Met);
+            std::deque <Method>::iterator it = std::find(method.begin(), method.end(), Met);
             if (it == method.end()) method.push_back(Met);
         }
 
@@ -87,7 +87,7 @@
     #pragma region Del
 
         void Location::del(const Method & Met) {
-            std::vector <Method>::iterator it = std::find(method.begin(), method.end(), Met);
+            std::deque <Method>::iterator it = std::find(method.begin(), method.end(), Met);
             if (it != method.end()) { it->clear(); method.erase(it); }
         }
 

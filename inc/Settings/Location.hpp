@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 11:53:37 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/17 16:40:19 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/18 14:33:59 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@
 #include <iostream>																						//	For strings and standard input/output like std::cin, std::cout
 #include <algorithm>																					//	For std::find()
 #include <vector>																						//	For std::vector container
+#include <deque>																						//	For std::deque container
 
 class Location {
 
@@ -24,7 +25,7 @@ class Location {
 
 		//	Variables
 		std::vector <std::pair<std::string, std::string> >	data;										//	Values of the current Location
-		std::vector <Method>								method;										//	Locations of the current VServer
+		std::deque <Method>									method;										//	Method of the current Location
 
 		//	Constructors
 		Location();																						//	Default constructor

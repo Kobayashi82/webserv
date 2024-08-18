@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 11:53:48 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/17 17:44:02 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/18 14:34:09 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 #include <iostream>																						//	For standard input/output stream objects like std::cin, std::cout
 #include <algorithm>																					//	For std::find()
 #include <vector>																						//	For std::vector container
+#include <deque>																						//	For std::deque container
 
 class VServer {
 
@@ -26,7 +27,7 @@ class VServer {
 		//	Variables
 		std::vector <std::pair<std::string, std::string> >	data;										//	Values of the current VServer
 		std::vector <std::pair<std::string, int> >			addresses;									//	Values of the current VServer
-		std::vector <Location>								location;									//	Locations of the current VServer
+		std::deque <Location>								location;									//	Locations of the current VServer
 		std::vector <std::string>							config;										//	Settings in a vector of the current VServer
 		bool												config_displayed;							//	Is the log or the settings displayed
 		size_t												config_index;								//	Current index of the settings

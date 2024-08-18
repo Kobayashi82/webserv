@@ -6,7 +6,7 @@
 #    By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/02/20 17:51:39 by vzurera-          #+#    #+#              #
-#    Updated: 2024/08/17 23:20:19 by vzurera-         ###   ########.fr        #
+#    Updated: 2024/08/18 12:29:56 by vzurera-         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -62,7 +62,7 @@ SRCS	=	Log/Timer.cpp Log/Log.cpp																					\
 			Settings/Parser.cpp																							\
 			Display/Display.cpp Display/Monitor.cpp																		\
 			Utils/String.cpp Utils/Network.cpp Utils/Files.cpp															\
-			Network/SocketManager.cpp																					\
+			Network/Sockets.cpp Network/Client.cpp																		\
 			main.cpp
 
 # ────────────────────────────────────────────────────────── #
@@ -203,8 +203,6 @@ fclean:
 	@printf "\n"
 #	Delete folder and files
 	@-rm -rf ./build >/dev/null 2>&1 || true
-	@-rm -rf ./bin/conf >/dev/null 2>&1 || true
-	@-rm -rf ./bin/logs >/dev/null 2>&1 || true
 #	Restore cursor
 	@$(MAKE) -s show_cursor
 

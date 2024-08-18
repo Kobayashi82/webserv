@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 11:54:43 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/17 17:47:47 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/18 14:35:26 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,7 +69,7 @@
     #pragma region Clear
 
         void VServer::clear() {
-            for (std::vector <Location>::iterator it = location.begin(); it != location.end(); ++it) it->clear();
+            for (std::deque <Location>::iterator it = location.begin(); it != location.end(); ++it) it->clear();
             data.clear(); addresses.clear(); location.clear(); config.clear(); log.clear();
         }
 
@@ -105,7 +105,7 @@
     #pragma region Set/Add
 
         void VServer::set(const Location & Loc) {
-            std::vector <Location>::iterator it = std::find(location.begin(), location.end(), Loc);
+            std::deque <Location>::iterator it = std::find(location.begin(), location.end(), Loc);
             if (it == location.end()) location.push_back(Loc);
         }
 
@@ -116,7 +116,7 @@
     #pragma region Del
 
         void VServer::del(const Location & Loc) {
-            std::vector <Location>::iterator it = std::find(location.begin(), location.end(), Loc);
+            std::deque <Location>::iterator it = std::find(location.begin(), location.end(), Loc);
         		if (it != location.end()) { it->clear(); location.erase(it); }
         }
 

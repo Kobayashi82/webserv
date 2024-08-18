@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:27:58 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/17 18:54:11 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/18 14:37:43 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@
 	std::string							Settings::config_path = Utils::programPath();					//	Path of the default configuration file
 	
 	VServer								Settings::global;												//	Global settings in a vector
-	std::vector <VServer> 				Settings::vserver;												//	V-Servers in a vector
+	std::deque <VServer> 				Settings::vserver;												//	V-Servers in a deque
 	
 	std::map <int, std::string>			Settings::error_codes;											//	Error codes in a map
 	std::map <std::string, std::string>	Settings::mime_types;											//	MIME types in a map
@@ -32,6 +32,10 @@
 	bool 								Settings::BadConfig = false;									//	Indicate if there are errors in the config file
 	int									Settings::line_count = 0;										//	Number of the current line of the configuration file (use to indicate the line of an error in the configuration file)
 	int									Settings::bracket_lvl = 0;										//	Level of the bracket (use to parse the configuration file)
+
+	const int 							Settings::MAX_EVENTS = 10;										//	Maximum number of events for epoll to raised in each iteration
+	const int 							Settings::TIMEOUT_INTERVAL = 5;									//	Time in seconds to close inactive client connections
+	const int 							Settings::TERMINAL_INTERVAL = 1;								//	Refresh interval in seconds for the terminal
 
 #pragma endregion
 
@@ -50,7 +54,7 @@
 	#pragma region Set/Add
 
 		void Settings::set(VServer & VServ) {
-			std::vector<VServer>::iterator it = std::find(vserver.begin(), vserver.end(), VServ);
+			std::deque <VServer>::iterator it = std::find(vserver.begin(), vserver.end(), VServ);
 			if (it == vserver.end()) { vserver.push_back(VServ); }
 			else *it = VServ;
 		}
@@ -62,7 +66,7 @@
 	#pragma region Del
 
 		void Settings::del(const VServer & VServ) {
-			std::vector<VServer>::iterator it = std::find(vserver.begin(), vserver.end(), VServ);
+			std::deque <VServer>::iterator it = std::find(vserver.begin(), vserver.end(), VServ);
 			if (it != vserver.end()) { it->clear(); vserver.erase(it); }
 		}
 
@@ -71,7 +75,7 @@
 	#pragma region Clear
 
 		void Settings::vserver_clear() {
-			for (std::vector<VServer>::iterator it = vserver.begin(); it != vserver.end(); ++it) it->clear();
+			for (std::deque <VServer>::iterator it = vserver.begin(); it != vserver.end(); ++it) it->clear();
 			vserver.clear();
 		}
 

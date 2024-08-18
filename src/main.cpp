@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 14:30:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/18 00:04:26 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/18 15:04:21 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,20 +20,22 @@
 //	TODO	get_ip_range no añadir 0 y broadcast solo cuando range
 //	TODO	Interface tabs
 
+//	keepalive_timeout 65;
+
 //  Entry point
 int main(int argc, char **argv) {
     Settings::load_args(argc, argv);
 
-	SocketManager Sockets;
+	Sockets sockets;
 
-	Sockets.createSockets();
+	sockets.socketCreate();
 
     while (Settings::terminate == -1) {
 		if (Display::Resized) { if (Display::drawing) Display::redraw = true; else Display::Output(); }
 		Display::Input(); usleep(10000);
 	}
 
-	Sockets.closeSockets();
+	sockets.socketClose();
 
 	if (!Settings::check_only && !Display::RawModeDisabled && !Display::ForceRawModeDisabled) {
 		usleep(100000); std::cout.flush(); std::cout.clear(); Display::maxFails = 10; Display::failCount = 0; Display::drawing = false;

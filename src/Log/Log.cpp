@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:32:38 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/17 18:59:04 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/18 14:37:02 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -114,7 +114,7 @@
 					if (!error.empty()) clear_log(error, log_days);
 				}
 
-				for (std::vector<VServer>::iterator server = Settings::vserver.begin(); server != Settings::vserver.end(); ++server) {
+				for (std::deque <VServer>::iterator server = Settings::vserver.begin(); server != Settings::vserver.end(); ++server) {
 					if (!server->data.empty()) {
 						long log_days; if (Utils::stol(server->get("log_days"), log_days)) log_days = _log_days;
 						std::string access = server->get("access_log");
@@ -123,7 +123,7 @@
 						if (!error.empty()) clear_log(error, log_days);
 					}
 
-					for (std::vector<Location>::iterator location = server->location.begin(); location != server->location.end(); ++location) {
+					for (std::deque <Location>::iterator location = server->location.begin(); location != server->location.end(); ++location) {
 						if (!location->data.empty()) {
 							long log_days; if (Utils::stol(location->get("log_days"), log_days)) log_days = _log_days;
 							std::string access = location->get("access_log");
