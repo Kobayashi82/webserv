@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 21:49:48 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/18 14:41:41 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/18 21:01:21 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,10 +23,6 @@
 
 class Client {
 
-	private:
-
-
-
 	public:
 
 		//	Variables
@@ -34,12 +30,13 @@ class Client {
 		Sockets::SocketInfo *	Socket;
 		std::string				IP;
 		int						port;
+		Sockets::EventInfo		event;
     	time_t					last_activity;
 		std::vector <char> 		read_buffer;
     	std::vector <char> 		write_buffer;
 
 		//	Constructors
-		Client(int _fd, Sockets::SocketInfo * _Socket, std::string _IP, int _port);
+		Client(int _fd, Sockets::SocketInfo * _Socket, std::string _IP, int _port, Sockets::EventInfo _event);
 		Client(const Client & Cli);
 
 		//	Overloads

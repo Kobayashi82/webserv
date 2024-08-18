@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 11:54:43 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/18 14:35:26 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/18 17:43:52 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 
 #pragma region Constructors
 
-    VServer::VServer() : config_displayed(false), config_index(0), log_index(0), autolog(true), status(false) {}
+    VServer::VServer() : config_displayed(false), config_index(0), log_index(0), autolog(true), status(false), force_off(false) {}
     VServer::VServer(const VServer & src) { *this = src; }
     VServer::~VServer() { clear(); }
 
@@ -25,7 +25,7 @@
 	VServer &	VServer::operator=(const VServer & rhs) {
         if (this != &rhs) {
             data = rhs.data; addresses = rhs.addresses; location = rhs.location; log = rhs.log; config = rhs.config;
-            config_displayed = rhs.config_displayed; config_index = rhs.config_index; log_index = rhs.log_index; status = rhs.status; autolog = rhs.autolog;
+            config_displayed = rhs.config_displayed; config_index = rhs.config_index; log_index = rhs.log_index; status = rhs.status; force_off = rhs.force_off; autolog = rhs.autolog;
         } return (*this);
     }
 

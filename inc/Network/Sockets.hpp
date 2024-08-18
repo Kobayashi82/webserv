@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 21:49:50 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/18 15:00:43 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/18 20:58:25 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 
 #include <iostream>
 #include <deque>																						//	For std::deque container
+#include <list>																						//	For std::deque container
 #include <string>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -33,40 +34,49 @@ class Sockets {
 
 		enum e_type { SOCKET, CLIENT, CGI };
 
-		struct SocketInfo {
-			int						fd;
-			std::string				IP;
-			int						port;
-			VServer *				VServ;
-			std::deque <Client *>	clients;
-
-			SocketInfo(int _fd, const std::string & _IP, int _port, VServer * _VServ);
-		};
-
+		struct SocketInfo;
 		struct EventInfo {
-			int				fd;
-			int				type;
-			SocketInfo *	Socket;
-			Client *		client;
+			int						fd;
+			int						type;
+			SocketInfo *			Socket;
+			Client *				client;
 
 			EventInfo(int _fd, int _type, Sockets::SocketInfo * _Socket, Client * _client);
+			EventInfo & operator=(const EventInfo & rhs);
 		};
 
-	    static std::deque <SocketInfo>	sockets;
-		static std::deque <Client *>	clients;
+		struct SocketInfo {
+			int							fd;
+			std::string					IP;
+			int							port;
+			EventInfo					event;
+			VServer *					VServ;
+			std::deque <Client *>		clients;
+
+			SocketInfo(int _fd, const std::string & _IP, int _port, EventInfo _event, VServer * _VServ);
+			SocketInfo & operator=(const SocketInfo & rhs);
+		};
+
+
+	    static std::list <SocketInfo>	sockets;
+		static std::list <Client>		clients;
 	    static int						epoll_fd;
 
 		static int	MainLoop();
 
-		static int	epoll_add(int fd, EventInfo & event);
+		static int	epoll_start();
+		static int	epoll_add(int fd, EventInfo * event);
 		static void	epoll_close();
 
 		static bool	socketExists(const std::string & IP, int port);
-		static bool	socketCreate();
-		static bool	socketCreate(VServer & VServ);
-		static int	socketListen(EventInfo * event);
+		static int	socketCreate();
+		static int	socketCreate(VServer * VServ);
+		static int	socketAccept(EventInfo * event);
 		static void	socketClose();
-		static void	socketClose(SocketInfo * Socket);
+		static int	socketClose(SocketInfo * Socket, bool del_socket = true);
+		static void	socketClose(VServer * VServ);
+		static void	clientsClose();
+		static int	socketDelete(SocketInfo * Socket);
 
 		static int	create_timer_fd(int interval = Settings::TIMEOUT_INTERVAL);
 

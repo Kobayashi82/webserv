@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 14:30:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/18 15:04:21 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/18 21:00:02 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,16 +26,16 @@
 int main(int argc, char **argv) {
     Settings::load_args(argc, argv);
 
-	Sockets sockets;
-
-	sockets.socketCreate();
+	Sockets::epoll_start();
+	Sockets::socketCreate();
 
     while (Settings::terminate == -1) {
+		if (Sockets::MainLoop() == -1) { Log::log_error(RD "Error de epoll_wait" NC); break; }
 		if (Display::Resized) { if (Display::drawing) Display::redraw = true; else Display::Output(); }
-		Display::Input(); usleep(10000);
+		Display::Input();
 	}
 
-	sockets.socketClose();
+	Sockets::epoll_close(); Sockets::socketClose(); Sockets::clientsClose();
 
 	if (!Settings::check_only && !Display::RawModeDisabled && !Display::ForceRawModeDisabled) {
 		usleep(100000); std::cout.flush(); std::cout.clear(); Display::maxFails = 10; Display::failCount = 0; Display::drawing = false;

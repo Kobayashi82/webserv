@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:14:05 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/18 14:33:37 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/18 16:41:49 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,9 +33,9 @@ class Settings {
 	private:
 
 		//	Variables
-		static bool									BadConfig;											//	Indicate if there are errors in the config file
 		static int									line_count;											//	Number of the current line of the configuration file (use to indicate the line of an error in the configuration file)
 		static int									bracket_lvl;										//	Level of the bracket (use to parse the configuration file)
+		static bool									BadConfig;											//	Indicate if there are errors in the config file
 
 		//	Errors and MIMEs
 		static void load_error_codes();																	//	Load error codes in a map

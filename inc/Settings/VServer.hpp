@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 11:53:48 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/18 14:34:09 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/18 17:43:05 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,6 +35,7 @@ class VServer {
 		bool												autolog;									//	Auto scroll logs
 		Log													log;										//	Logs (access, error and both)
 		bool												status;										//	Status of the VServer (Started/Stoped)
+		bool												force_off;									//	The VServer is disabled by user;
 		
 		//	Constructors
 		VServer();																						//	Default constructor

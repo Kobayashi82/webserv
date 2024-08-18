@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:27:58 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/18 14:37:43 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/18 16:43:16 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -124,12 +124,13 @@
 				if (bracket_lvl != 0) Log::log_error(RD "Brackets error");
 				loaded = true;
 				Log::check_logs();
-				if (global.log.error.size() > 0) { vserver_clear(); return; }
+				if (BadConfig) { vserver_clear(); return; }
 				if (isDefault)
 					Log::log_access(G "Default configuration file loaded" NC);
 				else
 					Log::log_access(G "Configuration file '" Y + File + G "' loaded" NC);
 			} else {
+				BadConfig = true;
 				if (isDefault) {
 					Log::log_error(RD "Could not create the " Y "default configuration" RD " file" NC);
 				} else {
@@ -212,11 +213,11 @@
 				Display::enableRawMode();
 				if (Display::RawModeDisabled || Display::ForceRawModeDisabled) std::cout << std::endl;
 				if (argc == 1) load(); else load(argv[1]);
-				if (global.log.error.size() == 0 && vserver.size() == 0 && loaded)	Log::log_error(RD "There are no virtual servers in the configuration file");
+				if (!BadConfig && vserver.size() == 0 && loaded)	Log::log_error(RD "There are no virtual servers in the configuration file");
 				else if (vserver.size() == 0) {
 					if (Display::RawModeDisabled || Display::ForceRawModeDisabled) std::cout << std::endl;
 					Log::log_error(RD "Could not load configuration file");
-				}
+				} else Settings::global.status = true;
 				if ((Display::RawModeDisabled || Display::ForceRawModeDisabled) && global.log.error.size() > 0) terminate = 1;
 			}
 		}
