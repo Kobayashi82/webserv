@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/14 14:37:32 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/19 15:38:13 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/19 22:16:22 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -254,18 +254,18 @@
 				Settings::global.status = !Settings::global.status;
 				if (Settings::global.status) {
 					Log::log_access("WebServ 1.0 started");
-					Net::socketCreate();
+					Net::socket_create_all();
 				} else {
 					Log::log_access("WebServ 1.0 stoped");
-					Net::socketClose();
+					Net::socket_close_all();
 				}
 			} else if ((c == 'v' || c == 'V') && Settings::vserver.size() > 0
 				&& Settings::current_vserver != -1) {																									//	(V)server start
 					Settings::vserver[Settings::current_vserver].force_off = !Settings::vserver[Settings::current_vserver].force_off;
 					if (Settings::vserver[Settings::current_vserver].status)
-						Net::socketClose(&Settings::vserver[Settings::current_vserver]);
+						Net::socket_close(&Settings::vserver[Settings::current_vserver]);
 					else if (!Settings::vserver[Settings::current_vserver].force_off)
-						Net::socketCreate(&Settings::vserver[Settings::current_vserver]);
+						Net::socket_create(&Settings::vserver[Settings::current_vserver]);
 			} else if ((c == 'c' || c == 'C')) {																										//	(C)lear log
 				if (Settings::current_vserver == -1 && Settings::global.log.both.size() > 0)
 					Settings::global.log.clear();

@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 21:49:48 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/19 15:39:39 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/20 00:09:22 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,32 +18,35 @@
 #include <iostream>																						//	For standard input/output stream objects like std::cin, std::cout
 #include <vector>																						//	For std::vector container
 
-#include <sys/timerfd.h>
-#include <ctime>
-
 class Client {
 
 	public:
 
 		//	Variables
-		int						fd;
-		Net::SocketInfo *	Socket;
-		std::string				IP;
-		int						port;
-		Net::EventInfo		event;
-    	time_t					last_activity;
-		std::vector <char> 		read_buffer;
-    	std::vector <char> 		write_buffer;
+		int					fd;																			//	File descriptor associated with the client
+		Net::SocketInfo *	socket;																		//	Pointer to the associated SocketInfo
+		std::string			IP;																			//	IP address of the client
+		int					port;																		//	Port number of the client
+		Net::EventInfo		event;																		//	EventInfo associated with this client
+    	time_t				last_activity;																//	
+
+		std::vector <char> 	read_buffer;																//	Buffer for reading data
+    	std::vector <char> 	write_buffer;																//	Buffer for writing data
+		size_t				read_pos;																	//	Current position in the read buffer
+		size_t				write_pos;																	//	Current position in the write buffer
 
 		//	Constructors
-		Client(int _fd, Net::SocketInfo * _Socket, std::string _IP, int _port, Net::EventInfo _event);
-		Client(const Client & Cli);
+		Client(int _fd, Net::SocketInfo * _socket, std::string _IP, int _port, Net::EventInfo _event);	//	Parameterized constructor
+		Client(const Client & Cli);																		//	Copy constructor
 
 		//	Overloads
 		Client &	operator=(const Client & rhs);														//	Overload for asignation
 		bool		operator==(const Client & rhs) const;												//	Overload for comparison
 
 		//	Methods
-		void	check_timeout(int interval_sec = Settings::TIMEOUT_INTERVAL);
+		void	check_timeout(int interval);															//	Checks if the client has timed out
+		void	update_last_activity();																	//	Updates the client last activity timestamp
+
+		void	remove();																				//	Removes the client by closing the connection and cleaning up associated resources
 
 };

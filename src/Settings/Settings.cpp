@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:27:58 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/18 16:43:16 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/19 20:28:51 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,10 +32,6 @@
 	bool 								Settings::BadConfig = false;									//	Indicate if there are errors in the config file
 	int									Settings::line_count = 0;										//	Number of the current line of the configuration file (use to indicate the line of an error in the configuration file)
 	int									Settings::bracket_lvl = 0;										//	Level of the bracket (use to parse the configuration file)
-
-	const int 							Settings::MAX_EVENTS = 10;										//	Maximum number of events for epoll to raised in each iteration
-	const int 							Settings::TIMEOUT_INTERVAL = 5;									//	Time in seconds to close inactive client connections
-	const int 							Settings::TERMINAL_INTERVAL = 1;								//	Refresh interval in seconds for the terminal
 
 #pragma endregion
 

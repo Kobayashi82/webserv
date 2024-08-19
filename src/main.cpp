@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 14:30:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/19 15:36:25 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/20 00:11:19 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,22 +20,23 @@
 //	TODO	get_ip_range no añadir 0 y broadcast solo cuando range
 //	TODO	Interface tabs
 
-//	keepalive_timeout 65;
+//	keepalive_timeout 75;				>= 0 && <= 120 		0 = disabled			defaults to 30
+//	keepalive_requests 1000;			> 0 && <= 5000								defaults to 500
 
 //  Entry point
 int main(int argc, char **argv) {
     Settings::load_args(argc, argv);
 
-	Net::epoll_start();
-	Net::socketCreate();
+	Net::epoll__create();
+	Net::socket_create_all();
 
     while (Settings::terminate == -1) {
-		if (Net::MainLoop() == -1) { Log::log_error(RD "Error de epoll_wait" NC); break; }
+		if (Net::epoll_events() == -1) { Log::log_error(RD "Error de epoll_wait" NC); break; }
 		if (Display::Resized) { if (Display::drawing) Display::redraw = true; else Display::Output(); }
 		Display::Input();
 	}
 
-	Net::epoll_close(); Net::socketClose(); Net::clientsClose();
+	Net::epoll_close(); Net::socket_close_all(); //Net::clientsClose();
 
 	if (!Settings::check_only && !Display::RawModeDisabled && !Display::ForceRawModeDisabled) {
 		usleep(100000); std::cout.flush(); std::cout.clear(); Display::maxFails = 10; Display::failCount = 0; Display::drawing = false;

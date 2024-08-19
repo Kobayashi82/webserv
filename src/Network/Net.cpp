@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 21:55:43 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/19 15:35:56 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/19 23:44:40 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,38 +17,90 @@
 
 	std::list <Net::SocketInfo>		Net::sockets;
 	std::list <Client>				Net::clients;
-	int 							Net::epoll_fd = -1;
+
+	int 							Net::epoll_fd = -1;											//	File descriptor for epoll
+	Net::EventInfo					Net::event_timeout;											//	EventInfo structure used for generating events in epoll and checking client timeouts
+
+	const int						Net::MAX_EVENTS = 10;										//	Maximum number of events that can be handled per iteration by epoll
+	const int						Net::TIMEOUT_INTERVAL = 1;									//	Interval in seconds between timeout checks for inactive clients
+	const int						Net::TERMINAL_INTERVAL = 10;								//	Interval in seconds between updates for the terminal display
+
+	const int						Net::KEEP_ALIVE_TIMEOUT = 30;								//	Timeout in seconds for keep-alive (if a client is inactive for this amount of time, the connection will be closed)
+	const int						Net::KEEP_ALIVE_REQUEST = 500;								//	Maximum request for keep-alive (if a client exceeds this number of requests, the connection will be closed)
 
 #pragma endregion
 
-#pragma region Constructors
 
-	Net::SocketInfo::SocketInfo(int _fd, const std::string & _IP, int _port, EventInfo _event, VServer * _VServ) : fd(_fd), IP(_IP), port(_port), event(_event), VServ(_VServ) {}
-	Net::EventInfo::EventInfo(int _fd, int _type, Net::SocketInfo * _Socket, Client * _client) : fd(_fd), type(_type), Socket(_Socket), client(_client) {}
+#pragma region EventInfo
 
-	Net::SocketInfo & Net::SocketInfo::operator=(const SocketInfo & rhs) {
-		if (this != &rhs) {
-			fd = rhs.fd;
-			IP = rhs.IP;
-			port = rhs.port;
-			event = rhs.event;
-			VServ = rhs.VServ;
-			clients = rhs.clients;
+	#pragma region Constructors
+
+		Net::EventInfo::EventInfo() : fd(-1) {}
+		Net::EventInfo::EventInfo(int _fd, int _type, Net::SocketInfo * _socket, Client * _client) : fd(_fd), type(_type), socket(_socket), client(_client) {}
+
+	#pragma endregion
+
+	#pragma region Overloads
+
+		Net::EventInfo & Net::EventInfo::operator=(const EventInfo & rhs) {
+			if (this != &rhs) { fd = rhs.fd; type = rhs.type; socket = rhs.socket; client = rhs.client; }
+			return (*this);
 		}
-		return *this;
-	}
-	
-	Net::EventInfo & Net::EventInfo::operator=(const EventInfo & rhs) {
-		if (this != &rhs) {
-			fd = rhs.fd;
-			type = rhs.type;
-			Socket = rhs.Socket;
-			client = rhs.client;
+
+		bool Net::EventInfo::operator==(const EventInfo & rhs) {
+			return (fd == rhs.fd && type == rhs.type && socket == rhs.socket && client == rhs.client);
 		}
-		return *this;
-	}
+
+	#pragma endregion
 
 #pragma endregion
+
+#pragma region SocketInfo
+
+	#pragma region Constructors
+
+		Net::SocketInfo::SocketInfo(int _fd, const std::string & _IP, int _port, EventInfo _event, VServer * _VServ) : fd(_fd), IP(_IP), port(_port), event(_event), VServ(_VServ) {}
+
+	#pragma endregion
+
+	#pragma region Overloads
+
+		Net::SocketInfo & Net::SocketInfo::operator=(const SocketInfo & rhs) {
+			if (this != &rhs) { fd = rhs.fd; IP = rhs.IP; port = rhs.port; event = rhs.event; VServ = rhs.VServ; clients = rhs.clients; }
+			return (*this);
+		}
+
+		bool Net::SocketInfo::operator==(const SocketInfo & rhs) {
+			return (fd == rhs.fd && IP == rhs.IP && port == rhs.port && event == rhs.event && VServ == rhs.VServ && clients == rhs.clients);
+		}
+
+	#pragma endregion
+
+	#pragma region Remove
+
+		void Net::SocketInfo::remove() {
+			std::string msg = "Socket closed at " + IP + ":" + Utils::ltos(port);
+			Net::epoll_del(&event); VServer * tmp_VServ = VServ;
+			std::list <SocketInfo>::iterator s_it = Net::sockets.begin();
+			while (s_it != Net::sockets.end()) {
+				if (*s_it == *this) {
+					std::list <Client *>::iterator c_it = clients.begin();
+					while (c_it != clients.end()) {
+						Client * current = *c_it; ++c_it;
+						current->remove();
+					}
+					Net::sockets.erase(s_it);
+					if (close(fd) != -1) Log::log_access(msg, tmp_VServ);
+					break;
+				}
+				++s_it;
+			}
+		}
+
+	#pragma endregion
+
+#pragma endregion
+
 
 #pragma region Sockets
 
@@ -56,65 +108,40 @@
 
 		#pragma region Create All
 
-			int Net::socketCreate() {
-				int not_created = 1;
+			int Net::socket_create_all() {
 				if (!Settings::global.status) return (1);
-				for (std::deque <VServer>::iterator vserv_it = Settings::vserver.begin(); vserv_it != Settings::vserver.end(); ++vserv_it) {
-					if (vserv_it->force_off) continue;
-					for (std::vector <std::pair<std::string, int> >::const_iterator addr_it = vserv_it->addresses.begin(); addr_it != vserv_it->addresses.end(); ++addr_it) {
-						if (socketExists(addr_it->first, addr_it->second)) { continue; }
 
-						int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
-						if (serverSocket == -1) { Log::log_error("Error creando el socket para " + addr_it->first + ":" + Utils::ltos(addr_it->second), &(*vserv_it)); continue; }
+				bool nothing_created = true;
 
-						int opt = 1;
-						if (setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1) { Log::log_error("Error configurando opciones de socket para " + addr_it->first + ":" + Utils::ltos(addr_it->second), &(*vserv_it)); close(serverSocket); continue; }
+				for (std::deque <VServer>::iterator vserv_it = Settings::vserver.begin(); vserv_it != Settings::vserver.end(); ++vserv_it)
+					if (!socket_create(&(*vserv_it))) nothing_created = false;
 
-						sockaddr_in address;
-						std::memset(&address, 0, sizeof(address));
-						address.sin_family = AF_INET;
-						address.sin_port = htons(addr_it->second);
-						inet_pton(AF_INET, addr_it->first.c_str(), &address.sin_addr);
-
-						if (bind(serverSocket, (sockaddr*)&address, sizeof(address)) == -1) {
-							//Log::log_error(Utils::ltos(errno) + "Error vinculando el socket para " + addr_it->first + ":" + Utils::ltos(addr_it->second));
-							close(serverSocket); continue;
-						}
-
-						if (listen(serverSocket, SOMAXCONN) == -1) { Log::log_error("Error escuchando en el socket para " + addr_it->first + ":" + Utils::ltos(addr_it->second), &(*vserv_it)); close(serverSocket); continue; }
-
-						// Añadir el socket al epoll
-						sockets.push_back(SocketInfo(serverSocket, addr_it->first, addr_it->second, EventInfo(serverSocket, SOCKET, NULL, NULL), &(*vserv_it)));
-						// Obtener una referencia al último elemento recién insertado.
-						SocketInfo & socketInfo = sockets.back();
-
-						// Establecer el puntero en el event al objeto SocketInfo que acabamos de insertar.
-						socketInfo.event.Socket = &socketInfo;
-
-						if (epoll_add(serverSocket, &socketInfo.event) == -1) { Log::log_error("Error añadiendo socket al epoll", &(*vserv_it)); close(serverSocket); sockets.pop_back(); continue; }
-
-						if (!vserv_it->status) vserv_it->status = true;
-						Log::log_access("Socket creado y escuchando en " + addr_it->first + ":" + Utils::ltos(addr_it->second), &(*vserv_it));
-						not_created = 0;
-					}
-				}
-				return (not_created);
+				return (nothing_created);
 			}
 
 		#pragma endregion
 
-		#pragma region Create One
+		#pragma region Create VServer
 
-			int Net::socketCreate(VServer * VServ) {
+			int Net::socket_create(VServer * VServ) {
 				if (!Settings::global.status || VServ->force_off) return (1);
+
+				bool nothing_created = true;
+
 				for (std::vector <std::pair<std::string, int> >::const_iterator addr_it = VServ->addresses.begin(); addr_it != VServ->addresses.end(); ++addr_it) {
-					if (socketExists(addr_it->first, addr_it->second)) { continue; }
+					if (socket_exists(addr_it->first, addr_it->second)) continue;
 
 					int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
-					if (serverSocket == -1) { Log::log_error("Error creando el socket para " + addr_it->first + ":" + Utils::ltos(addr_it->second), VServ); continue; }
+					if (serverSocket == -1) {
+						Log::log_error("Error creando el socket para " + addr_it->first + ":" + Utils::ltos(addr_it->second), VServ);
+						continue;
+					}
 
-					int opt = 1;
-					if (setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1) { Log::log_error("Error configurando opciones de socket para " + addr_it->first + ":" + Utils::ltos(addr_it->second), VServ); close(serverSocket); continue; }
+					int options = 1;
+					if (setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &options, sizeof(options)) == -1) {
+						Log::log_error("Error configurando opciones de socket para " + addr_it->first + ":" + Utils::ltos(addr_it->second), VServ);
+						close(serverSocket); continue;
+					}
 
 					sockaddr_in address; std::memset(&address, 0, sizeof(address));
 					address.sin_family = AF_INET;
@@ -126,27 +153,38 @@
 						close(serverSocket); continue;
 					}
 
-					if (listen(serverSocket, SOMAXCONN) == -1) { Log::log_error("Error escuchando en el socket para " + addr_it->first + ":" + Utils::ltos(addr_it->second), VServ); close(serverSocket); continue; }
+					if (listen(serverSocket, SOMAXCONN) == -1) {
+						Log::log_error("Error escuchando en el socket para " + addr_it->first + ":" + Utils::ltos(addr_it->second), VServ);
+						close(serverSocket); continue;
+					}
 
-
-					// Añadir el socket al epoll
+					// Add the new socket as SocketInfo to Net::sockets
 					sockets.push_back(SocketInfo(serverSocket, addr_it->first, addr_it->second, EventInfo(serverSocket, SOCKET, NULL, NULL), VServ));
-					// Obtener una referencia al último elemento recién insertado.
 					SocketInfo &socketInfo = sockets.back();
+					socketInfo.event.socket = &socketInfo;
 
-					// Establecer el puntero en el event al objeto SocketInfo que acabamos de insertar.
-					socketInfo.event.Socket = &socketInfo;
-
-					if (epoll_add(serverSocket, &(socketInfo.event)) == -1) {
-						Log::log_error("Error añadiendo socket al epoll", VServ); close(serverSocket); sockets.pop_back();
-						continue;
+					if (epoll_add(&(socketInfo.event)) == -1) {
+						Log::log_error("Error añadiendo socket al epoll", VServ);
+						close(serverSocket); sockets.pop_back(); continue;
 					}
 
 					if (!VServ->status) VServ->status = true;
 					Log::log_access("Socket creado y escuchando en " + addr_it->first + ":" + Utils::ltos(addr_it->second), VServ);
+					nothing_created = false;
 				}
-			return (true);
-		}
+
+				return (nothing_created);
+			}
+
+		#pragma endregion	
+
+		#pragma region Exists
+
+			bool Net::socket_exists(const std::string & IP, int port) {
+				for (std::list <SocketInfo>::const_iterator it = sockets.begin(); it != sockets.end(); ++it)
+					if (it->IP == IP && it->port == port) return (true);
+				return (false);
+			}
 
 		#pragma endregion
 
@@ -156,37 +194,26 @@
 
 		#pragma region Close All
 
-			void Net::socketClose() {
-				std::list <SocketInfo>::iterator it = sockets.begin();
-				while (it != sockets.end()) {
-					if (it->VServ->status) it->VServ->status = false;
-					socketClose(&(*it), false);
-					it = sockets.erase(it);
+			void Net::socket_close_all() {
+				std::list<SocketInfo>::iterator s_it = sockets.begin();
+				while (s_it != sockets.end()) {
+					if (s_it->VServ->status) s_it->VServ->status = false;
+					SocketInfo current = *s_it; ++s_it;
+					current.remove();
 				}
 			}
 
 		#pragma endregion
 
-		#pragma region Close One
+		#pragma region Close VServer
 
-			int Net::socketClose(SocketInfo * Socket, bool del_socket) {
-				std::string msg = "Socket cerrado en " + Socket->IP + ":" + Utils::ltos(Socket->port);
-				VServer * VServ = Socket->VServ;
-				if (del_socket) socketDelete(Socket);
-				if (close(Socket->fd) == -1) return (-1);
-				// disconnect and release clients
-				Log::log_access(msg, VServ);
-
-				return (0);
-			}
-
-			void Net::socketClose(VServer * VServ) {
-				std::list <SocketInfo>::iterator it = sockets.begin();
-				while (it != sockets.end()) {
-					if (it->VServ == VServ) {
-						socketClose(&(*it), false);
-						it = sockets.erase(it);
-					} else ++it;
+			void Net::socket_close(VServer * VServ) {
+				std::list<SocketInfo>::iterator s_it = sockets.begin();
+				while (s_it != sockets.end()) {
+					if (s_it->VServ == VServ) {
+						SocketInfo current = *s_it; ++s_it;
+						current.remove();
+					} else ++s_it;
 				}
 				VServ->status = false;
 				Display::Output();
@@ -194,69 +221,34 @@
 
 		#pragma endregion
 
-		#pragma region Close Client All
-
-			void Net::clientsClose() {
-				std::list <Client>::iterator it = clients.begin();
-				while (it != clients.end()) {
-					if (it->fd != -1) close(it->fd);
-					it = clients.erase(it);
-				}
-			}
-
-		#pragma endregion
-
-	#pragma endregion
-
-	#pragma region Delete
-
-		int Net::socketDelete(SocketInfo * Socket) {
-			std::list <SocketInfo>::iterator it = sockets.begin();
-			while (it != sockets.end()) {
-				if (&(*it) == Socket) { sockets.erase(it); return (0); }
-				++it;
-			}
-
-			return (1);
-		}
-
 	#pragma endregion
 
 	#pragma region Accept
 
-		int Net::socketAccept(EventInfo * event) {
+		int Net::socket_accept(EventInfo * event) {
 			sockaddr_in Addr; socklen_t AddrLen = sizeof(Addr);
 			int fd = accept(event->fd, (sockaddr *)&Addr, &AddrLen);
-
-			if (fd == -1) { Log::log_error("Error al aceptar la conexión"); return (-1); }
+			if (fd == -1) {
+				Log::log_error("Error al aceptar la conexión");
+				return (-1);
+			}
 
 			std::string	IP		= inet_ntoa(Addr.sin_addr);
-			int			Port	= ntohs(Addr.sin_port);
+			int			port	= ntohs(Addr.sin_port);
+
+			clients.push_back(Client(fd, event->socket, IP, port, EventInfo(fd, CLIENT, event->socket, NULL)));
+			Client & cli = clients.back();
+			event->socket->clients.push_back(&cli);
+			cli.event.client = &cli;
+
+			if (epoll_add(&(cli.event)) == -1) {
+				Log::log_error("Error añadiendo socket al epoll");
+				close(fd); clients.pop_back(); event->socket->clients.pop_back(); return (-1);
+			}
 
 			Log::log_access("Conexión aceptada de " + IP);
 
-			//EventInfo client_event(fd, CLIENT, event->Socket, NULL);
-			clients.push_back(Client(fd, event->Socket, IP, Port, EventInfo(fd, CLIENT, event->Socket, NULL)));
-			
-			Client & cli = clients.back();
-
-
-			event->Socket->clients.push_back(&cli);
-			cli.event.client = &cli;
-
-			if (epoll_add(fd, &(cli.event)) == -1) { Log::log_error("Error añadiendo socket al epoll"); close(fd); clients.pop_back(); event->Socket->clients.pop_back(); return (-1); }
-
 			return (fd);
-		}
-
-	#pragma endregion
-
-	#pragma region Exists
-
-		bool Net::socketExists(const std::string & IP, int port) {
-			for (std::list <SocketInfo>::const_iterator it = sockets.begin(); it != sockets.end(); ++it)
-				if (it->IP == IP && it->port == port) return (true);
-			return (false);
 		}
 
 	#pragma endregion
@@ -265,87 +257,116 @@
 
 #pragma region EPOLL
 
-	#pragma region Start
+	#pragma region Create
 
-		int Net::epoll_start() {
+		int Net::epoll__create() {
 				if (epoll_fd != -1) epoll_close();
 
 				epoll_fd = epoll_create(1024);
 				if (epoll_fd == -1) { Log::log_error("Error creando el epoll file descriptor"); return (1); }
+				if (!create_timeout()) epoll_add(&event_timeout);
 
 				return (0);
 		}
 
 	#pragma endregion
 
-	#pragma region Add
-
-		int Net::epoll_add(int fd, EventInfo * event) {
-			struct epoll_event epoll_event;
-
-    if (event == NULL) {
-        Log::log_error("Error: puntero event es nulo en epoll_add");
-        return -1;
-    }
-			epoll_event.data.ptr = event;
-			epoll_event.events = EPOLLIN;																// Monitorizar solo para lecturas (conexiones entrantes)
-		
-			//return (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, fd, &epoll_event));
-			int result = epoll_ctl(epoll_fd, EPOLL_CTL_ADD, fd, &epoll_event);
-		   	    if (result == -1) {
-        Log::log_error("Error en epoll_ctl: " + Utils::ltos(errno));
-    } else {
-        Log::log_access("epoll_ctl: OK");
-    }
-			return (result);
-		}
-
-#pragma endregion
-
 	#pragma region Close
 
 		void Net::epoll_close() {
+			if (event_timeout.fd != -1) close(event_timeout.fd);
 			if (epoll_fd != -1) close(epoll_fd);
 		}
 
 	#pragma endregion
+	
+	#pragma region Add
 
-	#pragma region Create Timer FD
+		int Net::epoll_add(EventInfo * event) {
+			struct epoll_event epoll_event;
 
-		int Net::create_timer_fd(int interval_sec) {
-			int timer_fd = timerfd_create(CLOCK_MONOTONIC, 0);
-			if (timer_fd == -1) return (-1);
-
-			struct itimerspec new_value;
-			memset(&new_value, 0, sizeof(new_value));
-			new_value.it_value.tv_sec = interval_sec;		// Tiempo hasta la primera expiración
-			new_value.it_interval.tv_sec = interval_sec; 	// Intervalo entre expiraciones
-
-			if (timerfd_settime(timer_fd, 0, &new_value, NULL) == -1) { close(timer_fd); return (-1); }
-			return (timer_fd);
+			epoll_event.data.ptr = event;
+			epoll_event.events = EPOLLIN;
+		
+			return (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, event->fd, &epoll_event));
 		}
 
 	#pragma endregion
 
-#pragma endregion
+	#pragma region Del
 
-#pragma region MainLoop
+		void Net::epoll_del(EventInfo * event) {
+			epoll_ctl(epoll_fd, EPOLL_CTL_DEL, event->fd, NULL);
+		}
 
-	int Net::MainLoop() {
-		struct epoll_event events[Settings::MAX_EVENTS];
-        int eventCount = epoll_wait(epoll_fd, events, Settings::MAX_EVENTS, 10);
-        if (eventCount == -1) { Log::log_error("Error en epoll_wait"); return (-1); }
+	#pragma endregion
 
-		for (int i = 0; i < eventCount; ++i) {
-            EventInfo * event = static_cast<EventInfo *>(events[i].data.ptr);
-			 if (event == NULL) { Log::log_error("Error2 en epoll_wait"); continue; }
-			switch (event->type) {
-				case SOCKET: 	{ socketAccept(event); break; }
-				case CLIENT: 	{ break; }
-				case CGI: 		{ break; }
+	#pragma region Events
+
+		int Net::epoll_events() {
+			struct epoll_event events[MAX_EVENTS];
+			int eventCount = epoll_wait(epoll_fd, events, MAX_EVENTS, TERMINAL_INTERVAL);
+			if (eventCount == -1) { return (1); }
+
+			for (int i = 0; i < eventCount; ++i) {
+				if (events[i].data.ptr == NULL) continue;
+
+				EventInfo * event = static_cast<EventInfo *>(events[i].data.ptr);
+
+				switch (event->type) {
+					case SOCKET: 	{ socket_accept(event); break; }
+					case CLIENT: 	{ break; }
+					case DATA: 		{ break; }
+					case CGI: 		{ break; }
+					case TIMEOUT: 	{ check_timeout(); break; }
+				}
 			}
-        }
-        return (0);
-	}
+			return (0);
+		}
+
+	#pragma endregion
+
+	#pragma region Time-Out
+
+		#pragma region Create
+
+			int Net::create_timeout() {
+				int timer_fd = timerfd_create(CLOCK_MONOTONIC, 0);
+				if (timer_fd == -1) return (1);
+
+				struct itimerspec new_value;
+				memset(&new_value, 0, sizeof(new_value));
+				new_value.it_value.tv_sec = Net::TIMEOUT_INTERVAL;		// Tiempo hasta la primera expiración
+				new_value.it_interval.tv_sec = Net::TIMEOUT_INTERVAL; 	// Intervalo entre expiraciones
+
+				if (timerfd_settime(timer_fd, 0, &new_value, NULL) == -1) { close(timer_fd); return (1); }
+
+				event_timeout = EventInfo(timer_fd, TIMEOUT, NULL, NULL);
+
+				return (0);
+			}
+
+		#pragma endregion
+
+		#pragma region Check
+
+			void Net::check_timeout() {
+				uint64_t expirations;
+				read(event_timeout.fd, &expirations, sizeof(expirations));
+
+				long TimeOutInt = KEEP_ALIVE_TIMEOUT;
+
+				if (Settings::global.get("keepalive_timeout") != "") TimeOutInt = Utils::stol(Settings::global.get("keepalive_timeout"), TimeOutInt);
+
+				std::list<Client>::iterator it = clients.begin();
+				while (it != clients.end()) {
+					std::list<Client>::iterator current = it; ++it;
+					current->check_timeout(TimeOutInt);
+				}
+			}
+
+		#pragma endregion
+
+	#pragma endregion
 
 #pragma endregion

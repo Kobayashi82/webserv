@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:14:05 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/18 16:41:49 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/19 20:27:24 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,10 +81,6 @@ class Settings {
 		static bool									loaded;												//	The config file loaded successfully (but may contains errors)
 		static int									current_vserver;									//	Current selected V-Server (-1 = None)
 		static int									terminate;											//	Flag the program to exit with the value in terminate (the default value of -1 don't exit)
-
-		static const int 							MAX_EVENTS;											//	Maximum number of events for epoll to raised in each iteration
-		static const int 							TIMEOUT_INTERVAL;									//	Time in seconds to close inactive client connections
-		static const int 							TERMINAL_INTERVAL;									//	Refresh interval in seconds for the terminal
 
 		//	Load
 		static void			load();																		//	Load the default configuration file

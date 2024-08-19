@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/18 11:28:40 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/19 15:40:19 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/19 23:44:17 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,8 +15,10 @@
 
 #pragma region Constructors
 
-    Client::Client(int _fd, Net::SocketInfo * _Socket, std::string _IP, int _port, Net::EventInfo _event) : fd(_fd), Socket(_Socket), IP(_IP), port(_port), event(_event) {}
-    Client::Client(const Client & src) : fd(src.fd), Socket(src.Socket), IP(src.IP), port(src.port), event(src.event), last_activity(src.last_activity), read_buffer(src.read_buffer), write_buffer(src.write_buffer) {}
+    Client::Client(int _fd, Net::SocketInfo * _socket, std::string _IP, int _port, Net::EventInfo _event) : fd(_fd), socket(_socket), IP(_IP), port(_port), event(_event) {
+		read_pos = 0; write_pos = 0; last_activity = std::time(NULL);
+	}
+    Client::Client(const Client & src) : fd(src.fd), socket(src.socket), IP(src.IP), port(src.port), event(src.event), last_activity(src.last_activity), read_buffer(src.read_buffer), write_buffer(src.write_buffer) {}
 
 
 #pragma endregion
@@ -25,13 +27,13 @@
 
 	Client &	Client::operator=(const Client & rhs) {
         if (this != &rhs) {
-            fd = rhs.fd; IP = rhs.IP; port = rhs.port; Socket = rhs.Socket; last_activity = rhs.last_activity;
+            fd = rhs.fd; IP = rhs.IP; port = rhs.port; socket = rhs.socket; last_activity = rhs.last_activity;
 			read_buffer = rhs.read_buffer; write_buffer = rhs.write_buffer; event = rhs.event;
         } return (*this);
     }
 
 	bool		Client::operator==(const Client & rhs) const {
-		return (fd == rhs.fd && IP == rhs.IP && port == rhs.port && Socket == rhs.Socket && last_activity == rhs.last_activity
+		return (fd == rhs.fd && IP == rhs.IP && port == rhs.port && socket == rhs.socket && last_activity == rhs.last_activity
 				&& read_buffer == rhs.read_buffer && write_buffer == rhs.write_buffer);
 	}
 
@@ -42,9 +44,30 @@
 	void Client::check_timeout(int interval) {
 		time_t current_time = std::time(NULL);
 		if (difftime(current_time, last_activity) > interval) {
-			close(fd);																						//	La conexión ha superado el timeout, ciérrala
-			Log::log_access("The client in " + IP + ":" + Utils::ltos(port) + " closed because time-out");
-			// Net::removeClient(this);
+			Log::log_access("The client in " + IP + ":" + Utils::ltos(port) + " closed because time-out", socket->VServ);
+			remove();
+		}
+	}
+
+    void Client::update_last_activity() { last_activity = std::time(NULL); }
+
+#pragma endregion
+
+#pragma region Close
+
+	void	Client::remove() {
+		Net::epoll_del(&event); close(fd);
+
+	    std::list <Client *>::iterator s_it = socket->clients.begin();
+    	while (s_it != socket->clients.end()) {
+        	if (**s_it == *this) {s_it = socket->clients.erase(s_it); break; }
+            ++s_it;
+        }
+
+		std::list <Client>::iterator c_it = Net::clients.begin();
+		while (c_it != Net::clients.end()) {
+			if (*this == *c_it) { Net::clients.erase(c_it); break; }
+			++c_it;
 		}
 	}
 
