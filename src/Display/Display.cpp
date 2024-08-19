@@ -6,13 +6,13 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/14 14:37:32 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/18 17:52:32 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/19 15:38:13 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Display.hpp"
 #include "Settings.hpp"
-#include "Sockets.hpp"
+#include "Net.hpp"
 #include "Monitor.hpp"
 
 #pragma region Variables
@@ -254,18 +254,18 @@
 				Settings::global.status = !Settings::global.status;
 				if (Settings::global.status) {
 					Log::log_access("WebServ 1.0 started");
-					Sockets::socketCreate();
+					Net::socketCreate();
 				} else {
 					Log::log_access("WebServ 1.0 stoped");
-					Sockets::socketClose();
+					Net::socketClose();
 				}
 			} else if ((c == 'v' || c == 'V') && Settings::vserver.size() > 0
 				&& Settings::current_vserver != -1) {																									//	(V)server start
 					Settings::vserver[Settings::current_vserver].force_off = !Settings::vserver[Settings::current_vserver].force_off;
 					if (Settings::vserver[Settings::current_vserver].status)
-						Sockets::socketClose(&Settings::vserver[Settings::current_vserver]);
+						Net::socketClose(&Settings::vserver[Settings::current_vserver]);
 					else if (!Settings::vserver[Settings::current_vserver].force_off)
-						Sockets::socketCreate(&Settings::vserver[Settings::current_vserver]);
+						Net::socketCreate(&Settings::vserver[Settings::current_vserver]);
 			} else if ((c == 'c' || c == 'C')) {																										//	(C)lear log
 				if (Settings::current_vserver == -1 && Settings::global.log.both.size() > 0)
 					Settings::global.log.clear();

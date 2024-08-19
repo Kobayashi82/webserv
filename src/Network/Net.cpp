@@ -1,32 +1,32 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Sockets.cpp                                        :+:      :+:    :+:   */
+/*   Net.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 21:55:43 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/18 21:01:15 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/19 15:35:56 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Sockets.hpp"
+#include "Net.hpp"
 #include "Client.hpp"
 
 #pragma region Variables
 
-	std::list <Sockets::SocketInfo>		Sockets::sockets;
-	std::list <Client>					Sockets::clients;
-	int 								Sockets::epoll_fd = -1;
+	std::list <Net::SocketInfo>		Net::sockets;
+	std::list <Client>				Net::clients;
+	int 							Net::epoll_fd = -1;
 
 #pragma endregion
 
 #pragma region Constructors
 
-	Sockets::SocketInfo::SocketInfo(int _fd, const std::string & _IP, int _port, EventInfo _event, VServer * _VServ) : fd(_fd), IP(_IP), port(_port), event(_event), VServ(_VServ) {}
-	Sockets::EventInfo::EventInfo(int _fd, int _type, Sockets::SocketInfo * _Socket, Client * _client) : fd(_fd), type(_type), Socket(_Socket), client(_client) {}
+	Net::SocketInfo::SocketInfo(int _fd, const std::string & _IP, int _port, EventInfo _event, VServer * _VServ) : fd(_fd), IP(_IP), port(_port), event(_event), VServ(_VServ) {}
+	Net::EventInfo::EventInfo(int _fd, int _type, Net::SocketInfo * _Socket, Client * _client) : fd(_fd), type(_type), Socket(_Socket), client(_client) {}
 
-	Sockets::SocketInfo & Sockets::SocketInfo::operator=(const SocketInfo & rhs) {
+	Net::SocketInfo & Net::SocketInfo::operator=(const SocketInfo & rhs) {
 		if (this != &rhs) {
 			fd = rhs.fd;
 			IP = rhs.IP;
@@ -38,7 +38,7 @@
 		return *this;
 	}
 	
-	Sockets::EventInfo & Sockets::EventInfo::operator=(const EventInfo & rhs) {
+	Net::EventInfo & Net::EventInfo::operator=(const EventInfo & rhs) {
 		if (this != &rhs) {
 			fd = rhs.fd;
 			type = rhs.type;
@@ -56,7 +56,7 @@
 
 		#pragma region Create All
 
-			int Sockets::socketCreate() {
+			int Net::socketCreate() {
 				int not_created = 1;
 				if (!Settings::global.status) return (1);
 				for (std::deque <VServer>::iterator vserv_it = Settings::vserver.begin(); vserv_it != Settings::vserver.end(); ++vserv_it) {
@@ -105,7 +105,7 @@
 
 		#pragma region Create One
 
-			int Sockets::socketCreate(VServer * VServ) {
+			int Net::socketCreate(VServer * VServ) {
 				if (!Settings::global.status || VServ->force_off) return (1);
 				for (std::vector <std::pair<std::string, int> >::const_iterator addr_it = VServ->addresses.begin(); addr_it != VServ->addresses.end(); ++addr_it) {
 					if (socketExists(addr_it->first, addr_it->second)) { continue; }
@@ -156,7 +156,7 @@
 
 		#pragma region Close All
 
-			void Sockets::socketClose() {
+			void Net::socketClose() {
 				std::list <SocketInfo>::iterator it = sockets.begin();
 				while (it != sockets.end()) {
 					if (it->VServ->status) it->VServ->status = false;
@@ -169,7 +169,7 @@
 
 		#pragma region Close One
 
-			int Sockets::socketClose(SocketInfo * Socket, bool del_socket) {
+			int Net::socketClose(SocketInfo * Socket, bool del_socket) {
 				std::string msg = "Socket cerrado en " + Socket->IP + ":" + Utils::ltos(Socket->port);
 				VServer * VServ = Socket->VServ;
 				if (del_socket) socketDelete(Socket);
@@ -180,7 +180,7 @@
 				return (0);
 			}
 
-			void Sockets::socketClose(VServer * VServ) {
+			void Net::socketClose(VServer * VServ) {
 				std::list <SocketInfo>::iterator it = sockets.begin();
 				while (it != sockets.end()) {
 					if (it->VServ == VServ) {
@@ -196,7 +196,7 @@
 
 		#pragma region Close Client All
 
-			void Sockets::clientsClose() {
+			void Net::clientsClose() {
 				std::list <Client>::iterator it = clients.begin();
 				while (it != clients.end()) {
 					if (it->fd != -1) close(it->fd);
@@ -210,7 +210,7 @@
 
 	#pragma region Delete
 
-		int Sockets::socketDelete(SocketInfo * Socket) {
+		int Net::socketDelete(SocketInfo * Socket) {
 			std::list <SocketInfo>::iterator it = sockets.begin();
 			while (it != sockets.end()) {
 				if (&(*it) == Socket) { sockets.erase(it); return (0); }
@@ -224,7 +224,7 @@
 
 	#pragma region Accept
 
-		int Sockets::socketAccept(EventInfo * event) {
+		int Net::socketAccept(EventInfo * event) {
 			sockaddr_in Addr; socklen_t AddrLen = sizeof(Addr);
 			int fd = accept(event->fd, (sockaddr *)&Addr, &AddrLen);
 
@@ -253,7 +253,7 @@
 
 	#pragma region Exists
 
-		bool Sockets::socketExists(const std::string & IP, int port) {
+		bool Net::socketExists(const std::string & IP, int port) {
 			for (std::list <SocketInfo>::const_iterator it = sockets.begin(); it != sockets.end(); ++it)
 				if (it->IP == IP && it->port == port) return (true);
 			return (false);
@@ -267,7 +267,7 @@
 
 	#pragma region Start
 
-		int Sockets::epoll_start() {
+		int Net::epoll_start() {
 				if (epoll_fd != -1) epoll_close();
 
 				epoll_fd = epoll_create(1024);
@@ -280,7 +280,7 @@
 
 	#pragma region Add
 
-		int Sockets::epoll_add(int fd, EventInfo * event) {
+		int Net::epoll_add(int fd, EventInfo * event) {
 			struct epoll_event epoll_event;
 
     if (event == NULL) {
@@ -304,7 +304,7 @@
 
 	#pragma region Close
 
-		void Sockets::epoll_close() {
+		void Net::epoll_close() {
 			if (epoll_fd != -1) close(epoll_fd);
 		}
 
@@ -312,7 +312,7 @@
 
 	#pragma region Create Timer FD
 
-		int Sockets::create_timer_fd(int interval_sec) {
+		int Net::create_timer_fd(int interval_sec) {
 			int timer_fd = timerfd_create(CLOCK_MONOTONIC, 0);
 			if (timer_fd == -1) return (-1);
 
@@ -331,7 +331,7 @@
 
 #pragma region MainLoop
 
-	int Sockets::MainLoop() {
+	int Net::MainLoop() {
 		struct epoll_event events[Settings::MAX_EVENTS];
         int eventCount = epoll_wait(epoll_fd, events, Settings::MAX_EVENTS, 10);
         if (eventCount == -1) { Log::log_error("Error en epoll_wait"); return (-1); }

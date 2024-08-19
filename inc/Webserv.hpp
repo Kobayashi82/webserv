@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/14 14:38:19 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/18 11:32:47 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/19 15:36:38 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,4 +14,4 @@
 
 #include "Display.hpp"
 #include "Settings.hpp"
-#include "Sockets.hpp"
+#include "Net.hpp"

@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Sockets.hpp                                        :+:      :+:    :+:   */
+/*   Net.hpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 21:49:50 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/18 20:58:25 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/19 15:35:25 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,7 @@
 
 #include <iostream>
 #include <deque>																						//	For std::deque container
-#include <list>																						//	For std::deque container
+#include <list>																							//	For std::list container
 #include <string>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -28,7 +28,7 @@
 #include <errno.h>
 
 class Client;
-class Sockets {
+class Net {
 
 	public:
 
@@ -41,7 +41,7 @@ class Sockets {
 			SocketInfo *			Socket;
 			Client *				client;
 
-			EventInfo(int _fd, int _type, Sockets::SocketInfo * _Socket, Client * _client);
+			EventInfo(int _fd, int _type, Net::SocketInfo * _Socket, Client * _client);
 			EventInfo & operator=(const EventInfo & rhs);
 		};
 
