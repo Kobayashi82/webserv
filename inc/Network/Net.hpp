@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 21:49:50 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/20 00:11:02 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/20 19:18:52 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -87,6 +87,9 @@ class Net {
 	    static std::list <SocketInfo>	sockets;														//	List of all SocketInfo objects
 		static std::list <Client>		clients;														//	List of all Client objects
 
+		static long						read_bytes;														//	Total number of bytes downloaded by the server
+		static long						write_bytes;													//	Total number of bytes uploaded by the server
+
 		//	Socket
 		static int	socket_create_all();																//	Creates all sockets from all VServers
 		static int	socket_create(VServer * VServ);														//	Creates all sockets from a VServer
@@ -97,6 +100,7 @@ class Net {
 		static int	epoll__create();																	//	Creates epoll, set the FD to 'epoll_fd', create and add 'event_timeout'
 		static void	epoll_close();																		//	Closes epoll
 		static int	epoll_add(EventInfo * event);														//	Adds an event to epoll
+		static int	epoll_edit(EventInfo * event, bool epollin, bool epollout);
 		static void	epoll_del(EventInfo * event);														//	Removes an event from epoll
 		static int	epoll_events();																		//	Processes epoll events
 
@@ -109,6 +113,7 @@ class Net {
 		static EventInfo							event_timeout;										//	EventInfo structure used for generating events in epoll and checking client timeouts
 
 		static const int 							MAX_EVENTS;											//	Maximum number of events that can be handled per iteration by epoll
+		static const int							EPOLL_BUFFER_SIZE;									//	Size of the buffer for read and write operations
 		static const int 							TIMEOUT_INTERVAL;									//	Interval in seconds between timeout checks for inactive clients
 		static const int 							TERMINAL_INTERVAL;									//	Interval in seconds between updates for the terminal display
 
@@ -116,11 +121,16 @@ class Net {
 		static const int							KEEP_ALIVE_REQUEST;									//	Maximum request for keep-alive (if a client exceeds this number of requests, the connection will be closed)
 
 		//	Socket
-		static int	socket_accept(EventInfo * event);													//	Accepts a new connection
+		static void	socket_accept(EventInfo * event);													//	Accepts a new connection
 		static bool	socket_exists(const std::string & IP, int port);									//	Checks if a socket with the given IP address and port exists
 		
 		//	EPOLL
 		static int	create_timeout();																	//	Creates a file descriptor for the client timeout checker
 		static void check_timeout();																	//	Checks for clients that have timed out
-		
+
+		static void read_request(EventInfo * event);
+		static void write_response(EventInfo * event);
+		static void	process_request(EventInfo * event);
+		static void	process_response(EventInfo * event);
+
 };

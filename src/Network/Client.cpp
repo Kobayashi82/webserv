@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/18 11:28:40 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/19 23:44:17 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/20 16:21:48 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,8 +44,8 @@
 	void Client::check_timeout(int interval) {
 		time_t current_time = std::time(NULL);
 		if (difftime(current_time, last_activity) > interval) {
-			Log::log_access("The client in " + IP + ":" + Utils::ltos(port) + " closed because time-out", socket->VServ);
-			remove();
+			remove(true);
+			Log::log_access("Client " + IP + ":" + Utils::ltos(port) + " connection time-out", socket->VServ);
 		}
 	}
 
@@ -53,10 +53,11 @@
 
 #pragma endregion
 
-#pragma region Close
+#pragma region Remove
 
-	void	Client::remove() {
+	void	Client::remove(bool no_msg) {
 		Net::epoll_del(&event); close(fd);
+		VServer * VServ = socket->VServ;
 
 	    std::list <Client *>::iterator s_it = socket->clients.begin();
     	while (s_it != socket->clients.end()) {
@@ -69,6 +70,7 @@
 			if (*this == *c_it) { Net::clients.erase(c_it); break; }
 			++c_it;
 		}
+		if (!no_msg) Log::log_access("Client " + IP + ":" + Utils::ltos(port) + " connection closed", VServ);
 	}
 
 #pragma endregion

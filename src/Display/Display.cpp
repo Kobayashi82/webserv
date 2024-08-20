@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/14 14:37:32 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/19 22:16:22 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/20 21:53:26 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -304,14 +304,14 @@
 				while (++row < total_rows - 3) {
 					int length = 0; std::string temp = "";
 					if (index < log.size()) temp = log[index++];
-					if (temp.empty()) { oss << C "│"; setLine(C, " ", cols + 2, oss); oss << C "│" NC << std::endl; continue; }
+					if (temp.empty()) { oss << C "│"; setLine(C, " ", cols + 2, oss); oss << C "│" NC << "\n"; continue; }
 					length = Utils::str_nocolor_length(temp);
 					if (length > cols + 2) temp = Utils::str_nocolor_trunc(temp, cols - 1);
 					length = (cols + 2) - Utils::str_nocolor_length(temp);
 					if (length < 0) length = 0;
 					oss << C "│" NC << temp;
 					setLine(C, " ", length, oss);
-					oss << C "│" NC << std::endl;
+					oss << C "│" NC << "\n";
 				}
 			}
 
@@ -327,14 +327,14 @@
 					std::ostringstream ss; ss << Y " " << std::left << std::setw(width) << std::setfill(' ') << index << NC;
 
 					if (index < config.size()) temp = ss.str() + "  " + config[index]; index++;
-					if (temp.empty()) { oss << C "│"; setLine(C, " ", cols + 2, oss); oss << "│" NC << std::endl; continue; }
+					if (temp.empty()) { oss << C "│"; setLine(C, " ", cols + 2, oss); oss << "│" NC << "\n"; continue; }
 					length = Utils::str_nocolor_length(temp);
 					if (length > cols + 2) temp = Utils::str_nocolor_trunc(temp, cols - 1);
 					length = (cols + 2) - Utils::str_nocolor_length(temp);
 					if (length < 0) length = 0;
 					oss << C "│" NC << temp;
 					setLine(C, " ", length, oss);
-					oss << C "│" NC << std::endl;
+					oss << C "│" NC << "\n";
 				}
 			}
 
@@ -404,46 +404,42 @@
 				}
 
 			//	DATA
-				std::string SData1, SData2, Data1, Data2, Conect;
-				if (Settings::current_vserver == -1) {
-					SData1 = "0.00 MB/s";
-					SData2 = "0.00 MB/s";
-					Data1 = Y "0.00 " C "MB/s";
-					Data2 = Y "0.00 " C "MB/s";
-					Conect = "0";
-				} else if (Settings::current_vserver != -1) {
-					SData1 = "0.00 MB/s";
-					SData2 = "0.00 MB/s";
-					Data1 = Y "0.00 " C "MB/s";
-					Data2 = Y "0.00 " C "MB/s";
-					Conect = "0";
-				}
+				std::string data1, data2, Downloaded, Uploaded, Conect;
+				int Downloaded_size, Uploaded_size;
+				Utils::formatSize(Net::read_bytes, data1, data2);
+				Downloaded = Y + data1 + " " C + data2 + NC;
+				Downloaded_size = data1.size() + data2.size() + 1;
+
+				Utils::formatSize(Net::write_bytes, data1, data2);
+				Uploaded = Y + data1 + " " C + data2 + NC;
+				Uploaded_size = data1.size() + data2.size() + 1;
+				Conect = Utils::ltos(Net::clients.size());
 
 			//	PRINT BUTTONS
 				oss << top;
-				if (length >= static_cast<int>((SData1.size() + SData2.size() + Conect.size() + 15))) {
-					setLine(C, "─", length - 15 - (SData1.size() + SData2.size() + Conect.size() ), oss);
+				if (length >= Downloaded_size + Uploaded_size +  static_cast<int>(Conect.size()) + 15) {
+					setLine(C, "─", length - 15 - (Downloaded_size + Uploaded_size + Conect.size()), oss);
 					oss << C "┬" NC; setLine(C, "─", Conect.size() + 4, oss);
-					oss << C "┬" NC; setLine(C, "─", SData1.size() + 4, oss);
-					oss << C "┬" NC; setLine(C, "─", SData2.size() + 4, oss); oss << "┤" NC << std::endl; row++;
+					oss << C "┬" NC; setLine(C, "─", Downloaded_size + 4, oss);
+					oss << C "┬" NC; setLine(C, "─", Uploaded_size + 4, oss); oss << "┤" NC << "\n"; row++;
 				} else {
-					setLine(C, "─", length, oss); oss << "┤" NC << std::endl; row++;
+					setLine(C, "─", length, oss); oss << "┤" NC << "\n"; row++;
 				}
 				oss << middle;
-				if (length >= static_cast<int>((SData1.size() + SData2.size() + Conect.size() + 15)))  {
-					setLine(NC, " ", length - 15 - (SData1.size() + SData2.size() + Conect.size()), oss);
-					oss << C "│ " G "Ϟ " Y << Conect << C " │ " G "↑ " C << Data1 << C " │ " G "↓ " C << Data2 << C " │" NC << std::endl; row++;
+				if (length >= Downloaded_size + Uploaded_size +  static_cast<int>(Conect.size()) + 15)  {
+					setLine(NC, " ", length - 15 - (Downloaded_size + Uploaded_size + Conect.size()), oss);
+					oss << C "│ " G "Ϟ " Y << Conect << C " │ " G "↓ " C << Downloaded << C " │ " G "↑ " C << Uploaded << C " │" NC << "\n"; row++;
 				} else {
-					setLine(NC, " ", length, oss); oss << C "│" NC << std::endl; row++;
+					setLine(NC, " ", length, oss); oss << C "│" NC << "\n"; row++;
 				}
 				oss << bottom;
-				if (length >= static_cast<int>((SData1.size() + SData2.size() + Conect.size() + 15)))  {
-					setLine(C, "─", length - 15 - (SData1.size() + SData2.size() + Conect.size()), oss);
+				if (length >= Downloaded_size + Uploaded_size +  static_cast<int>(Conect.size()) + 15)  {
+					setLine(C, "─", length - 15 - (Downloaded_size + Uploaded_size + Conect.size()), oss);
 					oss << C "┴" NC; setLine(C, "─", Conect.size() + 4, oss);
-					oss << C "┴" NC; setLine(C, "─", SData1.size() + 4, oss);
-					oss << C "┴" NC; setLine(C, "─", SData2.size() + 4, oss); oss << "┘" NC << std::endl; row++;
+					oss << C "┴" NC; setLine(C, "─", Downloaded_size + 4, oss);
+					oss << C "┴" NC; setLine(C, "─", Uploaded_size + 4, oss); oss << "┘" NC << "\n"; row++;
 				} else {
-					setLine(C, "─", length, oss); oss << "┘" NC << std::endl; row++;
+					setLine(C, "─", length, oss); oss << "┘" NC << "\n"; row++;
 				}
 			}
 
@@ -452,6 +448,7 @@
 		#pragma region Output
 
 			void Display::Output() {
+				return;
 				if (Settings::check_only || RawModeDisabled || ForceRawModeDisabled) return;
 				if (drawing) return; else drawing = true;																						//	┌───┐ ◄ ►
 				winsize w; ioctl(0, TIOCGWINSZ, &w); int cols = w.ws_col - 4, row = 0;															//	├─┬─┤  ▲
@@ -464,9 +461,9 @@
 				
 			//	TITLE
 				oss << CHIDE CUU;
-				oss << C "┌─────────────────┬"; setLine(C, "─", (cols + 2) - 18, oss); oss << "┐" NC << std::endl; row++;
-				oss << C "│ V-Servers: " << Color << temp; setLine(C, " ", 5 - temp.size(), oss); oss << C "│"; setPadding("WEBSERV 1.0", Status, " ", (cols + 2) - 20, 1, oss); oss << RD "X " C "│" NC << std::endl; row++;
-				oss << C "├─────────────────┤"; setLine(Status, "▄", (cols + 2) - 18, oss); oss << C "│" NC << std::endl; row++;
+				oss << C "┌─────────────────┬"; setLine(C, "─", (cols + 2) - 18, oss); oss << "┐" NC << "\n"; row++;
+				oss << C "│ V-Servers: " << Color << temp; setLine(C, " ", 5 - temp.size(), oss); oss << C "│"; setPadding("WEBSERV 1.0", Status, " ", (cols + 2) - 20, 1, oss); oss << RD "X " C "│" NC << "\n"; row++;
+				oss << C "├─────────────────┤"; setLine(Status, "▄", (cols + 2) - 18, oss); oss << C "│" NC << "\n"; row++;
 
 			//	COLOR LINES
 				bool some = false;
@@ -482,7 +479,7 @@
 
 			//	MEM & CPU
 				temp = monitor.getMEMinStr();
-				oss << C "│ MEM: " G << temp; setLine(C, " ", 11 - temp.size(), oss);  oss << C "│"; setLine(Status, "▀", (cols + 2) - 18, oss); oss << C "│" NC << std::endl; row++;
+				oss << C "│ MEM: " G << temp; setLine(C, " ", 11 - temp.size(), oss);  oss << C "│"; setLine(Status, "▀", (cols + 2) - 18, oss); oss << C "│" NC << "\n"; row++;
 				temp = monitor.getCPUinStr();
 				oss << C "│ CPU: " G << temp; setLine(C, " ", 11 - temp.size(), oss); oss << C "│ " Y << LArrow;
 
@@ -509,8 +506,8 @@
 
 				if (temp.size() > static_cast<size_t>((cols + 2) - 27)) temp = temp.substr(0, (cols + 2) - 30) + "...";
 				setPadding(temp, Status, " ", (cols + 2) - 24, 1, oss);
-				oss << " " Y << RArrow << C "│" NC << std::endl; row++;
-				oss << C "├─────────────────┴"; setLine(C, "─", (cols + 2) - 18, oss); oss << "┤" NC << std::endl; row++;
+				oss << " " Y << RArrow << C "│" NC << "\n"; row++;
+				oss << C "├─────────────────┴"; setLine(C, "─", (cols + 2) - 18, oss); oss << "┤" NC << "\n"; row++;
 
 			//	LOG & SETTINGS
 				if (Settings::current_vserver == -1 && Settings::global.config_displayed == false) {
@@ -549,14 +546,14 @@
 	#pragma region Logo
 
 		void Display::Logo() {
-			std::cout << C	<< std::endl << std::endl
-					  << 	" ██╗    ██╗███████╗██████╗ ███████╗███████╗██████╗ ██╗   ██╗" 	<< std::endl
-					  << 	" ██║    ██║██╔════╝██╔══██╗██╔════╝██╔════╝██╔══██╗██║   ██║" << std::endl
-					  << 	" ██║ █╗ ██║█████╗  ██████╔╝███████╗█████╗  ██████╔╝██║   ██║" << std::endl
-					  << 	" ██║███╗██║██╔══╝  ██╔══██╗╚════██║██╔══╝  ██╔══██╗╚██╗ ██╔╝" << std::endl
-					  << 	" ╚███╔███╔╝███████╗██████╔╝███████║███████╗██║  ██║ ╚████╔╝ " << std::endl
-					  << 	"  ╚══╝╚══╝ ╚══════╝╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝  ╚═══╝  " << std::endl
-					  << NC	<< std::endl;
+			std::cout << C	<< "\n" << "\n"
+					  << 	" ██╗    ██╗███████╗██████╗ ███████╗███████╗██████╗ ██╗   ██╗" 	<< "\n"
+					  << 	" ██║    ██║██╔════╝██╔══██╗██╔════╝██╔════╝██╔══██╗██║   ██║" << "\n"
+					  << 	" ██║ █╗ ██║█████╗  ██████╔╝███████╗█████╗  ██████╔╝██║   ██║" << "\n"
+					  << 	" ██║███╗██║██╔══╝  ██╔══██╗╚════██║██╔══╝  ██╔══██╗╚██╗ ██╔╝" << "\n"
+					  << 	" ╚███╔███╔╝███████╗██████╔╝███████║███████╗██║  ██║ ╚████╔╝ " << "\n"
+					  << 	"  ╚══╝╚══╝ ╚══════╝╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝  ╚═══╝  " << "\n"
+					  << NC	<< "\n";
 		}
 
 	#pragma endregion

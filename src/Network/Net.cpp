@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 21:55:43 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/19 23:44:40 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/20 20:23:29 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,18 +15,22 @@
 
 #pragma region Variables
 
-	std::list <Net::SocketInfo>		Net::sockets;
-	std::list <Client>				Net::clients;
+	std::list <Net::SocketInfo>		Net::sockets;														//	List of all SocketInfo objects
+	std::list <Client>				Net::clients;														//	List of all Client objects
 
-	int 							Net::epoll_fd = -1;											//	File descriptor for epoll
-	Net::EventInfo					Net::event_timeout;											//	EventInfo structure used for generating events in epoll and checking client timeouts
+	long							Net::read_bytes;													//	Total number of bytes downloaded by the server
+	long							Net::write_bytes;													//	Total number of bytes uploaded by the server
 
-	const int						Net::MAX_EVENTS = 10;										//	Maximum number of events that can be handled per iteration by epoll
-	const int						Net::TIMEOUT_INTERVAL = 1;									//	Interval in seconds between timeout checks for inactive clients
-	const int						Net::TERMINAL_INTERVAL = 10;								//	Interval in seconds between updates for the terminal display
+	int 							Net::epoll_fd = -1;													//	File descriptor for epoll
+	Net::EventInfo					Net::event_timeout;													//	EventInfo structure used for generating events in epoll and checking client timeouts
 
-	const int						Net::KEEP_ALIVE_TIMEOUT = 30;								//	Timeout in seconds for keep-alive (if a client is inactive for this amount of time, the connection will be closed)
-	const int						Net::KEEP_ALIVE_REQUEST = 500;								//	Maximum request for keep-alive (if a client exceeds this number of requests, the connection will be closed)
+	const int						Net::MAX_EVENTS = 10;												//	Maximum number of events that can be handled per iteration by epoll
+	const int						Net::EPOLL_BUFFER_SIZE = 4096;										//	Size of the buffer for read and write operations
+	const int						Net::TIMEOUT_INTERVAL = 1;											//	Interval in seconds between timeout checks for inactive clients
+	const int						Net::TERMINAL_INTERVAL = 10;										//	Interval in seconds between updates for the terminal display
+
+	const int						Net::KEEP_ALIVE_TIMEOUT = 30;										//	Timeout in seconds for keep-alive (if a client is inactive for this amount of time, the connection will be closed)
+	const int						Net::KEEP_ALIVE_REQUEST = 500;										//	Maximum request for keep-alive (if a client exceeds this number of requests, the connection will be closed)
 
 #pragma endregion
 
@@ -79,7 +83,7 @@
 	#pragma region Remove
 
 		void Net::SocketInfo::remove() {
-			std::string msg = "Socket closed at " + IP + ":" + Utils::ltos(port);
+			std::string msg = "Socket " + IP + ":" + Utils::ltos(port) + " closed";
 			Net::epoll_del(&event); VServer * tmp_VServ = VServ;
 			std::list <SocketInfo>::iterator s_it = Net::sockets.begin();
 			while (s_it != Net::sockets.end()) {
@@ -133,13 +137,13 @@
 
 					int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
 					if (serverSocket == -1) {
-						Log::log_error("Error creando el socket para " + addr_it->first + ":" + Utils::ltos(addr_it->second), VServ);
+						Log::log_error("Socket " + addr_it->first + ":" + Utils::ltos(addr_it->second) + " cannot be created", VServ);
 						continue;
 					}
 
 					int options = 1;
 					if (setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &options, sizeof(options)) == -1) {
-						Log::log_error("Error configurando opciones de socket para " + addr_it->first + ":" + Utils::ltos(addr_it->second), VServ);
+						Log::log_error("Socket " + addr_it->first + ":" + Utils::ltos(addr_it->second) + " cannot be created", VServ);
 						close(serverSocket); continue;
 					}
 
@@ -154,7 +158,7 @@
 					}
 
 					if (listen(serverSocket, SOMAXCONN) == -1) {
-						Log::log_error("Error escuchando en el socket para " + addr_it->first + ":" + Utils::ltos(addr_it->second), VServ);
+						Log::log_error("Socket " + addr_it->first + ":" + Utils::ltos(addr_it->second) + " cannot be created", VServ);
 						close(serverSocket); continue;
 					}
 
@@ -164,12 +168,12 @@
 					socketInfo.event.socket = &socketInfo;
 
 					if (epoll_add(&(socketInfo.event)) == -1) {
-						Log::log_error("Error añadiendo socket al epoll", VServ);
+						Log::log_error("Socket " + addr_it->first + ":" + Utils::ltos(addr_it->second) + " cannot be created", VServ);
 						close(serverSocket); sockets.pop_back(); continue;
 					}
 
 					if (!VServ->status) VServ->status = true;
-					Log::log_access("Socket creado y escuchando en " + addr_it->first + ":" + Utils::ltos(addr_it->second), VServ);
+					Log::log_access("Socket " + addr_it->first + ":" + Utils::ltos(addr_it->second) + " waiting for connections", VServ);
 					nothing_created = false;
 				}
 
@@ -225,13 +229,11 @@
 
 	#pragma region Accept
 
-		int Net::socket_accept(EventInfo * event) {
+		void Net::socket_accept(EventInfo * event) {
 			sockaddr_in Addr; socklen_t AddrLen = sizeof(Addr);
-			int fd = accept(event->fd, (sockaddr *)&Addr, &AddrLen);
-			if (fd == -1) {
-				Log::log_error("Error al aceptar la conexión");
-				return (-1);
-			}
+			int fd = accept(event->fd, (sockaddr *)&Addr, &AddrLen); if (fd == -1) return;
+			//int flags = fcntl(fd, F_GETFL, 0); if (flags == -1) return;
+			//if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1) return;
 
 			std::string	IP		= inet_ntoa(Addr.sin_addr);
 			int			port	= ntohs(Addr.sin_port);
@@ -241,14 +243,9 @@
 			event->socket->clients.push_back(&cli);
 			cli.event.client = &cli;
 
-			if (epoll_add(&(cli.event)) == -1) {
-				Log::log_error("Error añadiendo socket al epoll");
-				close(fd); clients.pop_back(); event->socket->clients.pop_back(); return (-1);
-			}
+			if (epoll_add(&(cli.event)) == -1) { close(fd); clients.pop_back(); event->socket->clients.pop_back(); return; }
 
-			Log::log_access("Conexión aceptada de " + IP);
-
-			return (fd);
+			Log::log_access("Client " + IP + ":" + Utils::ltos(port) + " connected");
 		}
 
 	#pragma endregion
@@ -263,7 +260,7 @@
 				if (epoll_fd != -1) epoll_close();
 
 				epoll_fd = epoll_create(1024);
-				if (epoll_fd == -1) { Log::log_error("Error creando el epoll file descriptor"); return (1); }
+				if (epoll_fd == -1) { Log::log_error(RD "Cannot create " Y "EPOLL" NC); return (1); }
 				if (!create_timeout()) epoll_add(&event_timeout);
 
 				return (0);
@@ -293,6 +290,23 @@
 
 	#pragma endregion
 
+	#pragma region Edit
+
+		int Net::epoll_edit(EventInfo * event, bool epollin, bool epollout) {
+			struct epoll_event epoll_event;
+
+			epoll_event.data.ptr = event;
+
+			if (epollin && epollout) epoll_event.events = EPOLLIN | EPOLLOUT;
+			else if (epollin) epoll_event.events = EPOLLIN;
+			else if (epollout) epoll_event.events = EPOLLOUT;
+			else return (0);
+		
+			return (epoll_ctl(epoll_fd, EPOLL_CTL_MOD, event->fd, &epoll_event));
+		}
+
+	#pragma endregion
+
 	#pragma region Del
 
 		void Net::epoll_del(EventInfo * event) {
@@ -313,12 +327,21 @@
 
 				EventInfo * event = static_cast<EventInfo *>(events[i].data.ptr);
 
-				switch (event->type) {
-					case SOCKET: 	{ socket_accept(event); break; }
-					case CLIENT: 	{ break; }
-					case DATA: 		{ break; }
-					case CGI: 		{ break; }
-					case TIMEOUT: 	{ check_timeout(); break; }
+				if (events[i].events & EPOLLIN) {
+					switch (event->type) {
+						case SOCKET: 	{ socket_accept(event); break; }
+						case CLIENT: 	{ read_request(event); break; }
+						case DATA: 		{ break; }
+						case CGI: 		{ break; }
+						case TIMEOUT: 	{ check_timeout(); break; }
+					}
+				}
+				if (events[i].events & EPOLLOUT) {
+					switch (event->type) {
+						case CLIENT: 	{ write_response(event); break; }
+						case DATA: 		{ break; }
+						case CGI: 		{ break; }
+					}
 				}
 			}
 			return (0);
@@ -370,3 +393,73 @@
 	#pragma endregion
 
 #pragma endregion
+
+
+void Net::read_request(EventInfo * event) {
+    char buffer[EPOLL_BUFFER_SIZE];				memset(buffer, 0, sizeof(buffer));
+	char peek_buffer[EPOLL_BUFFER_SIZE + 1];	memset(peek_buffer, 0, sizeof(peek_buffer));
+
+	ssize_t bytes_peek = recv(event->fd, peek_buffer, EPOLL_BUFFER_SIZE + 1, MSG_PEEK);
+
+    if (bytes_peek == 0) { event->client->remove(); return; }
+
+    event->client->update_last_activity();
+
+    ssize_t bytes_read = recv(event->fd, buffer, EPOLL_BUFFER_SIZE, 0);
+    
+    if (bytes_read > 0) {
+        event->client->read_buffer.insert(event->client->read_buffer.end(), buffer, buffer + bytes_read);
+
+		read_bytes+= bytes_read;
+		if (bytes_peek <= EPOLL_BUFFER_SIZE) process_request(event);
+	} else if (bytes_read <= 0) event->client->remove();
+}
+
+void Net::write_response(EventInfo *event) {
+	event->client->update_last_activity();
+
+    if (!event->client->write_buffer.empty()) {
+
+        size_t buffer_size = event->client->write_buffer.size();
+        size_t chunk_size = std::min(buffer_size, static_cast<size_t>(EPOLL_BUFFER_SIZE));
+        
+        ssize_t bytes_written = write(event->fd, event->client->write_buffer.data(), chunk_size);
+
+        if (bytes_written > 0) {
+            event->client->write_buffer.erase(event->client->write_buffer.begin(), event->client->write_buffer.begin() + bytes_written);
+
+			write_bytes+= bytes_written;
+
+		} else if (bytes_written < 0) return; // close(event->fd);
+    }
+    
+    if (event->client->write_buffer.empty()) epoll_edit(event, true, false);
+}
+
+
+void Net::process_request(EventInfo * event) {
+	std::string request(event->client->read_buffer.begin(), event->client->read_buffer.end());
+	std::istringstream request_stream(request);
+	std::string line;
+	while (std::getline(request_stream, line))
+	{
+		Utils::trim(line);
+		Log::log_access(line);
+	}
+	event->client->read_buffer.clear();
+	process_response(event);
+}
+
+void Net::process_response(EventInfo * event) {
+    // Crear una respuesta HTTP básica
+    std::string response = 
+        "HTTP/1.1 200 OK\r\n"
+        "Content-Type: text/html\r\n"
+        "Content-Length: 48\r\n"
+		"Connection: keep-alive\r\n"
+        //"Connection: close\r\n"
+        "\r\n"
+        "<html><body><h1>Hello, World!</h1></body></html>";
+	event->client->write_buffer.insert(event->client->write_buffer.end(), response.begin(), response.end());
+    epoll_edit(event, true, true);
+}

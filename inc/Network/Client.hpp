@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 21:49:48 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/20 00:09:22 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/20 16:14:44 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,6 +47,6 @@ class Client {
 		void	check_timeout(int interval);															//	Checks if the client has timed out
 		void	update_last_activity();																	//	Updates the client last activity timestamp
 
-		void	remove();																				//	Removes the client by closing the connection and cleaning up associated resources
+		void	remove(bool no_msg = false);															//	Removes the client by closing the connection and cleaning up associated resources
 
 };

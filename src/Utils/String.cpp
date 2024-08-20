@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:36:49 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/12 14:00:33 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/20 16:52:34 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,13 +76,23 @@
 
 #pragma region Format Size
 
-	std::string Utils::formatSize(size_t bytes) {
-		const char * suffixes[] = {"byte", "KB", "MB", "GB", "TB"}; std::string s = "";
+	std::string Utils::formatSize(size_t bytes, bool just_suffix) {
+		const char * suffixes[] = {"B", "KB", "MB", "GB", "TB"};;
 		size_t suffix = 0; double size = static_cast<double>(bytes);
 
 		while (size >= 1024 && suffix < 4) { size /= 1024; ++suffix; }
-		if (size > 1 && suffix == 0) s = "s";
-		return (dtos(size) + " " + suffixes[suffix] + s);
+		if (just_suffix) return (suffixes[suffix]);
+		return (dtos(size) + " " + suffixes[suffix]);
+	}
+
+	void Utils::formatSize(size_t bytes, std::string & data1, std::string & data2) {
+		const char * suffixes[] = {"B", "KB", "MB", "GB", "TB"};
+		size_t suffix = 0; double size = static_cast<double>(bytes);
+
+		while (size >= 1024 && suffix < 4) { size /= 1024; ++suffix; }
+
+		data1 = dtos(size);
+		data2 = suffixes[suffix];
 	}
 
 #pragma endregion
