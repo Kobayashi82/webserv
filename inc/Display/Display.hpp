@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 11:59:38 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/15 18:49:18 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/21 11:57:03 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,6 +34,7 @@ class Display {
 		static bool	ForceRawModeDisabled;																//	Force terminal in normal mode (not raw mode)
 		static bool	Resized;																			//	True if the terminal has been resized
 		static bool	redraw;																				//	Is in the middle of an Output()
+		static bool	terminate;																			//	Flag the thread to finish
 
 		//	Methods
 		static void	Logo();																				//	Print the Webserv logo
@@ -42,5 +43,11 @@ class Display {
 		static void	enableRawMode();																	//	Enable raw un-buffered mode for the terminal
 		static void	disableRawMode();																	//	Disable raw un-buffered mode for the terminal
 		static void	setTerminalSize(size_t rows, size_t cols);											//	Set the terminal size (a little big buggy)
+
+		static void	* main_display(void * args);
+
+	private:
+
+		static const int 							TERMINAL_INTERVAL;									//	Interval in miliseconds between updates for the terminal display
 
 };

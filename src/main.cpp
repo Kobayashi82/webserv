@@ -6,11 +6,12 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 14:30:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/20 22:23:41 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/21 15:07:29 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Webserv.hpp"
+#include "Mutex.hpp"
 
 //  *       service nginx reload
 
@@ -21,6 +22,10 @@
 
 //	TODO	get_ip_range no añadir 0 y broadcast solo cuando range
 //	TODO	Interface tabs
+
+//	TODO	Write_to_file
+//	TODO	Read_from_file
+//	TODO	Manage multi-uploads	(add ID to event que indique nombre de archivo y si es de lectura o escritura)
 
 //	TODO	check_logs no error if size < 11 (creo)
 //	TODO	Algoritmo para detectar dia en los logs y que sea mas rapido. Para eliminar log_days
@@ -34,22 +39,22 @@
 int main(int argc, char **argv) {
     Settings::load_args(argc, argv);
 
+	Mutex::mtx_set(Mutex::MTX_INIT);
+	Mutex::thrd_set(Mutex::THRD_CREATE);
+
 	Net::epoll__create();
 	Net::socket_create_all();
 
     while (Settings::terminate == -1) {
-		if (Net::epoll_events() == -1) { Log::log_error(RD "Error de epoll_wait" NC); break; }
-		if (Display::Resized) { if (Display::drawing) Display::redraw = true; else Display::Output(); }
-		Display::Input();
+		if (Net::epoll_events() == -1) { Log::log(RD "Error de epoll_wait" NC, Log::BOTH_ERROR); Settings::terminate = 1; break; }
 	}
+	
+	Net::epoll_close(); Net::socket_close_all();
 
-	Net::epoll_close(); Net::socket_close_all(); //Net::clientsClose();
+	Display::terminate = true;
 
-	if (!Settings::check_only && !Display::RawModeDisabled && !Display::ForceRawModeDisabled) {
-		usleep(100000); std::cout.flush(); std::cout.clear(); Display::maxFails = 10; Display::failCount = 0; Display::drawing = false;
-		Log::log_access(G "WebServ 1.0 closed successfully");
-		Display::disableRawMode();
-	} else std::cout << CSHOW << std::endl;
+	Mutex::thrd_set(Mutex::THRD_JOIN);
+	Mutex::mtx_set(Mutex::MTX_DESTROY);
 
 	Settings::clear();
     return (Settings::terminate);

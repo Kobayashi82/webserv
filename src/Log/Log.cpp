@@ -6,18 +6,46 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:32:38 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/20 21:39:12 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/21 16:25:26 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Settings.hpp"
+#include "Mutex.hpp"
 #include "Log.hpp"
 
 #pragma region Variables
 
-	size_t	Log::_log_days = 30;
+	size_t						Log::_log_days = 30;
+	std::queue <Log::LogInfo>	Log::_logs;
 
 #pragma endregion
+
+
+#pragma region LogInfo
+
+	#pragma region Constructors
+
+		Log::LogInfo::LogInfo(std::string & _msg, int _type, VServer * _VServ) : msg(_msg), type(_type), VServ(_VServ) {}
+
+	#pragma endregion
+
+	#pragma region Overloads
+
+		Log::LogInfo & Log::LogInfo::operator=(const LogInfo & rhs) {
+			if (this != &rhs) { msg = rhs.msg; type = rhs.type; VServ = rhs.VServ; }
+			return (*this);
+		}
+
+		bool Log::LogInfo::operator==(const LogInfo & rhs) {
+			return (msg == rhs.msg && type == rhs.type && VServ == rhs.VServ);
+		}
+
+	#pragma endregion
+
+#pragma endregion
+
+
 
 #pragma region Constructors
 
@@ -106,6 +134,7 @@
 		#pragma region Check Logs
 
 			void Log::check_logs() {
+				return;
 				if (!Settings::global.data.empty()) {
 					long log_days; if (Utils::stol(Settings::global.get("log_days"), log_days)) log_days = _log_days;
 					std::string access = Settings::global.get("access_log");
@@ -141,7 +170,7 @@
 
 	#pragma region Log to File
 
-		static void log_to_file(const std::string & str, std::string path = "") {
+		void log_to_file(const std::string & str, std::string path = "") {
 			if (str.empty()) return;
 			if (Settings::check_only || Display::RawModeDisabled || Display::ForceRawModeDisabled) std::cout << " " << str << std::endl;
 			else {
@@ -159,32 +188,75 @@
 
 	#pragma region Log Access
 
-		void Log::log_access(std::string str, VServer * VServ) {
-			if (str.empty() || Settings::check_only) return ;
-			str = "[" + Settings::timer.current_date() + " " + Settings::timer.current_time() + "] - " + str;
-			Settings::global.log.both_add(str); Settings::global.log.access_add(str);
-			if (VServ) { VServ->log.both_add(str); VServ->log.access_add(str); }
-			if (VServ && VServ->get("access_log") != "") log_to_file(str, VServ->get("access_log"));
-			else log_to_file(str, Settings::global.get("access_log"));
-			Display::Output();
+		void Log::log_access(std::string msg, int type, VServer * VServ) {
+			if (msg.empty() || Settings::check_only) return ;
+			if (!Settings::check_only && !Display::RawModeDisabled && !Display::ForceRawModeDisabled)
+				msg = "[" + Settings::timer.current_date() + " " + Settings::timer.current_time() + "] - " + msg;
+			if (type == MEM_ACCESS || type == BOTH_ACCESS) {
+				Settings::global.log.both_add(msg); Settings::global.log.access_add(msg);
+				if (VServ) { VServ->log.both_add(msg); VServ->log.access_add(msg); }
+			}
+			if (type == LOCAL_ACCESS || type == BOTH_ACCESS) {
+				if (VServ && VServ->get("access_log") != "") log_to_file(msg, VServ->get("access_log"));
+				else log_to_file(msg, Settings::global.get("access_log"));
+			}
+			//Display::Output();
 		}
 
 	#pragma endregion
 
 	#pragma region Log Error
 
-		void Log::log_error(std::string str, VServer * VServ) {
-			if (str.empty()) return ;
-			if (!Settings::check_only && !Display::RawModeDisabled && !Display::ForceRawModeDisabled) str = "[" + Settings::timer.current_date() + " " + Settings::timer.current_time() + "] - " + str;
-			else str = "\t" + str + NC;
-			Settings::global.log.both_add(str); Settings::global.log.error_add(str);
-			if (VServ) { VServ->log.both_add(str); VServ->log.error_add(str); }
-			if (VServ && VServ->get("error_log") != "") log_to_file(str, VServ->get("error_log"));
-			else log_to_file(str, Settings::global.get("error_log"));
-			Display::Output();
+		void Log::log_error(std::string msg, int type, VServer * VServ) {
+			if (msg.empty()) return ;
+			if (!Settings::check_only && !Display::RawModeDisabled && !Display::ForceRawModeDisabled)
+				msg = "[" + Settings::timer.current_date() + " " + Settings::timer.current_time() + "] - " + msg;
+			else msg = "\t" + msg + NC;
+
+			if (type == MEM_ERROR || type == BOTH_ERROR) {
+				Settings::global.log.both_add(msg); Settings::global.log.error_add(msg);
+				if (VServ) { VServ->log.both_add(msg); VServ->log.error_add(msg); }
+			}
+			if (type == LOCAL_ERROR || type == BOTH_ERROR) {
+				if (VServ && VServ->get("error_log") != "") log_to_file(msg, VServ->get("error_log"));
+				else log_to_file(msg, Settings::global.get("error_log"));
+			}
+			//Display::Output();
 		}
 
 	#pragma endregion
 
 #pragma endregion
  
+ void	Log::log(std::string msg, int type, VServer * VServ) {
+	if (VServ == &(Settings::global)) VServ = NULL;
+	Mutex::mtx_set(Mutex::MTX_LOCK);
+	_logs.push(LogInfo(msg, type, VServ));
+	Mutex::mtx_set(Mutex::MTX_UNLOCK);
+ }
+ 
+void Log::process_logs() {
+	int i = 0;
+	//std::queue <Log::LogInfo> logs;
+	
+	// Mutex::mtx_set(Mutex::MTX_LOCK);
+	// std::swap(logs, _logs);
+	// Mutex::mtx_set(Mutex::MTX_UNLOCK);
+
+
+	while (i++ < 20) {
+		Mutex::mtx_set(Mutex::MTX_LOCK);
+		if (_logs.empty()) { Mutex::mtx_set(Mutex::MTX_UNLOCK); return; }
+	    Log::LogInfo log = _logs.front(); _logs.pop();
+		Mutex::mtx_set(Mutex::MTX_UNLOCK);
+		switch (log.type) {
+			case MEM_ACCESS: log_access(log.msg, log.type, log.VServ); break;
+			case MEM_ERROR: log_error(log.msg, log.type, log.VServ); break;
+			case LOCAL_ACCESS: log_access(log.msg, log.type, log.VServ); break;
+			case LOCAL_ERROR: log_error(log.msg, log.type, log.VServ); break;
+			case BOTH_ACCESS: log_access(log.msg, log.type, log.VServ); break;
+			case BOTH_ERROR: log_error(log.msg, log.type, log.VServ); break;
+		}
+    }
+	Display::Output();
+}

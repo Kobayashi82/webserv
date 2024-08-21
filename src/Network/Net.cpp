@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 21:55:43 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/20 20:23:29 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/21 15:42:46 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,8 +27,7 @@
 	const int						Net::MAX_EVENTS = 10;												//	Maximum number of events that can be handled per iteration by epoll
 	const int						Net::EPOLL_BUFFER_SIZE = 4096;										//	Size of the buffer for read and write operations
 	const int						Net::TIMEOUT_INTERVAL = 1;											//	Interval in seconds between timeout checks for inactive clients
-	const int						Net::TERMINAL_INTERVAL = 10;										//	Interval in seconds between updates for the terminal display
-
+	
 	const int						Net::KEEP_ALIVE_TIMEOUT = 30;										//	Timeout in seconds for keep-alive (if a client is inactive for this amount of time, the connection will be closed)
 	const int						Net::KEEP_ALIVE_REQUEST = 500;										//	Maximum request for keep-alive (if a client exceeds this number of requests, the connection will be closed)
 
@@ -94,7 +93,7 @@
 						current->remove();
 					}
 					Net::sockets.erase(s_it);
-					if (close(fd) != -1) Log::log_access(msg, tmp_VServ);
+					if (close(fd) != -1) Log::log(msg, Log::BOTH_ACCESS, tmp_VServ);
 					break;
 				}
 				++s_it;
@@ -137,13 +136,13 @@
 
 					int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
 					if (serverSocket == -1) {
-						Log::log_error("Socket " + addr_it->first + ":" + Utils::ltos(addr_it->second) + " cannot be created", VServ);
+						Log::log("Socket " + addr_it->first + ":" + Utils::ltos(addr_it->second) + " cannot be created", Log::BOTH_ERROR, VServ);
 						continue;
 					}
 
 					int options = 1;
 					if (setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &options, sizeof(options)) == -1) {
-						Log::log_error("Socket " + addr_it->first + ":" + Utils::ltos(addr_it->second) + " cannot be created", VServ);
+						Log::log("Socket " + addr_it->first + ":" + Utils::ltos(addr_it->second) + " cannot be created", Log::BOTH_ERROR, VServ);
 						close(serverSocket); continue;
 					}
 
@@ -153,12 +152,12 @@
 					inet_pton(AF_INET, addr_it->first.c_str(), &address.sin_addr);
 
 					if (bind(serverSocket, (sockaddr *)&address, sizeof(address)) == -1) {
-						//Log::log_error(Utils::ltos(errno) + "Error vinculando el socket para " + addr_it->first + ":" + Utils::ltos(addr_it->second));
+						//Log::log(Utils::ltos(errno) + "Error vinculando el socket para " + addr_it->first + ":" + Utils::ltos(addr_it->second));
 						close(serverSocket); continue;
 					}
 
 					if (listen(serverSocket, SOMAXCONN) == -1) {
-						Log::log_error("Socket " + addr_it->first + ":" + Utils::ltos(addr_it->second) + " cannot be created", VServ);
+						Log::log("Socket " + addr_it->first + ":" + Utils::ltos(addr_it->second) + " cannot be created", Log::BOTH_ERROR, VServ);
 						close(serverSocket); continue;
 					}
 
@@ -168,12 +167,12 @@
 					socketInfo.event.socket = &socketInfo;
 
 					if (epoll_add(&(socketInfo.event)) == -1) {
-						Log::log_error("Socket " + addr_it->first + ":" + Utils::ltos(addr_it->second) + " cannot be created", VServ);
+						Log::log("Socket " + addr_it->first + ":" + Utils::ltos(addr_it->second) + " cannot be created", Log::BOTH_ERROR, VServ);
 						close(serverSocket); sockets.pop_back(); continue;
 					}
 
 					if (!VServ->status) VServ->status = true;
-					Log::log_access("Socket " + addr_it->first + ":" + Utils::ltos(addr_it->second) + " waiting for connections", VServ);
+					Log::log("Socket " + addr_it->first + ":" + Utils::ltos(addr_it->second) + " waiting for connections", Log::BOTH_ACCESS, VServ);
 					nothing_created = false;
 				}
 
@@ -220,7 +219,7 @@
 					} else ++s_it;
 				}
 				VServ->status = false;
-				Display::Output();
+				//Display::Output();
 			}
 
 		#pragma endregion
@@ -245,7 +244,7 @@
 
 			if (epoll_add(&(cli.event)) == -1) { close(fd); clients.pop_back(); event->socket->clients.pop_back(); return; }
 
-			Log::log_access("Client " + IP + ":" + Utils::ltos(port) + " connected");
+			Log::log("Client " + IP + ":" + Utils::ltos(port) + " connected", Log::BOTH_ACCESS, cli.socket->VServ);
 		}
 
 	#pragma endregion
@@ -260,7 +259,7 @@
 				if (epoll_fd != -1) epoll_close();
 
 				epoll_fd = epoll_create(1024);
-				if (epoll_fd == -1) { Log::log_error(RD "Cannot create " Y "EPOLL" NC); return (1); }
+				if (epoll_fd == -1) { Log::log(RD "Cannot create " Y "EPOLL" NC, Log::BOTH_ERROR); return (1); }
 				if (!create_timeout()) epoll_add(&event_timeout);
 
 				return (0);
@@ -319,7 +318,7 @@
 
 		int Net::epoll_events() {
 			struct epoll_event events[MAX_EVENTS];
-			int eventCount = epoll_wait(epoll_fd, events, MAX_EVENTS, TERMINAL_INTERVAL);
+			int eventCount = epoll_wait(epoll_fd, events, MAX_EVENTS, -1);
 			if (eventCount == -1) { return (1); }
 
 			for (int i = 0; i < eventCount; ++i) {
@@ -330,7 +329,7 @@
 				if (events[i].events & EPOLLIN) {
 					switch (event->type) {
 						case SOCKET: 	{ socket_accept(event); break; }
-						case CLIENT: 	{ read_request(event); break; }
+						case CLIENT: 	{ if (read_request(event)) continue; else break; }
 						case DATA: 		{ break; }
 						case CGI: 		{ break; }
 						case TIMEOUT: 	{ check_timeout(); break; }
@@ -395,13 +394,13 @@
 #pragma endregion
 
 
-void Net::read_request(EventInfo * event) {
+int Net::read_request(EventInfo * event) {
     char buffer[EPOLL_BUFFER_SIZE];				memset(buffer, 0, sizeof(buffer));
 	char peek_buffer[EPOLL_BUFFER_SIZE + 1];	memset(peek_buffer, 0, sizeof(peek_buffer));
 
 	ssize_t bytes_peek = recv(event->fd, peek_buffer, EPOLL_BUFFER_SIZE + 1, MSG_PEEK);
 
-    if (bytes_peek == 0) { event->client->remove(); return; }
+    if (bytes_peek <= 0) { event->client->remove(); return (1); }
 
     event->client->update_last_activity();
 
@@ -412,7 +411,8 @@ void Net::read_request(EventInfo * event) {
 
 		read_bytes+= bytes_read;
 		if (bytes_peek <= EPOLL_BUFFER_SIZE) process_request(event);
-	} else if (bytes_read <= 0) event->client->remove();
+	} else if (bytes_read <= 0) { event->client->remove(); return (1); }
+	return (0);
 }
 
 void Net::write_response(EventInfo *event) {
@@ -444,7 +444,7 @@ void Net::process_request(EventInfo * event) {
 	while (std::getline(request_stream, line))
 	{
 		Utils::trim(line);
-		Log::log_access(line);
+		Log::log(line, Log::BOTH_ACCESS);
 	}
 	event->client->read_buffer.clear();
 	process_response(event);

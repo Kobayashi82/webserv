@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 21:49:50 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/20 19:18:52 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/21 13:49:35 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -115,7 +115,6 @@ class Net {
 		static const int 							MAX_EVENTS;											//	Maximum number of events that can be handled per iteration by epoll
 		static const int							EPOLL_BUFFER_SIZE;									//	Size of the buffer for read and write operations
 		static const int 							TIMEOUT_INTERVAL;									//	Interval in seconds between timeout checks for inactive clients
-		static const int 							TERMINAL_INTERVAL;									//	Interval in seconds between updates for the terminal display
 
 		static const int							KEEP_ALIVE_TIMEOUT;									//	Timeout in seconds for keep-alive (if a client is inactive for this amount of time, the connection will be closed)
 		static const int							KEEP_ALIVE_REQUEST;									//	Maximum request for keep-alive (if a client exceeds this number of requests, the connection will be closed)
@@ -128,7 +127,7 @@ class Net {
 		static int	create_timeout();																	//	Creates a file descriptor for the client timeout checker
 		static void check_timeout();																	//	Checks for clients that have timed out
 
-		static void read_request(EventInfo * event);
+		static int read_request(EventInfo * event);
 		static void write_response(EventInfo * event);
 		static void	process_request(EventInfo * event);
 		static void	process_response(EventInfo * event);

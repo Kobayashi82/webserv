@@ -6,7 +6,7 @@
 #    By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/02/20 17:51:39 by vzurera-          #+#    #+#              #
-#    Updated: 2024/08/19 15:36:13 by vzurera-         ###   ########.fr        #
+#    Updated: 2024/08/21 11:02:16 by vzurera-         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -49,7 +49,7 @@ FLAGS				= -Wall -Wextra -Werror -std=c++98 -g # -fsanitize=thread
 # ───────────────── #
 
 SRC_DIR				= ./src/
-INC_DIR				= -I./inc -I./inc/Log -I./inc/Settings -I./inc/Display -I./inc/Utils  -I./inc/Network
+INC_DIR				= -I./inc -I./inc/Thread -I./inc/Log -I./inc/Settings -I./inc/Display -I./inc/Utils  -I./inc/Network
 OBJ_DIR				= ./build/obj/
 
 # ────────── #
@@ -57,12 +57,13 @@ OBJ_DIR				= ./build/obj/
 # ────────── #
 
 NAME	=	webserv
-SRCS	=	Log/Timer.cpp Log/Log.cpp																					\
+SRCS	=	Thread/Mutex.cpp																							\
+			Log/Timer.cpp Log/Log.cpp																					\
 			Settings/Settings.cpp Settings/VServer.cpp Settings/Location.cpp Settings/Method.cpp Settings/Codes.cpp		\
 			Settings/Parser.cpp																							\
 			Display/Display.cpp Display/Monitor.cpp																		\
 			Utils/String.cpp Utils/Network.cpp Utils/Files.cpp															\
-			Network/Net.cpp Network/Client.cpp																		\
+			Network/Net.cpp Network/Client.cpp																			\
 			main.cpp
 
 # ────────────────────────────────────────────────────────── #

@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/14 14:37:32 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/20 21:53:26 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/21 15:14:59 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,9 @@
 	bool					Display::ForceRawModeDisabled = false;										//	Force terminal in normal mode (not raw mode)
 	bool					Display::Resized = false;													//	True if the terminal has been resized
 	bool					Display::redraw = false;													//	Is in the middle of an Output()
+	bool					Display::terminate = false;													//	Flag the thread to finish
+
+	const int				Display::TERMINAL_INTERVAL = 10;											//	Interval in miliseconds between updates for the terminal display
 
 	static Monitor			monitor;																	//	Class to obtain MEM and CPU ussage
 	static struct termios	orig_termios;																//	Structure for terminal information
@@ -31,7 +34,6 @@
 	static int				total_cols = 0;																//	Number of columns in the terminal
 	static int				total_rows = 0;																//	Number of rows in the terminal
 	static int				log_rows = 0;																//	Number of rows available for logs or settings
-
 
 #pragma endregion
 
@@ -95,7 +97,7 @@
     static void resumeHandler(int signum) {
         (void) signum;
         Display::enableRawMode();
-        Display::Output();
+        //Display::Output();
 		if (Settings::check_only || Display::RawModeDisabled || Display::ForceRawModeDisabled) Display::Logo();
     }
 
@@ -253,10 +255,10 @@
 			if ((c == 'w' || c == 'W') && Settings::vserver.size() > 0) {																				//	(S)tart / (S)top
 				Settings::global.status = !Settings::global.status;
 				if (Settings::global.status) {
-					Log::log_access("WebServ 1.0 started");
+					Log::log_access("WebServ 1.0 started", Log::BOTH_ACCESS);
 					Net::socket_create_all();
 				} else {
-					Log::log_access("WebServ 1.0 stoped");
+					Log::log_access("WebServ 1.0 stoped", Log::BOTH_ACCESS);
 					Net::socket_close_all();
 				}
 			} else if ((c == 'v' || c == 'V') && Settings::vserver.size() > 0
@@ -448,7 +450,6 @@
 		#pragma region Output
 
 			void Display::Output() {
-				return;
 				if (Settings::check_only || RawModeDisabled || ForceRawModeDisabled) return;
 				if (drawing) return; else drawing = true;																						//	┌───┐ ◄ ►
 				winsize w; ioctl(0, TIOCGWINSZ, &w); int cols = w.ws_col - 4, row = 0;															//	├─┬─┤  ▲
@@ -559,3 +560,18 @@
 	#pragma endregion
 
 #pragma endregion
+
+
+void * Display::main_display(void * args) { (void) args;
+    while (terminate == false) {
+		if (Resized) { if (drawing) redraw = true; else Output(); }
+		Input(); Log::process_logs(); usleep(TERMINAL_INTERVAL * 1000);
+	}
+
+	if (!Settings::check_only && !RawModeDisabled && !ForceRawModeDisabled) {
+		usleep(100000); std::cout.flush(); std::cout.clear(); maxFails = 10; failCount = 0; drawing = false;
+		Log::log_access(G "WebServ 1.0 closed successfully", Log::BOTH_ACCESS);
+		disableRawMode();
+	} else std::cout << CSHOW << std::endl;
+	return (NULL);
+}

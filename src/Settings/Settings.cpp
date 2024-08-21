@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:27:58 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/19 20:28:51 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/21 14:50:26 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -104,7 +104,7 @@
 						<< "}" << std::endl;
 				outfile.close();
 				Utils::createPath(path + "www/html");
-				Log::log_error("Default configuration file created succesfully");
+				Log::log("Default configuration file created succesfully" NC, Log::BOTH_ERROR);
 			}
 		}
 
@@ -117,25 +117,25 @@
 			std::string	line; std::ifstream infile(File.c_str());
 
 			if (infile.is_open()) { parser(infile); infile.close();
-				if (bracket_lvl != 0) Log::log_error(RD "Brackets error");
+				if (bracket_lvl != 0) Log::log(RD "Brackets error" NC, Log::BOTH_ERROR);
 				loaded = true;
 				Log::check_logs();
 				if (BadConfig) { vserver_clear(); return; }
 				if (isDefault)
-					Log::log_access(G "Default configuration file loaded" NC);
+					Log::log(G "Default configuration file loaded" NC, Log::BOTH_ACCESS);
 				else
-					Log::log_access(G "Configuration file '" Y + File + G "' loaded" NC);
+					Log::log(G "Configuration file '" Y + File + G "' loaded" NC, Log::BOTH_ACCESS);
 			} else {
 				BadConfig = true;
 				if (isDefault) {
-					Log::log_error(RD "Could not create the " Y "default configuration" RD " file" NC);
+					Log::log(RD "Could not create the " Y "default configuration" RD " file" NC, Log::BOTH_ERROR);
 				} else {
 					if (Utils::file_exists(File) == 1)
-						Log::log_error(RD "The configuration file '" Y + File + RD "' does not exist" NC);
+						Log::log(RD "The configuration file '" Y + File + RD "' does not exist" NC, Log::BOTH_ERROR);
 					else if (Utils::file_exists(File) == 2)
-						Log::log_error(RD "Cannot read the file '" Y + File + RD "'" NC);
+						Log::log(RD "Cannot read the file '" Y + File + RD "'" NC, Log::BOTH_ERROR);
 					else
-						Log::log_error(RD "Could not load the configuration file '" Y + File + RD "'" NC);
+						Log::log(RD "Could not load the configuration file '" Y + File + RD "'" NC, Log::BOTH_ERROR);
 				}
 			}
 		}
@@ -150,12 +150,12 @@
 
 			if (FileStatus) {
 				if (FileStatus == 1)
-					Log::log_error(RD "Default configuration file does not exist, generating a default config file" NC);
+					Log::log(RD "Default configuration file does not exist, generating a default config file" NC, Log::BOTH_ERROR);
 				else if (FileStatus == 2) {
-					Log::log_error(RD "Cannot read the default configuration file, generating a default config file" NC);
+					Log::log(RD "Cannot read the default configuration file, generating a default config file" NC, Log::BOTH_ERROR);
 					remove(File.c_str());
 				} else {
-					Log::log_error(RD "Could not load the default configuration file, generating a default config file" NC);
+					Log::log(RD "Could not load the default configuration file, generating a default config file" NC, Log::BOTH_ERROR);
 					remove(File.c_str());
 				}
 				generate_config(File, program_path);
@@ -180,7 +180,7 @@
 				check_only = true;
 				std::cout << std::endl;
 				load();
-				if (vserver.size() == 0 && loaded && global.log.error.size() == 0) Log::log_error("There are no " Y "virtual servers" RD " in the configuration file");
+				if (vserver.size() == 0 && loaded && global.log.error.size() == 0) Log::log("There are no " Y "virtual servers" RD " in the configuration file" NC, Log::BOTH_ERROR);
 				if (global.log.error.size() == 0)			std::cout << C "\tThe configuration file is correct" NC << std::endl;
 				else if (global.log.error.size() == 1)	std::cout << std::endl << C "\t\tThere is "  Y << global.log.error.size() << C " error in total" NC << std::endl;
 				else 								std::cout << std::endl << C "\t\tThere are " Y << global.log.error.size() << C " errors in total" NC << std::endl;
@@ -195,7 +195,7 @@
 				else if (strcmp(argv[1], "-t")) load(argv[1]);
 				else if (strcmp(argv[2], "-t")) load(argv[2]);
 
-				if (vserver.size() == 0 && loaded && global.log.error.size() == 0) Log::log_error("There are no " Y "virtual servers" RD " in the configuration file");
+				if (vserver.size() == 0 && loaded && global.log.error.size() == 0) Log::log("There are no " Y "virtual servers" RD " in the configuration file" NC, Log::BOTH_ERROR);
 
 				if (global.log.error.size() == 0)			std::cout << C "\tThe configuration file is correct" NC << std::endl;
 				else if (global.log.error.size() == 1)	std::cout << std::endl << C "\t\tThere is "  Y << global.log.error.size() << C " error in total" NC << std::endl;
@@ -209,10 +209,10 @@
 				Display::enableRawMode();
 				if (Display::RawModeDisabled || Display::ForceRawModeDisabled) std::cout << std::endl;
 				if (argc == 1) load(); else load(argv[1]);
-				if (!BadConfig && vserver.size() == 0 && loaded)	Log::log_error(RD "There are no virtual servers in the configuration file");
+				if (!BadConfig && vserver.size() == 0 && loaded)	Log::log(RD "There are no virtual servers in the configuration file"NC, Log::BOTH_ERROR);
 				else if (vserver.size() == 0) {
 					if (Display::RawModeDisabled || Display::ForceRawModeDisabled) std::cout << std::endl;
-					Log::log_error(RD "Could not load configuration file");
+					Log::log(RD "Could not load configuration file" NC, Log::BOTH_ERROR);
 				} else Settings::global.status = true;
 				if ((Display::RawModeDisabled || Display::ForceRawModeDisabled) && global.log.error.size() > 0) terminate = 1;
 			}
