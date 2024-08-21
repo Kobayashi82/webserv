@@ -6,18 +6,20 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:32:38 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/21 16:25:26 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/21 22:22:13 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Settings.hpp"
+#include "Display.hpp"
 #include "Mutex.hpp"
 #include "Log.hpp"
 
 #pragma region Variables
 
-	size_t						Log::_log_days = 30;
-	std::queue <Log::LogInfo>	Log::_logs;
+	size_t									Log::_log_days = 30;
+	std::queue <Log::LogInfo>				Log::_logs;
+	std::map <std::string, std::ofstream *>	Log::_fileStreams;
 
 #pragma endregion
 
@@ -189,17 +191,19 @@
 	#pragma region Log Access
 
 		void Log::log_access(std::string msg, int type, VServer * VServ) {
-			if (msg.empty() || Settings::check_only) return ;
+			if (msg.empty()) return ;
 			if (!Settings::check_only && !Display::RawModeDisabled && !Display::ForceRawModeDisabled)
 				msg = "[" + Settings::timer.current_date() + " " + Settings::timer.current_time() + "] - " + msg;
+			else msg = "\t" + msg + NC;
 			if (type == MEM_ACCESS || type == BOTH_ACCESS) {
 				Settings::global.log.both_add(msg); Settings::global.log.access_add(msg);
 				if (VServ) { VServ->log.both_add(msg); VServ->log.access_add(msg); }
 			}
-			if (type == LOCAL_ACCESS || type == BOTH_ACCESS) {
-				if (VServ && VServ->get("access_log") != "") log_to_file(msg, VServ->get("access_log"));
-				else log_to_file(msg, Settings::global.get("access_log"));
-			}
+
+			// if (type == LOCAL_ACCESS || type == BOTH_ACCESS) {
+			// 	if (VServ && VServ->get("access_log") != "") log_to_file(msg, VServ->get("access_log"));
+			// 	else log_to_file(msg, Settings::global.get("access_log"));
+			// }
 			//Display::Output();
 		}
 
@@ -212,22 +216,64 @@
 			if (!Settings::check_only && !Display::RawModeDisabled && !Display::ForceRawModeDisabled)
 				msg = "[" + Settings::timer.current_date() + " " + Settings::timer.current_time() + "] - " + msg;
 			else msg = "\t" + msg + NC;
-
 			if (type == MEM_ERROR || type == BOTH_ERROR) {
 				Settings::global.log.both_add(msg); Settings::global.log.error_add(msg);
 				if (VServ) { VServ->log.both_add(msg); VServ->log.error_add(msg); }
 			}
-			if (type == LOCAL_ERROR || type == BOTH_ERROR) {
-				if (VServ && VServ->get("error_log") != "") log_to_file(msg, VServ->get("error_log"));
-				else log_to_file(msg, Settings::global.get("error_log"));
-			}
+			// if (type == LOCAL_ERROR || type == BOTH_ERROR) {
+			// 	if (VServ && VServ->get("error_log") != "") log_to_file(msg, VServ->get("error_log"));
+			// 	else log_to_file(msg, Settings::global.get("error_log"));
+			// }
 			//Display::Output();
 		}
 
 	#pragma endregion
 
 #pragma endregion
- 
+
+void Log::close_fileStreams() {
+    for (std::map <std::string, std::ofstream *>::iterator it = _fileStreams.begin(); it != _fileStreams.end(); ++it) {
+        if (it->second) {
+			it->second->close();
+			delete it->second;
+		}
+	}
+    _fileStreams.clear();
+}
+
+std::ofstream * Log::get_fileStream(const std::string & path) {
+    std::map <std::string, std::ofstream *>::iterator it = _fileStreams.find(path);
+    if (it == _fileStreams.end()) {
+		std::ofstream * outfile = new std::ofstream(path.c_str(), std::ios_base::app);
+        if (outfile->is_open()) {
+            _fileStreams[path] = outfile;
+			return (outfile);
+		} else {
+			delete outfile;
+			return (NULL);
+		}
+    }
+    return (it->second);
+}
+
+	#pragma region Log to File
+
+		void Log::log_to_file2(const std::string & msg, std::string path) {
+			if (msg.empty() || path.empty()) return;
+			if (Settings::check_only || Display::RawModeDisabled || Display::ForceRawModeDisabled) std::cout << " " << msg << std::endl;
+			else {
+				std::ofstream * ofs = get_fileStream(path);
+				if (ofs) *ofs << msg; ofs->flush();
+
+				// if (path != "" && path[0] != '/') path = Settings::program_path + path;
+				// std::ofstream outfile;
+				// outfile.open(path.c_str(), std::ios_base::app);
+				// if (outfile.is_open()) { outfile << msg; outfile.close(); }
+			}
+		}
+
+	#pragma endregion
+
  void	Log::log(std::string msg, int type, VServer * VServ) {
 	if (VServ == &(Settings::global)) VServ = NULL;
 	Mutex::mtx_set(Mutex::MTX_LOCK);
@@ -236,19 +282,21 @@
  }
  
 void Log::process_logs() {
-	int i = 0;
-	//std::queue <Log::LogInfo> logs;
-	
-	// Mutex::mtx_set(Mutex::MTX_LOCK);
-	// std::swap(logs, _logs);
-	// Mutex::mtx_set(Mutex::MTX_UNLOCK);
+	std::queue <Log::LogInfo> logs;
 
+	Mutex::mtx_set(Mutex::MTX_LOCK);
+	if (_logs.empty()) { Mutex::mtx_set(Mutex::MTX_UNLOCK); return; }
+	std::swap(logs, _logs);
+	Mutex::mtx_set(Mutex::MTX_UNLOCK);
 
-	while (i++ < 20) {
-		Mutex::mtx_set(Mutex::MTX_LOCK);
-		if (_logs.empty()) { Mutex::mtx_set(Mutex::MTX_UNLOCK); return; }
-	    Log::LogInfo log = _logs.front(); _logs.pop();
-		Mutex::mtx_set(Mutex::MTX_UNLOCK);
+	std::map<std::string, std::string> logMap;
+
+	while (!logs.empty()) {
+		Log::LogInfo log = logs.front(); logs.pop();
+		std::string path = Settings::global.get("access_log");
+		if (path != "" && path[0] != '/') path = Settings::program_path + path;
+		if (!log.msg.empty() && !path.empty())
+			logMap[path] += "[" + Settings::timer.current_date() + " " + Settings::timer.current_time() + "] - " + Utils::str_nocolor(log.msg) + "\n";
 		switch (log.type) {
 			case MEM_ACCESS: log_access(log.msg, log.type, log.VServ); break;
 			case MEM_ERROR: log_error(log.msg, log.type, log.VServ); break;
@@ -258,5 +306,41 @@ void Log::process_logs() {
 			case BOTH_ERROR: log_error(log.msg, log.type, log.VServ); break;
 		}
     }
+    for (std::map<std::string, std::string>::iterator it = logMap.begin(); it != logMap.end(); ++it)
+        log_to_file2(it->second, it->first);
+    logMap.clear();
 	Display::Output();
 }
+
+#pragma endregion
+ 
+//  void	Log::log(std::string msg, std::string path) {
+// 	path = Settings::global.get("access_log");
+// 	Mutex::mtx_set(Mutex::MTX_LOCK);
+// 	_logs.push(LogInfo(msg, path));
+// 	Mutex::mtx_set(Mutex::MTX_UNLOCK);
+//  }
+ 
+// void Log::process_logs() {
+// 	std::queue <Log::LogInfo> logs;
+
+// 	Mutex::mtx_set(Mutex::MTX_LOCK);
+// 	if (_logs.empty()) { Mutex::mtx_set(Mutex::MTX_UNLOCK); return; }
+// 	std::swap(logs, _logs);
+// 	Mutex::mtx_set(Mutex::MTX_UNLOCK);
+
+// 	std::map<std::string, std::string> logMap;
+
+// 	while (!logs.empty()) {
+// 	   	Log::LogInfo log = logs.front(); logs.pop();
+// 		if (!log.msg.empty() && !log.path.empty()) {
+// 			logMap[log.path] += "[" + Settings::timer.current_date() + " " + Settings::timer.current_time() + "] - " + log.msg + "\n";
+// 			//log.msg = "[" + Settings::timer.current_date() + " " + Settings::timer.current_time() + "] - " + log.msg;
+// 			//log_to_file(msg, log.path);
+// 		}
+// 	}
+//     for (std::map<std::string, std::string>::iterator it = logMap.begin(); it != logMap.end(); ++it)
+//         log_to_file(it->second, it->first);
+//     logMap.clear();
+// 	//std::cout << "FIN\n";
+// }

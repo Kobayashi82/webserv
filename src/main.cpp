@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 14:30:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/21 15:07:29 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/21 22:34:34 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@
 //	*		nc 127.0.0.1 8081	-	telnet 127.0.0.1 8081
 //	*		curl -v http://localhost:8081/
 
-//	*		siege -c 255 -t 10S 127.0.0.1:8081
+//	*		siege -c 255 -t 10S 127.0.0.1:8081			135.000 transactions is a good measure
 
 //	TODO	get_ip_range no añadir 0 y broadcast solo cuando range
 //	TODO	Interface tabs
@@ -34,6 +34,8 @@
 
 //	TODO	keepalive_timeout 75;				>= 0 && <= 120 		0 = disabled			defaults to 30
 //	TODO	keepalive_requests 1000;			> 0 && <= 5000								defaults to 500
+
+//	TODO	total conections and bandwidth with a fixed size
 
 //  Entry point
 int main(int argc, char **argv) {
@@ -56,7 +58,7 @@ int main(int argc, char **argv) {
 	Mutex::thrd_set(Mutex::THRD_JOIN);
 	Mutex::mtx_set(Mutex::MTX_DESTROY);
 
-	Settings::clear();
+	Settings::clear(); Log::close_fileStreams();
     return (Settings::terminate);
 }
 

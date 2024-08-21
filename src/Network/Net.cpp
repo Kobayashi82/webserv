@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 21:55:43 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/21 15:42:46 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/21 22:37:22 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,8 +82,8 @@
 	#pragma region Remove
 
 		void Net::SocketInfo::remove() {
-			std::string msg = "Socket " + IP + ":" + Utils::ltos(port) + " closed";
-			Net::epoll_del(&event); VServer * tmp_VServ = VServ;
+			//std::string msg = "Socket " + IP + ":" + Utils::ltos(port) + " closed";
+			Net::epoll_del(&event); close(fd); //VServer * tmp_VServ = VServ;
 			std::list <SocketInfo>::iterator s_it = Net::sockets.begin();
 			while (s_it != Net::sockets.end()) {
 				if (*s_it == *this) {
@@ -93,7 +93,7 @@
 						current->remove();
 					}
 					Net::sockets.erase(s_it);
-					if (close(fd) != -1) Log::log(msg, Log::BOTH_ACCESS, tmp_VServ);
+					//if (close(fd) != -1) Log::log(msg, Log::BOTH_ACCESS, tmp_VServ);
 					break;
 				}
 				++s_it;
@@ -172,7 +172,7 @@
 					}
 
 					if (!VServ->status) VServ->status = true;
-					Log::log("Socket " + addr_it->first + ":" + Utils::ltos(addr_it->second) + " waiting for connections", Log::BOTH_ACCESS, VServ);
+					//Log::log("Socket " + addr_it->first + ":" + Utils::ltos(addr_it->second) + " waiting for connections", Log::BOTH_ACCESS, VServ);
 					nothing_created = false;
 				}
 
@@ -244,7 +244,7 @@
 
 			if (epoll_add(&(cli.event)) == -1) { close(fd); clients.pop_back(); event->socket->clients.pop_back(); return; }
 
-			Log::log("Client " + IP + ":" + Utils::ltos(port) + " connected", Log::BOTH_ACCESS, cli.socket->VServ);
+			//Log::log("Client " + IP + ":" + Utils::ltos(port) + " connected", Log::BOTH_ACCESS, cli.socket->VServ);
 		}
 
 	#pragma endregion
@@ -318,7 +318,7 @@
 
 		int Net::epoll_events() {
 			struct epoll_event events[MAX_EVENTS];
-			int eventCount = epoll_wait(epoll_fd, events, MAX_EVENTS, -1);
+			int eventCount = epoll_wait(epoll_fd, events, MAX_EVENTS, 100);
 			if (eventCount == -1) { return (1); }
 
 			for (int i = 0; i < eventCount; ++i) {
@@ -441,11 +441,14 @@ void Net::process_request(EventInfo * event) {
 	std::string request(event->client->read_buffer.begin(), event->client->read_buffer.end());
 	std::istringstream request_stream(request);
 	std::string line;
-	while (std::getline(request_stream, line))
-	{
-		Utils::trim(line);
-		Log::log(line, Log::BOTH_ACCESS);
-	}
+	if (std::getline(request_stream, line))
+	Utils::trim(line);
+	Log::log(line, Log::BOTH_ACCESS);
+	// while (std::getline(request_stream, line))
+	// {
+	// 	Utils::trim(line);
+	// 	Log::log(line, Log::BOTH_ACCESS);
+	// }
 	event->client->read_buffer.clear();
 	process_response(event);
 }

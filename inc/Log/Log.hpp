@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:32:23 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/21 15:24:55 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/21 21:47:42 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,12 +15,15 @@
 #include <iostream>																						//	For strings and standard input/output like std::cin, std::cout
 #include <deque>																						//	For std::deque container
 #include <queue>																						//	For std::queue container
+#include <map>																							//	For std::map container
 
 class VServer;
 class Log {
 
 	public:
 
+		static std::ofstream *	get_fileStream(const std::string & path);
+		
 		enum e_type { MEM_ACCESS, MEM_ERROR, LOCAL_ACCESS, LOCAL_ERROR, BOTH_ACCESS, BOTH_ERROR };
 		
 		struct LogInfo {
@@ -69,12 +72,18 @@ class Log {
 		//static std::queue <LogInfo> copy_logs();														//	Copy the queue logs to process in the secundary thread
 		static void process_logs();																		//	
 
+		static void	close_fileStreams();
+
 	private:
 
-		size_t					_maxSize;																//	Maximum number of logs for each memory log
-		static size_t			_log_days;																//	Maximum number of days to keep in local logs
+		size_t											_maxSize;										//	Maximum number of logs for each memory log
+		static size_t									_log_days;										//	Maximum number of days to keep in local logs
 
-		static std::queue <LogInfo>	_logs;
+		static std::queue <LogInfo>						_logs;
+		static std::map <std::string, std::ofstream *>	_fileStreams;
+
+		
+		static void				log_to_file2(const std::string & msg, std::string path);
 
 };
 

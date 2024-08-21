@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/18 11:28:40 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/21 14:47:53 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/21 20:13:14 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,7 +44,7 @@
 	void Client::check_timeout(int interval) {
 		time_t current_time = std::time(NULL);
 		if (difftime(current_time, last_activity) > interval) {
-			Log::log("Client " + IP + ":" + Utils::ltos(port) + " connection time-out", Log::BOTH_ACCESS, socket->VServ);
+			//Log::log("Client " + IP + ":" + Utils::ltos(port) + " connection time-out", Log::BOTH_ACCESS, socket->VServ);
 			remove(true);
 		}
 	}
@@ -56,8 +56,9 @@
 #pragma region Remove
 
 	void	Client::remove(bool no_msg) {
+		(void) no_msg;
 		Net::epoll_del(&event); close(fd);
-		VServer * VServ = socket->VServ;
+		//VServer * VServ = socket->VServ;
 
 	    std::list <Client *>::iterator s_it = socket->clients.begin();
     	while (s_it != socket->clients.end()) {
@@ -68,7 +69,7 @@
 		std::list <Client>::iterator c_it = Net::clients.begin();
 		while (c_it != Net::clients.end()) {
 			if (*this == *c_it) {
-				if (!no_msg) Log::log("Client " + IP + ":" + Utils::ltos(port) + " connection closed", Log::BOTH_ACCESS, VServ);
+				//if (!no_msg) Log::log("Client " + IP + ":" + Utils::ltos(port) + " connection closed", Log::BOTH_ACCESS, VServ);
 				Net::clients.erase(c_it); break;
 			} ++c_it;
 		}
