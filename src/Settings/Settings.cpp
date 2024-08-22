@@ -6,11 +6,13 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:27:58 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/21 14:50:26 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/23 00:36:42 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Settings.hpp"
+
+//	Change log_days for log_size
 
 #pragma region Variables
 
@@ -119,7 +121,7 @@
 			if (infile.is_open()) { parser(infile); infile.close();
 				if (bracket_lvl != 0) Log::log(RD "Brackets error" NC, Log::BOTH_ERROR);
 				loaded = true;
-				Log::check_logs();
+				//Log::check_logs();
 				if (BadConfig) { vserver_clear(); return; }
 				if (isDefault)
 					Log::log(G "Default configuration file loaded" NC, Log::BOTH_ACCESS);

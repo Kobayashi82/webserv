@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 14:30:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/21 22:34:34 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/22 13:01:01 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,7 +58,7 @@ int main(int argc, char **argv) {
 	Mutex::thrd_set(Mutex::THRD_JOIN);
 	Mutex::mtx_set(Mutex::MTX_DESTROY);
 
-	Settings::clear(); Log::close_fileStreams();
+	Settings::clear();
     return (Settings::terminate);
 }
 

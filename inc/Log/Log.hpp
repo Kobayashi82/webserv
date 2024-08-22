@@ -6,47 +6,28 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:32:23 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/21 21:47:42 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/22 23:47:35 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
 #include <iostream>																						//	For strings and standard input/output like std::cin, std::cout
-#include <deque>																						//	For std::deque container
-#include <queue>																						//	For std::queue container
-#include <map>																							//	For std::map container
+#include <deque>																						//	For std::deque container.	Used to store memory logs
+#include <queue>																						//	For std::queue container.	Used as an intermediary for thread-safe communication
+#include <map>																							//	For std::map container.		Used to group logs and save them to a file in one operation
 
 class VServer;
 class Log {
 
 	public:
-
-		static std::ofstream *	get_fileStream(const std::string & path);
-		
-		enum e_type { MEM_ACCESS, MEM_ERROR, LOCAL_ACCESS, LOCAL_ERROR, BOTH_ACCESS, BOTH_ERROR };
-		
-		struct LogInfo {
-
-			//	Variables
-			std::string	msg;
-			int			type;
-			VServer *	VServ;
-
-			//	Constructors
-			LogInfo(std::string & _msg, int _type, VServer * _VServ);									//	Parameterized constructor
-
-			//	Overloads
-			LogInfo &		operator=(const LogInfo & rhs);												//	Overload for asignation
-			bool			operator==(const LogInfo & rhs);											//	Overload for comparison
-
-		};
-
+	
 		//	Variables
+		enum e_type { MEM_ACCESS, MEM_ERROR, BOTH_ACCESS, BOTH_ERROR, LOCAL_ACCESS, LOCAL_ERROR };
+		
 		std::deque <std::string>	access;																//	Logs for 'access' in a deque
 		std::deque <std::string>	error;																//	Logs for 'error' in a deque
 		std::deque <std::string>	both;																//	Logs for 'both' in a deque
-
 
 		//	Constructors
     	Log();																							//	Default constructor
@@ -54,36 +35,47 @@ class Log {
 		~Log();																							//	Destructor
 
 		//	Overloads
-		Log & operator=(const Log & rhs);																//	Overload for asignation
+		Log &	operator=(const Log & rhs);																//	Overload for asignation
+		bool	operator==(const Log & rhs) const;														//	Overload for comparison
 
 		//	Memory Log																					//	This logs are kept in memory and lost once the server closes
-		void access_add(const std::string & str);
-		void error_add(const std::string & str);
-		void both_add(const std::string & str);
+		void access_add(const std::string & msg);														//	Add a log to 'access'
+		void error_add(const std::string & msg);														//	Add a log to 'error'
+		void both_add(const std::string & msg);															//	Add a log to 'both'
 		void clear();																					//	clear all logs in 'access', 'error' and 'both'
 
 		//	Local Log																					//	This logs are saved to a file (and also added to memory logs)
 		static void	check_logs();																		//	Delete logs based on log_days config (default to 30 days)
-
-		static void	log_access(std::string msg, int type, VServer * VServ = NULL);						//	Log to access
-		static void	log_error(std::string str, int type, VServer * VServ = NULL);						//	Log to error
-
-		static void	log(std::string msg, int type, VServer * VServ = NULL);								//	Add a new message to logs queue
-		//static std::queue <LogInfo> copy_logs();														//	Copy the queue logs to process in the secundary thread
-		static void process_logs();																		//	
-
-		static void	close_fileStreams();
+		static void process_logs();																		//	Save logs to memory and/or to a file
+		static void	log(std::string msg, int type, VServer * VServ = NULL, std::string path = "");		//	Add a new message to logs queue
 
 	private:
 
-		size_t											_maxSize;										//	Maximum number of logs for each memory log
-		static size_t									_log_days;										//	Maximum number of days to keep in local logs
+		struct LogInfo {
 
-		static std::queue <LogInfo>						_logs;
-		static std::map <std::string, std::ofstream *>	_fileStreams;
+			//	Variables
+			std::string	msg;
+			int			type;
+			VServer *	VServ;
+			std::string	path;
 
-		
-		static void				log_to_file2(const std::string & msg, std::string path);
+			//	Constructors
+			LogInfo(std::string & _msg, int _type, VServer * _VServ, std::string _path);				//	Parameterized constructor
+
+			//	Overloads
+			LogInfo &		operator=(const LogInfo & rhs);												//	Overload for asignation
+			bool			operator==(const LogInfo & rhs);											//	Overload for comparison
+
+		};
+
+		static std::queue <LogInfo>	_logs;																//	Queue container with logs that need to be processed
+
+		static const size_t			MEM_MAXSIZE;														//	Maximum number of logs for each memory log
+		static const size_t			LOCAL_MAXSIZE;														//	Maximum size of the log in disk
+
+		static void	truncate_log(const std::string & path, long long maxFileSize);						//	Truncate the log file to the maximum set in the config file (default to 10 MB)
+		static void	log_to_memory(std::string msg, int type, VServer * VServ = NULL);					//	Log to memory
+		static void	log_to_file(const std::string & msg, std::string path);								//	Save logs to file
 
 };
 
@@ -99,7 +91,7 @@ class Log {
 //
 //			access:     Requests, responses, and other information that are not errors.
 //			error:      All errors, including server-specific errors.
-//			both:       Both Access and Error logs.
+//			both:       Both access and error logs.
 //
 //		In addition to these 3 main logs, each virtual server has the same 3 types of logs.
 //		This allows control over what happens in each virtual server.

@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/14 14:37:32 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/21 22:04:42 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/22 13:33:55 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -255,12 +255,13 @@
 			if ((c == 'w' || c == 'W') && Settings::vserver.size() > 0) {																				//	(S)tart / (S)top
 				Settings::global.status = !Settings::global.status;
 				if (Settings::global.status) {
-					Log::log_access("WebServ 1.0 started", Log::BOTH_ACCESS);
+					Log::log("WebServ 1.0 started", Log::BOTH_ACCESS);
 					Net::socket_create_all();
 				} else {
-					Log::log_access("WebServ 1.0 stoped", Log::BOTH_ACCESS);
+					Log::log("WebServ 1.0 stoped", Log::BOTH_ACCESS);
 					Net::socket_close_all();
 				}
+				Output();
 			} else if ((c == 'v' || c == 'V') && Settings::vserver.size() > 0
 				&& Settings::current_vserver != -1) {																									//	(V)server start
 					Settings::vserver[Settings::current_vserver].force_off = !Settings::vserver[Settings::current_vserver].force_off;
@@ -570,7 +571,7 @@ void * Display::main_display(void * args) { (void) args;
 
 	if (!Settings::check_only && !RawModeDisabled && !ForceRawModeDisabled) {
 		usleep(100000); std::cout.flush(); std::cout.clear(); maxFails = 10; failCount = 0; drawing = false;
-		Log::log_access(G "WebServ 1.0 closed successfully", Log::BOTH_ACCESS);
+		Log::log(G "WebServ 1.0 closed successfully", Log::BOTH_ACCESS); Log::process_logs();
 		disableRawMode();
 	} else std::cout << CSHOW << std::endl;
 	return (NULL);
