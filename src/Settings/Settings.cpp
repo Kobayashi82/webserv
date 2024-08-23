@@ -6,13 +6,12 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:27:58 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/23 00:36:42 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/23 12:33:10 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Settings.hpp"
-
-//	Change log_days for log_size
+#include "Display.hpp"
 
 #pragma region Variables
 

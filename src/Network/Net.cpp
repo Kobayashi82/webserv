@@ -6,10 +6,11 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 21:55:43 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/21 22:37:22 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/23 13:04:14 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include "Colors.hpp"
 #include "Net.hpp"
 #include "Client.hpp"
 
@@ -444,6 +445,7 @@ void Net::process_request(EventInfo * event) {
 	if (std::getline(request_stream, line))
 	Utils::trim(line);
 	Log::log(line, Log::BOTH_ACCESS);
+
 	// while (std::getline(request_stream, line))
 	// {
 	// 	Utils::trim(line);

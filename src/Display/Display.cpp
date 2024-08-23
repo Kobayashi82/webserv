@@ -6,14 +6,15 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/14 14:37:32 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/22 13:33:55 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/23 13:16:37 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Display.hpp"
+#include "Monitor.hpp"
 #include "Settings.hpp"
 #include "Net.hpp"
-#include "Monitor.hpp"
+#include "Thread.hpp"
 
 #pragma region Variables
 
@@ -24,9 +25,13 @@
 	bool					Display::ForceRawModeDisabled = false;										//	Force terminal in normal mode (not raw mode)
 	bool					Display::Resized = false;													//	True if the terminal has been resized
 	bool					Display::redraw = false;													//	Is in the middle of an Output()
-	bool					Display::terminate = false;													//	Flag the thread to finish
 
-	const int				Display::TERMINAL_INTERVAL = 10;											//	Interval in miliseconds between updates for the terminal display
+	pthread_t				Display::_thread;
+	pthread_mutex_t			Display::_mutex;
+	bool					Display::_terminate = false;												//	Flag the thread to finish
+	bool					Display::_update;															//	Flag for a redraw in the next iteration
+
+	const int				Display::UPDATE_INTERVAL = 10;												//	Interval in miliseconds for the thread main loop
 
 	static Monitor			monitor;																	//	Class to obtain MEM and CPU ussage
 	static struct termios	orig_termios;																//	Structure for terminal information
@@ -539,6 +544,7 @@
 				}
 				failCount = 0;
 				drawing = false;
+				Thread::set_bool(_mutex, _update, false);
 			}
 
 		#pragma endregion
@@ -560,19 +566,56 @@
 
 	#pragma endregion
 
+	#pragma region Update
+
+		void	Display::update() {
+			Thread::set_bool(_mutex, _update, true);
+		}
+
+	#pragma endregion
+
 #pragma endregion
 
+#pragma region Thread
 
-void * Display::main_display(void * args) { (void) args;
-    while (terminate == false) {
-		if (Resized) { if (drawing) redraw = true; else Output(); }
-		Input(); Log::process_logs(); usleep(TERMINAL_INTERVAL * 1000);
-	}
+	#pragma region Main
 
-	if (!Settings::check_only && !RawModeDisabled && !ForceRawModeDisabled) {
-		usleep(100000); std::cout.flush(); std::cout.clear(); maxFails = 10; failCount = 0; drawing = false;
-		Log::log(G "WebServ 1.0 closed successfully", Log::BOTH_ACCESS); Log::process_logs();
-		disableRawMode();
-	} else std::cout << CSHOW << std::endl;
-	return (NULL);
-}
+		void * Display::main(void * args) { (void) args;
+			while (_terminate == false) {
+				Input();
+				if (Resized) { if (drawing) redraw = true; else Output(); }
+				if (Thread::get_bool(_mutex, _update)) Output();
+				usleep(UPDATE_INTERVAL * 1000);
+			}
+
+			if (!Settings::check_only && !RawModeDisabled && !ForceRawModeDisabled) {
+				usleep(100000); std::cout.flush(); std::cout.clear(); maxFails = 10; failCount = 0; drawing = false;
+				Log::log(G "WebServ 1.0 closed successfully", Log::BOTH_ACCESS); Log::process_logs(); Output();
+				disableRawMode();
+			} else std::cout << CSHOW << std::endl;
+			return (NULL);
+		}
+
+	#pragma endregion
+
+	#pragma region Start
+
+		void Display::start() {
+			_terminate = false;
+			Thread::mutex_set(_mutex, Thread::MTX_INIT);
+			Thread::thread_set(_thread, Thread::THRD_CREATE, main);
+		}
+
+	#pragma endregion
+
+	#pragma region Stop
+
+		void Display::stop() {
+			_terminate = true;
+			Thread::thread_set(_thread, Thread::THRD_JOIN);
+			Thread::mutex_set(_mutex, Thread::MTX_DESTROY);
+		}
+
+	#pragma endregion
+
+#pragma endregion

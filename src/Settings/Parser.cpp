@@ -6,10 +6,11 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:30:57 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/21 14:51:15 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/23 13:30:40 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include "Colors.hpp"
 #include "Settings.hpp"
 
 #include <unistd.h>																						//	For access() to checks the accessibility of a file or directory
@@ -62,15 +63,25 @@
 
 	#pragma endregion
 
-	#pragma region Log Days
+	#pragma region Log MaxSize
 
-		int Settings::parse_log_days(std::string & str) {
-			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
+		int Settings::parse_log_maxsize(std::string & str) {
+			long multiplier = 1; std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
 
-			if (str.empty()) { 								Log::log(RD + n_line + "There is no value for " Y "log_days" NC, Log::BOTH_ERROR); return (1); }
-			long number; if (Utils::stol(str, number)) { 	Log::log(RD + n_line + "Invalid value " Y + str + RD " for " Y "log_days" NC, Log::BOTH_ERROR); return (1); }
-			if (number < 0) { 								Log::log(RD + n_line + "Invalid value " Y + str + RD " for " Y "log_days" RD " cannot be " Y "lower" RD " than " Y "0" NC, Log::BOTH_ERROR); return (1); }
-			if (number > 365) { 							Log::log(RD + n_line + "Invalid value " Y + str + RD " for " Y "log_days" RD " cannot be " Y "greater" RD " than " Y "365" NC, Log::BOTH_ERROR); return (1); }
+			if (str.empty()) { Log::log(RD + n_line + "Empty value for " Y "log_maxsize" NC, Log::BOTH_ERROR); return (1); }
+			if (str.size() > 1 && !std::isdigit(str[str.size() - 1]) && !std::isdigit(str[str.size() - 2]) && std::tolower(str[str.size() - 1]) == 'b') str.erase(str.size() - 1);
+			if (!std::isdigit(str[str.size() - 1])) {
+				switch (std::tolower(str[str.size() - 1])) {
+					case 'k': multiplier = 1024; break;
+					case 'm': multiplier = 1024 * 1024; break;
+					case 'b' : break;
+					default : { Log::log(RD + n_line + "Invalid value for " Y "log_maxsize" NC, Log::BOTH_ERROR); return (1); }
+				} str.erase(str.size() - 1);
+			}
+
+			long number; if (Utils::stol(str, number) || (str = Utils::ltos(number * multiplier)) == "") { Log::log(RD + n_line + "Invalid value for '" Y "log_maxsize" RD "'" NC, Log::BOTH_ERROR); return (1); }
+			if (number * multiplier < 1024) { Log::log(RD + n_line + "Value for " Y "log_maxsize" RD " cannot be " Y "lower" RD " than " Y "1 MB" NC, Log::BOTH_ERROR); return (1); }
+			if (number * multiplier > 10 * 1024 * 1024) { Log::log(RD + n_line + "Value for " Y "log_maxsize" RD " cannot be " Y "greater" RD " than " Y "10 MB" NC, Log::BOTH_ERROR); return (1); }
 
 			return (0);
 		}
@@ -85,7 +96,7 @@
 			if (str.empty()) { Log::log(RD + n_line + "Empty value for " Y "client_max_body_size" NC, Log::BOTH_ERROR); return (1); }
 			if (str.size() > 1 && !std::isdigit(str[str.size() - 1]) && !std::isdigit(str[str.size() - 2]) && std::tolower(str[str.size() - 1]) == 'b') str.erase(str.size() - 1);
 			if (!std::isdigit(str[str.size() - 1])) {
-				switch ( std::tolower(str[str.size() - 1])) {
+				switch (std::tolower(str[str.size() - 1])) {
 					case 'k': multiplier = 1024; break;
 					case 'm': multiplier = 1024 * 1024; break;
 					case 'g': multiplier = 1024 * 1024 * 1024; break;
@@ -95,8 +106,9 @@
 			}
 
 			long number; if (Utils::stol(str, number) || (str = Utils::ltos(number * multiplier)) == "") { Log::log(RD + n_line + "Invalid value for '" Y "client_max_body_size" RD "'" NC, Log::BOTH_ERROR); return (1); }
-			if (number < 1) { Log::log(RD + n_line + "Value for " Y "client_max_body_size" RD " cannot be " Y "lower" RD " than " Y "1 byte" NC, Log::BOTH_ERROR); return (1); }
-			if (number > 1024 * 1024 * 1024) { Log::log(RD + n_line + "Value for " Y "client_max_body_size" RD " cannot be " Y "greater" RD " than " Y "1GB" NC, Log::BOTH_ERROR); return (1); }
+			if (number * multiplier < 1) { Log::log(RD + n_line + "Value for " Y "client_max_body_size" RD " cannot be " Y "lower" RD " than " Y "1 byte" NC, Log::BOTH_ERROR); return (1); }
+			if (number * multiplier > 1024 * 1024 * 1024) { Log::log(RD + n_line + "Value for " Y "client_max_body_size" RD " cannot be " Y "greater" RD " than " Y "1 GB" NC, Log::BOTH_ERROR); return (1); }
+
 			return (0);
 		}
 
@@ -473,7 +485,7 @@
 			if (section == GLOBAL || section == SERVER || section == LOCATION) {
 				if (firstPart == "access_log") return (0);
 				if (firstPart == "error_log") return (0);
-				if (firstPart == "log_days") return (0);
+				if (firstPart == "log_maxsize") return (0);
 				if (firstPart == "root") return (0);
 				if (firstPart == "index") return (0);
 				if (firstPart == "uploads") return (0);
@@ -559,7 +571,7 @@
 
 				if ((section == GLOBAL || section == SERVER || section == LOCATION) && !firstPart.empty()) {
 					if (firstPart == "access_log" || firstPart == "error_log") parse_path(firstPart, secondPart, true, true);
-					if (!NoAdd && firstPart == "log_days") parse_log_days(secondPart);
+					if (!NoAdd && firstPart == "log_maxsize") parse_log_maxsize(secondPart);
 					if (!NoAdd && firstPart == "root" && parse_path(firstPart, secondPart, false, false))									BadConfig = true;
 					if (!NoAdd && firstPart == "uploads" && parse_path(firstPart, secondPart, false, false))								BadConfig = true;
 					if (!NoAdd && firstPart == "client_max_body_size" && parse_body_size(secondPart))										BadConfig = true;

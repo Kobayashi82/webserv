@@ -6,12 +6,11 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 14:30:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/22 13:01:01 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/23 13:31:11 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Webserv.hpp"
-#include "Mutex.hpp"
 
 //  *       service nginx reload
 
@@ -27,8 +26,6 @@
 //	TODO	Read_from_file
 //	TODO	Manage multi-uploads	(add ID to event que indique nombre de archivo y si es de lectura o escritura)
 
-//	TODO	check_logs no error if size < 11 (creo)
-//	TODO	Algoritmo para detectar dia en los logs y que sea mas rapido. Para eliminar log_days
 //	TODO	Pasar interfaz a un hilo (no queda otra)
 //	TODO	Mejor interfaz para -i (y en hilo tambien)
 
@@ -41,8 +38,7 @@
 int main(int argc, char **argv) {
     Settings::load_args(argc, argv);
 
-	Mutex::mtx_set(Mutex::MTX_INIT);
-	Mutex::thrd_set(Mutex::THRD_CREATE);
+	Log::start(); Display::start();
 
 	Net::epoll__create();
 	Net::socket_create_all();
@@ -53,10 +49,7 @@ int main(int argc, char **argv) {
 	
 	Net::epoll_close(); Net::socket_close_all();
 
-	Display::terminate = true;
-
-	Mutex::thrd_set(Mutex::THRD_JOIN);
-	Mutex::mtx_set(Mutex::MTX_DESTROY);
+	Log::stop(); Display::stop();
 
 	Settings::clear();
     return (Settings::terminate);

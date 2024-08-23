@@ -6,13 +6,12 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 21:49:48 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/20 16:14:44 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/23 12:36:00 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
-#include "Settings.hpp"
 #include "Net.hpp"
 
 #include <iostream>																						//	For standard input/output stream objects like std::cin, std::cout

@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:37:20 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/20 16:38:09 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/23 13:06:34 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,7 @@ class Utils {
 		static void 		trim(std::string & str);													//	Trim a string passed as reference from spaces in both sides and also trim any "# comments"
 		static void 		toLower(std::string & str);													//	Convert a string passed as reference to lower case
 		static void			toUpper(std::string & str);													//	Convert a string passed as reference to upper case
-		static long			stol(const std::string & str, long & number, bool ignore_eof = false);		//	Convert a string to a number passed as reference (return 0 if success)
+		static bool			stol(const std::string & str, long & number, bool ignore_eof = false);		//	Convert a string to a number passed as reference (return 0 if success)
 		static std::string	ltos(long number);															//	Convert a long number to string
 		static std::string	dtos(double number);														//	Convert a double number to string
 		static std::string	formatSize(size_t bytes, bool just_suffix = false);							//	Format a size to string (byte, KB, MB, GB, TB)

@@ -6,16 +6,13 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:14:05 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/19 20:27:24 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/23 12:39:17 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
-#include "Colors.hpp"
-#include "Display.hpp"
 #include "Utils.hpp"
-#include "Timer.hpp"
 #include "VServer.hpp"
 
 #include <iostream>																						//	For strings and standard input/output like std::cin, std::cout
@@ -43,7 +40,7 @@ class Settings {
 
 		//	Parser
 		static int	parse_path(const std::string & firstPart, std::string & str, bool isFile, bool check_path, bool check_write);
-		static int	parse_log_days(std::string & str);
+		static int	parse_log_maxsize(std::string & str);
 		static int	parse_body_size(std::string & str);
 		static int	parse_errors(const std::string & firstPart, const std::string & secondPart);
 		static int	parse_errors(const std::string & firstPart, const std::string & secondPart, VServer & VServ);

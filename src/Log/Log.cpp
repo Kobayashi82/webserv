@@ -6,39 +6,43 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:32:38 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/23 00:36:22 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/23 13:31:28 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Settings.hpp"
-#include "Display.hpp"
-#include "Mutex.hpp"
 #include "Log.hpp"
+#include "Display.hpp"
+#include "Settings.hpp"
+#include "Thread.hpp"
 
 #pragma region Variables
 
+	pthread_t					Log::_thread;
+	pthread_mutex_t				Log::_mutex;
+	bool						Log::_terminate = false;													//	Flag the thread to finish
 	std::queue <Log::LogInfo>	Log::_logs;
 
 	const size_t				Log::MEM_MAXSIZE = 200;														//	Maximum number of logs for each memory log
-	const size_t				Log::LOCAL_MAXSIZE = 1 * 1024 * 1024;										//	Maximum size of the log in disk (default to 10 MB)
+	long						Log::LOCAL_MAXSIZE = 1 * 1024 * 1024;										//	Maximum size of the log in disk (default to 1 MB | 0 MB = dont truncate | Max 10 MB)
+	const int					Log::UPDATE_INTERVAL = 10;													//	Interval in miliseconds for the thread main loop
 
 	#pragma region LogInfo
 
 		#pragma region Constructors
 
-			Log::LogInfo::LogInfo(std::string & _msg, int _type, VServer * _VServ, std::string _path) : msg(_msg), type(_type), VServ(_VServ), path(_path) {}
+			Log::LogInfo::LogInfo(std::string & _msg, int _type, VServer * _VServ, std::string _path, long _maxsize) : msg(_msg), type(_type), VServ(_VServ), path(_path), maxsize(_maxsize) {}
 
 		#pragma endregion
 
 		#pragma region Overloads
 
 			Log::LogInfo &	Log::LogInfo::operator=(const LogInfo & rhs) {
-				if (this != &rhs) { msg = rhs.msg; type = rhs.type; VServ = rhs.VServ; path = rhs.path; }
+				if (this != &rhs) { msg = rhs.msg; type = rhs.type; VServ = rhs.VServ; path = rhs.path; maxsize = rhs.maxsize; }
 				return (*this);
 			}
 
 			bool			Log::LogInfo::operator==(const LogInfo & rhs) {
-				return (msg == rhs.msg && type == rhs.type && VServ == rhs.VServ && path == rhs.path);
+				return (msg == rhs.msg && type == rhs.type && VServ == rhs.VServ && path == rhs.path && maxsize == rhs.maxsize);
 			}
 
 		#pragma endregion
@@ -99,7 +103,7 @@
 	
 	#pragma region Truncate Logs
 
-		void Log::truncate_log(const std::string & path, long long maxFileSize) {
+		void Log::truncate_log(const std::string & path, long long maxFileSize, long long extraSize) {	//	Truncate the log file to the maximum set in the config file (default to 1 MB | 0 MB = dont truncate | Max 10 MB)
 			const std::size_t blockSize = 8192;															//	Block size of data to read and write
 			char buffer[blockSize];																		//	Buffer to read in blocks
 
@@ -109,6 +113,7 @@
 			srcFile.seekg(0, std::ios::end);															//	Go to the end of the file
 			long long fileSize = srcFile.tellg();														//	Get the size of the file
 
+			if (maxFileSize + extraSize <= 0 || fileSize <= maxFileSize + extraSize) return;			//	If the size of the file is lower than the maximum + extra, do nothing
 			if (maxFileSize <= 0 || fileSize <= maxFileSize) return;									//	If the size of the file is lower than the maximum, do nothing
 
 			srcFile.seekg(fileSize - maxFileSize, std::ios::beg);										//	Go to the begining position of the data tha we keep
@@ -154,9 +159,12 @@
 
 	#pragma region Log to File
 
-		void Log::log_to_file(const std::string & msg, std::string path) {
+		void Log::log_to_file(const std::string & msg, std::string path, long maxsize) {
 			if (msg.empty() || path.empty()) return;
-			truncate_log(path, (LOCAL_MAXSIZE) - msg.size());											//	Truncate the log file to the maximum set in the config file (default to 10 MB)
+
+			long extraSize = std::min(((maxsize * 25) / 100), static_cast<long>(5 * 1024 * 1024));
+			truncate_log(path, maxsize - extraSize / 2 - msg.size(), extraSize);
+
 			std::ofstream outfile; outfile.open(path.c_str(), std::ios_base::app);
 			if (outfile.is_open()) {
 				outfile << msg; outfile.flush();
@@ -171,13 +179,13 @@
 		void Log::process_logs() {
 			std::queue <Log::LogInfo> logs;
 
-			Mutex::mtx_set(Mutex::MTX_LOCK);
+			Thread::mutex_set(_mutex, Thread::MTX_LOCK);
 			if (!_logs.empty()) std::swap(logs, _logs);
-			Mutex::mtx_set(Mutex::MTX_UNLOCK);
+			Thread::mutex_set(_mutex, Thread::MTX_UNLOCK);
 
 			if (logs.empty()) return;
 
-			std::map<std::string, std::string> logMap;
+			std::map <std::string, std::pair <std::string, long> > logMap;
 
 			while (!logs.empty()) {
 				Log::LogInfo log = logs.front(); logs.pop();
@@ -188,22 +196,31 @@
 				if (!log.path.empty() && log.path[0] != '/') log.path = Settings::program_path + log.path;
 
 				if (log.type < 4) log_to_memory(log.msg, log.type, log.VServ);
-				if (log.type > 1 && !log.path.empty()) logMap[log.path] += Utils::str_nocolor(log.msg) + "\n";
+				if (log.type > 1 && !log.path.empty()) {
+					logMap[log.path].first += Utils::str_nocolor(log.msg) + "\n";
+					logMap[log.path].second = log.maxsize;
+				}
 			}
 
-			for (std::map<std::string, std::string>::iterator it = logMap.begin(); it != logMap.end(); ++it)
-				log_to_file(it->second, it->first);
+			for (std::map <std::string, std::pair <std::string, long> >::iterator it = logMap.begin(); it != logMap.end(); ++it)
+				log_to_file(it->second.first, it->first, it->second.second);
 			logMap.clear();
 
-			Display::Output();
+			Display::update();
 		}
 
 	#pragma endregion
 
 	#pragma region Log
 
-		void Log::log(std::string msg, int type, VServer * VServ, std::string path) {
+		void Log::log(std::string msg, int type, VServer * VServ, std::string path, long maxsize) {
 			if (VServ == &(Settings::global)) VServ = NULL;
+
+			if (type > 1 && maxsize == -1) { long size;
+				if (VServ && Utils::stol(VServ->get("log_maxsize"), size) == false) maxsize = size;
+				else if (Utils::stol(Settings::global.get("log_maxsize"), size) == false) maxsize = size;
+				else maxsize = LOCAL_MAXSIZE;
+			}
 
 			if (path.empty()) {
 				if (type == BOTH_ACCESS || type == LOCAL_ACCESS) {
@@ -216,11 +233,46 @@
 				}
 			}
 
-			Mutex::mtx_set(Mutex::MTX_LOCK);
-			_logs.push(LogInfo(msg, type, VServ, path));
-			Mutex::mtx_set(Mutex::MTX_UNLOCK);
+			Thread::mutex_set(_mutex, Thread::MTX_LOCK);
+			_logs.push(LogInfo(msg, type, VServ, path, maxsize));
+			Thread::mutex_set(_mutex, Thread::MTX_UNLOCK);
 		}
 	
+	#pragma endregion
+
+#pragma endregion
+
+#pragma region Thread
+
+	#pragma region Main
+
+		void * Log::main(void * args) { (void) args;
+			while (_terminate == false) {
+				Log::process_logs(); usleep(UPDATE_INTERVAL * 1000);
+			}
+			return (NULL);
+		}
+
+	#pragma endregion
+
+	#pragma region Start
+
+		void Log::start() {
+			_terminate = false;
+			Thread::mutex_set(_mutex, Thread::MTX_INIT);
+			Thread::thread_set(_thread, Thread::THRD_CREATE, main);
+		}
+
+	#pragma endregion
+
+	#pragma region Stop
+
+		void Log::stop() {
+			_terminate = true;
+			Thread::thread_set(_thread, Thread::THRD_JOIN);
+			Thread::mutex_set(_mutex, Thread::MTX_DESTROY);
+		}
+
 	#pragma endregion
 
 #pragma endregion

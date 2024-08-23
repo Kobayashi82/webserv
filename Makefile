@@ -6,7 +6,7 @@
 #    By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/02/20 17:51:39 by vzurera-          #+#    #+#              #
-#    Updated: 2024/08/21 11:02:16 by vzurera-         ###   ########.fr        #
+#    Updated: 2024/08/23 11:40:38 by vzurera-         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -57,7 +57,7 @@ OBJ_DIR				= ./build/obj/
 # ────────── #
 
 NAME	=	webserv
-SRCS	=	Thread/Mutex.cpp																							\
+SRCS	=	Thread/Thread.cpp																							\
 			Log/Timer.cpp Log/Log.cpp																					\
 			Settings/Settings.cpp Settings/VServer.cpp Settings/Location.cpp Settings/Method.cpp Settings/Codes.cpp		\
 			Settings/Parser.cpp																							\

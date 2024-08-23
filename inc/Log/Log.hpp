@@ -6,11 +6,13 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:32:23 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/22 23:47:35 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/23 12:52:32 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
+
+#include "Timer.hpp"
 
 #include <iostream>																						//	For strings and standard input/output like std::cin, std::cout
 #include <deque>																						//	For std::deque container.	Used to store memory logs
@@ -45,9 +47,11 @@ class Log {
 		void clear();																					//	clear all logs in 'access', 'error' and 'both'
 
 		//	Local Log																					//	This logs are saved to a file (and also added to memory logs)
-		static void	check_logs();																		//	Delete logs based on log_days config (default to 30 days)
 		static void process_logs();																		//	Save logs to memory and/or to a file
-		static void	log(std::string msg, int type, VServer * VServ = NULL, std::string path = "");		//	Add a new message to logs queue
+		static void	log(std::string msg, int type, VServer * VServ = NULL, std::string path = "", long maxsize = -1);	//	Add a new message to logs queue
+
+		static void	start();																			//	Start the thread
+		static void	stop();																				//	Stop the thread
 
 	private:
 
@@ -58,9 +62,10 @@ class Log {
 			int			type;
 			VServer *	VServ;
 			std::string	path;
+			long		maxsize;
 
 			//	Constructors
-			LogInfo(std::string & _msg, int _type, VServer * _VServ, std::string _path);				//	Parameterized constructor
+			LogInfo(std::string & _msg, int _type, VServer * _VServ, std::string _path, long _maxsize);	//	Parameterized constructor
 
 			//	Overloads
 			LogInfo &		operator=(const LogInfo & rhs);												//	Overload for asignation
@@ -68,14 +73,20 @@ class Log {
 
 		};
 
+		static pthread_t			_thread;
+		static pthread_mutex_t		_mutex;
+		static bool					_terminate;															//	Flag the thread to finish
 		static std::queue <LogInfo>	_logs;																//	Queue container with logs that need to be processed
 
 		static const size_t			MEM_MAXSIZE;														//	Maximum number of logs for each memory log
-		static const size_t			LOCAL_MAXSIZE;														//	Maximum size of the log in disk
+		static long					LOCAL_MAXSIZE;														//	Maximum size of the log in disk
+		static const int			UPDATE_INTERVAL;													//	Interval in miliseconds for the thread main loop
 
-		static void	truncate_log(const std::string & path, long long maxFileSize);						//	Truncate the log file to the maximum set in the config file (default to 10 MB)
+		static void	truncate_log(const std::string & path, long long maxFileSize, long long extraSize);	//	Truncate the log file to the maximum set in the config file (default to 1 MB | 0 MB = dont truncate | Max 10 MB)
 		static void	log_to_memory(std::string msg, int type, VServer * VServ = NULL);					//	Log to memory
-		static void	log_to_file(const std::string & msg, std::string path);								//	Save logs to file
+		static void	log_to_file(const std::string & msg, std::string path, long maxsize);				//	Save logs to file
+
+		static void	* main(void * args);
 
 };
 
