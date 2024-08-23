@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:32:38 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/23 13:31:28 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/23 18:45:54 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -143,7 +143,12 @@
 
 		void Log::log_to_memory(std::string msg, int type, VServer * VServ) {
 			if (msg.empty()) return ;
-			if (Settings::check_only || Display::RawModeDisabled || Display::ForceRawModeDisabled) { std::cout << "\t" << msg << NC << std::endl; return; }
+			if (Settings::check_only || Display::RawModeDisabled || Display::ForceRawModeDisabled) {
+				if (Settings::check_only && Settings::loaded == false) {
+					if (msg.size() > 24) msg = msg.substr(24); else msg = "";
+				}
+				if (!msg.empty()) std::cout << "\t" << msg << NC << std::endl;
+			}
 
 			if (type == MEM_ACCESS || type == BOTH_ACCESS) {
 				Settings::global.log.both_add(msg); Settings::global.log.access_add(msg);

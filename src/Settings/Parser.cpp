@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:30:57 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/23 13:30:40 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/23 19:11:09 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,12 +15,6 @@
 
 #include <unistd.h>																						//	For access() to checks the accessibility of a file or directory
 #include <sys/stat.h>																					//	For stat() to retrieves information about a file or directory
-
-#pragma region Variables
-
-	enum e_section { ROOT, GLOBAL, SERVER, LOCATION, METHOD };
-
-#pragma endregion
 
 #pragma region Directives
 
@@ -63,6 +57,38 @@
 
 	#pragma endregion
 
+	#pragma region Keep-Alive Timeout
+
+		int Settings::parse_keepalive_timeout(std::string & str) {
+			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
+
+			if (str.empty()) { Log::log(RD + n_line + "Empty value for " Y "keepalive_timeout" NC, Log::BOTH_ERROR); return (1); }
+
+			long number; if (Utils::stol(str, number) || (str = Utils::ltos(number)) == "") { str = ""; Log::log(RD + n_line + "Invalid value for '" Y "keepalive_timeout" RD "'" NC, Log::BOTH_ERROR); return (1); }
+			if (number < 0) { str = ""; Log::log(RD + n_line + "Value for " Y "keepalive_timeout" RD " cannot be " Y "lower" RD " than " Y "0" NC, Log::BOTH_ERROR); return (1); }
+			if (number > 120) { str = ""; Log::log(RD + n_line + "Value for " Y "keepalive_timeout" RD " cannot be " Y "greater" RD " than " Y "120" NC, Log::BOTH_ERROR); return (1); }
+
+			return (0);
+		}
+
+	#pragma endregion
+
+	#pragma region Keep-Alive Requests
+
+		int Settings::parse_keepalive_requests(std::string & str) {
+			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
+
+			if (str.empty()) { Log::log(RD + n_line + "Empty value for " Y "keepalive_requests" NC, Log::BOTH_ERROR); return (1); }
+
+			long number; if (Utils::stol(str, number) || (str = Utils::ltos(number)) == "") { str = ""; Log::log(RD + n_line + "Invalid value for '" Y "keepalive_requests" RD "'" NC, Log::BOTH_ERROR); return (1); }
+			if (number < 0) { str = ""; Log::log(RD + n_line + "Value for " Y "keepalive_requests" RD " cannot be " Y "lower" RD " than " Y "0" NC, Log::BOTH_ERROR); return (1); }
+			if (number > 5000) { str = ""; Log::log(RD + n_line + "Value for " Y "keepalive_requests" RD " cannot be " Y "greater" RD " than " Y "5000" NC, Log::BOTH_ERROR); return (1); }
+
+			return (0);
+		}
+
+	#pragma endregion
+
 	#pragma region Log MaxSize
 
 		int Settings::parse_log_maxsize(std::string & str) {
@@ -75,13 +101,13 @@
 					case 'k': multiplier = 1024; break;
 					case 'm': multiplier = 1024 * 1024; break;
 					case 'b' : break;
-					default : { Log::log(RD + n_line + "Invalid value for " Y "log_maxsize" NC, Log::BOTH_ERROR); return (1); }
+					default : { str = ""; Log::log(RD + n_line + "Invalid value for " Y "log_maxsize" NC, Log::BOTH_ERROR); return (1); }
 				} str.erase(str.size() - 1);
 			}
 
-			long number; if (Utils::stol(str, number) || (str = Utils::ltos(number * multiplier)) == "") { Log::log(RD + n_line + "Invalid value for '" Y "log_maxsize" RD "'" NC, Log::BOTH_ERROR); return (1); }
-			if (number * multiplier < 1024) { Log::log(RD + n_line + "Value for " Y "log_maxsize" RD " cannot be " Y "lower" RD " than " Y "1 MB" NC, Log::BOTH_ERROR); return (1); }
-			if (number * multiplier > 10 * 1024 * 1024) { Log::log(RD + n_line + "Value for " Y "log_maxsize" RD " cannot be " Y "greater" RD " than " Y "10 MB" NC, Log::BOTH_ERROR); return (1); }
+			long number; if (Utils::stol(str, number) || (str = Utils::ltos(number * multiplier)) == "") { str = ""; Log::log(RD + n_line + "Invalid value for '" Y "log_maxsize" RD "'" NC, Log::BOTH_ERROR); return (1); }
+			if (number * multiplier != 0 && number * multiplier < 1024) { str = ""; Log::log(RD + n_line + "Value for " Y "log_maxsize" RD " cannot be " Y "lower" RD " than " Y "1 MB" NC, Log::BOTH_ERROR); return (1); }
+			if (number * multiplier > 10 * 1024 * 1024) { str = ""; Log::log(RD + n_line + "Value for " Y "log_maxsize" RD " cannot be " Y "greater" RD " than " Y "10 MB" NC, Log::BOTH_ERROR); return (1); }
 
 			return (0);
 		}
@@ -101,13 +127,13 @@
 					case 'm': multiplier = 1024 * 1024; break;
 					case 'g': multiplier = 1024 * 1024 * 1024; break;
 					case 'b' : break;
-					default : { Log::log(RD + n_line + "Invalid value for " Y "client_max_body_size" NC, Log::BOTH_ERROR); return (1); }
+					default : { str = ""; Log::log(RD + n_line + "Invalid value for " Y "client_max_body_size" NC, Log::BOTH_ERROR); return (1); }
 				} str.erase(str.size() - 1);
 			}
 
-			long number; if (Utils::stol(str, number) || (str = Utils::ltos(number * multiplier)) == "") { Log::log(RD + n_line + "Invalid value for '" Y "client_max_body_size" RD "'" NC, Log::BOTH_ERROR); return (1); }
-			if (number * multiplier < 1) { Log::log(RD + n_line + "Value for " Y "client_max_body_size" RD " cannot be " Y "lower" RD " than " Y "1 byte" NC, Log::BOTH_ERROR); return (1); }
-			if (number * multiplier > 1024 * 1024 * 1024) { Log::log(RD + n_line + "Value for " Y "client_max_body_size" RD " cannot be " Y "greater" RD " than " Y "1 GB" NC, Log::BOTH_ERROR); return (1); }
+			long number; if (Utils::stol(str, number) || (str = Utils::ltos(number * multiplier)) == "") { str = ""; Log::log(RD + n_line + "Invalid value for '" Y "client_max_body_size" RD "'" NC, Log::BOTH_ERROR); return (1); }
+			if (number * multiplier < 1) { str = ""; Log::log(RD + n_line + "Value for " Y "client_max_body_size" RD " cannot be " Y "lower" RD " than " Y "1 byte" NC, Log::BOTH_ERROR); return (1); }
+			if (number * multiplier > 1024 * 1024 * 1024) { str = ""; Log::log(RD + n_line + "Value for " Y "client_max_body_size" RD " cannot be " Y "greater" RD " than " Y "1 GB" NC, Log::BOTH_ERROR); return (1); }
 
 			return (0);
 		}
@@ -463,7 +489,7 @@
 
 	#pragma region Repeated
 
-		static int repeated_directive(const std::string & str, const std::vector<std::pair<std::string, std::string> > & data, int line_count) {
+		int Settings::repeated_directive(const std::string & str, const std::vector<std::pair<std::string, std::string> > & data, int line_count) {
 			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
 
 			if (str.empty() || data.size() == 0 || str == "listen" || str == "allow" || str == "deny") return (0);
@@ -478,7 +504,7 @@
 
 	#pragma region Invalid
 
-		static int invalid_directive(std::string firstPart, int line_count, int section) {
+		int Settings::invalid_directive(std::string firstPart, int line_count, int section) {
 			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
 
 			if (firstPart.empty()) return (0);
@@ -498,6 +524,8 @@
 			}
 			if (section == GLOBAL) {
 				if (firstPart == "http") return (0);
+				if (firstPart == "keepalive_timeout") return (0);
+				if (firstPart == "keepalive_requests") return (0);
 			} else if (section == SERVER) {
 				if (firstPart == "server") return (0);
 				if (firstPart == "server_name") return (0);
@@ -582,6 +610,8 @@
 				}
 
 				if (section == GLOBAL && !firstPart.empty()) {
+					if (!NoAdd && firstPart == "keepalive_timeout" && parse_keepalive_timeout(secondPart))									BadConfig = true;
+					if (!NoAdd && firstPart == "keepalive_requests" && parse_keepalive_requests(secondPart))								BadConfig = true;
 					if (!NoAdd && firstPart == "error_page") parse_errors(firstPart, secondPart);
 					if (!NoAdd && firstPart == "cgi") parse_cgi(firstPart, secondPart);
 
@@ -629,6 +659,10 @@
 				}
 			}
 		}
+		if (bracket_lvl != 0) {		BadConfig = true; Log::log(RD "Brackets error" NC, Log::BOTH_ERROR); }
+		if (vserver.size() == 0) {	BadConfig = true; Log::log(RD "There are no " Y "virtual servers" RD " in the configuration file" NC, Log::BOTH_ERROR); }
+		if (BadConfig)				vserver_clear();
+		Log::process_logs();
 	}
 
 #pragma endregion

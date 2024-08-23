@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 21:55:43 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/23 13:04:14 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/23 19:26:58 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,79 +32,77 @@
 	const int						Net::KEEP_ALIVE_TIMEOUT = 30;										//	Timeout in seconds for keep-alive (if a client is inactive for this amount of time, the connection will be closed)
 	const int						Net::KEEP_ALIVE_REQUEST = 500;										//	Maximum request for keep-alive (if a client exceeds this number of requests, the connection will be closed)
 
-#pragma endregion
+	#pragma region EventInfo
 
+		#pragma region Constructors
 
-#pragma region EventInfo
+			Net::EventInfo::EventInfo() : fd(-1) {}
+			Net::EventInfo::EventInfo(int _fd, int _type, Net::SocketInfo * _socket, Client * _client) : fd(_fd), type(_type), socket(_socket), client(_client) {}
 
-	#pragma region Constructors
+		#pragma endregion
 
-		Net::EventInfo::EventInfo() : fd(-1) {}
-		Net::EventInfo::EventInfo(int _fd, int _type, Net::SocketInfo * _socket, Client * _client) : fd(_fd), type(_type), socket(_socket), client(_client) {}
+		#pragma region Overloads
 
-	#pragma endregion
-
-	#pragma region Overloads
-
-		Net::EventInfo & Net::EventInfo::operator=(const EventInfo & rhs) {
-			if (this != &rhs) { fd = rhs.fd; type = rhs.type; socket = rhs.socket; client = rhs.client; }
-			return (*this);
-		}
-
-		bool Net::EventInfo::operator==(const EventInfo & rhs) {
-			return (fd == rhs.fd && type == rhs.type && socket == rhs.socket && client == rhs.client);
-		}
-
-	#pragma endregion
-
-#pragma endregion
-
-#pragma region SocketInfo
-
-	#pragma region Constructors
-
-		Net::SocketInfo::SocketInfo(int _fd, const std::string & _IP, int _port, EventInfo _event, VServer * _VServ) : fd(_fd), IP(_IP), port(_port), event(_event), VServ(_VServ) {}
-
-	#pragma endregion
-
-	#pragma region Overloads
-
-		Net::SocketInfo & Net::SocketInfo::operator=(const SocketInfo & rhs) {
-			if (this != &rhs) { fd = rhs.fd; IP = rhs.IP; port = rhs.port; event = rhs.event; VServ = rhs.VServ; clients = rhs.clients; }
-			return (*this);
-		}
-
-		bool Net::SocketInfo::operator==(const SocketInfo & rhs) {
-			return (fd == rhs.fd && IP == rhs.IP && port == rhs.port && event == rhs.event && VServ == rhs.VServ && clients == rhs.clients);
-		}
-
-	#pragma endregion
-
-	#pragma region Remove
-
-		void Net::SocketInfo::remove() {
-			//std::string msg = "Socket " + IP + ":" + Utils::ltos(port) + " closed";
-			Net::epoll_del(&event); close(fd); //VServer * tmp_VServ = VServ;
-			std::list <SocketInfo>::iterator s_it = Net::sockets.begin();
-			while (s_it != Net::sockets.end()) {
-				if (*s_it == *this) {
-					std::list <Client *>::iterator c_it = clients.begin();
-					while (c_it != clients.end()) {
-						Client * current = *c_it; ++c_it;
-						current->remove();
-					}
-					Net::sockets.erase(s_it);
-					//if (close(fd) != -1) Log::log(msg, Log::BOTH_ACCESS, tmp_VServ);
-					break;
-				}
-				++s_it;
+			Net::EventInfo & Net::EventInfo::operator=(const EventInfo & rhs) {
+				if (this != &rhs) { fd = rhs.fd; type = rhs.type; socket = rhs.socket; client = rhs.client; }
+				return (*this);
 			}
-		}
+
+			bool Net::EventInfo::operator==(const EventInfo & rhs) {
+				return (fd == rhs.fd && type == rhs.type && socket == rhs.socket && client == rhs.client);
+			}
+
+		#pragma endregion
+
+	#pragma endregion
+
+	#pragma region SocketInfo
+
+		#pragma region Constructors
+
+			Net::SocketInfo::SocketInfo(int _fd, const std::string & _IP, int _port, EventInfo _event, VServer * _VServ) : fd(_fd), IP(_IP), port(_port), event(_event), VServ(_VServ) {}
+
+		#pragma endregion
+
+		#pragma region Overloads
+
+			Net::SocketInfo & Net::SocketInfo::operator=(const SocketInfo & rhs) {
+				if (this != &rhs) { fd = rhs.fd; IP = rhs.IP; port = rhs.port; event = rhs.event; VServ = rhs.VServ; clients = rhs.clients; }
+				return (*this);
+			}
+
+			bool Net::SocketInfo::operator==(const SocketInfo & rhs) {
+				return (fd == rhs.fd && IP == rhs.IP && port == rhs.port && event == rhs.event && VServ == rhs.VServ && clients == rhs.clients);
+			}
+
+		#pragma endregion
+
+		#pragma region Remove
+
+			void Net::SocketInfo::remove() {
+				//std::string msg = "Socket " + IP + ":" + Utils::ltos(port) + " closed";
+				Net::epoll_del(&event); close(fd); //VServer * tmp_VServ = VServ;
+				std::list <SocketInfo>::iterator s_it = Net::sockets.begin();
+				while (s_it != Net::sockets.end()) {
+					if (*s_it == *this) {
+						std::list <Client *>::iterator c_it = clients.begin();
+						while (c_it != clients.end()) {
+							Client * current = *c_it; ++c_it;
+							current->remove();
+						}
+						Net::sockets.erase(s_it);
+						//if (close(fd) != -1) Log::log(msg, Log::BOTH_ACCESS, tmp_VServ);
+						break;
+					}
+					++s_it;
+				}
+			}
+
+		#pragma endregion
 
 	#pragma endregion
 
 #pragma endregion
-
 
 #pragma region Sockets
 
@@ -377,14 +375,15 @@
 				uint64_t expirations;
 				read(event_timeout.fd, &expirations, sizeof(expirations));
 
-				long TimeOutInt = KEEP_ALIVE_TIMEOUT;
+				long TimeOut = KEEP_ALIVE_TIMEOUT;
 
-				if (Settings::global.get("keepalive_timeout") != "") TimeOutInt = Utils::stol(Settings::global.get("keepalive_timeout"), TimeOutInt);
+				if (Settings::global.get("keepalive_timeout") != "") Utils::stol(Settings::global.get("keepalive_timeout"), TimeOut);
+				if (TimeOut == 0) return;
 
 				std::list<Client>::iterator it = clients.begin();
 				while (it != clients.end()) {
 					std::list<Client>::iterator current = it; ++it;
-					current->check_timeout(TimeOutInt);
+					current->check_timeout(TimeOut);
 				}
 			}
 
@@ -394,77 +393,104 @@
 
 #pragma endregion
 
+#pragma region Comunications
 
-int Net::read_request(EventInfo * event) {
-    char buffer[EPOLL_BUFFER_SIZE];				memset(buffer, 0, sizeof(buffer));
-	char peek_buffer[EPOLL_BUFFER_SIZE + 1];	memset(peek_buffer, 0, sizeof(peek_buffer));
+	#pragma region Read Request
 
-	ssize_t bytes_peek = recv(event->fd, peek_buffer, EPOLL_BUFFER_SIZE + 1, MSG_PEEK);
+		int Net::read_request(EventInfo * event) {
+			char buffer[EPOLL_BUFFER_SIZE];				memset(buffer, 0, sizeof(buffer));
+			char peek_buffer[EPOLL_BUFFER_SIZE + 1];	memset(peek_buffer, 0, sizeof(peek_buffer));
 
-    if (bytes_peek <= 0) { event->client->remove(); return (1); }
+			ssize_t bytes_peek = recv(event->fd, peek_buffer, EPOLL_BUFFER_SIZE + 1, MSG_PEEK);
 
-    event->client->update_last_activity();
+			if (bytes_peek <= 0) { event->client->remove(); return (1); }
 
-    ssize_t bytes_read = recv(event->fd, buffer, EPOLL_BUFFER_SIZE, 0);
-    
-    if (bytes_read > 0) {
-        event->client->read_buffer.insert(event->client->read_buffer.end(), buffer, buffer + bytes_read);
+			event->client->update_last_activity();
 
-		read_bytes+= bytes_read;
-		if (bytes_peek <= EPOLL_BUFFER_SIZE) process_request(event);
-	} else if (bytes_read <= 0) { event->client->remove(); return (1); }
-	return (0);
-}
+			ssize_t bytes_read = recv(event->fd, buffer, EPOLL_BUFFER_SIZE, 0);
+			
+			if (bytes_read > 0) {
+				event->client->read_buffer.insert(event->client->read_buffer.end(), buffer, buffer + bytes_read);
 
-void Net::write_response(EventInfo *event) {
-	event->client->update_last_activity();
+				read_bytes+= bytes_read;
+				if (bytes_peek <= EPOLL_BUFFER_SIZE) process_request(event);
+			} else if (bytes_read <= 0) { event->client->remove(); return (1); }
 
-    if (!event->client->write_buffer.empty()) {
+			return (0);
+		}
 
-        size_t buffer_size = event->client->write_buffer.size();
-        size_t chunk_size = std::min(buffer_size, static_cast<size_t>(EPOLL_BUFFER_SIZE));
-        
-        ssize_t bytes_written = write(event->fd, event->client->write_buffer.data(), chunk_size);
+	#pragma endregion
 
-        if (bytes_written > 0) {
-            event->client->write_buffer.erase(event->client->write_buffer.begin(), event->client->write_buffer.begin() + bytes_written);
+	#pragma region Write Response
 
-			write_bytes+= bytes_written;
+		void Net::write_response(EventInfo *event) {
+			event->client->update_last_activity();
 
-		} else if (bytes_written < 0) return; // close(event->fd);
-    }
-    
-    if (event->client->write_buffer.empty()) epoll_edit(event, true, false);
-}
+			if (!event->client->write_buffer.empty()) {
 
+				size_t buffer_size = event->client->write_buffer.size();
+				size_t chunk_size = std::min(buffer_size, static_cast<size_t>(EPOLL_BUFFER_SIZE));
+				
+				ssize_t bytes_written = write(event->fd, event->client->write_buffer.data(), chunk_size);
 
-void Net::process_request(EventInfo * event) {
-	std::string request(event->client->read_buffer.begin(), event->client->read_buffer.end());
-	std::istringstream request_stream(request);
-	std::string line;
-	if (std::getline(request_stream, line))
-	Utils::trim(line);
-	Log::log(line, Log::BOTH_ACCESS);
+				if (bytes_written > 0) {
+					event->client->write_buffer.erase(event->client->write_buffer.begin(), event->client->write_buffer.begin() + bytes_written);
 
-	// while (std::getline(request_stream, line))
-	// {
-	// 	Utils::trim(line);
-	// 	Log::log(line, Log::BOTH_ACCESS);
-	// }
-	event->client->read_buffer.clear();
-	process_response(event);
-}
+					write_bytes+= bytes_written;
 
-void Net::process_response(EventInfo * event) {
-    // Crear una respuesta HTTP básica
-    std::string response = 
-        "HTTP/1.1 200 OK\r\n"
-        "Content-Type: text/html\r\n"
-        "Content-Length: 48\r\n"
-		"Connection: keep-alive\r\n"
-        //"Connection: close\r\n"
-        "\r\n"
-        "<html><body><h1>Hello, World!</h1></body></html>";
-	event->client->write_buffer.insert(event->client->write_buffer.end(), response.begin(), response.end());
-    epoll_edit(event, true, true);
-}
+				} else if (bytes_written < 0) return; // close(event->fd);
+			}
+			
+			if (event->client->write_buffer.empty()) {
+				epoll_edit(event, true, false);
+
+				long MaxRequests = KEEP_ALIVE_TIMEOUT;
+
+				if (Settings::global.get("keepalive_requests") != "") Utils::stol(Settings::global.get("keepalive_requests"), MaxRequests);
+				if (event->client->total_requests >= MaxRequests) event->client->remove();
+			}
+		}
+
+	#pragma endregion
+
+	#pragma region Process Request
+
+		void Net::process_request(EventInfo * event) {
+			std::string request(event->client->read_buffer.begin(), event->client->read_buffer.end());
+			std::istringstream request_stream(request);
+			std::string line;
+			if (std::getline(request_stream, line))
+			Utils::trim(line);
+			Log::log(line, Log::BOTH_ACCESS);
+
+			// while (std::getline(request_stream, line))
+			// {
+			// 	Utils::trim(line);
+			// 	Log::log(line, Log::BOTH_ACCESS);
+			// }
+			event->client->read_buffer.clear();
+			event->client->total_requests++;
+			process_response(event);
+		}
+
+	#pragma endregion
+
+	#pragma region Process Request
+
+		void Net::process_response(EventInfo * event) {
+			// Crear una respuesta HTTP básica
+			std::string response = 
+				"HTTP/1.1 200 OK\r\n"
+				"Content-Type: text/html\r\n"
+				"Content-Length: 48\r\n"
+				"Connection: keep-alive\r\n"
+				//"Connection: close\r\n"
+				"\r\n"
+				"<html><body><h1>Hello, World!</h1></body></html>";
+			event->client->write_buffer.insert(event->client->write_buffer.end(), response.begin(), response.end());
+			epoll_edit(event, true, true);
+		}
+
+	#pragma endregion
+
+#pragma endregion

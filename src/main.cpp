@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 14:30:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/23 13:31:11 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/23 19:38:10 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,9 +29,6 @@
 //	TODO	Pasar interfaz a un hilo (no queda otra)
 //	TODO	Mejor interfaz para -i (y en hilo tambien)
 
-//	TODO	keepalive_timeout 75;				>= 0 && <= 120 		0 = disabled			defaults to 30
-//	TODO	keepalive_requests 1000;			> 0 && <= 5000								defaults to 500
-
 //	TODO	total conections and bandwidth with a fixed size
 
 //  Entry point
@@ -39,19 +36,17 @@ int main(int argc, char **argv) {
     Settings::load_args(argc, argv);
 
 	Log::start(); Display::start();
-
-	Net::epoll__create();
-	Net::socket_create_all();
+	Net::epoll__create(); Net::socket_create_all();
 
     while (Settings::terminate == -1) {
-		if (Net::epoll_events() == -1) { Log::log(RD "Error de epoll_wait" NC, Log::BOTH_ERROR); Settings::terminate = 1; break; }
+		Net::epoll_events();
 	}
 	
 	Net::epoll_close(); Net::socket_close_all();
-
 	Log::stop(); Display::stop();
 
 	Settings::clear();
+
     return (Settings::terminate);
 }
 

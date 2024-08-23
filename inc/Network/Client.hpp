@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 21:49:48 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/23 12:36:00 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/23 19:14:39 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,6 +28,7 @@ class Client {
 		int					port;																		//	Port number of the client
 		Net::EventInfo		event;																		//	EventInfo associated with this client
     	time_t				last_activity;																//	
+		long				total_requests;																//
 
 		std::vector <char> 	read_buffer;																//	Buffer for reading data
     	std::vector <char> 	write_buffer;																//	Buffer for writing data

@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:14:05 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/23 12:39:17 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/23 19:03:48 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,12 +27,46 @@
 
 class Settings {
 
+	public:
+
+		//	Variables
+		static Timer								timer;												//	Class to obtain time and date related data
+		static std::string							program_path;										//	Path of the executable
+		static std::string							config_path;										//	Path of the default configuration file
+
+		static VServer								global;												//	Global settings in a vector
+		static std::deque <VServer>					vserver;											//	V-Servers in a deque
+
+		static std::map <int, std::string>			error_codes;										//	Error codes in a map
+		static std::map <std::string, std::string>	mime_types;											//	MIME types in a map
+
+		static bool									check_only;											//	Check the config file, but don't start the server
+		static bool									loaded;												//	The config file loaded successfully (but may contains errors)
+		static int									current_vserver;									//	Current selected V-Server (-1 = None)
+		static int									terminate;											//	Flag the program to exit with the value in terminate (the default value of -1 don't exit)
+
+		//	Global
+		static void	clear(bool reset = false);															//	Delete all Keys, his Values and optionally reset config data
+
+		//	V-Server
+		static void	set(VServer & VServ);																//	Add or modify a V-Server
+		static void	add(VServer & VServ);																//	Alias for 'set'
+		static void	del(const VServer & VServ);															//	Delete a V-Server
+		static void	vserver_clear();																	//	Delete all V-Servers
+
+		//	Load
+		static void	load();																				//	Load the default configuration file
+		static void	load(const std::string & File);														//	Load a configuration file
+		static void	load_args(int argc, char **argv);													//	Load a configuration file based on the defined arguments
+
 	private:
 
 		//	Variables
-		static int									line_count;											//	Number of the current line of the configuration file (use to indicate the line of an error in the configuration file)
-		static int									bracket_lvl;										//	Level of the bracket (use to parse the configuration file)
-		static bool									BadConfig;											//	Indicate if there are errors in the config file
+		enum e_section { ROOT, GLOBAL, SERVER, LOCATION, METHOD };
+		
+		static int	line_count;																			//	Number of the current line of the configuration file (use to indicate the line of an error in the configuration file)
+		static int	bracket_lvl;																		//	Level of the bracket (use to parse the configuration file)
+		static bool	BadConfig;																			//	Indicate if there are errors in the config file
 
 		//	Errors and MIMEs
 		static void load_error_codes();																	//	Load error codes in a map
@@ -40,6 +74,8 @@ class Settings {
 
 		//	Parser
 		static int	parse_path(const std::string & firstPart, std::string & str, bool isFile, bool check_path, bool check_write);
+		static int	parse_keepalive_timeout(std::string & str);
+		static int	parse_keepalive_requests(std::string & str);
 		static int	parse_log_maxsize(std::string & str);
 		static int	parse_body_size(std::string & str);
 		static int	parse_errors(const std::string & firstPart, const std::string & secondPart);
@@ -59,38 +95,9 @@ class Settings {
 		static int	parse_cgi(const std::string & firstPart, const std::string & secondPart, VServer & VServ);
 		static int	parse_cgi(const std::string & firstPart, const std::string & secondPart, Location & Loc);
 
+		static int	repeated_directive(const std::string & str, const std::vector<std::pair<std::string, std::string> > & data, int line_count);
+		static int	invalid_directive(std::string firstPart, int line_count, int section);
+
 		static void	parser(std::ifstream & infile);
-		
-	public:
-
-		//	Variables
-		static Timer								timer;												//	Class to obtain time and date related data
-		static std::string							program_path;										//	Path of the executable
-		static std::string							config_path;										//	Path of the default configuration file
-
-		static VServer								global;												//	Global settings in a vector
-		static std::deque <VServer>					vserver;											//	V-Servers in a deque
-
-		static std::map <int, std::string>			error_codes;										//	Error codes in a map
-		static std::map <std::string, std::string>	mime_types;											//	MIME types in a map
-
-		static bool									check_only;											//	Check the config file, but don't start the server
-		static bool									loaded;												//	The config file loaded successfully (but may contains errors)
-		static int									current_vserver;									//	Current selected V-Server (-1 = None)
-		static int									terminate;											//	Flag the program to exit with the value in terminate (the default value of -1 don't exit)
-
-		//	Load
-		static void			load();																		//	Load the default configuration file
-		static void			load(const std::string & File);												//	Load a configuration file
-		static void			load_args(int argc, char **argv);											//	Load a configuration file based on the defined arguments
-
-		//	Global
-		static void			clear(bool reset = false);															//	Delete all Keys, his Values and optionally reset config data
-
-		//	V-Server
-		static void			set(VServer & VServ);														//	Add or modify a V-Server
-		static void			add(VServer & VServ);														//	Alias for 'set'
-		static void			del(const VServer & VServ);													//	Delete a V-Server
-		static void			vserver_clear();															//	Delete all V-Servers
 
 };
