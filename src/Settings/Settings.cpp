@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:27:58 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/23 19:37:45 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/23 23:01:22 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -172,7 +172,7 @@
 
 			//	Option -i: Run the program in console mode
 			} else if ((argc == 2 || argc == 3) && !strcmp(argv[1], "-i")) {
-				Display::RawModeDisabled = true; Display::ForceRawModeDisabled = true; Display::Logo();
+				Display::RawModeDisabled = true; Display::ForceRawModeDisabled = true; Display::logo();
 
 			//	Option -t: Checks the configuration file
 			} else if ((argc == 2 || argc == 3) && !strcmp(argv[1], "-t")) {		check_only = true;
@@ -207,7 +207,7 @@
 				else if (argc == 3) load(argv[2]);
 
 				if (BadConfig == false) {
-					Settings::global.status = true;
+					Settings::global.status = true; Display::update();
 				} else {
 					Log::log(RD "Could not load configuration file" NC, Log::BOTH_ERROR);
 					if (Display::RawModeDisabled || Display::ForceRawModeDisabled) terminate = 1;

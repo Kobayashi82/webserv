@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 14:30:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/23 19:38:10 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/24 00:19:00 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,12 +38,12 @@ int main(int argc, char **argv) {
 	Log::start(); Display::start();
 	Net::epoll__create(); Net::socket_create_all();
 
-    while (Settings::terminate == -1) {
+    while (Display::isTerminate() == -1) {
 		Net::epoll_events();
 	}
 	
 	Net::epoll_close(); Net::socket_close_all();
-	Log::stop(); Display::stop();
+	Log::stop(); Display::stop(); Log::release_mutex();
 
 	Settings::clear();
 

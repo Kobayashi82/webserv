@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:32:38 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/23 18:45:54 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/24 00:18:40 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -252,7 +252,7 @@
 	#pragma region Main
 
 		void * Log::main(void * args) { (void) args;
-			while (_terminate == false) {
+			while (Thread::get_bool(_mutex, _terminate) == false) {
 				Log::process_logs(); usleep(UPDATE_INTERVAL * 1000);
 			}
 			return (NULL);
@@ -263,7 +263,7 @@
 	#pragma region Start
 
 		void Log::start() {
-			_terminate = false;
+			Thread::set_bool(_mutex, _terminate, false);
 			Thread::mutex_set(_mutex, Thread::MTX_INIT);
 			Thread::thread_set(_thread, Thread::THRD_CREATE, main);
 		}
@@ -273,10 +273,15 @@
 	#pragma region Stop
 
 		void Log::stop() {
-			_terminate = true;
+			Thread::set_bool(_mutex, _terminate, true);
 			Thread::thread_set(_thread, Thread::THRD_JOIN);
+			//Thread::mutex_set(_mutex, Thread::MTX_DESTROY);
+		}
+
+		void Log::release_mutex() {
 			Thread::mutex_set(_mutex, Thread::MTX_DESTROY);
 		}
+
 
 	#pragma endregion
 

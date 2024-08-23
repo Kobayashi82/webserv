@@ -6,13 +6,15 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 21:55:43 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/23 19:26:58 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/24 00:50:49 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Colors.hpp"
 #include "Net.hpp"
 #include "Client.hpp"
+#include "Display.hpp"
+#include "Thread.hpp"
 
 #pragma region Variables
 
@@ -111,7 +113,7 @@
 		#pragma region Create All
 
 			int Net::socket_create_all() {
-				if (!Settings::global.status) return (1);
+				if (Thread::get_bool(Display::mutex, Settings::global.status) == false) return (1);
 
 				bool nothing_created = true;
 
@@ -126,7 +128,7 @@
 		#pragma region Create VServer
 
 			int Net::socket_create(VServer * VServ) {
-				if (!Settings::global.status || VServ->force_off) return (1);
+				if (Thread::get_bool(Display::mutex, Settings::global.status) == false || Thread::get_bool(Display::mutex, VServ->force_off)) return (1);
 
 				bool nothing_created = true;
 
@@ -170,7 +172,7 @@
 						close(serverSocket); sockets.pop_back(); continue;
 					}
 
-					if (!VServ->status) VServ->status = true;
+					if (Thread::get_bool(Display::mutex, VServ->status) == false) Thread::set_bool(Display::mutex, VServ->status, true);
 					//Log::log("Socket " + addr_it->first + ":" + Utils::ltos(addr_it->second) + " waiting for connections", Log::BOTH_ACCESS, VServ);
 					nothing_created = false;
 				}
@@ -199,7 +201,7 @@
 			void Net::socket_close_all() {
 				std::list<SocketInfo>::iterator s_it = sockets.begin();
 				while (s_it != sockets.end()) {
-					if (s_it->VServ->status) s_it->VServ->status = false;
+					if (Thread::get_bool(Display::mutex, s_it->VServ->status)) Thread::set_bool(Display::mutex, s_it->VServ->status, false);
 					SocketInfo current = *s_it; ++s_it;
 					current.remove();
 				}

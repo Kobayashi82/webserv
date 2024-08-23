@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 11:59:38 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/23 12:17:41 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/24 00:26:33 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,6 +27,8 @@ class Display {
 
 	public:
 
+		static pthread_mutex_t	mutex;
+
 		static bool				drawing;																//	True if printing in the terminal
 		static int				failCount;																//	Current number of fails when printing in the the terminal
 		static int				maxFails;																//	Maximum numbers of retries to print in the terminal if something fails
@@ -44,6 +46,8 @@ class Display {
 		static void	setTerminalSize(size_t rows, size_t cols);											//	Set the terminal size (a little big buggy)
 
 		static void	update();																			//	Ask for a redraw in the next iteration
+		static void	logo();																				//	Ask for a logo print in the next iteration
+		static int	isTerminate();
 
 		static void	start();																			//	Start the thread
 		static void	stop();																				//	Stop the thread
@@ -51,9 +55,11 @@ class Display {
 	private:
 
 		static pthread_t		_thread;
-		static pthread_mutex_t	_mutex;
 		static bool				_terminate;																//	Flag the thread to finish
+
 		static bool				_update;																//	Flag for a redraw in the next iteration
+		static bool				_logo;																	//	Flag for printing the logo
+
 
 		static const int		UPDATE_INTERVAL;														//	Interval in miliseconds for the thread main loop
 

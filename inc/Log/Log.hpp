@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:32:23 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/23 18:45:34 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/24 00:18:37 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,6 +52,7 @@ class Log {
 
 		static void	start();																			//	Start the thread
 		static void	stop();																				//	Stop the thread
+		static void	release_mutex();
 
 	private:
 
@@ -76,6 +77,7 @@ class Log {
 		static pthread_t			_thread;
 		static pthread_mutex_t		_mutex;
 		static bool					_terminate;															//	Flag the thread to finish
+
 		static std::queue <LogInfo>	_logs;																//	Queue container with logs that need to be processed
 
 		static const size_t			MEM_MAXSIZE;														//	Maximum number of logs for each memory log
