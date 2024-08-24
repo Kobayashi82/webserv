@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/14 14:37:32 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/24 00:35:03 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/24 15:28:42 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,32 +85,35 @@
 #pragma region Signals
 
 	static void killHandler(int signum) {
-		if (Settings::check_only || Display::RawModeDisabled || Display::ForceRawModeDisabled) std::cout << CL CL "  ";
-		Settings::terminate = signum + 128;
+		if (Settings::check_only || !Display::isRawMode() || Display::ForceRawModeDisabled) std::cout << CL CL "  ";
+		Thread::set_int(Display::mutex, Settings::terminate, signum + 128);
 	}
 
 	static void resizeHandler(int signum) {
 		(void) signum;
-		Display::Resized = true;
+		Thread::set_bool(Display::mutex, Display::Resized, true);
 	}
 
 	static void stopHandler(int signum) {
 		(void) signum;
-		if (Settings::check_only || Display::RawModeDisabled || Display::ForceRawModeDisabled) std::cout << CL CL "  ";
+		if (Settings::check_only || !Display::isRawMode() || Display::ForceRawModeDisabled) std::cout << CL CL "  ";
+		Thread::mutex_set(Display::mutex, Thread::MTX_LOCK);
 		Display::disableRawMode();
+		Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK);
 		raise(SIGSTOP);
 	}
 
     static void resumeHandler(int signum) {
         (void) signum;
+		Thread::mutex_set(Display::mutex, Thread::MTX_LOCK);
         Display::enableRawMode();
-        //Display::Output();
-		if (Settings::check_only || Display::RawModeDisabled || Display::ForceRawModeDisabled) Display::logo();
+		Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK);
+		if (Settings::check_only || !Display::isRawMode() || Display::ForceRawModeDisabled) Display::logo();
     }
 
 	static void quitHandler(int signum) {
-		if (Settings::check_only || Display::RawModeDisabled || Display::ForceRawModeDisabled) std::cout << CL CL "  ";
-		Settings::terminate = signum + 128;
+		if (Settings::check_only || !Display::isRawMode() || Display::ForceRawModeDisabled) std::cout << CL CL "  ";
+		Thread::set_int(Display::mutex, Settings::terminate, signum + 128);
  	}
 
 #pragma endregion
@@ -211,6 +214,8 @@
 				if 		(Settings::current_vserver == -1)													VServ = &Settings::global;
 				else 																						VServ = &Settings::vserver[Settings::current_vserver];
 
+				Thread::mutex_set(Log::mutex, Thread::MTX_LOCK);
+
 				if		(VServ->config_displayed == false
 						&& static_cast<int>(VServ->log.both.size()) >= log_rows
 						&& static_cast<int>(VServ->log.both.size()) - (log_rows - 1) > static_cast<int>(VServ->log_index)) {	if (++VServ->log_index == VServ->log.both.size() - (log_rows - 1)) VServ->autolog = true; }
@@ -218,6 +223,9 @@
 				else if (VServ->config_displayed == true
 						&& static_cast<int>(VServ->config.size()) >= log_rows
 						&& static_cast<int>(VServ->config.size()) - (log_rows - 1) > static_cast<int>(VServ->config_index))		Settings::global.config_index++;
+
+				Thread::mutex_set(Log::mutex, Thread::MTX_UNLOCK);
+
 
 				if (Display::drawing) { Display::redraw = true; return; } Display::Output();
 			}
@@ -245,13 +253,15 @@
 				VServer * VServ; size_t temp = 0;
 				if 		(Settings::current_vserver == -1)													VServ = &Settings::global;
 				else 																						VServ = &Settings::vserver[Settings::current_vserver];
-		
+
+				Thread::mutex_set(Log::mutex, Thread::MTX_LOCK);
+
 				if (VServ->config_displayed == false && VServ->log.both.size() > 0 && VServ->log_index != VServ->log.both.size() - (log_rows - 1)) {
 
 					if (static_cast<int>(VServ->log.both.size()) - (log_rows - 1) < 0)						temp = 0;
 					else 																					temp = static_cast<int>(VServ->log.both.size()) - (log_rows - 1);
 
-					if (VServ->log_index == temp)															return;
+					if (VServ->log_index == temp) {															Thread::mutex_set(Log::mutex, Thread::MTX_UNLOCK); return; }
 					else																					VServ->log_index = temp;
 
 					if (static_cast<int>(VServ->log_index) == static_cast<int>(VServ->log.both.size()) - (log_rows - 1))	VServ->autolog = true;
@@ -261,9 +271,11 @@
 					if (static_cast<int>(VServ->config.size()) - (log_rows - 1) < 0)						temp = 0;
 					else																					temp = static_cast<int>(VServ->config.size()) - (log_rows - 1);
 
-					if (VServ->config_index == temp)														return;
+					if (VServ->config_index == temp) {														Thread::mutex_set(Log::mutex, Thread::MTX_UNLOCK); return; }
 					else																					VServ->config_index = temp;
 				}
+
+				Thread::mutex_set(Log::mutex, Thread::MTX_UNLOCK);
 
 				if (Display::drawing) { Display::redraw = true; return; } Display::Output();
 			}
@@ -275,11 +287,14 @@
 			static void Key_W() {
 				if (Settings::vserver.size() == 0)															return;
 
-				bool tmp = Thread::get_bool(Display::mutex, Settings::global.status);
-				Thread::set_bool(Display::mutex, Settings::global.status, !tmp);
+				Thread::mutex_set(Display::mutex, Thread::MTX_LOCK);
 
-				if (Thread::get_bool(Display::mutex, Settings::global.status))								Net::socket_create_all();
-				else																						Net::socket_close_all();
+					Settings::global.status = !Settings::global.status;
+
+					if (Settings::global.status)															Net::ask_socket_create_all = true;
+					else																					Net::ask_socket_close_all = true;
+
+				Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK);
 
 				Display::Output();
 			}
@@ -293,11 +308,14 @@
 
 				VServer * VServ = &Settings::vserver[Settings::current_vserver];
 
-				bool tmp = Thread::get_bool(Display::mutex, VServ->force_off);
-				Thread::set_bool(Display::mutex, VServ->force_off, !tmp);
+				Thread::mutex_set(Display::mutex, Thread::MTX_LOCK);
 
-				if		(Thread::get_bool(Display::mutex, VServ->status))									Net::socket_close(VServ); 
-				else if (Thread::get_bool(Display::mutex, VServ->force_off) == false)						Net::socket_create(VServ);
+					VServ->force_off = !VServ->force_off;
+
+					if		(VServ->status)																	Net::socket_action_list.push_back(std::make_pair(VServ, Net::CLOSE));
+					else if (VServ->force_off == false)														Net::socket_action_list.push_back(std::make_pair(VServ, Net::CREATE));
+
+				Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK);
 
 				Display::Output();
 			}
@@ -311,8 +329,10 @@
 				if 		(Settings::current_vserver == -1)													VServ = &Settings::global;
 				else 																						VServ = &Settings::vserver[Settings::current_vserver];
 			
+				Thread::mutex_set(Log::mutex, Thread::MTX_LOCK);
 				if (VServ->log.both.size() > 0)																VServ->log.clear();
-				
+				Thread::mutex_set(Log::mutex, Thread::MTX_UNLOCK);
+
 				Display::Output();
 			}
 
@@ -351,7 +371,7 @@
 	#pragma region Input
 
 		void Display::Input() {
-			if (RawModeDisabled) return;
+			if (isRawMode() == false) return;
 
 			char c, seq[2];
 			if (read(STDIN_FILENO, &c, 1) != 1) return ;																				//	This is Non-Blocking
@@ -426,6 +446,7 @@
 
 			void print_buttons(std::ostringstream & oss, int & cols, int & row) {
 			//	MAIN
+				Thread::mutex_set(Log::mutex, Thread::MTX_LOCK);
 				std::string Color1 = G UN; std::string Color2 = NC Y;
 				std::string top = C "├──────┬";
 				std::string middle = C "│ " + Color1 + "E" + Color2 + "xit " C "│";
@@ -484,8 +505,10 @@
 						length -= 6;
 					}
 				}
+				Thread::mutex_set(Log::mutex, Thread::MTX_UNLOCK);
 
 			//	DATA
+				Thread::mutex_set(Display::mutex, Thread::MTX_LOCK);
 				std::string data1, data2, Downloaded, Uploaded, Conect;
 				int Downloaded_size, Uploaded_size;
 				Utils::formatSize(Net::read_bytes, data1, data2);
@@ -495,7 +518,8 @@
 				Utils::formatSize(Net::write_bytes, data1, data2);
 				Uploaded = Y + data1 + " " C + data2 + NC;
 				Uploaded_size = data1.size() + data2.size() + 1;
-				Conect = Utils::ltos(Net::clients.size());
+				Conect = Utils::ltos(Net::total_clients);
+				Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK);
 
 			//	PRINT BUTTONS
 				oss << top;
@@ -530,7 +554,7 @@
 		#pragma region Output
 
 			void Display::Output() {
-				if (drawing || Settings::check_only || RawModeDisabled || ForceRawModeDisabled) return; else  drawing = true;
+				if (drawing || Settings::check_only || !isRawMode() || ForceRawModeDisabled) return; else  drawing = true;
 
 			//	VARIABLES
 				winsize w; ioctl(0, TIOCGWINSZ, &w); int cols = w.ws_col - 4, row = 0;
@@ -539,7 +563,7 @@
 				std::ostringstream oss; std::ostringstream ss; ss << Settings::vserver.size(); std::string temp = ss.str();
 				std::string Status = RD; std::string Color = RD; std::string LArrow = "  ", RArrow = "  ";
 
-				if (Settings::global.status)															Status = G;
+				if (Thread::get_bool(mutex, Settings::global.status))									Status = G;
 				if (Settings::vserver.size() > 0)														Color = G;
 				if (Settings::vserver.size() > 0) { 													LArrow = "◄ "; RArrow = "► "; }
 
@@ -551,14 +575,14 @@
 
 			//	COLOR LINES
 				bool some = false;
-				if (Settings::vserver.size() > 0 && Settings::current_vserver != -1 && Settings::vserver[Settings::current_vserver].status)	Status = G;
+				if (Settings::vserver.size() > 0 && Settings::current_vserver != -1 && Thread::get_bool(mutex, Settings::vserver[Settings::current_vserver].status))	Status = G;
 				else if (Settings::vserver.size() > 0 && Settings::current_vserver == -1) {													Status = RD;
 					for (size_t i = 0; i < Settings::vserver.size(); ++i) {
 						if (Thread::get_bool(mutex, Settings::vserver[i].status))															Status = G;
 						else if (!Thread::get_bool(mutex, Settings::vserver[i].status))													some = true;
 					}
 				} else 																														Status = RD;
-				if (Settings::global.status == false)																						Status = RD;
+				if (Thread::get_bool(mutex, Settings::global.status) == false)																Status = RD;
 				if (Status != RD && some)																									Status = Y;
 
 			//	MEM & CPU
@@ -587,7 +611,7 @@
 				oss << C "├─────────────────┴"; setLine(C, "─", (cols + 2) - 18, oss); oss << "┤" NC << "\n"; row++;
 
 			//	LOG & SETTINGS
-
+				Thread::mutex_set(Log::mutex, Thread::MTX_LOCK);
 				if (Settings::current_vserver == -1 && Settings::global.config_displayed == false) {
 					if (Settings::global.autolog) {
 						if (static_cast<int>(Settings::global.log.both.size()) - (log_rows - 1) < 0) Settings::global.log_index = 0;
@@ -605,7 +629,7 @@
 					print_log(Settings::vserver[Settings::current_vserver].log.both, Settings::vserver[Settings::current_vserver].log_index, oss, cols, row);
 				} else if (Settings::current_vserver != -1 && Settings::vserver[Settings::current_vserver].config_displayed == true)
 					print_config(Settings::vserver[Settings::current_vserver].config, Settings::vserver[Settings::current_vserver].config_index, oss, cols, row);
-
+				Thread::mutex_set(Log::mutex, Thread::MTX_UNLOCK);
 			//	BUTTONS
 				print_buttons(oss, cols, row);
 
@@ -651,8 +675,12 @@
 			Thread::set_bool(mutex, _logo, true);
 		}
 
-		int	Display::isTerminate() {
+		int		Display::isTerminate() {
 			return (Thread::get_int(mutex, Settings::terminate));
+		}
+
+		bool	Display::isRawMode() {
+			return (!Thread::get_bool(mutex, RawModeDisabled));
 		}
 
 	#pragma endregion
@@ -673,10 +701,9 @@
 				usleep(UPDATE_INTERVAL * 1000);
 			}
 
-			if (!Settings::check_only && !RawModeDisabled && !ForceRawModeDisabled) {
+			if (!Settings::check_only && isRawMode() && !ForceRawModeDisabled) {
 				usleep(100000); std::cout.flush(); std::cout.clear(); maxFails = 10; failCount = 0; drawing = false;
 				Log::log(G "WebServ 1.0 closed successfully", Log::MEM_ACCESS); Log::process_logs(); Output();
-				disableRawMode();
 			} else std::cout << CSHOW << std::endl;
 			return (NULL);
 		}

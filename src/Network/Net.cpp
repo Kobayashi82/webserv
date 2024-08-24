@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 21:55:43 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/24 00:50:49 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/24 14:37:13 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,8 +21,13 @@
 	std::list <Net::SocketInfo>		Net::sockets;														//	List of all SocketInfo objects
 	std::list <Client>				Net::clients;														//	List of all Client objects
 
+	int								Net::total_clients;													//	Total number of clients conected
 	long							Net::read_bytes;													//	Total number of bytes downloaded by the server
 	long							Net::write_bytes;													//	Total number of bytes uploaded by the server
+
+	bool									Net::ask_socket_create_all;									//
+	bool									Net::ask_socket_close_all;									//
+	std::list <std::pair <VServer *, int> >	Net::socket_action_list;									//
 
 	int 							Net::epoll_fd = -1;													//	File descriptor for epoll
 	Net::EventInfo					Net::event_timeout;													//	EventInfo structure used for generating events in epoll and checking client timeouts
@@ -82,8 +87,7 @@
 		#pragma region Remove
 
 			void Net::SocketInfo::remove() {
-				//std::string msg = "Socket " + IP + ":" + Utils::ltos(port) + " closed";
-				Net::epoll_del(&event); close(fd); //VServer * tmp_VServ = VServ;
+				Net::epoll_del(&event); close(fd);
 				std::list <SocketInfo>::iterator s_it = Net::sockets.begin();
 				while (s_it != Net::sockets.end()) {
 					if (*s_it == *this) {
@@ -93,7 +97,6 @@
 							current->remove();
 						}
 						Net::sockets.erase(s_it);
-						//if (close(fd) != -1) Log::log(msg, Log::BOTH_ACCESS, tmp_VServ);
 						break;
 					}
 					++s_it;
@@ -219,8 +222,7 @@
 						current.remove();
 					} else ++s_it;
 				}
-				VServ->status = false;
-				//Display::Output();
+				Thread::set_bool(Display::mutex, VServ->status, false);
 			}
 
 		#pragma endregion
@@ -232,8 +234,6 @@
 		void Net::socket_accept(EventInfo * event) {
 			sockaddr_in Addr; socklen_t AddrLen = sizeof(Addr);
 			int fd = accept(event->fd, (sockaddr *)&Addr, &AddrLen); if (fd == -1) return;
-			//int flags = fcntl(fd, F_GETFL, 0); if (flags == -1) return;
-			//if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1) return;
 
 			std::string	IP		= inet_ntoa(Addr.sin_addr);
 			int			port	= ntohs(Addr.sin_port);
@@ -245,7 +245,9 @@
 
 			if (epoll_add(&(cli.event)) == -1) { close(fd); clients.pop_back(); event->socket->clients.pop_back(); return; }
 
-			//Log::log("Client " + IP + ":" + Utils::ltos(port) + " connected", Log::BOTH_ACCESS, cli.socket->VServ);
+			Thread::mutex_set(Display::mutex, Thread::MTX_LOCK);
+			total_clients++;
+			Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK);
 		}
 
 	#pragma endregion
@@ -318,9 +320,10 @@
 	#pragma region Events
 
 		int Net::epoll_events() {
+			bool update_display = false;
 			struct epoll_event events[MAX_EVENTS];
 			int eventCount = epoll_wait(epoll_fd, events, MAX_EVENTS, 100);
-			if (eventCount == -1) { return (1); }
+			if (eventCount == -1) return (1);
 
 			for (int i = 0; i < eventCount; ++i) {
 				if (events[i].data.ptr == NULL) continue;
@@ -344,6 +347,35 @@
 					}
 				}
 			}
+
+			Thread::mutex_set(Display::mutex, Thread::MTX_LOCK);
+
+				if (socket_action_list.size() > 0) {
+					std::list <std::pair<VServer *, int> >::iterator it = socket_action_list.begin();
+					while (it != socket_action_list.end()) {
+
+						Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK);
+
+							if (it->second == CREATE) socket_create(it->first);
+							if (it->second == CLOSE) socket_close(it->first);
+						
+						Thread::mutex_set(Display::mutex, Thread::MTX_LOCK);
+
+						it = socket_action_list.erase(it);
+					}
+					update_display = true;
+				}
+
+				Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK);
+				if (update_display) Display::update();
+
+			Thread::mutex_set(Display::mutex, Thread::MTX_LOCK);
+
+				if (ask_socket_create_all) { Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK); socket_create_all(); Display::update(); return (0); }
+				if (ask_socket_close_all) { Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK); socket_close_all(); Display::update(); return (0); }
+
+			Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK);
+
 			return (0);
 		}
 
@@ -414,7 +446,10 @@
 			if (bytes_read > 0) {
 				event->client->read_buffer.insert(event->client->read_buffer.end(), buffer, buffer + bytes_read);
 
+				Thread::mutex_set(Display::mutex, Thread::MTX_LOCK);
 				read_bytes+= bytes_read;
+				Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK);
+
 				if (bytes_peek <= EPOLL_BUFFER_SIZE) process_request(event);
 			} else if (bytes_read <= 0) { event->client->remove(); return (1); }
 
@@ -438,7 +473,9 @@
 				if (bytes_written > 0) {
 					event->client->write_buffer.erase(event->client->write_buffer.begin(), event->client->write_buffer.begin() + bytes_written);
 
+					Thread::mutex_set(Display::mutex, Thread::MTX_LOCK);
 					write_bytes+= bytes_written;
+					Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK);
 
 				} else if (bytes_written < 0) return; // close(event->fd);
 			}

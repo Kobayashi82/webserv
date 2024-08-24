@@ -6,20 +6,21 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/18 11:28:40 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/23 13:19:04 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/24 13:34:21 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Display.hpp"
 #include "Client.hpp"
 #include "Net.hpp"
+#include "Thread.hpp"
 
 #pragma region Constructors
 
     Client::Client(int _fd, Net::SocketInfo * _socket, std::string _IP, int _port, Net::EventInfo _event) : fd(_fd), socket(_socket), IP(_IP), port(_port), event(_event) {
 		read_pos = 0; write_pos = 0; last_activity = std::time(NULL);
 	}
-    Client::Client(const Client & src) : fd(src.fd), socket(src.socket), IP(src.IP), port(src.port), event(src.event), last_activity(src.last_activity), read_buffer(src.read_buffer), write_buffer(src.write_buffer) {}
+    Client::Client(const Client & src) : fd(src.fd), socket(src.socket), IP(src.IP), port(src.port), event(src.event), last_activity(src.last_activity), total_requests(src.total_requests), read_buffer(src.read_buffer), write_buffer(src.write_buffer) {}
 
 
 #pragma endregion
@@ -29,13 +30,13 @@
 	Client &	Client::operator=(const Client & rhs) {
         if (this != &rhs) {
             fd = rhs.fd; IP = rhs.IP; port = rhs.port; socket = rhs.socket; last_activity = rhs.last_activity;
-			read_buffer = rhs.read_buffer; write_buffer = rhs.write_buffer; event = rhs.event;
+			total_requests = rhs.total_requests; read_buffer = rhs.read_buffer; write_buffer = rhs.write_buffer; event = rhs.event;
         } return (*this);
     }
 
 	bool		Client::operator==(const Client & rhs) const {
 		return (fd == rhs.fd && IP == rhs.IP && port == rhs.port && socket == rhs.socket && last_activity == rhs.last_activity
-				&& read_buffer == rhs.read_buffer && write_buffer == rhs.write_buffer);
+				&& total_requests == rhs.total_requests && read_buffer == rhs.read_buffer && write_buffer == rhs.write_buffer);
 	}
 
 #pragma endregion
@@ -59,14 +60,18 @@
 
 	    std::list <Client *>::iterator s_it = socket->clients.begin();
     	while (s_it != socket->clients.end()) {
-        	if (**s_it == *this) {s_it = socket->clients.erase(s_it); break; }
+        	if (**s_it == *this) { s_it = socket->clients.erase(s_it); break; }
             ++s_it;
         }
 
 		std::list <Client>::iterator c_it = Net::clients.begin();
 		while (c_it != Net::clients.end()) {
 			if (*this == *c_it) {
-				Net::clients.erase(c_it); Display::update(); break;
+				Net::clients.erase(c_it);
+				Thread::mutex_set(Display::mutex, Thread::MTX_LOCK);
+				Net::total_clients--;
+				Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK);
+				Display::update(); break;
 			} ++c_it;
 		}
 	}

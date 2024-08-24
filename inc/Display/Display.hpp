@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 11:59:38 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/24 00:26:33 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/24 15:15:17 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,6 +48,7 @@ class Display {
 		static void	update();																			//	Ask for a redraw in the next iteration
 		static void	logo();																				//	Ask for a logo print in the next iteration
 		static int	isTerminate();
+		static bool	isRawMode();
 
 		static void	start();																			//	Start the thread
 		static void	stop();																				//	Stop the thread

@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:32:38 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/24 00:18:40 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/24 15:21:39 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,8 +17,9 @@
 
 #pragma region Variables
 
+	pthread_mutex_t				Log::mutex;
+
 	pthread_t					Log::_thread;
-	pthread_mutex_t				Log::_mutex;
 	bool						Log::_terminate = false;													//	Flag the thread to finish
 	std::queue <Log::LogInfo>	Log::_logs;
 
@@ -91,7 +92,9 @@
 
 		#pragma region Clear
 
-			void Log::clear() { access.clear(); error.clear(); both.clear(); }
+			void Log::clear() {
+				access.clear(); error.clear(); both.clear();
+			}
 
 		#pragma endregion
 
@@ -143,13 +146,14 @@
 
 		void Log::log_to_memory(std::string msg, int type, VServer * VServ) {
 			if (msg.empty()) return ;
-			if (Settings::check_only || Display::RawModeDisabled || Display::ForceRawModeDisabled) {
+			if (Settings::check_only || !Display::isRawMode() || Display::ForceRawModeDisabled) {
 				if (Settings::check_only && Settings::loaded == false) {
 					if (msg.size() > 24) msg = msg.substr(24); else msg = "";
 				}
 				if (!msg.empty()) std::cout << "\t" << msg << NC << std::endl;
 			}
 
+			Thread::mutex_set(mutex, Thread::MTX_LOCK);
 			if (type == MEM_ACCESS || type == BOTH_ACCESS) {
 				Settings::global.log.both_add(msg); Settings::global.log.access_add(msg);
 				if (VServ) { VServ->log.both_add(msg); VServ->log.access_add(msg); }
@@ -158,6 +162,7 @@
 				Settings::global.log.both_add(msg); Settings::global.log.error_add(msg);
 				if (VServ) { VServ->log.both_add(msg); VServ->log.error_add(msg); }
 			}
+			Thread::mutex_set(mutex, Thread::MTX_UNLOCK);
 		}
 
 	#pragma endregion
@@ -184,9 +189,9 @@
 		void Log::process_logs() {
 			std::queue <Log::LogInfo> logs;
 
-			Thread::mutex_set(_mutex, Thread::MTX_LOCK);
+			Thread::mutex_set(mutex, Thread::MTX_LOCK);
 			if (!_logs.empty()) std::swap(logs, _logs);
-			Thread::mutex_set(_mutex, Thread::MTX_UNLOCK);
+			Thread::mutex_set(mutex, Thread::MTX_UNLOCK);
 
 			if (logs.empty()) return;
 
@@ -238,9 +243,9 @@
 				}
 			}
 
-			Thread::mutex_set(_mutex, Thread::MTX_LOCK);
+			Thread::mutex_set(mutex, Thread::MTX_LOCK);
 			_logs.push(LogInfo(msg, type, VServ, path, maxsize));
-			Thread::mutex_set(_mutex, Thread::MTX_UNLOCK);
+			Thread::mutex_set(mutex, Thread::MTX_UNLOCK);
 		}
 	
 	#pragma endregion
@@ -252,7 +257,7 @@
 	#pragma region Main
 
 		void * Log::main(void * args) { (void) args;
-			while (Thread::get_bool(_mutex, _terminate) == false) {
+			while (Thread::get_bool(mutex, _terminate) == false) {
 				Log::process_logs(); usleep(UPDATE_INTERVAL * 1000);
 			}
 			return (NULL);
@@ -263,8 +268,7 @@
 	#pragma region Start
 
 		void Log::start() {
-			Thread::set_bool(_mutex, _terminate, false);
-			Thread::mutex_set(_mutex, Thread::MTX_INIT);
+			Thread::set_bool(mutex, _terminate, false);
 			Thread::thread_set(_thread, Thread::THRD_CREATE, main);
 		}
 
@@ -273,13 +277,16 @@
 	#pragma region Stop
 
 		void Log::stop() {
-			Thread::set_bool(_mutex, _terminate, true);
+			Thread::set_bool(mutex, _terminate, true);
 			Thread::thread_set(_thread, Thread::THRD_JOIN);
-			//Thread::mutex_set(_mutex, Thread::MTX_DESTROY);
+		}
+
+		void Log::start_mutex() {
+			Thread::mutex_set(mutex, Thread::MTX_INIT);
 		}
 
 		void Log::release_mutex() {
-			Thread::mutex_set(_mutex, Thread::MTX_DESTROY);
+			Thread::mutex_set(mutex, Thread::MTX_DESTROY);
 		}
 
 

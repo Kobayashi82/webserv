@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 21:49:50 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/23 19:19:12 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/24 13:59:41 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,11 +85,19 @@ class Net {
 		#pragma endregion
 
 		//	Variables
+		
+		enum e_socket_action { CREATE, CLOSE };
+
 	    static std::list <SocketInfo>	sockets;														//	List of all SocketInfo objects
 		static std::list <Client>		clients;														//	List of all Client objects
 
+		static int						total_clients;													//	Total number of clients conected
 		static long						read_bytes;														//	Total number of bytes downloaded by the server
 		static long						write_bytes;													//	Total number of bytes uploaded by the server
+
+		static bool										ask_socket_create_all;							//
+		static bool										ask_socket_close_all;							//
+		static std::list <std::pair <VServer *, int> >	socket_action_list;								//
 
 		//	Socket
 		static int	socket_create_all();																//	Creates all sockets from all VServers

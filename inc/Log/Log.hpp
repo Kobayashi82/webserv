@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:32:23 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/24 00:18:37 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/24 13:06:24 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,8 @@ class Log {
 		std::deque <std::string>	error;																//	Logs for 'error' in a deque
 		std::deque <std::string>	both;																//	Logs for 'both' in a deque
 
+		static pthread_mutex_t		mutex;
+
 		//	Constructors
     	Log();																							//	Default constructor
 		Log(const Log & src);																			//	Copy constructor
@@ -52,6 +54,7 @@ class Log {
 
 		static void	start();																			//	Start the thread
 		static void	stop();																				//	Stop the thread
+		static void	start_mutex();
 		static void	release_mutex();
 
 	private:
@@ -75,7 +78,6 @@ class Log {
 		};
 
 		static pthread_t			_thread;
-		static pthread_mutex_t		_mutex;
 		static bool					_terminate;															//	Flag the thread to finish
 
 		static std::queue <LogInfo>	_logs;																//	Queue container with logs that need to be processed
