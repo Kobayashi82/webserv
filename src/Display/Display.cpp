@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/14 14:37:32 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/24 15:28:42 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/24 16:57:07 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,43 +44,6 @@
 
 #pragma endregion
 
-#pragma region Utils
-
-	#pragma region Set Padding
-
-		static void setPadding(std::string str, std::string Color, std::string c, int cols, int div, std::ostringstream & oss) {
-			int Padding = ((cols) - str.length()) / (2 * div);
-			if (Padding < 0) Padding = 0;
-			
-			for (int i = 0; i < Padding; ++i) Color += c;
-			oss << Color << str;
-			Color = "";
-			for (int i = Padding + str.length(); i < cols; ++i) Color += c;
-			oss << Color;
-		}
-
-
-	#pragma endregion
-
-	#pragma region Set Line
-
-		static void setLine(std::string Color, std::string c, int cols, std::ostringstream & oss) {
-			if (cols < 0) return ;
-			for (int i = 0; i < cols; ++i) Color += c;
-			oss << Color;
-		}
-
-	#pragma endregion
-
-	#pragma region Set Terminal Size
-
-		void Display::setTerminalSize(size_t rows, size_t cols) {
-			std::cout << "\033[8;" << rows << ";" << cols << "t";
-		}
-
-	#pragma endregion
-
-#pragma endregion
 
 #pragma region Signals
 
@@ -398,6 +361,44 @@
 
 #pragma region Output
 
+	#pragma region Utils
+
+		#pragma region Set Padding
+
+			static void setPadding(std::string str, std::string Color, std::string c, int cols, int div, std::ostringstream & oss) {
+				int Padding = ((cols) - str.length()) / (2 * div);
+				if (Padding < 0) Padding = 0;
+				
+				for (int i = 0; i < Padding; ++i) Color += c;
+				oss << Color << str;
+				Color = "";
+				for (int i = Padding + str.length(); i < cols; ++i) Color += c;
+				oss << Color;
+			}
+
+
+		#pragma endregion
+
+		#pragma region Set Line
+
+			static void setLine(std::string Color, std::string c, int cols, std::ostringstream & oss) {
+				if (cols < 0) return ;
+				for (int i = 0; i < cols; ++i) Color += c;
+				oss << Color;
+			}
+
+		#pragma endregion
+
+		#pragma region Set Terminal Size
+
+			void Display::setTerminalSize(size_t rows, size_t cols) {
+				std::cout << "\033[8;" << rows << ";" << cols << "t";
+			}
+
+		#pragma endregion
+
+	#pragma endregion
+
 	#pragma region Output
 
 		#pragma region Print Log
@@ -428,7 +429,7 @@
 					int length = 0; std::string temp = "";
 					std::ostringstream ss; ss << Y " " << std::left << std::setw(width) << std::setfill(' ') << index << NC;
 
-					if (index < config.size()) temp = ss.str() + "  " + config[index]; index++;
+					if (index < config.size()) temp = ss.str() + "  " + Utils::replace_tabs(config[index++]);
 					if (temp.empty()) { oss << C "│"; setLine(C, " ", cols + 2, oss); oss << "│" NC << "\n"; continue; }
 					length = Utils::str_nocolor_length(temp);
 					if (length > cols + 2) temp = Utils::str_nocolor_trunc(temp, cols - 1);
@@ -447,78 +448,87 @@
 			void print_buttons(std::ostringstream & oss, int & cols, int & row) {
 			//	MAIN
 				Thread::mutex_set(Log::mutex, Thread::MTX_LOCK);
-				std::string Color1 = G UN; std::string Color2 = NC Y;
-				std::string top = C "├──────┬";
-				std::string middle = C "│ " + Color1 + "E" + Color2 + "xit " C "│";
-				std::string bottom = C "└──────┴";
-				int	length = (cols + 2) - 7;
 
-				if (Settings::vserver.size() > 0) {
-					top += C "─────────┬";
-					middle += " " + Color1 + "W" + Color2 + "ebServ " C "│";
-					bottom +=  "─────────┴";
-					length -= 10;
-				}
+					std::string Color1 = G UN; std::string Color2 = NC Y;
+					std::string top = C "├──────┬";
+					std::string middle = C "│ " + Color1 + "E" + Color2 + "xit " C "│";
+					std::string bottom = C "└──────┴";
+					int	length = (cols + 2) - 7;
 
-				if (Settings::current_vserver == -1) {
-					if (Settings::global.config_displayed == false) {
-						top += C "──────────┬";
-						middle += " " + Color1 + "S" + Color2 + "ettings " C "│";
-						bottom +=  "──────────┴";
-						length -= 11;
-						if (Settings::global.log.both.size() > 0) {
-							top += C "───────────┬";
-							middle += " " + Color1 + "C" + Color2 + "lear log " C "│";
-							bottom +=  "───────────┴";
-							length -= 12;
-						}
-					} else {
-						top += C "─────┬";
-						middle += " " + Color1 + "L" + Color2 + "og " C "│";
-						bottom +=  "─────┴";
-						length -= 6;
-					}
-				}
-			//	V-SERVER
-				if (Settings::current_vserver != -1) {
-					if (Settings::global.status) {
+					if (Settings::vserver.size() > 0) {
 						top += C "─────────┬";
-						middle += " " + Color1 + "V" + Color2 + "server " C "│";
+						middle += " " + Color1 + "W" + Color2 + "ebServ " C "│";
 						bottom +=  "─────────┴";
 						length -= 10;
 					}
-					if (Settings::vserver[Settings::current_vserver].config_displayed == false) {
-						top += C "──────────┬";
-						middle += " " + Color1 + "S" + Color2 + "ettings " C "│";
-						bottom +=  "──────────┴";
-						length -= 11;
-						if (Settings::vserver[Settings::current_vserver].log.both.size() > 0) {
-							top += C "───────────┬";
-							middle += " " + Color1 + "C" + Color2 + "lear log " C "│";
-							bottom +=  "───────────┴";
-							length -= 12;
+
+					if (Settings::current_vserver == -1) {
+						if (Settings::global.config_displayed == false) {
+							top += C "──────────┬";
+							middle += " " + Color1 + "S" + Color2 + "ettings " C "│";
+							bottom +=  "──────────┴";
+							length -= 11;
+							if (Settings::global.log.both.size() > 0) {
+								top += C "───────────┬";
+								middle += " " + Color1 + "C" + Color2 + "lear log " C "│";
+								bottom +=  "───────────┴";
+								length -= 12;
+							}
+						} else {
+							top += C "─────┬";
+							middle += " " + Color1 + "L" + Color2 + "og " C "│";
+							bottom +=  "─────┴";
+							length -= 6;
 						}
-					} else {
-						top += C "─────┬";
-						middle += " " + Color1 + "L" + Color2 + "og " C "│";
-						bottom +=  "─────┴";
-						length -= 6;
 					}
-				}
+				//	V-SERVER
+					if (Settings::current_vserver != -1) {
+						if (Settings::global.status) {
+							top += C "─────────┬";
+							middle += " " + Color1 + "V" + Color2 + "server " C "│";
+							bottom +=  "─────────┴";
+							length -= 10;
+						}
+						if (Settings::vserver[Settings::current_vserver].config_displayed == false) {
+							top += C "──────────┬";
+							middle += " " + Color1 + "S" + Color2 + "ettings " C "│";
+							bottom +=  "──────────┴";
+							length -= 11;
+							if (Settings::vserver[Settings::current_vserver].log.both.size() > 0) {
+								top += C "───────────┬";
+								middle += " " + Color1 + "C" + Color2 + "lear log " C "│";
+								bottom +=  "───────────┴";
+								length -= 12;
+							}
+						} else {
+							top += C "─────┬";
+							middle += " " + Color1 + "L" + Color2 + "og " C "│";
+							bottom +=  "─────┴";
+							length -= 6;
+						}
+					}
+
 				Thread::mutex_set(Log::mutex, Thread::MTX_UNLOCK);
 
 			//	DATA
 				Thread::mutex_set(Display::mutex, Thread::MTX_LOCK);
-				std::string data1, data2, Downloaded, Uploaded, Conect;
-				int Downloaded_size, Uploaded_size;
-				Utils::formatSize(Net::read_bytes, data1, data2);
-				Downloaded = Y + data1 + " " C + data2 + NC;
-				Downloaded_size = data1.size() + data2.size() + 1;
 
-				Utils::formatSize(Net::write_bytes, data1, data2);
-				Uploaded = Y + data1 + " " C + data2 + NC;
-				Uploaded_size = data1.size() + data2.size() + 1;
-				Conect = Utils::ltos(Net::total_clients);
+					std::string data1, data2, Downloaded, Uploaded, Conect;
+					int Downloaded_size, Uploaded_size; std::ostringstream ss;
+
+					Utils::formatSize(Net::read_bytes, data1, data2);
+					ss << std::left << std::fixed << std::setprecision(2) << Utils::formatSizeDbl(Net::read_bytes); data1 = ss.str();
+					Downloaded = Y + data1 + " " C + data2 + NC;
+					Downloaded_size = data1.size() + data2.size() + 1;
+
+					Utils::formatSize(Net::write_bytes, data1, data2);
+					ss.str(""); ss << std::left << std::fixed << std::setprecision(2) << Utils::formatSizeDbl(Net::write_bytes); data1 = ss.str();
+					Uploaded = Y + data1 + " " C + data2 + NC;
+					Uploaded_size = data1.size() + data2.size() + 1;
+
+					ss.str(""); ss << std::left << std::setw(3) << Utils::ltos(Net::total_clients);
+					Conect = ss.str();
+					
 				Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK);
 
 			//	PRINT BUTTONS
@@ -563,9 +573,9 @@
 				std::ostringstream oss; std::ostringstream ss; ss << Settings::vserver.size(); std::string temp = ss.str();
 				std::string Status = RD; std::string Color = RD; std::string LArrow = "  ", RArrow = "  ";
 
-				if (Thread::get_bool(mutex, Settings::global.status))									Status = G;
-				if (Settings::vserver.size() > 0)														Color = G;
-				if (Settings::vserver.size() > 0) { 													LArrow = "◄ "; RArrow = "► "; }
+				if (Thread::get_bool(mutex, Settings::global.status))																		Status = G;
+				if (Settings::vserver.size() > 0)																							Color = G;
+				if (Settings::vserver.size() > 0) { 																						LArrow = "◄ "; RArrow = "► "; }
 
 			//	TITLE
 				oss << CHIDE CUU;
@@ -575,11 +585,12 @@
 
 			//	COLOR LINES
 				bool some = false;
-				if (Settings::vserver.size() > 0 && Settings::current_vserver != -1 && Thread::get_bool(mutex, Settings::vserver[Settings::current_vserver].status))	Status = G;
+				if	(Settings::vserver.size() > 0 && Settings::current_vserver != -1
+					&& Thread::get_bool(mutex, Settings::vserver[Settings::current_vserver].status))										Status = G;
 				else if (Settings::vserver.size() > 0 && Settings::current_vserver == -1) {													Status = RD;
 					for (size_t i = 0; i < Settings::vserver.size(); ++i) {
 						if (Thread::get_bool(mutex, Settings::vserver[i].status))															Status = G;
-						else if (!Thread::get_bool(mutex, Settings::vserver[i].status))													some = true;
+						else if (!Thread::get_bool(mutex, Settings::vserver[i].status))														some = true;
 					}
 				} else 																														Status = RD;
 				if (Thread::get_bool(mutex, Settings::global.status) == false)																Status = RD;
@@ -594,48 +605,56 @@
 			//	NAME
 				ss.str("");
 				if (Settings::vserver.size() > 0 && Settings::current_vserver != -1) {
-					if (Settings::vserver[Settings::current_vserver].get("server_name").empty() && Settings::current_vserver == 0)	temp = "(1) Default";
-					else if (Settings::vserver[Settings::current_vserver].get("server_name").empty()) {								ss << Settings::current_vserver + 1;
-																																	temp = "(" + ss.str() + ") V-Server";
-					} else {																										ss << Settings::current_vserver + 1;
-																																	temp = "(" + ss.str() + ") " + Settings::vserver[Settings::current_vserver].get("server_name");
+					if (Settings::vserver[Settings::current_vserver].get("server_name").empty() && Settings::current_vserver == 0)			temp = "(1) Default";
+					else if (Settings::vserver[Settings::current_vserver].get("server_name").empty()) {										ss << Settings::current_vserver + 1;
+																																			temp = "(" + ss.str() + ") V-Server";
+					} else {																												ss << Settings::current_vserver + 1;
+																																			temp = "(" + ss.str() + ") " + Settings::vserver[Settings::current_vserver].get("server_name");
 					}
-				} else if (Status == RD && Settings::vserver.size() > 0)															temp = "Virtual servers offline";
+				} else if (Status == RD && Settings::vserver.size() > 0)																	temp = "Virtual servers offline";
 				else if (Settings::vserver.size() > 0 && Settings::current_vserver == -1)
-					if (some)																										temp = "Some virtual servers online";
-					else																											temp = "Virtual servers online";
-				else																												temp = "No virtual servers available";
+					if (some)																												temp = "Some virtual servers online";
+					else																													temp = "Virtual servers online";
+				else																														temp = "No virtual servers available";
 
-				if (temp.size() > static_cast<size_t>((cols + 2) - 27)) 															temp = temp.substr(0, (cols + 2) - 30) + "...";
+				if (temp.size() > static_cast<size_t>((cols + 2) - 27)) 																	temp = temp.substr(0, (cols + 2) - 30) + "...";
 				setPadding(temp, Status, " ", (cols + 2) - 24, 1, oss); oss << " " Y << RArrow << C "│" NC << "\n"; row++;
 				oss << C "├─────────────────┴"; setLine(C, "─", (cols + 2) - 18, oss); oss << "┤" NC << "\n"; row++;
 
 			//	LOG & SETTINGS
 				Thread::mutex_set(Log::mutex, Thread::MTX_LOCK);
-				if (Settings::current_vserver == -1 && Settings::global.config_displayed == false) {
-					if (Settings::global.autolog) {
-						if (static_cast<int>(Settings::global.log.both.size()) - (log_rows - 1) < 0) Settings::global.log_index = 0;
-						else Settings::global.log_index = static_cast<int>(Settings::global.log.both.size()) - (log_rows - 1);
-					}
-					print_log(Settings::global.log.both, Settings::global.log_index, oss, cols, row);
-				} else if (Settings::current_vserver == -1 && Settings::global.config_displayed == true)
-					print_config(Settings::global.config, Settings::global.config_index, oss, cols, row);
 
-				if (Settings::current_vserver != -1 && Settings::vserver[Settings::current_vserver].config_displayed == false) {
-					if (Settings::vserver[Settings::current_vserver].autolog) {
-						if (static_cast<int>(Settings::vserver[Settings::current_vserver].log.both.size()) - (log_rows - 1) < 0) Settings::vserver[Settings::current_vserver].log_index = 0;
-						else Settings::vserver[Settings::current_vserver].log_index = static_cast<int>(Settings::vserver[Settings::current_vserver].log.both.size()) - (log_rows - 1);
-					}
-					print_log(Settings::vserver[Settings::current_vserver].log.both, Settings::vserver[Settings::current_vserver].log_index, oss, cols, row);
-				} else if (Settings::current_vserver != -1 && Settings::vserver[Settings::current_vserver].config_displayed == true)
-					print_config(Settings::vserver[Settings::current_vserver].config, Settings::vserver[Settings::current_vserver].config_index, oss, cols, row);
+					if (Settings::current_vserver == -1 && Settings::global.config_displayed == false) {
+						if (Settings::global.autolog) {
+							if (static_cast<int>(Settings::global.log.both.size()) - (log_rows - 1) < 0) Settings::global.log_index = 0;
+							else Settings::global.log_index = static_cast<int>(Settings::global.log.both.size()) - (log_rows - 1);
+						}
+						print_log(Settings::global.log.both, Settings::global.log_index, oss, cols, row);
+					} else if (Settings::current_vserver == -1 && Settings::global.config_displayed == true)
+						print_config(Settings::global.config, Settings::global.config_index, oss, cols, row);
+
+					if (Settings::current_vserver != -1 && Settings::vserver[Settings::current_vserver].config_displayed == false) {
+						if (Settings::vserver[Settings::current_vserver].autolog) {
+							if (static_cast<int>(Settings::vserver[Settings::current_vserver].log.both.size()) - (log_rows - 1) < 0) Settings::vserver[Settings::current_vserver].log_index = 0;
+							else Settings::vserver[Settings::current_vserver].log_index = static_cast<int>(Settings::vserver[Settings::current_vserver].log.both.size()) - (log_rows - 1);
+						}
+						print_log(Settings::vserver[Settings::current_vserver].log.both, Settings::vserver[Settings::current_vserver].log_index, oss, cols, row);
+					} else if (Settings::current_vserver != -1 && Settings::vserver[Settings::current_vserver].config_displayed == true)
+						print_config(Settings::vserver[Settings::current_vserver].config, Settings::vserver[Settings::current_vserver].config_index, oss, cols, row);
+
 				Thread::mutex_set(Log::mutex, Thread::MTX_UNLOCK);
 			//	BUTTONS
 				print_buttons(oss, cols, row);
 
 			//	PRINT
 				if (redraw) { drawing = false; redraw = false; std::cout.flush(); std::cout.clear(); failCount = 0; Output(); return; }
-				std::cout << oss.str(); std::cout.flush();
+				std::string output = oss.str();
+				const size_t chunkSize = 1024; // Tamaño del fragmento, por ejemplo, 1024 caracteres
+				for (size_t i = 0; i < output.size(); i += chunkSize) {
+					std::cout << output.substr(i, chunkSize);
+					std::cout.flush(); // Asegura que se vacíe el buffer después de cada fragmento
+				}
+				//std::cout << oss.str(); std::cout.flush();
 				if (std::cout.fail()) {
 					std::cout.clear(); drawing = false; failCount++;
 					if (failCount < maxFails) { Output(); return; }
@@ -695,7 +714,7 @@
 		void * Display::main(void * args) { (void) args;
 			while (Thread::get_bool(mutex, _terminate) == false) {
 				Input();
-				if (Resized) { if (drawing) redraw = true; else Output(); }
+				if (Thread::get_bool(mutex, Resized)) { Thread::set_bool(mutex, Resized, false); if (drawing) redraw = true; else Output(); }
 				if (Thread::get_bool(mutex, _logo)) Logo();
 				if (Thread::get_bool(mutex, _update)) Output();
 				usleep(UPDATE_INTERVAL * 1000);

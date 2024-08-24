@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:36:49 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/23 13:17:55 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/24 16:56:36 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,22 +78,30 @@
 #pragma region Format Size
 
 	std::string Utils::formatSize(size_t bytes, bool just_suffix) {
-		const char * suffixes[] = {"B", "KB", "MB", "GB", "TB"};;
-		size_t suffix = 0; double size = static_cast<double>(bytes);
+		const char * suffixes[] = {"KB", "MB", "GB", "TB"};;
+		size_t suffix = 0; double size = static_cast<double>(bytes) / 1024.0;
 
-		while (size >= 1024 && suffix < 4) { size /= 1024; ++suffix; }
-		if (just_suffix) return (suffixes[suffix]);
-		return (dtos(size) + " " + suffixes[suffix]);
+		while (size >= 1024 && suffix < 3) { size /= 1024; ++suffix; }
+		if (just_suffix)		return (suffixes[suffix]);
+		else					return (dtos(size) + " " + suffixes[suffix]);
 	}
 
 	void Utils::formatSize(size_t bytes, std::string & data1, std::string & data2) {
-		const char * suffixes[] = {"B", "KB", "MB", "GB", "TB"};
-		size_t suffix = 0; double size = static_cast<double>(bytes);
+		const char * suffixes[] = {"KB", "MB", "GB", "TB"};
+		size_t suffix = 0; double size = static_cast<double>(bytes) / 1024.0;
 
-		while (size >= 1024 && suffix < 4) { size /= 1024; ++suffix; }
+		while (size >= 1024 && suffix < 3) { size /= 1024; ++suffix; }
 
 		data1 = dtos(size);
 		data2 = suffixes[suffix];
+	}
+
+	double Utils::formatSizeDbl(size_t bytes) {
+		size_t suffix = 0; double size = static_cast<double>(bytes) / 1024.0;
+
+		while (size >= 1024 && suffix < 3) { size /= 1024; ++suffix; }
+
+		return (size);
 	}
 
 #pragma endregion
@@ -177,6 +185,20 @@
 			else ++length;
 		}
 		return (length);
+	}
+
+#pragma endregion
+
+#pragma region Replace Tabs
+
+	std::string Utils::replace_tabs(const std::string & str, int tabSize) {
+		std::string result;
+
+		for (std::string::const_iterator it = str.begin(); it != str.end(); ++it) {
+			if (*it == '\t')	result.append(tabSize, ' ');
+			else				result += *it;
+		}
+		return (result);
 	}
 
 #pragma endregion

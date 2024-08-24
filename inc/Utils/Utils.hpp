@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:37:20 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/23 13:06:34 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/24 16:56:11 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,9 +29,11 @@ class Utils {
 		static std::string	dtos(double number);														//	Convert a double number to string
 		static std::string	formatSize(size_t bytes, bool just_suffix = false);							//	Format a size to string (byte, KB, MB, GB, TB)
 		static void			formatSize(size_t bytes, std::string & data1, std::string & data2);			//	Format a size to string (byte, KB, MB, GB, TB) and set it to data1 and data2
+		static double		formatSizeDbl(size_t bytes);												//	Format a size to double (byte, KB, MB, GB, TB)
 		static int			str_nocolor_length(const std::string & str);								//	Get the length of a string without the colors chars
 		static std::string	str_nocolor_trunc(const std::string & str, int length);						//	Get a string truncated to the length without counting colors chars
 		static std::string	str_nocolor(const std::string & str);										//	Get a string without the colors chars
+		static std::string	replace_tabs(const std::string & str, int tabSize = 8);
 
 		//	Network
 		static bool			isValidIP(const std::string & IP);											//	Validate an IP
