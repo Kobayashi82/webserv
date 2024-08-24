@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:30:57 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/24 17:50:55 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/24 18:05:04 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -349,7 +349,7 @@
 			if (values.size() < 2) { Log::log(RD + n_line + "Empty value for " Y "cgi" NC, Log::BOTH_ERROR); BadConfig = true; return (1); }
 			std::string filePath = values.back(); values.pop_back();
 			if (filePath.empty() || filePath[0] != '/') { Log::log(RD + n_line + "Invalid path for " Y "cgi" NC, Log::BOTH_ERROR); BadConfig = true; }
-			if (parse_path(firstPart, filePath, true, true)) { BadConfig = true; }
+			if (parse_path("CGI", filePath, true, true)) { BadConfig = true; }
 
 			for (std::vector<std::string>::iterator it = values.begin(); it != values.end(); ++it) {
 				value = *it; if (value.empty() || value[0] != '.') { Log::log(RD + n_line + "Invalid extension " Y + value + RD " for " Y "cgi" NC, Log::BOTH_ERROR); BadConfig = true; }
@@ -366,7 +366,7 @@
 			if (values.size() < 2) { Log::log(RD + n_line + "Empty value for " Y "cgi" NC, Log::BOTH_ERROR); BadConfig = true; return (1); }
 			std::string filePath = values.back(); values.pop_back();
 			if (filePath.empty() || filePath[0] != '/') { Log::log(RD + n_line + "Invalid path for " Y "cgi" NC, Log::BOTH_ERROR); BadConfig = true; }
-			if (parse_path(filePath, value, true, true)) { BadConfig = true; }
+			if (parse_path("CGI", filePath, true, true)) { BadConfig = true; }
 
 			for (std::vector<std::string>::iterator it = values.begin(); it != values.end(); ++it) {
 				value = *it; if (value.empty() || value[0] != '.') { Log::log(RD + n_line + "Invalid extension " Y + value + RD " for " Y "cgi" NC, Log::BOTH_ERROR); BadConfig = true; }
@@ -383,7 +383,7 @@
 			if (values.size() < 2) { Log::log(RD + n_line + "Empty value for " Y "cgi" NC, Log::BOTH_ERROR); BadConfig = true; return (1); }
 			std::string filePath = values.back(); values.pop_back();
 			if (filePath.empty() || filePath[0] != '/') { Log::log(RD + n_line + "Invalid path for " Y "cgi" NC, Log::BOTH_ERROR); BadConfig = true; }
-			if (parse_path(firstPart, filePath, true, true)) { BadConfig = true; }
+			if (parse_path("CGI", filePath, true, true)) { BadConfig = true; }
 
 			for (std::vector<std::string>::iterator it = values.begin(); it != values.end(); ++it) {
 				value = *it; if (value.empty() || value[0] != '.') { Log::log(RD + n_line + "Invalid extension " Y + value + RD " for " Y "cgi" NC, Log::BOTH_ERROR); BadConfig = true; }

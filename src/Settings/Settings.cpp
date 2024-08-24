@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:27:58 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/24 17:56:22 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/24 18:09:09 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -90,23 +90,31 @@
 
 			if (outfile.is_open()) {
 				outfile << "http {\n"
-						<< "    access_log logs/access.log;\n"
-						<< "    error_log logs/error.log;\n\n"
-						<< "    client_max_body_size 10M;\n\n"
-						<< "    error_page 404 /404.html;\n"
-						<< "    error_page 500 502 503 504 /50x.html;\n\n"
-						<< "    keepalive_requests 100;\n"
-						<< "    keepalive_timeout 10;\n"						
-						<< "    autoindex on;\n\n"
-						<< "    server {\n"
-						<< "        listen 8081;\n"
-						<< "        root " << path + "www/html" << ";\n"
-						<< "        index index.html;\n"
-						<< "        server_name default;\n\n"
-						<< "        location / {\n"
-						<< "            try_files $uri $uri/ =404;\n"
-						<< "        }\n"
-						<< "    }\n"
+						<< "\taccess_log logs/access.log;\n"
+						<< "\terror_log logs/error.log;\n\n"
+
+						<< "\tclient_max_body_size 10M;\n\n"
+
+						<< "\terror_page 404 /404.html;\n"
+						<< "\terror_page 500 502 503 504 /50x.html;\n\n"
+
+						<< "\tkeepalive_requests 100;\n"
+						<< "\tkeepalive_timeout 10;\n"
+						<< "\tautoindex on;\n\n"
+
+						<< "\tcgi .py /usr/bin/python3;\n"
+						<< "\tcgi .php /usr/bin/php;\n\n"
+
+						<< "\tserver {\n"
+						<< "\t\tlisten 8081;\n"
+						<< "\t\troot " << path + "www/html" << ";\n"
+						<< "\t\tindex index.html;\n"
+						<< "\t\tserver_name default;\n\n"
+
+						<< "\t\tlocation / {\n"
+						<< "\t\t\ttry_files $uri $uri/ =404;\n"
+						<< "\t\t}\n"
+						<< "\t}\n"
 						<< "}" << std::endl;
 				outfile.close();
 
