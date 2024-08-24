@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 21:55:43 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/24 14:37:13 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/24 22:24:15 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,26 +18,27 @@
 
 #pragma region Variables
 
-	std::list <Net::SocketInfo>		Net::sockets;														//	List of all SocketInfo objects
-	std::list <Client>				Net::clients;														//	List of all Client objects
+	std::list<Net::SocketInfo>				Net::sockets;												//	List of all SocketInfo objects
+	std::list<Client>						Net::clients;												//	List of all Client objects
+	Cache									Net::cache(600, 100, 10);									//	Used to store cached data, such as files or HTML responses.	(arguments: expiration in seconds, max entries, max content size in MB)
 
-	int								Net::total_clients;													//	Total number of clients conected
-	long							Net::read_bytes;													//	Total number of bytes downloaded by the server
-	long							Net::write_bytes;													//	Total number of bytes uploaded by the server
+	int										Net::total_clients;											//	Total number of clients conected
+	long									Net::read_bytes;											//	Total number of bytes downloaded by the server
+	long									Net::write_bytes;											//	Total number of bytes uploaded by the server
 
-	bool									Net::ask_socket_create_all;									//
-	bool									Net::ask_socket_close_all;									//
-	std::list <std::pair <VServer *, int> >	Net::socket_action_list;									//
+	bool									Net::ask_socket_create_all;									//	Flag indicating the request to create all sockets			(Used when Key_W is pressed)
+	bool									Net::ask_socket_close_all;									//	Flag indicating the request to close of all sockets			(Used when Key_W is pressed)
+	std::list<std::pair <VServer *, int> >	Net::socket_action_list;									//	List of VServers to enable or disable						(Used when Key_V is pressed)
 
-	int 							Net::epoll_fd = -1;													//	File descriptor for epoll
-	Net::EventInfo					Net::event_timeout;													//	EventInfo structure used for generating events in epoll and checking client timeouts
+	int 									Net::epoll_fd = -1;											//	File descriptor for epoll
+	Net::EventInfo							Net::event_timeout;											//	EventInfo structure used for generating events in epoll and checking client timeouts
 
-	const int						Net::MAX_EVENTS = 10;												//	Maximum number of events that can be handled per iteration by epoll
-	const int						Net::EPOLL_BUFFER_SIZE = 4096;										//	Size of the buffer for read and write operations
-	const int						Net::TIMEOUT_INTERVAL = 1;											//	Interval in seconds between timeout checks for inactive clients
+	const int								Net::MAX_EVENTS = 10;										//	Maximum number of events that can be handled per iteration by epoll
+	const int								Net::EPOLL_BUFFER_SIZE = 4096;								//	Size of the buffer for read and write operations
+	const int								Net::TIMEOUT_INTERVAL = 1;									//	Interval in seconds between timeout checks for inactive clients
 	
-	const int						Net::KEEP_ALIVE_TIMEOUT = 30;										//	Timeout in seconds for keep-alive (if a client is inactive for this amount of time, the connection will be closed)
-	const int						Net::KEEP_ALIVE_REQUEST = 500;										//	Maximum request for keep-alive (if a client exceeds this number of requests, the connection will be closed)
+	const int								Net::KEEP_ALIVE_TIMEOUT = 30;								//	Timeout in seconds for keep-alive (if a client is inactive for this amount of time, the connection will be closed)
+	const int								Net::KEEP_ALIVE_REQUEST = 500;								//	Maximum request for keep-alive (if a client exceeds this number of requests, the connection will be closed)
 
 	#pragma region EventInfo
 
