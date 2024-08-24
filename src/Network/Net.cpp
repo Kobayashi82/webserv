@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 21:55:43 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/24 22:24:15 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/24 22:39:39 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -337,7 +337,7 @@
 						case CLIENT: 	{ if (read_request(event)) continue; else break; }
 						case DATA: 		{ break; }
 						case CGI: 		{ break; }
-						case TIMEOUT: 	{ check_timeout(); break; }
+						case TIMEOUT: 	{ Display::update(); check_timeout(); break; }
 					}
 				}
 				if (events[i].events & EPOLLOUT) {
