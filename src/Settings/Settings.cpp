@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:27:58 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/23 23:01:22 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/24 17:56:22 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -99,7 +99,7 @@
 						<< "    keepalive_timeout 10;\n"						
 						<< "    autoindex on;\n\n"
 						<< "    server {\n"
-						<< "        listen 127.0.0.1:8081;\n"
+						<< "        listen 8081;\n"
 						<< "        root " << path + "www/html" << ";\n"
 						<< "        index index.html;\n"
 						<< "        server_name default;\n\n"

@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/12 13:59:39 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/17 23:44:56 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/24 17:53:54 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,8 +45,36 @@
 		std::string mask = IP.substr(slashPos + 1);
 
 		if (!isValid_IPAddress(ip)) return (false);
-		if (mask.find('.') != std::string::npos) return (isValid_IPAddress(mask));
-		long number; if (stol(mask, number) || number < 0 || number > 32) return (false);
+		if (mask.find('.') != std::string::npos && !isValidMask(mask))				return (false);
+		else { long number; if (stol(mask, number) || number < 0 || number > 32) 	return (false); }
+
+		return (true);
+	}
+
+#pragma endregion
+
+#pragma region Mask Valid
+
+	bool Utils::isValidMask(const std::string & mask) {
+		if (mask.empty()) return (false);
+
+		if (mask.find('.') != std::string::npos) {
+			const char * maskArray[] = {
+				"255.255.255.255", "255.255.255.254", "255.255.255.252", "255.255.255.248",
+				"255.255.255.240", "255.255.255.224", "255.255.255.192", "255.255.255.128",
+				"255.255.255.0", "255.255.254.0", "255.255.252.0", "255.255.248.0",
+				"255.255.240.0", "255.255.224.0", "255.255.192.0", "255.255.128.0",
+				"255.255.0.0", "255.254.0.0", "255.252.0.0", "255.248.0.0",
+				"255.240.0.0", "255.224.0.0", "255.192.0.0", "255.128.0.0",
+				"255.0.0.0", "254.0.0.0", "252.0.0.0", "248.0.0.0",
+				"240.0.0.0", "224.0.0.0", "192.0.0.0", "128.0.0.0", "0.0.0.0"
+			};
+
+			std::vector<std::string> validMasks(maskArray, maskArray + sizeof(maskArray) / sizeof(maskArray[0]));
+			return (std::find(validMasks.begin(), validMasks.end(), mask) != validMasks.end());
+
+		} else { long number; if (stol(mask, number) || number < 0 || number > 32) 	return (false); }
+
 		return (true);
 	}
 
@@ -109,7 +137,7 @@
 
 #pragma region Add Address
 
-	static std::vector <std::string> get_ip_range(const std::string & IP, const std::string & mask) {
+	std::vector <std::string> get_ip_range(const std::string & IP, const std::string & mask) {
 		std::vector<std::string> ip_range;
 		unsigned int ip_addr = ipToInt(IP);
 		unsigned int mask_addr = ipToInt(mask);
@@ -123,21 +151,6 @@
 
 		return (ip_range);
 	}
-
-	// static std::vector<std::string> get_ip_range(const std::string & IP, const std::string & mask) {
-	// 	std::vector<std::string> ip_range;
-	// 	unsigned int ip_addr = ipToInt(IP);
-	// 	unsigned int mask_addr = ipToInt(mask);
-	// 	unsigned int network_addr = ip_addr & mask_addr;
-	// 	unsigned int broadcast_addr = network_addr | ~mask_addr;
-
-	// 	for (unsigned int addr = network_addr + 1; addr < broadcast_addr; ++addr) {
-	// 		std::ostringstream oss; oss << ((addr >> 24) & 0xFF) << "." << ((addr >> 16) & 0xFF) << "." << ((addr >> 8) & 0xFF) << "." << (addr & 0xFF);
-	// 		ip_range.push_back(oss.str());
-	// 	}
-
-	// 	return ip_range;
-	// }
 
 	void Utils::add_address(const std::string & IP, long port, VServer & VServ) {
 		std::string ip = IP; std::string mask = "255.255.255.255";
@@ -156,7 +169,13 @@
 
 		std::vector<std::string> ip_range = get_ip_range(ip, mask);
 
+    	std::string first_ip = ip_range.front();
+    	std::string broadcast_ip = ip_range.back();
+
 		for (std::vector<std::string>::const_iterator it = ip_range.begin(); it != ip_range.end(); ++it) {
+			if (ip_range.size() > 2 && (*it == first_ip || *it == broadcast_ip)) {
+            	continue; // Skip the first and broadcast addresses
+        	}
 			bool exists = false;
 	
 			for (std::vector <std::pair<std::string, int> >::const_iterator addr_it = VServ.addresses.begin(); addr_it != VServ.addresses.end(); ++addr_it)

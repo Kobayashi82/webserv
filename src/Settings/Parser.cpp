@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:30:57 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/23 19:11:09 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/24 17:50:55 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -260,7 +260,7 @@
 					if (ip.empty()) {																	Log::log(RD + n_line + "Invalid IP for " Y "listen" NC, Log::BOTH_ERROR); return (1); }
 					if (Utils::isValidIP(temp.substr(0, slashPos)) == false) {							Log::log(RD + n_line + "Invalid IP " Y + temp.substr(0, slashPos) + RD " for " Y "listen" NC, Log::BOTH_ERROR); return (1); }
 					if (mask.empty()) {																	Log::log(RD + n_line + "Invalid mask for " Y "listen" NC, Log::BOTH_ERROR); return (1); }
-					if (mask.find('.') != std::string::npos) { if (Utils::isValidIP(mask) == false) {	Log::log(RD + n_line + "Invalid mask " Y + temp.substr(slashPos + 1) + RD " for " Y "listen" NC, Log::BOTH_ERROR); return (1); }}
+					if (mask.find('.') != std::string::npos) { if (Utils::isValidMask(mask) == false) {	Log::log(RD + n_line + "Invalid mask " Y + temp.substr(slashPos + 1) + RD " for " Y "listen" NC, Log::BOTH_ERROR); return (1); }}
 					else { long number; if (Utils::stol(mask, number) || number < 0 || number > 32) {	Log::log(RD + n_line + "Invalid mask " Y + temp.substr(slashPos + 1) + RD " for " Y "listen" NC, Log::BOTH_ERROR); return (1); }}
 					IP = temp;
 				} else {

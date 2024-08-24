@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:37:20 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/24 16:56:11 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/24 17:50:41 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,6 +37,7 @@ class Utils {
 
 		//	Network
 		static bool			isValidIP(const std::string & IP);											//	Validate an IP
+		static bool			isValidMask(const std::string & mask);										//	Validate a mask
 		static bool			isIPInRange(const std::string & IP, const std::string & range);				//	Check if an IP is in a given range
 		static void			add_address(const std::string & IP, long port, VServer & VServ);
 		static bool			isValidPort(std::string port);												//	Validate a Port in string format
