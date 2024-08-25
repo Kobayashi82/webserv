@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/24 19:39:57 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/24 22:31:23 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/25 22:20:17 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,6 +73,6 @@ class Cache {
 
 		int															_expire_time;						//	Time in seconds after which a CacheInfo entry is considered expired
 		size_t														_max_size;							//	Maximum number of files to keep in cache
-		size_t														_max_content_size;						//	Maximum size of the content allowed
+		size_t														_max_content_size;					//	Maximum size of the content allowed
 
 };

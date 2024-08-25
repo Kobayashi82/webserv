@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 14:30:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/25 20:05:13 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/25 21:01:35 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,6 @@ int main(int argc, char **argv) {
 	
 	Settings::load_args(argc, argv);
 
-	Log::start_mutex();
 	Log::start(); Display::start();
 
 	Net::epoll__create(); Net::socket_create_all(); Display::update();

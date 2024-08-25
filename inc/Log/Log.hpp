@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:32:23 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/24 13:06:24 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/25 21:01:15 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,7 +54,6 @@ class Log {
 
 		static void	start();																			//	Start the thread
 		static void	stop();																				//	Stop the thread
-		static void	start_mutex();
 		static void	release_mutex();
 
 	private:

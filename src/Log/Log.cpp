@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:32:38 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/24 15:21:39 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/25 21:00:54 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -268,6 +268,7 @@
 	#pragma region Start
 
 		void Log::start() {
+			Thread::mutex_set(mutex, Thread::MTX_INIT);
 			Thread::set_bool(mutex, _terminate, false);
 			Thread::thread_set(_thread, Thread::THRD_CREATE, main);
 		}
@@ -279,10 +280,6 @@
 		void Log::stop() {
 			Thread::set_bool(mutex, _terminate, true);
 			Thread::thread_set(_thread, Thread::THRD_JOIN);
-		}
-
-		void Log::start_mutex() {
-			Thread::mutex_set(mutex, Thread::MTX_INIT);
 		}
 
 		void Log::release_mutex() {

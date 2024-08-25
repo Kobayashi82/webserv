@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/18 11:28:40 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/24 13:34:21 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/25 23:08:33 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@
 #pragma region Constructors
 
     Client::Client(int _fd, Net::SocketInfo * _socket, std::string _IP, int _port, Net::EventInfo _event) : fd(_fd), socket(_socket), IP(_IP), port(_port), event(_event) {
-		read_pos = 0; write_pos = 0; last_activity = std::time(NULL);
+		read_pos = 0; write_pos = 0; last_activity = std::time(NULL); total_requests = 0;
 	}
     Client::Client(const Client & src) : fd(src.fd), socket(src.socket), IP(src.IP), port(src.port), event(src.event), last_activity(src.last_activity), total_requests(src.total_requests), read_buffer(src.read_buffer), write_buffer(src.write_buffer) {}
 

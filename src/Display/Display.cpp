@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/14 14:37:32 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/25 19:54:41 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/25 23:08:42 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -714,9 +714,9 @@
 		void * Display::main(void * args) { (void) args;
 			while (Thread::get_bool(mutex, _terminate) == false) {
 				Input();
-				if (Thread::get_bool(mutex, Resized)) { Thread::set_bool(mutex, Resized, false); if (drawing) redraw = true; else Output(); }
-				if (Thread::get_bool(mutex, _logo)) Logo();
-				if (Thread::get_bool(mutex, _update)) Output();
+				if (Thread::get_bool(mutex, Resized) && isRawMode()) { Thread::set_bool(mutex, Resized, false); if (drawing) redraw = true; else Output(); }
+				else if (Thread::get_bool(mutex, _logo)) Logo();
+				else if (Thread::get_bool(mutex, _update)) Output();
 				usleep(UPDATE_INTERVAL * 1000);
 			}
 
