@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 14:30:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/25 21:01:35 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/25 23:12:01 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,14 +19,7 @@
 
 //	*		siege -c 255 -t 10S 127.0.0.1:8081			135.000 transactions is a good measure
 
-//	TODO	Manage multi-uploads				(add ID to event que indique nombre de archivo y si es de lectura o escritura)
-
-//	TODO	Read/write functions for epoll
-
 //	TODO	Process_requested_path
-
-//	TODO	Security for server and cookies
-
 //	TODO	Variables $request_uri $uri
 
 //  Entry point
