@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 22:23:52 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/10 22:51:11 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/25 18:57:39 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,5 +68,39 @@
 		struct stat path_stat; stat(path.c_str(), &path_stat);
 		return (S_ISDIR(path_stat.st_mode));
 	}
+
+#pragma endregion
+
+#pragma region FullPath
+
+	std::string Utils::fullpath(const std::string & path) {
+		std::vector<std::string> split_path; std::string dir;
+		std::istringstream stream(path);
+
+		while (std::getline(stream, dir, '/')) split_path.push_back(dir);
+
+		std::vector<std::string> full_path;
+
+		for (size_t i = 0; i < split_path.size(); ++i) {
+			if (split_path[i] == "." || split_path[i].empty())	continue;
+			else if (split_path[i] == "..") {
+				if (!full_path.empty())							full_path.pop_back();
+			} else												full_path.push_back(split_path[i]);
+		}
+
+		std::string real_path = "/";
+		for (size_t i = 0; i < full_path.size(); ++i) {
+			if (i > 0) real_path += "/";
+			real_path += full_path[i];
+		}
+
+		return (real_path);
+	}
+
+#pragma endregion
+
+#pragma region IsSubpath
+
+	bool Utils::is_subpath(const std::string & path1, const std::string & path2) { return (path1.find(path2) == 0); }
 
 #pragma endregion

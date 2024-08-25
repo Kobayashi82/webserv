@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 21:55:43 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/25 11:18:32 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/25 20:04:55 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,9 +26,9 @@
 	long									Net::read_bytes;											//	Total number of bytes downloaded by the server
 	long									Net::write_bytes;											//	Total number of bytes uploaded by the server
 
-	bool									Net::ask_socket_create_all;									//	Flag indicating the request to create all sockets			(Used when Key_W is pressed)
-	bool									Net::ask_socket_close_all;									//	Flag indicating the request to close of all sockets			(Used when Key_W is pressed)
-	std::list<std::pair <VServer *, int> >	Net::socket_action_list;									//	List of VServers to enable or disable						(Used when Key_V is pressed)
+	int										Net::ask_socket = 0;										//	Flag indicating the request to create or close all sockets		(Used when Key_W is pressed)
+
+	std::list<std::pair <VServer *, int> >	Net::socket_action_list;									//	List of VServers to enable or disable							(Used when Key_V is pressed)
 
 	int 									Net::epoll_fd = -1;											//	File descriptor for epoll
 	Net::EventInfo							Net::event_timeout;											//	EventInfo structure used for generating events in epoll and checking client timeouts
@@ -44,20 +44,44 @@
 
 		#pragma region Constructors
 
-			Net::EventInfo::EventInfo() : fd(-1) {}
-			Net::EventInfo::EventInfo(int _fd, int _type, Net::SocketInfo * _socket, Client * _client) : fd(_fd), type(_type), socket(_socket), client(_client) {}
+			Net::EventInfo::EventInfo() : fd(-1), type(NOTHING), socket(NULL), client(NULL), path(""), no_cache(false) {}
+
+			Net::EventInfo::EventInfo(int _fd, int _type, Net::SocketInfo * _socket, Client * _client) : fd(_fd), type(_type), socket(_socket), client(_client), path(""), no_cache(false) {}
 
 		#pragma endregion
 
 		#pragma region Overloads
 
 			Net::EventInfo & Net::EventInfo::operator=(const EventInfo & rhs) {
-				if (this != &rhs) { fd = rhs.fd; type = rhs.type; socket = rhs.socket; client = rhs.client; }
+				if (this != &rhs) {
+					fd = rhs.fd; type = rhs.type; socket = rhs.socket; client = rhs.client; path = rhs.path; no_cache = rhs.no_cache;
+					read_buffer = rhs.read_buffer; write_buffer = rhs.write_buffer; event_data = rhs.event_data;
+				}
 				return (*this);
 			}
 
-			bool Net::EventInfo::operator==(const EventInfo & rhs) {
-				return (fd == rhs.fd && type == rhs.type && socket == rhs.socket && client == rhs.client);
+			bool Net::EventInfo::operator==(const EventInfo & rhs) const {
+				return (fd == rhs.fd && type == rhs.type && socket == rhs.socket && client == rhs.client && read_buffer == rhs.read_buffer && write_buffer == rhs.write_buffer && event_data == rhs.event_data && path == rhs.path && no_cache == rhs.no_cache);
+			}
+
+		#pragma endregion
+
+		#pragma region Remove
+
+			int Net::EventInfo::remove() {
+				if (this->type == CLIENT) {
+					this->client->remove();
+				} else if (this->type == SOCKET) {
+					this->socket->remove();
+				} else if (this->type == DATA || this->type == CGI) {
+					epoll_del(this);
+
+					std::list<EventInfo> & events = this->client->event.event_data;
+					for (std::list<EventInfo>::iterator it = events.begin(); it != events.end(); ++it)
+						if (*it == *this) { events.erase(it); return (1); }
+				}
+
+				return (0);
 			}
 
 		#pragma endregion
@@ -79,7 +103,7 @@
 				return (*this);
 			}
 
-			bool Net::SocketInfo::operator==(const SocketInfo & rhs) {
+			bool Net::SocketInfo::operator==(const SocketInfo & rhs) const {
 				return (fd == rhs.fd && IP == rhs.IP && port == rhs.port && event == rhs.event && VServ == rhs.VServ && clients == rhs.clients);
 			}
 
@@ -253,6 +277,45 @@
 
 	#pragma endregion
 
+	#pragma region Server Status
+
+		int Net::check_server_status() {
+			bool update_display = false;
+
+			Thread::mutex_set(Display::mutex, Thread::MTX_LOCK);
+
+			if (socket_action_list.size() > 0) {
+				std::list <std::pair<VServer *, int> >::iterator it = socket_action_list.begin();
+				while (it != socket_action_list.end()) {
+
+					Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK);
+
+						if (it->second == CREATE) socket_create(it->first);
+						if (it->second == CLOSE) socket_close(it->first);
+						
+					Thread::mutex_set(Display::mutex, Thread::MTX_LOCK);
+
+					it = socket_action_list.erase(it);
+				}
+				update_display = true;
+			}
+
+			Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK);
+	
+			if (update_display) Display::update();
+
+			Thread::mutex_set(Display::mutex, Thread::MTX_LOCK);
+
+				if (ask_socket == 1) { ask_socket = 0; Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK); socket_create_all(); Display::update(); return (1); }
+				if (ask_socket == 2) { ask_socket = 0; Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK); socket_close_all();  Display::update(); return (1); }
+
+			Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK);
+
+			return (0);
+		}
+
+	#pragma endregion
+
 #pragma endregion
 
 #pragma region EPOLL
@@ -321,8 +384,8 @@
 	#pragma region Events
 
 		int Net::epoll_events() {
-			bool update_display = false;
 			struct epoll_event events[MAX_EVENTS];
+
 			int eventCount = epoll_wait(epoll_fd, events, MAX_EVENTS, 100);
 			if (eventCount == -1) return (1);
 
@@ -333,50 +396,23 @@
 
 				if (events[i].events & EPOLLIN) {
 					switch (event->type) {
-						case SOCKET: 	{ socket_accept(event); break; }
-						case CLIENT: 	{ if (read_request(event)) continue; break; }
-						case DATA: 		{ if (read_data(event)) continue; break; }
-						case CGI: 		{ if (read_data(event)) continue; break; }
-						case TIMEOUT: 	{ Display::update(); check_timeout(); break; }
+						case SOCKET: 	{ socket_accept(event);											break; }
+						case CLIENT: 	{ if (read_request(event))	continue;							break; }
+						case DATA: 		{ if (read_data(event))		continue;							break; }
+						case CGI: 		{ if (read_data(event))		continue;							break; }
+						case TIMEOUT: 	{ Display::update(); check_timeout(); cache.remove_expired();	break; }
 					}
 				}
 				if (events[i].events & EPOLLOUT) {
 					switch (event->type) {
-						case CLIENT: 	{ write_response(event); break; }
-						case DATA: 		{ break; }
-						case CGI: 		{ break; }
+						case CLIENT: 	{ write_response(event);										break; }
+						case DATA: 		{																break; }
+						case CGI: 		{																break; }
 					}
 				}
 			}
 
-			Thread::mutex_set(Display::mutex, Thread::MTX_LOCK);
-
-				if (socket_action_list.size() > 0) {
-					std::list <std::pair<VServer *, int> >::iterator it = socket_action_list.begin();
-					while (it != socket_action_list.end()) {
-
-						Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK);
-
-							if (it->second == CREATE) socket_create(it->first);
-							if (it->second == CLOSE) socket_close(it->first);
-						
-						Thread::mutex_set(Display::mutex, Thread::MTX_LOCK);
-
-						it = socket_action_list.erase(it);
-					}
-					update_display = true;
-				}
-
-				Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK);
-				if (update_display) Display::update();
-
-			Thread::mutex_set(Display::mutex, Thread::MTX_LOCK);
-
-				if (ask_socket_create_all) { Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK); socket_create_all(); Display::update(); return (0); }
-				if (ask_socket_close_all) { Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK); socket_close_all(); Display::update(); return (0); }
-
-			Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK);
-
+			check_server_status();
 			return (0);
 		}
 
@@ -439,13 +475,11 @@
 				char peek_buffer[EPOLL_BUFFER_SIZE + 1];	memset(peek_buffer, 0, sizeof(peek_buffer));
 
 				ssize_t bytes_peek = recv(event->fd, peek_buffer, EPOLL_BUFFER_SIZE + 1, MSG_PEEK);
-
 				if (bytes_peek <= 0) { event->client->remove(); return (1); }
 
 				event->client->update_last_activity();
 
 				ssize_t bytes_read = recv(event->fd, buffer, EPOLL_BUFFER_SIZE, 0);
-				
 				if (bytes_read > 0) {
 					event->client->read_buffer.insert(event->client->read_buffer.end(), buffer, buffer + bytes_read);
 
@@ -525,14 +559,15 @@
 
 			void Net::process_response(EventInfo * event) {
 				// Crear una respuesta HTTP básica
+				std::string body = "<html><body><h1>Hello, World!</h1></body></html>";
 				std::string response = 
 					"HTTP/1.1 200 OK\r\n"
 					"Content-Type: text/html\r\n"
-					"Content-Length: 48\r\n"
+					"Content-Length: " + Utils::ltos(body.size()) + "\r\n"
 					"Connection: keep-alive\r\n"
 					//"Connection: close\r\n"
-					"\r\n"
-					"<html><body><h1>Hello, World!</h1></body></html>";
+					"\r\n" + body;
+
 				event->client->write_buffer.insert(event->client->write_buffer.end(), response.begin(), response.end());
 				epoll_edit(event, true, true);
 
@@ -552,16 +587,14 @@
 				char peek_buffer[EPOLL_BUFFER_SIZE + 1];	memset(peek_buffer, 0, sizeof(peek_buffer));
 
 				ssize_t bytes_peek = recv(event->fd, peek_buffer, EPOLL_BUFFER_SIZE + 1, MSG_PEEK);
-
-				// if (bytes_peek <= 0) { event->client->remove(); return (1); }										remove data from client->data
+				if (bytes_peek <= 0) { event->remove(); return (1); }
 
 				ssize_t bytes_read = recv(event->fd, buffer, EPOLL_BUFFER_SIZE, 0);
-				
 				if (bytes_read > 0) {
 					event->read_buffer.insert(event->client->read_buffer.end(), buffer, buffer + bytes_read);
 
 					if (bytes_peek <= EPOLL_BUFFER_SIZE) process_data(event);
-				} // else if (bytes_read <= 0) { event->client->remove(); return (1); }									remove data from client->data
+				} else if (bytes_read <= 0) {  event->remove(); return (1); }
 
 				return (0);
 			}
@@ -575,14 +608,16 @@
 
 				//	if (body > max_body_size) return lo que sea
 
+				if (event->type == DATA && event->no_cache == false) cache.add(event->path, request);
+
 				std::istringstream request_stream(request);
 				std::string line;
 				if (std::getline(request_stream, line))
 				Utils::trim(line);
 				Log::log(line, Log::BOTH_ACCESS);
 
-				event->read_buffer.clear();																	//	Aqui si vaciamos el buffer
-				// process_response(event);																	process file to generate response
+				event->read_buffer.clear();
+				// process_response(event);
 			}
 
 		#pragma endregion

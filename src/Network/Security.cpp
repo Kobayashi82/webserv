@@ -6,13 +6,13 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/25 11:19:15 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/25 13:53:42 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/25 18:56:30 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Security.hpp"
 
-#pragma region Sanitizer
+#pragma region Encoder / Decoder
 
 	#pragma region URL
 
@@ -20,7 +20,7 @@
 
 		#pragma region Encode
 
-			std::string encode_url(const std::string & url) {
+			std::string Security::encode_url(const std::string & url) {
 				std::ostringstream encode;
 				encode << std::hex << std::uppercase;
 
@@ -37,7 +37,7 @@
 
 		#pragma region Decode
 
-			std::string decode_url(const std::string & url) {
+			std::string Security::decode_url(const std::string & url) {
 				std::ostringstream decode;
 
 				for (size_t i = 0; i < url.size(); ++i) {
@@ -60,9 +60,9 @@
 
 	//	Al enviar html y recibir un Content-Type = text/html
 
-		#pragma region Decode
+		#pragma region Encode
 
-			std::string encode_html(const std::string & content) {
+			std::string Security::encode_html(const std::string & content) {
 				std::string encode;
 				encode.reserve(content.size());
 
@@ -85,7 +85,7 @@
 
 		#pragma region Decode
 
-			std::string decode_html(const std::string & content) {
+			std::string Security::decode_html(const std::string & content) {
 				std::string decode;
 				decode.reserve(content.size());
 
@@ -118,7 +118,7 @@
 
 		#pragma region Encode
 
-			std::string encode_css(const std::string & content) {
+			std::string Security::encode_css(const std::string & content) {
 				if (content.find("<script>") != std::string::npos)
 					throw std::runtime_error("400 Bad Request - Potentially dangerous content");
 
@@ -142,7 +142,7 @@
 
 		#pragma region Decode
 
-			std::string decode_css(const std::string & content) {
+			std::string Security::decode_css(const std::string & content) {
 				if (content.find("<script>") != std::string::npos)
 					throw std::runtime_error("400 Bad Request - Potentially dangerous content");
 
@@ -175,7 +175,7 @@
 
 		#pragma region Encode
 
-			std::string encode_xml(const std::string & content) {
+			std::string Security::encode_xml(const std::string & content) {
 				std::ostringstream encode;
 
 				for (size_t i = 0; i < content.size(); ++i) {
@@ -196,7 +196,7 @@
 
 		#pragma region Decode
 
-			std::string decode_xml(const std::string & content) {
+			std::string Security::decode_xml(const std::string & content) {
 				std::string decode;
 				decode.reserve(content.size());
 
@@ -228,7 +228,7 @@
 
 		#pragma region Encode
 
-			std::string encode_json(const std::string & content) {
+			std::string Security::encode_json(const std::string & content) {
 				std::ostringstream encode;
 
 				for (size_t i = 0; i < content.size(); ++i) {
@@ -252,7 +252,7 @@
 
 		#pragma region Decode
 
-			std::string decode_json(const std::string & content) {
+			std::string Security::decode_json(const std::string & content) {
 				std::ostringstream decode;
 
 				for (size_t i = 0; i < content.size(); ++i) {
@@ -291,7 +291,7 @@
 
 		#pragma region Encode
 
-			std::string encode_javascript(const std::string & content) {
+			std::string Security::encode_javascript(const std::string & content) {
 				std::ostringstream encode;
 
 				 for (size_t i = 0; i < content.size(); ++i) {
@@ -313,7 +313,7 @@
 
 		#pragma region Decode
 
-			std::string decode_javascript(const std::string & content) {
+			std::string Security::decode_javascript(const std::string & content) {
 				std::ostringstream decode;
 
 				for (size_t i = 0; i < content.size(); ++i) {

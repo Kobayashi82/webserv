@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/14 14:37:32 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/24 16:57:07 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/25 19:54:41 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -254,8 +254,8 @@
 
 					Settings::global.status = !Settings::global.status;
 
-					if (Settings::global.status)															Net::ask_socket_create_all = true;
-					else																					Net::ask_socket_close_all = true;
+					if (Settings::global.status)															Net::ask_socket = 1;
+					else																					Net::ask_socket = 2;
 
 				Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK);
 

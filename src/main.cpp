@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 14:30:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/24 18:16:29 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/25 20:05:13 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,6 @@
 //	TODO	Manage multi-uploads				(add ID to event que indique nombre de archivo y si es de lectura o escritura)
 
 //	TODO	Read/write functions for epoll
-//	TODO	Cache
 
 //	TODO	Process_requested_path
 
@@ -33,14 +32,14 @@
 //  Entry point
 int main(int argc, char **argv) {
 	
-    Settings::load_args(argc, argv);
+	Settings::load_args(argc, argv);
 
 	Log::start_mutex();
 	Log::start(); Display::start();
 
-	Net::epoll__create(); Net::socket_create_all();
+	Net::epoll__create(); Net::socket_create_all(); Display::update();
 
-    while (Display::isTerminate() == -1) {
+	while (Display::isTerminate() == -1) {
 		Net::epoll_events();
 	}
 	
@@ -53,5 +52,5 @@ int main(int argc, char **argv) {
 	Display::disableRawMode();
 	Settings::clear();
 
-    return (Settings::terminate);
+	return (Settings::terminate);
 }

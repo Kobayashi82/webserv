@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:37:20 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/24 17:50:41 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/25 18:55:35 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,6 +42,7 @@ class Utils {
 		static void			add_address(const std::string & IP, long port, VServer & VServ);
 		static bool			isValidPort(std::string port);												//	Validate a Port in string format
 		static bool			isValidPort(int port);														//	Validate a Port in numeric format
+		static bool 		valid_url(const std::string & url);											//	Validate a url or resource path
 
 		//	Files
 		static std::string	programPath();																//	Get the path of the executable (return '/' if fails)
@@ -49,5 +50,7 @@ class Utils {
 		static int 			file_exists(const std::string & File);										//	Check if a file exists (0 = Exists, 1 = Don't Exists, 2 = No read permissions)
 		static bool			isFile(const std::string & path);											//	Check if a Path is a file
 		static bool			isDirectory(const std::string & path);										//	Check if a Path is a directory
+		static std::string	fullpath(const std::string & path);											//	Return the full path of path (process ./ and ../ and must be absolute)
+		static bool 		is_subpath(const std::string & path1, const std::string & path2);			//	Check if path1 is inside of path2
 
 };

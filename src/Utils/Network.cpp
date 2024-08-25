@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/12 13:59:39 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/24 17:53:54 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/25 18:56:19 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -183,6 +183,23 @@
 
 			if (!exists) VServ.addresses.push_back(std::make_pair(*it, port));
 		}
+	}
+
+#pragma endregion
+
+#pragma region Valid URL
+
+	bool Utils::valid_url(const std::string & url) {
+		const std::string blacklist = ";|&`><$\\!";
+
+		for (size_t i = 0; i < url.size(); ++i) {
+			char ch = url[i];
+			if (blacklist.find(ch) != std::string::npos) return (false);
+		}
+
+		if (url.find("../") != std::string::npos || url.find("..\\") != std::string::npos) return (false);
+
+		return (true);
 	}
 
 #pragma endregion

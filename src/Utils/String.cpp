@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:36:49 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/24 16:56:36 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/25 19:40:50 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,7 +83,9 @@
 
 		while (size >= 1024 && suffix < 3) { size /= 1024; ++suffix; }
 		if (just_suffix)		return (suffixes[suffix]);
-		else					return (dtos(size) + " " + suffixes[suffix]);
+		
+		std::ostringstream oss; oss << std::fixed << std::setprecision(2) << size;
+		return (oss.str() + " " + suffixes[suffix]);
 	}
 
 	void Utils::formatSize(size_t bytes, std::string & data1, std::string & data2) {

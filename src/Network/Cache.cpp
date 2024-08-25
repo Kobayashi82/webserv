@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/24 19:40:07 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/24 22:34:22 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/25 19:35:10 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -97,7 +97,7 @@
 		#pragma region Add
 
 			void Cache::add(const std::string & path, const std::string & content) {
-				if (content.size() > _max_content_size) return;
+				if (path.empty() || content.empty() || content.size() > _max_content_size) return;
 				std::map <std::string, CacheInfo>::iterator it = _cache.find(path);
 
 				if (it != _cache.end()) {

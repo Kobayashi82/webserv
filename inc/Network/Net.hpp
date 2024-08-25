@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 21:49:50 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/25 11:09:09 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/25 19:52:26 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 
 #include "Settings.hpp"
 #include "Cache.hpp"
+#include "Security.hpp"
 
 #include <iostream>																						//	For standard input/output stream objects like std::cin, std::cout
 #include <deque>																						//	For std::deque container
@@ -44,6 +45,9 @@ class Net {
 		    size_t					read_pos;															//	Current position in the read buffer
 		    size_t					write_pos;															//	Current position in the write buffer
 
+			std::string 			path;																//	Path of the file
+			bool					no_cache;															//	Do not keep in cache
+
 			std::list <EventInfo>	event_data;															//	List of related EventInfo objects. Used for files and CGIs
 
 			//	Constructors
@@ -52,7 +56,9 @@ class Net {
 
 			//	Overloads
 			EventInfo &		operator=(const EventInfo & rhs);											//	Overload for asignation
-			bool			operator==(const EventInfo & rhs);											//	Overload for comparison
+			bool			operator==(const EventInfo & rhs) const;									//	Overload for comparison
+
+			int 			remove();
 
 		};
 
@@ -75,7 +81,7 @@ class Net {
 
 			//	Overloads
 			SocketInfo & 	operator=(const SocketInfo & rhs);											//	Overload for asignation
-			bool 			operator==(const SocketInfo & rhs);											//	Overload for comparison
+			bool 			operator==(const SocketInfo & rhs) const;									//	Overload for comparison
 
 			//	Methods
 			void 			remove();																	//	Remove a SocketInfo object
@@ -85,7 +91,7 @@ class Net {
 		#pragma endregion
 
 		//	Variables
-		enum e_socket_action { CREATE, CLOSE };															//	Enumeration for socket actions							(Used when Key_W and Key_V are pressed)
+		enum e_socket_action { CREATE, CLOSE };															//	Enumeration for socket actions									(Used when Key_W and Key_V are pressed)
 
 	    static std::list <SocketInfo>					sockets;										//	List of all SocketInfo objects
 		static std::list <Client>						clients;										//	List of all Client objects
@@ -96,9 +102,9 @@ class Net {
 		static long										read_bytes;										//	Total number of bytes downloaded by the server
 		static long										write_bytes;									//	Total number of bytes uploaded by the server
 
-		static bool										ask_socket_create_all;							//	Flag indicating the request to create all sockets		(Used when Key_W is pressed)
-		static bool										ask_socket_close_all;							//	Flag indicating the request to close of all sockets		(Used when Key_W is pressed)
-		static std::list <std::pair <VServer *, int> >	socket_action_list;								//	List of VServers to enable or disable					(Used when Key_V is pressed)
+		static int										ask_socket;										//	Flag indicating the request to create or close all sockets		(Used when Key_W is pressed)
+
+		static std::list <std::pair <VServer *, int> >	socket_action_list;								//	List of VServers to enable or disable							(Used when Key_V is pressed)
 
 		//	Socket
 		static int	socket_create_all();																//	Creates all sockets from all VServers
@@ -117,7 +123,7 @@ class Net {
 	private:
 
 		//	Variables
-		enum e_type { SOCKET, CLIENT, DATA, CGI, TIMEOUT };												//	Enumeration for event types used in EventInfo
+		enum e_type { NOTHING, SOCKET, CLIENT, DATA, CGI, TIMEOUT };									//	Enumeration for event types used in EventInfo
 		
 		static int										epoll_fd;										//	File descriptor for epoll
 		static EventInfo								event_timeout;									//	EventInfo structure used for generating events in epoll and checking client timeouts
@@ -132,19 +138,18 @@ class Net {
 		//	Socket
 		static void	socket_accept(EventInfo * event);													//	Accepts a new connection
 		static bool	socket_exists(const std::string & IP, int port);									//	Checks if a socket with the given IP address and port exists
-		
+		static int	check_server_status();
+
 		//	EPOLL
 		static int	create_timeout();																	//	Creates a file descriptor for the client timeout checker
 		static void check_timeout();																	//	Checks for clients that have timed out
 
 		static int	read_data(EventInfo * event);
-		static int	read_cgi(EventInfo * event);
 		static int	read_request(EventInfo * event);
 
 		static void	write_response(EventInfo * event);
 
 		static void	process_data(EventInfo * event);
-		static void	process_cgi(EventInfo * event);
 		static void	process_request(EventInfo * event);
 		static void	process_response(EventInfo * event);
 
