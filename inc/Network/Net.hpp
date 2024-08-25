@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 21:49:50 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/24 22:35:52 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/25 11:09:09 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -137,8 +137,14 @@ class Net {
 		static int	create_timeout();																	//	Creates a file descriptor for the client timeout checker
 		static void check_timeout();																	//	Checks for clients that have timed out
 
+		static int	read_data(EventInfo * event);
+		static int	read_cgi(EventInfo * event);
 		static int	read_request(EventInfo * event);
+
 		static void	write_response(EventInfo * event);
+
+		static void	process_data(EventInfo * event);
+		static void	process_cgi(EventInfo * event);
 		static void	process_request(EventInfo * event);
 		static void	process_response(EventInfo * event);
 
