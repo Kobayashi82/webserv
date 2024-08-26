@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 11:01:23 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/23 23:51:15 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/26 14:13:00 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,9 +16,9 @@
 
 	#pragma region Set
 
-		int		Thread::thread_set(pthread_t & thread, int action, void * (*func)(void *)) {				//	Create, join or detach a thread
+		int		Thread::thread_set(pthread_t & thread, int action, void * (*func)(void *), void * args) {
 			switch (action) {
-				case THRD_CREATE: return (func == NULL || pthread_create(&thread, NULL, func, NULL));
+				case THRD_CREATE: return (func == NULL || pthread_create(&thread, NULL, func, args));
 				case THRD_JOIN: return (pthread_join(thread, NULL));
 				case THRD_DETACH: return (pthread_detach(thread));
 				default: return (0);
@@ -42,6 +42,25 @@
 				default: return (0);
 			}
 		}
+
+	#pragma endregion
+
+#pragma region Conditional Var
+
+	#pragma region Set
+
+		int		Thread::cond_set(pthread_cond_t & cond, pthread_mutex_t * mutex, int action) {				//	Initializes, wait, signal, broadcast or destroys a conditional var
+			switch (action) {
+				case COND_INIT: return (pthread_cond_init(&cond, NULL));
+				case COND_WAIT: return (pthread_cond_wait(&cond, mutex));
+				case COND_SIGNAL: return (pthread_cond_signal(&cond));
+				case COND_BROADCAST: return (pthread_cond_broadcast(&cond));
+				case COND_DESTROY: return (pthread_cond_destroy(&cond));
+				default: return (0);
+			}
+		}
+
+	#pragma endregion
 
 	#pragma endregion
 
@@ -74,6 +93,25 @@
 
 		bool		Thread::get_bool(pthread_mutex_t & mutex, bool & value1) {								//	Retrieves the value of an integer protected by a mutex
 			bool result;
+
+			mutex_set(mutex, MTX_LOCK);
+			result = value1;
+			mutex_set(mutex, MTX_UNLOCK);
+			return (result);
+		}
+
+	#pragma endregion
+
+	#pragma region Size_t
+
+		void	Thread::set_size_t(pthread_mutex_t & mutex, size_t & value1, size_t value2) {				//	Sets the value of an size_t protected by a mutex
+			mutex_set(mutex, MTX_LOCK);
+			value1 = value2;
+			mutex_set(mutex, MTX_UNLOCK);
+		}
+
+		size_t	Thread::get_size_t(pthread_mutex_t & mutex, size_t & value1) {								//	Retrieves the value of an size_t protected by a mutex
+			size_t result;
 
 			mutex_set(mutex, MTX_LOCK);
 			result = value1;

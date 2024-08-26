@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 21:55:43 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/25 23:08:56 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/26 19:24:41 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,9 +44,9 @@
 
 		#pragma region Constructors
 
-			Net::EventInfo::EventInfo() : fd(-1), type(NOTHING), socket(NULL), client(NULL), path(""), no_cache(false) {}
-
-			Net::EventInfo::EventInfo(int _fd, int _type, Net::SocketInfo * _socket, Client * _client) : fd(_fd), type(_type), socket(_socket), client(_client), path(""), no_cache(false) {}
+			Net::EventInfo::EventInfo() : fd(-1), type(NOTHING), socket(NULL), client(NULL), epollin(false), epollout(false), path(""), no_cache(false) {}
+			Net::EventInfo::EventInfo(int _fd, int _type, Net::SocketInfo * _socket, Client * _client) : fd(_fd), type(_type), socket(_socket), client(_client), epollin(false), epollout(false), path(""), no_cache(false) {}
+			Net::EventInfo::EventInfo(const EventInfo & src) { *this = src; }
 
 		#pragma endregion
 
@@ -54,14 +54,15 @@
 
 			Net::EventInfo & Net::EventInfo::operator=(const EventInfo & rhs) {
 				if (this != &rhs) {
-					fd = rhs.fd; type = rhs.type; socket = rhs.socket; client = rhs.client; path = rhs.path; no_cache = rhs.no_cache;
+					fd = rhs.fd; type = rhs.type; socket = rhs.socket; client = rhs.client; epollin = rhs.epollin; epollout = rhs.epollout; path = rhs.path; no_cache = rhs.no_cache;
 					read_buffer = rhs.read_buffer; write_buffer = rhs.write_buffer; event_data = rhs.event_data;
 				}
 				return (*this);
 			}
 
 			bool Net::EventInfo::operator==(const EventInfo & rhs) const {
-				return (fd == rhs.fd && type == rhs.type && socket == rhs.socket && client == rhs.client && read_buffer == rhs.read_buffer && write_buffer == rhs.write_buffer && event_data == rhs.event_data && path == rhs.path && no_cache == rhs.no_cache);
+				return (fd == rhs.fd && type == rhs.type && socket == rhs.socket && client == rhs.client && epollin == rhs.epollin && epollout == rhs.epollout
+				&& path == rhs.path && no_cache == rhs.no_cache && read_buffer == rhs.read_buffer && write_buffer == rhs.write_buffer && event_data == rhs.event_data);
 			}
 
 		#pragma endregion
@@ -93,6 +94,7 @@
 		#pragma region Constructors
 
 			Net::SocketInfo::SocketInfo(int _fd, const std::string & _IP, int _port, EventInfo _event, VServer * _VServ) : fd(_fd), IP(_IP), port(_port), event(_event), VServ(_VServ) {}
+			Net::SocketInfo::SocketInfo(const SocketInfo & src) { *this = src; }
 
 		#pragma endregion
 
@@ -141,9 +143,9 @@
 		#pragma region Create All
 
 			int Net::socket_create_all() {
-				if (Thread::get_bool(Display::mutex, Settings::global.status) == false) return (1);
-
 				bool nothing_created = true;
+
+				if (Thread::get_bool(Display::mutex, Settings::global.status) == false) return (1);
 
 				for (std::deque <VServer>::iterator vserv_it = Settings::vserver.begin(); vserv_it != Settings::vserver.end(); ++vserv_it)
 					if (!socket_create(&(*vserv_it))) nothing_created = false;
@@ -195,7 +197,7 @@
 					SocketInfo &socketInfo = sockets.back();
 					socketInfo.event.socket = &socketInfo;
 
-					if (epoll_add(&(socketInfo.event)) == -1) {
+					if (epoll_add(&(socketInfo.event), true, false) == -1) {
 						Log::log("Socket " + addr_it->first + ":" + Utils::ltos(addr_it->second) + " cannot be created", Log::BOTH_ERROR, VServ);
 						close(serverSocket); sockets.pop_back(); continue;
 					}
@@ -268,7 +270,7 @@
 			event->socket->clients.push_back(&cli);
 			cli.event.client = &cli;
 
-			if (epoll_add(&(cli.event)) == -1) { close(fd); clients.pop_back(); event->socket->clients.pop_back(); return; }
+			if (epoll_add(&(cli.event), true, false) == -1) { close(fd); clients.pop_back(); event->socket->clients.pop_back(); return; }
 
 			Thread::mutex_set(Display::mutex, Thread::MTX_LOCK);
 			total_clients++;
@@ -307,7 +309,7 @@
 			Thread::mutex_set(Display::mutex, Thread::MTX_LOCK);
 
 				if (ask_socket == 1) { ask_socket = 0; Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK); socket_create_all(); Display::update(); return (1); }
-				if (ask_socket == 2) { ask_socket = 0; Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK); socket_close_all();  Display::update(); return (1); }
+				if (ask_socket == 2) { ask_socket = 0; Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK); socket_close_all();  Display::update(); return (2); }
 
 			Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK);
 
@@ -327,7 +329,7 @@
 
 				epoll_fd = epoll_create(1024);
 				if (epoll_fd == -1) { Log::log(RD "Cannot create " Y "EPOLL" NC, Log::BOTH_ERROR); return (1); }
-				if (!create_timeout()) epoll_add(&event_timeout);
+				if (!create_timeout()) epoll_add(&event_timeout, true, false);
 
 				return (0);
 		}
@@ -345,29 +347,39 @@
 	
 	#pragma region Add
 
-		int Net::epoll_add(EventInfo * event) {
+		int Net::epoll_add(EventInfo * event, bool epollin, bool epollout) {
 			struct epoll_event epoll_event;
 
 			epoll_event.data.ptr = event;
-			epoll_event.events = EPOLLIN;
-		
+
+			if (epollin && epollout)	epoll_event.events = EPOLLIN | EPOLLOUT;
+			else if (epollin) 			epoll_event.events = EPOLLIN;
+			else if (epollout) 			epoll_event.events = EPOLLOUT;
+			else { 						return (0); }
+
+			event->epollin = epollin;
+			event->epollout = epollout;
+
 			return (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, event->fd, &epoll_event));
 		}
 
 	#pragma endregion
 
-	#pragma region Edit
+	#pragma region Set
 
-		int Net::epoll_edit(EventInfo * event, bool epollin, bool epollout) {
+		int Net::epoll_set(EventInfo * event, bool epollin, bool epollout) {
 			struct epoll_event epoll_event;
 
 			epoll_event.data.ptr = event;
 
-			if (epollin && epollout) epoll_event.events = EPOLLIN | EPOLLOUT;
-			else if (epollin) epoll_event.events = EPOLLIN;
-			else if (epollout) epoll_event.events = EPOLLOUT;
-			else return (0);
-		
+			if (epollin && epollout)	epoll_event.events = EPOLLIN | EPOLLOUT;
+			else if (epollin) 			epoll_event.events = EPOLLIN;
+			else if (epollout)			epoll_event.events = EPOLLOUT;
+			else {				 		return (0); }
+
+			event->epollin = epollin;
+			event->epollout = epollout;
+
 			return (epoll_ctl(epoll_fd, EPOLL_CTL_MOD, event->fd, &epoll_event));
 		}
 
@@ -376,6 +388,8 @@
 	#pragma region Del
 
 		void Net::epoll_del(EventInfo * event) {
+			event->epollin = false;
+			event->epollout = false;
 			epoll_ctl(epoll_fd, EPOLL_CTL_DEL, event->fd, NULL);
 		}
 
@@ -520,7 +534,7 @@
 				}
 				
 				if (event->client->write_buffer.empty()) {
-					epoll_edit(event, true, false);
+					epoll_set(event, true, false);
 
 					long MaxRequests = KEEP_ALIVE_TIMEOUT;
 
@@ -569,7 +583,7 @@
 					"\r\n" + body;
 
 				event->client->write_buffer.insert(event->client->write_buffer.end(), response.begin(), response.end());
-				epoll_edit(event, true, true);
+				epoll_set(event, true, true);
 
 				//	Despues de procesar y enviar la respuesta, si total_request = max_requests cerrar cliente
 			}

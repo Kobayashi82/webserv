@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/14 14:37:32 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/25 23:35:43 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/26 13:15:39 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -565,6 +565,7 @@
 
 			void Display::Output() {
 				if (drawing || Settings::check_only || !isRawMode() || ForceRawModeDisabled) return; else  drawing = true;
+				bool isUpdate = Thread::get_bool(mutex, _update);
 
 			//	VARIABLES
 				winsize w; ioctl(0, TIOCGWINSZ, &w); int cols = w.ws_col - 4, row = 0;
@@ -648,20 +649,20 @@
 
 			//	PRINT
 				if (redraw) { drawing = false; redraw = false; std::cout.flush(); std::cout.clear(); failCount = 0; Output(); return; }
-				std::string output = oss.str();
-				const size_t chunkSize = 1024; // Tamaño del fragmento, por ejemplo, 1024 caracteres
-				for (size_t i = 0; i < output.size(); i += chunkSize) {
-					std::cout << output.substr(i, chunkSize);
-					std::cout.flush(); // Asegura que se vacíe el buffer después de cada fragmento
-				}
-				//std::cout << oss.str(); std::cout.flush();
+				// std::string output = oss.str();
+				// const size_t chunkSize = 1024; // Tamaño del fragmento, por ejemplo, 1024 caracteres
+				// for (size_t i = 0; i < output.size(); i += chunkSize) {
+				// 	std::cout << output.substr(i, chunkSize);
+				// 	std::cout.flush(); // Asegura que se vacíe el buffer después de cada fragmento
+				// }
+				std::cout << oss.str(); std::cout.flush();
 				if (std::cout.fail()) {
 					std::cout.clear(); drawing = false; failCount++;
 					if (failCount < maxFails) { Output(); return; }
 				}
 				failCount = 0;
 				drawing = false;
-				Thread::set_bool(mutex, _update, false);
+				if (isUpdate) Thread::set_bool(mutex, _update, false);
 			}
 
 		#pragma endregion
@@ -715,8 +716,8 @@
 			while (Thread::get_bool(mutex, _terminate) == false) {
 				Input();
 				if (Thread::get_bool(mutex, Resized) && isRawMode()) { Thread::set_bool(mutex, Resized, false); if (drawing) redraw = true; else Output(); }
-				else if (Thread::get_bool(mutex, _logo)) Logo();
-				else if (Thread::get_bool(mutex, _update)) Output();
+				else if (Thread::get_bool(mutex, _update) && isRawMode()) Output();
+				else if (Thread::get_bool(mutex, _logo) && !isRawMode()) Logo();
 				usleep(UPDATE_INTERVAL * 1000);
 			}
 

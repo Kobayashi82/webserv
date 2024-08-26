@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 14:30:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/25 23:12:01 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/26 15:13:56 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,19 +22,22 @@
 //	TODO	Process_requested_path
 //	TODO	Variables $request_uri $uri
 
+//	TODO	not working if changed executable name
+
 //  Entry point
 int main(int argc, char **argv) {
 	
 	Settings::load_args(argc, argv);
 
-	Log::start(); Display::start();
+	Log::start(); Display::start(); Net::pool.start();
 
-	Net::epoll__create(); Net::socket_create_all(); Display::update();
+	Net::epoll__create(); Net::socket_create_all(); usleep(10000); Display::update();
 
 	while (Display::isTerminate() == -1) {
 		Net::epoll_events();
 	}
 	
+	Net::pool.stop();
 	Net::epoll_close();
 	Net::socket_close_all();
 

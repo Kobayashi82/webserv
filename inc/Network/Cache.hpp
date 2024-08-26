@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/24 19:39:57 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/25 22:20:17 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/26 11:34:23 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,7 @@ class Cache {
 
 			//	Constructors
 			CacheInfo(const std::string & _path, const std::string & _content, time_t _expire);			//	Parameterized constructor
+			CacheInfo(const CacheInfo & src);															//	Copy constructor
 
 			//	Overloads
 			CacheInfo & 	operator=(const CacheInfo & rhs);											//	Overload for asignation

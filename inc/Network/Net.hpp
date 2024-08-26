@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 21:49:50 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/25 19:52:26 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/26 19:26:20 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 
 #include "Settings.hpp"
 #include "Cache.hpp"
+#include "Pool.hpp"
 #include "Security.hpp"
 
 #include <iostream>																						//	For standard input/output stream objects like std::cin, std::cout
@@ -40,6 +41,8 @@ class Net {
 			SocketInfo *			socket;																//	Pointer to the associated SocketInfo, if applicable
 			Client *				client;																//	Pointer to the associated Client, if applicable
 
+			bool					epollin;															//	Is in epoll as EPOLLIN
+			bool					epollout;															//	Is in epoll as EPOLLOUT
 			std::vector <char>		read_buffer;														//	Buffer for reading data
     		std::vector <char>		write_buffer;														//	Buffer for writing data
 		    size_t					read_pos;															//	Current position in the read buffer
@@ -52,6 +55,7 @@ class Net {
 
 			//	Constructors
 			EventInfo();																				//	Default constructor
+			EventInfo(const EventInfo & src);															//	Copy constructor
 			EventInfo(int _fd, int _type, Net::SocketInfo * _socket, Client * _client);					//	Parameterized constructor
 
 			//	Overloads
@@ -69,14 +73,15 @@ class Net {
 		struct SocketInfo {
 
 			//	Variables
-			int							fd;																//	File descriptor for the socket
-			std::string					IP;																//	IP address of the socket
-			int							port;															//	Port number of the socket
-			EventInfo					event;															//	EventInfo associated with this socket
-			VServer *					VServ;															//	Pointer to the associated virtual server
-			std::list <Client *>		clients;														//	List of clients associated with this socket
+			int						fd;																	//	File descriptor for the socket
+			std::string				IP;																	//	IP address of the socket
+			int						port;																//	Port number of the socket
+			EventInfo				event;																//	EventInfo associated with this socket
+			VServer *				VServ;																//	Pointer to the associated VServer
+			std::list <Client *>	clients;															//	List of clients associated with this socket
 
 			//	Constructors
+			SocketInfo(const SocketInfo & src);															//	Copy constructor
 			SocketInfo(int _fd, const std::string & _IP, int _port, EventInfo _event, VServer * _VServ);//	Parameterized constructor
 
 			//	Overloads
@@ -115,8 +120,8 @@ class Net {
 		//	EPOLL
 		static int	epoll__create();																	//	Creates epoll, set the FD to 'epoll_fd', create and add 'event_timeout'
 		static void	epoll_close();																		//	Closes epoll
-		static int	epoll_add(EventInfo * event);														//	Adds an event to epoll
-		static int	epoll_edit(EventInfo * event, bool epollin, bool epollout);
+		static int	epoll_add(EventInfo * event, bool epollin, bool epollout);							//	Add an event to epoll
+		static int	epoll_set(EventInfo * event, bool epollin, bool epollout);							//	Modify an event in epoll
 		static void	epoll_del(EventInfo * event);														//	Removes an event from epoll
 		static int	epoll_events();																		//	Processes epoll events
 

@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:27:58 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/24 18:09:09 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/26 13:13:52 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -215,7 +215,7 @@
 				else if (argc == 3) load(argv[2]);
 
 				if (BadConfig == false) {
-					Settings::global.status = true; Display::update();
+					Settings::global.status = true;
 				} else {
 					Log::log(RD "Could not load configuration file" NC, Log::BOTH_ERROR);
 					if (Display::RawModeDisabled || Display::ForceRawModeDisabled) terminate = 1;
