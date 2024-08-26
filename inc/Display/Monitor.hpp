@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/03 13:52:15 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/12 17:39:21 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/26 22:01:35 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,6 @@
 #include <fstream>																						//	For file stream classes like std::ifstream, std::ofstream
 #include <sstream>																						//	For std::stringstream to format strings
 #include <iomanip>																						//	For stream manipulators like std::setw and std::setfill
-
 #include <ctime>																						//	For time-related functions and types
 #include <cmath>																						//	For standard math functions
 
@@ -28,24 +27,19 @@ class Monitor {
 
 	private:
 
-		//	Variables (CPU)
-		std::time_t		_prev_time;																		//	
-		std::clock_t	_prev_cpu_time;																	//	
-		std::string		_CPUinStr;																		//	
-		double			_CPU;																			//	
-		std::string		_MEMinStr;																		//	
-		size_t			_MEM;																			//	
-
-		//	Variables (DATA)
-		size_t			_bytes_sent;																	//	
-		size_t			_bytes_received;																//	
+		//	Variables
+		std::time_t		_prev_time;																		//	Stores the previous time point for calculating elapsed time
+		std::clock_t	_prev_cpu_time;																	//	Stores the previous CPU time for calculating CPU usage
+		std::string		_CPUinStr;																		//	Last string representation of the CPU usage
+		double			_CPU;																			//	Last numeric representation of the CPU usage
+		std::string		_MEMinStr;																		//	Last string representation of the memory usage
+		size_t			_MEM;																			//	Last numeric representation of the memory usage
 
 	public:
 
 		//	Constructor
-    	Monitor();
+    	Monitor();																						//	Default constructor
 		Monitor(const Monitor & src);																	//	Copy constructor
-		~Monitor() {}
 
 		//	Overloads
 		Monitor &	operator=(const Monitor & rhs);														//	Overload for asignation
@@ -57,16 +51,6 @@ class Monitor {
 		//	MEM
 		std::string	getMEMinStr();																		//	Get the MEM usage as a string
 		size_t		getMEM();																			//	Get the MEM usage as a number
-
-		//	Bytes
-		void		inc_bytes_sent(size_t bytes);														//
-		void		inc_bytes_received(size_t bytes);													//
-
-		size_t		get_bytes_sent();																	//
-		size_t		get_bytes_received();																//
-
-		std::string	get_bytes_sent_str();																//
-		std::string	get_bytes_received_str();															//
 
 };
 

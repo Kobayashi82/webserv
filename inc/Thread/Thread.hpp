@@ -6,14 +6,14 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 11:01:21 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/26 14:13:21 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/26 22:15:54 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
 #include <iostream>																						//	For strings and standard input/output like std::cin, std::cout
-#include <pthread.h>
+#include <pthread.h>																					//	For multi-threading and synchronization
 
 class Thread {
 

@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:27:58 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/26 13:13:52 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/26 22:29:55 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -180,7 +180,7 @@
 
 			//	Option -i: Run the program in console mode
 			} else if ((argc == 2 || argc == 3) && !strcmp(argv[1], "-i")) {
-				Display::RawModeDisabled = true; Display::ForceRawModeDisabled = true; Display::logo();
+				Display::RawModeDisabled = true; Display::ForceRawModeDisabled = true; Display::Logo();
 
 			//	Option -t: Checks the configuration file
 			} else if ((argc == 2 || argc == 3) && !strcmp(argv[1], "-t")) {		check_only = true;
@@ -208,7 +208,7 @@
 			//	Load the configuration file
 			if (terminate == -1) {
 				Display::enableRawMode();
-				if (Display::RawModeDisabled || Display::ForceRawModeDisabled) std::cout << std::endl;
+				if (Display::RawModeDisabled || Display::ForceRawModeDisabled) { std::cout << std::endl; }
 
 				if (argc == 1 || (argc == 2 && !strcmp(argv[1], "-i"))) load();
 				else if (argc == 2 && strcmp(argv[1], "-i")) load(argv[1]);

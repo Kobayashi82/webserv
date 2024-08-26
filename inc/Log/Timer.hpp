@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 18:57:42 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/15 17:34:58 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/26 22:05:46 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,7 +28,6 @@ class Timer {
 		//	Constructors
     	Timer();																						//	Default constructor
 		Timer(const Timer & src);																		//	Copy constructor
-		~Timer();																						//	Destructor
 
 		//	Overloads
 		Timer &		operator=(const Timer & rhs);														//	Overload for asignation

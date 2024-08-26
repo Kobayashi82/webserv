@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/03 14:10:10 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/09 22:40:52 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/26 22:01:05 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,8 +21,6 @@
 		_CPU = 0;
 		_MEMinStr = "0.00 MB";
 		_MEM = 0;
-		_bytes_sent = 0;
-		_bytes_received = 0;
 	}
 
     Monitor::Monitor(const Monitor & src) { *this = src; }
@@ -106,18 +104,5 @@
 		_MEMinStr = Utils::formatSize(resident * sysconf(_SC_PAGESIZE));								//  Calculate and return the resident memory size in bytes
 		return (_MEMinStr);
 	}
-
-#pragma endregion
-
-#pragma region DATA
-
-	void Monitor::inc_bytes_sent(size_t bytes) { _bytes_sent += bytes; }
-	void Monitor::inc_bytes_received(size_t bytes) { _bytes_received += bytes; }
-
-	size_t Monitor::get_bytes_sent() { return (_bytes_sent); }
-	size_t Monitor::get_bytes_received() { return (_bytes_received); }
-
-	std::string Monitor::get_bytes_sent_str() { return (Utils::formatSize(_bytes_sent)); }
-	std::string Monitor::get_bytes_received_str() { return (Utils::formatSize(_bytes_received)); }
 
 #pragma endregion

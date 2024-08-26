@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:32:38 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/26 19:29:43 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/26 22:27:58 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,15 +17,15 @@
 
 #pragma region Variables
 
-	pthread_mutex_t				Log::mutex;
+	pthread_mutex_t				Log::mutex;																	//	Mutex for synchronizing access to shared resources
+	pthread_cond_t				Log::cond_var;																//	Condition variable for thread synchronization
 
-	pthread_t					Log::_thread;
+	pthread_t					Log::_thread;																//	Thread used for processing log entries
 	bool						Log::_terminate = false;													//	Flag the thread to finish
-	std::queue <Log::LogInfo>	Log::_logs;
+	std::queue <Log::LogInfo>	Log::_logs;																	//	Queue container with logs that need to be processed
 
 	const size_t				Log::MEM_MAXSIZE = 200;														//	Maximum number of logs for each memory log
 	long						Log::LOCAL_MAXSIZE = 1 * 1024 * 1024;										//	Maximum size of the log in disk (default to 1 MB | 0 MB = dont truncate | Max 10 MB)
-	const int					Log::UPDATE_INTERVAL = 10;													//	Interval in miliseconds for the thread main loop
 
 	#pragma region LogInfo
 
@@ -150,7 +150,7 @@
 				if (Settings::check_only && Settings::loaded == false) {
 					if (msg.size() > 24) msg = msg.substr(24); else msg = "";
 				}
-				if (!msg.empty()) std::cout << "\t" << msg << NC << std::endl;
+				if (!msg.empty()) std::cout << " " << msg << NC << std::endl;
 			}
 
 			Thread::mutex_set(mutex, Thread::MTX_LOCK);
@@ -199,8 +199,8 @@
 
 			while (!logs.empty()) {
 				Log::LogInfo log = logs.front(); logs.pop();
-
-				if (log.msg.empty()) continue;
+				
+				Utils::trim(log.msg); if (log.msg.empty()) continue;
 				log.msg = "[" + Settings::timer.current_date() + " " + Settings::timer.current_time() + "] - " + log.msg;
 
 				if (!log.path.empty() && log.path[0] != '/') log.path = Settings::program_path + log.path;
@@ -245,6 +245,7 @@
 
 			Thread::mutex_set(mutex, Thread::MTX_LOCK);
 			_logs.push(LogInfo(msg, type, VServ, path, maxsize));
+			Thread::cond_set(cond_var, &mutex, Thread::COND_SIGNAL);
 			Thread::mutex_set(mutex, Thread::MTX_UNLOCK);
 		}
 	
@@ -258,7 +259,10 @@
 
 		void * Log::main(void * args) { (void) args;
 			while (Thread::get_bool(mutex, _terminate) == false) {
-				Log::process_logs(); usleep(UPDATE_INTERVAL * 1000);
+				Thread::mutex_set(mutex, Thread::MTX_LOCK);
+				Thread::cond_set(cond_var, &mutex, Thread::COND_WAIT);
+				Thread::mutex_set(mutex, Thread::MTX_UNLOCK);
+				Log::process_logs();
 			}
 			return (NULL);
 		}
@@ -269,6 +273,7 @@
 
 		void Log::start() {
 			Thread::mutex_set(mutex, Thread::MTX_INIT);
+			Thread::cond_set(cond_var, &mutex, Thread::COND_INIT);
 			Thread::set_bool(mutex, _terminate, false);
 			Thread::thread_set(_thread, Thread::THRD_CREATE, main);
 		}
@@ -279,10 +284,12 @@
 
 		void Log::stop() {
 			Thread::set_bool(mutex, _terminate, true);
+			Thread::cond_set(cond_var, &mutex, Thread::COND_SIGNAL);
 			Thread::thread_set(_thread, Thread::THRD_JOIN);
 		}
 
 		void Log::release_mutex() {
+			Thread::cond_set(cond_var, &mutex, Thread::COND_DESTROY);
 			Thread::mutex_set(mutex, Thread::MTX_DESTROY);
 		}
 

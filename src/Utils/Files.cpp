@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 22:23:52 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/25 18:57:39 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/26 21:40:11 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,17 @@
 	std::string Utils::programPath() {
 		char result[PATH_MAX];
 		ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
-		if (count != -1) return (std::string(result, count - 7));
+		if (count != -1) {
+			result[count] = '\0';
+			std::string fullPath(result);
+
+			std::string::size_type pos = fullPath.find_last_of('/');
+			if (pos != std::string::npos) return (fullPath.substr(0, pos + 1));
+		}
+
+		char * home = getenv("HOME");
+    	if (home) return (std::string(home) + "/");
+
 		return ("/");
 	}
 

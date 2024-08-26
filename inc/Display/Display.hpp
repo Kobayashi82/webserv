@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 11:59:38 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/24 15:15:17 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/26 22:16:10 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,7 @@
 #include <iomanip>																						//	For stream manipulators like std::setw and std::setfill
 #include <csignal>																						//	For signal handling like std::signal
 
+#include <pthread.h>																					//	For multi-threading and synchronization
 #include <fcntl.h>																						//	For file control options like fcntl to set non-blocking mode
 #include <termios.h>																					//	For terminal I/O interfaces to enable/disable raw mode
 #include <sys/ioctl.h>																					//	For terminal control functions like ioctl to get window size
@@ -27,7 +28,7 @@ class Display {
 
 	public:
 
-		static pthread_mutex_t	mutex;
+		static pthread_mutex_t	mutex;																	//	Mutex for synchronizing access to shared resources
 
 		static bool				drawing;																//	True if printing in the terminal
 		static int				failCount;																//	Current number of fails when printing in the the terminal
@@ -47,23 +48,21 @@ class Display {
 
 		static void	update();																			//	Ask for a redraw in the next iteration
 		static void	logo();																				//	Ask for a logo print in the next iteration
-		static int	isTerminate();
-		static bool	isRawMode();
+		static int	isTerminate();																		//	Checks if the main termination flag is set
+		static bool	isRawMode();																		//	Checks if the program is in raw mode
 
 		static void	start();																			//	Start the thread
 		static void	stop();																				//	Stop the thread
 
 	private:
 
-		static pthread_t		_thread;
+		static pthread_t		_thread;																//	Thread used for display rendering
 		static bool				_terminate;																//	Flag the thread to finish
-
 		static bool				_update;																//	Flag for a redraw in the next iteration
 		static bool				_logo;																	//	Flag for printing the logo
 
-
 		static const int		UPDATE_INTERVAL;														//	Interval in miliseconds for the thread main loop
 
-		static void	* main(void * args);
+		static void	* main(void * args);																//	Main loop function for the thread
 
 };

@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 11:01:23 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/26 19:29:52 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/26 22:20:07 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,18 +14,29 @@
 
 #pragma region Thread
 
-	#pragma region Set
-
-		int		Thread::thread_set(pthread_t & thread, int action, void * (*func)(void *), void * args) {
-			switch (action) {
-				case THRD_CREATE: return (func == NULL || pthread_create(&thread, NULL, func, args));
-				case THRD_JOIN: return (pthread_join(thread, NULL));
-				case THRD_DETACH: return (pthread_detach(thread));
-				default: return (0);
-			}
+	int		Thread::thread_set(pthread_t & thread, int action, void * (*func)(void *), void * args) {
+		switch (action) {
+			case THRD_CREATE: return (func == NULL || pthread_create(&thread, NULL, func, args));
+			case THRD_JOIN: return (pthread_join(thread, NULL));
+			case THRD_DETACH: return (pthread_detach(thread));
+			default: return (0);
 		}
+	}
 
-	#pragma endregion
+#pragma endregion
+
+#pragma region Conditional Var
+
+	int		Thread::cond_set(pthread_cond_t & cond, pthread_mutex_t * mutex, int action) {				//	Initializes, wait, signal, broadcast or destroys a conditional var
+		switch (action) {
+			case COND_INIT: return (pthread_cond_init(&cond, NULL));
+			case COND_WAIT: return (pthread_cond_wait(&cond, mutex));
+			case COND_SIGNAL: return (pthread_cond_signal(&cond));
+			case COND_BROADCAST: return (pthread_cond_broadcast(&cond));
+			case COND_DESTROY: return (pthread_cond_destroy(&cond));
+			default: return (0);
+		}
+	}
 
 #pragma endregion
 
@@ -42,25 +53,6 @@
 				default: return (0);
 			}
 		}
-
-	#pragma endregion
-
-#pragma region Conditional Var
-
-	#pragma region Set
-
-		int		Thread::cond_set(pthread_cond_t & cond, pthread_mutex_t * mutex, int action) {				//	Initializes, wait, signal, broadcast or destroys a conditional var
-			switch (action) {
-				case COND_INIT: return (pthread_cond_init(&cond, NULL));
-				case COND_WAIT: return (pthread_cond_wait(&cond, mutex));
-				case COND_SIGNAL: return (pthread_cond_signal(&cond));
-				case COND_BROADCAST: return (pthread_cond_broadcast(&cond));
-				case COND_DESTROY: return (pthread_cond_destroy(&cond));
-				default: return (0);
-			}
-		}
-
-	#pragma endregion
 
 	#pragma endregion
 

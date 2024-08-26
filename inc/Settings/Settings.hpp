@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:14:05 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/23 19:03:48 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/26 22:13:53 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,7 +62,7 @@ class Settings {
 	private:
 
 		//	Variables
-		enum e_section { ROOT, GLOBAL, SERVER, LOCATION, METHOD };
+		enum e_section { ROOT, GLOBAL, SERVER, LOCATION, METHOD };										//	Enumarator for the sections of the config file
 		
 		static int	line_count;																			//	Number of the current line of the configuration file (use to indicate the line of an error in the configuration file)
 		static int	bracket_lvl;																		//	Level of the bracket (use to parse the configuration file)
@@ -98,6 +98,6 @@ class Settings {
 		static int	repeated_directive(const std::string & str, const std::vector<std::pair<std::string, std::string> > & data, int line_count);
 		static int	invalid_directive(std::string firstPart, int line_count, int section);
 
-		static void	parser(std::ifstream & infile);
+		static void	parser(std::ifstream & infile);														//	Main parser function that read the config file
 
 };

@@ -6,11 +6,30 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/25 11:19:15 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/25 18:56:30 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/26 21:12:46 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Security.hpp"
+
+#pragma region Variables
+
+	std::string		Security::KEY = "This_Key_Is_Super_Secret_And_Even_42_Hackers_Will_Never_Find_It!";	// Key used to encrypt and decrypt data (used for cookies)
+
+#pragma endregion
+
+#pragma region Cipher
+
+	std::string Security::cipher_data(const std::string & data, std::string key) {
+		std::string result = data; size_t key_length = key.size();
+
+		for (size_t i = 0; i < data.size(); i++)
+			result[i] = data[i] ^ key[i % key_length];
+
+		return (result);
+	}
+
+#pragma endregion
 
 #pragma region Encoder / Decoder
 

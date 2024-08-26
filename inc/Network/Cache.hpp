@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/24 19:39:57 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/26 11:34:23 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/26 22:06:18 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,7 @@ class Cache {
 			bool 			operator==(const CacheInfo & rhs) const;									//	Overload for comparison
 
 			//	Methods
-			bool			isExpired() const;															//	Return true if the CacheInfo is expired
+			bool			isExpired() const;															//	Return true if the CacheInfo expired
 
 		};
 

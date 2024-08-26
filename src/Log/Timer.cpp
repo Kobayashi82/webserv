@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:17:42 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/15 17:35:21 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/26 22:05:25 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,6 @@
 
 	Timer::Timer() : start_time(std::time(0)) {}
     Timer::Timer(const Timer & src) { *this = src; }
-	Timer::~Timer() {}
 
 #pragma endregion
 

@@ -6,15 +6,15 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 21:49:50 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/26 19:30:24 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/26 22:09:55 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
 #include "Settings.hpp"
-#include "Cache.hpp"
 #include "Security.hpp"
+#include "Cache.hpp"
 
 #include <iostream>																						//	For standard input/output stream objects like std::cin, std::cout
 #include <deque>																						//	For std::deque container
@@ -61,7 +61,7 @@ class Net {
 			EventInfo &		operator=(const EventInfo & rhs);											//	Overload for asignation
 			bool			operator==(const EventInfo & rhs) const;									//	Overload for comparison
 
-			int 			remove();
+			int 			remove();																	//	Remove the corresponding owner of the EventInfo (client, socket or event_data)
 
 		};
 
@@ -148,6 +148,8 @@ class Net {
 		static int	create_timeout();																	//	Creates a file descriptor for the client timeout checker
 		static void check_timeout();																	//	Checks for clients that have timed out
 
+
+		//	Work in progress
 		static int	read_data(EventInfo * event);
 		static int	read_request(EventInfo * event);
 
