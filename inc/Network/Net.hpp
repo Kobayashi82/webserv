@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 21:49:50 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/26 19:26:20 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/26 19:30:24 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,6 @@
 
 #include "Settings.hpp"
 #include "Cache.hpp"
-#include "Pool.hpp"
 #include "Security.hpp"
 
 #include <iostream>																						//	For standard input/output stream objects like std::cin, std::cout

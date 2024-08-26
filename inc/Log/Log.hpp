@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:32:23 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/25 21:01:15 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/26 19:32:00 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,6 +58,8 @@ class Log {
 
 	private:
 
+		#pragma region LogInfo
+
 		struct LogInfo {
 
 			//	Variables
@@ -75,6 +77,8 @@ class Log {
 			bool			operator==(const LogInfo & rhs);											//	Overload for comparison
 
 		};
+
+		#pragma endregion
 
 		static pthread_t			_thread;
 		static bool					_terminate;															//	Flag the thread to finish
