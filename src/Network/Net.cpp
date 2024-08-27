@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 21:55:43 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/26 22:09:50 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/27 10:04:19 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,6 +83,18 @@
 				}
 
 				return (0);
+			}
+
+		#pragma endregion
+
+		#pragma region Create
+
+			Net::EventInfo * Net::create_event_data(int _fd, int _type, SocketInfo * _socket, EventInfo * parent) {
+				if (!parent || (parent->type != DATA && parent->type != CGI) || (_type != DATA && _type != CGI)) return (NULL);
+
+				parent->event_data.push_back(EventInfo(_fd, _type, _socket, parent->client));
+
+				return (&parent->event_data.back());
 			}
 
 		#pragma endregion
@@ -411,7 +423,7 @@
 				if (events[i].events & EPOLLIN) {
 					switch (event->type) {
 						case SOCKET: 	{ socket_accept(event);											break; }
-						case CLIENT: 	{ if (read_request(event))	continue;							break; }
+						case CLIENT: 	{ if (read_client(event))	continue;							break; }
 						case DATA: 		{ if (read_data(event))		continue;							break; }
 						case CGI: 		{ if (read_data(event))		continue;							break; }
 						case TIMEOUT: 	{ Display::update(); check_timeout(); cache.remove_expired();	break; }
@@ -419,7 +431,7 @@
 				}
 				if (events[i].events & EPOLLOUT) {
 					switch (event->type) {
-						case CLIENT: 	{ write_response(event);										break; }
+						case CLIENT: 	{ write_client(event);										break; }
 						case DATA: 		{																break; }
 						case CGI: 		{																break; }
 					}
@@ -470,168 +482,6 @@
 					std::list<Client>::iterator current = it; ++it;
 					current->check_timeout(TimeOut);
 				}
-			}
-
-		#pragma endregion
-
-	#pragma endregion
-
-#pragma endregion
-
-#pragma region Comunications
-
-	#pragma region CLIENT
-
-		#pragma region Read Request
-
-			int Net::read_request(EventInfo * event) {
-				char buffer[EPOLL_BUFFER_SIZE];				memset(buffer, 0, sizeof(buffer));
-				char peek_buffer[EPOLL_BUFFER_SIZE + 1];	memset(peek_buffer, 0, sizeof(peek_buffer));
-
-				ssize_t bytes_peek = recv(event->fd, peek_buffer, EPOLL_BUFFER_SIZE + 1, MSG_PEEK);
-				if (bytes_peek <= 0) { event->client->remove(); return (1); }
-
-				event->client->update_last_activity();
-
-				ssize_t bytes_read = recv(event->fd, buffer, EPOLL_BUFFER_SIZE, 0);
-				if (bytes_read > 0) {
-					event->client->read_buffer.insert(event->client->read_buffer.end(), buffer, buffer + bytes_read);
-
-					Thread::mutex_set(Display::mutex, Thread::MTX_LOCK);
-					read_bytes+= bytes_read;
-					Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK);
-
-					//	if (event->client->read_buffer.size() >= max_request_size) return lo que sea
-
-					if (bytes_peek <= EPOLL_BUFFER_SIZE) process_request(event);
-				} else if (bytes_read <= 0) { event->client->remove(); return (1); }
-
-				return (0);
-			}
-
-		#pragma endregion
-
-		#pragma region Write Response
-
-			void Net::write_response(EventInfo *event) {
-				event->client->update_last_activity();
-
-				if (!event->client->write_buffer.empty()) {
-
-					size_t buffer_size = event->client->write_buffer.size();
-					size_t chunk_size = std::min(buffer_size, static_cast<size_t>(EPOLL_BUFFER_SIZE));
-					
-					ssize_t bytes_written = write(event->fd, event->client->write_buffer.data(), chunk_size);
-
-					if (bytes_written > 0) {
-						event->client->write_buffer.erase(event->client->write_buffer.begin(), event->client->write_buffer.begin() + bytes_written);
-
-						Thread::mutex_set(Display::mutex, Thread::MTX_LOCK);
-						write_bytes+= bytes_written;
-						Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK);
-
-					} else if (bytes_written < 0) return; // close(event->fd);
-				}
-				
-				if (event->client->write_buffer.empty()) {
-					epoll_set(event, true, false);
-
-					long MaxRequests = KEEP_ALIVE_TIMEOUT;
-
-					if (Settings::global.get("keepalive_requests") != "") Utils::stol(Settings::global.get("keepalive_requests"), MaxRequests);
-					if (event->client->total_requests >= MaxRequests) event->client->remove();
-				}
-			}
-
-		#pragma endregion
-
-		#pragma region Process Request
-
-			void Net::process_request(EventInfo * event) {
-
-				//	Diferenciar entre dos request unidas. Se busca un header y eso determina el inicio de otro response?
-				//	Si tenemos body_length leemos solo hasta ahi y el resto va de vuelta al buffer
-
-				std::string request(event->client->read_buffer.begin(), event->client->read_buffer.end());
-
-				//	if (body > max_body_size) return lo que sea
-
-				std::istringstream request_stream(request);
-				std::string line;
-				if (std::getline(request_stream, line))
-				Utils::trim(line);
-				Log::log(line, Log::BOTH_ACCESS);
-
-				event->client->read_buffer.clear();
-				event->client->total_requests++;
-				process_response(event);
-			}
-
-		#pragma endregion
-
-		#pragma region Process Response
-
-			void Net::process_response(EventInfo * event) {
-				// Crear una respuesta HTTP básica
-				std::string body = "<html><body><h1>Hello, World!</h1></body></html>";
-				std::string response = 
-					"HTTP/1.1 200 OK\r\n"
-					"Content-Type: text/html\r\n"
-					"Content-Length: " + Utils::ltos(body.size()) + "\r\n"
-					"Connection: keep-alive\r\n"
-					//"Connection: close\r\n"
-					"\r\n" + body;
-
-				event->client->write_buffer.insert(event->client->write_buffer.end(), response.begin(), response.end());
-				epoll_set(event, true, true);
-
-				//	Despues de procesar y enviar la respuesta, si total_request = max_requests cerrar cliente
-			}
-
-		#pragma endregion
-
-	#pragma endregion
-
-	#pragma region DATA
-
-		#pragma region Read Data
-
-			int Net::read_data(EventInfo * event) {
-				char buffer[EPOLL_BUFFER_SIZE];				memset(buffer, 0, sizeof(buffer));
-				char peek_buffer[EPOLL_BUFFER_SIZE + 1];	memset(peek_buffer, 0, sizeof(peek_buffer));
-
-				ssize_t bytes_peek = recv(event->fd, peek_buffer, EPOLL_BUFFER_SIZE + 1, MSG_PEEK);
-				if (bytes_peek <= 0) { event->remove(); return (1); }
-
-				ssize_t bytes_read = recv(event->fd, buffer, EPOLL_BUFFER_SIZE, 0);
-				if (bytes_read > 0) {
-					event->read_buffer.insert(event->client->read_buffer.end(), buffer, buffer + bytes_read);
-
-					if (bytes_peek <= EPOLL_BUFFER_SIZE) process_data(event);
-				} else if (bytes_read <= 0) {  event->remove(); return (1); }
-
-				return (0);
-			}
-
-		#pragma endregion
-
-		#pragma region Process Data
-
-			void Net::process_data(EventInfo * event) {
-				std::string request(event->read_buffer.begin(), event->client->read_buffer.end());
-
-				//	if (body > max_body_size) return lo que sea
-
-				if (event->type == DATA && event->no_cache == false) cache.add(event->path, request);
-
-				std::istringstream request_stream(request);
-				std::string line;
-				if (std::getline(request_stream, line))
-				Utils::trim(line);
-				Log::log(line, Log::BOTH_ACCESS);
-
-				event->read_buffer.clear();
-				// process_response(event);
 			}
 
 		#pragma endregion

@@ -6,7 +6,7 @@
 #    By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/02/20 17:51:39 by vzurera-          #+#    #+#              #
-#    Updated: 2024/08/25 23:10:17 by vzurera-         ###   ########.fr        #
+#    Updated: 2024/08/27 09:33:01 by vzurera-         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -63,7 +63,7 @@ SRCS	=	Thread/Thread.cpp																							\
 			Settings/Parser.cpp																							\
 			Display/Display.cpp Display/Monitor.cpp																		\
 			Utils/String.cpp Utils/Network.cpp Utils/Files.cpp															\
-			Network/Net.cpp Network/Client.cpp Network/Cache.cpp Network/Security.cpp									\
+			Network/Net.cpp Network/Client.cpp Network/Comunications.cpp Network/Cache.cpp Network/Security.cpp			\
 			main.cpp
 
 # ────────────────────────────────────────────────────────── #

@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 21:49:50 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/26 22:09:55 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/27 13:00:20 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,6 +64,8 @@ class Net {
 			int 			remove();																	//	Remove the corresponding owner of the EventInfo (client, socket or event_data)
 
 		};
+
+		EventInfo * create_event_data(int _fd, int _type, SocketInfo * _socket, EventInfo * parent);
 
 		#pragma endregion
 
@@ -126,6 +128,29 @@ class Net {
 
 	private:
 
+
+		#pragma region ResolveInfo
+
+		struct ResolveInfo {
+
+			//	Variables
+			EventInfo *				event;																//	Pointer to the associated EventInfo
+			VServer *				VServ;																//	Pointer to the associated VServer
+			Location *				Loc;																//	Pointer to the associated Location
+			Method *				Met;																//	Pointer to the associated Method
+
+			//	Constructors
+			//ResolveInfo(const ResolveInfo & src);														//	Copy constructor
+			//ResolveInfo();																			//	Parameterized constructor
+
+			//	Overloads
+			//ResolveInfo & 	operator=(const ResolveInfo & rhs);										//	Overload for asignation
+			//bool 			operator==(const ResolveInfo & rhs) const;									//	Overload for comparison
+
+		};
+
+		#pragma endregion
+
 		//	Variables
 		enum e_type { NOTHING, SOCKET, CLIENT, DATA, CGI, TIMEOUT };									//	Enumeration for event types used in EventInfo
 		
@@ -149,14 +174,17 @@ class Net {
 		static void check_timeout();																	//	Checks for clients that have timed out
 
 
-		//	Work in progress
+		//	Comunications (Work in progress)
 		static int	read_data(EventInfo * event);
-		static int	read_request(EventInfo * event);
+		static int	read_client(EventInfo * event);
 
-		static void	write_response(EventInfo * event);
+		static void	write_client(EventInfo * event);
 
-		static void	process_data(EventInfo * event);
-		static void	process_request(EventInfo * event);
+		static void	process_data(EventInfo * event, std::string data);
+		static void	process_request(EventInfo * event, std::string request);
 		static void	process_response(EventInfo * event);
+
+		//	Resolve request
+		static void	resolve_request(const std::string host, const std::string method, std::string path, EventInfo * event);
 
 };
