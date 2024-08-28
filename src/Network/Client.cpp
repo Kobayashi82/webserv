@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/18 11:28:40 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/25 23:08:33 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/28 20:50:08 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,10 +17,10 @@
 
 #pragma region Constructors
 
-    Client::Client(int _fd, Net::SocketInfo * _socket, std::string _IP, int _port, Net::EventInfo _event) : fd(_fd), socket(_socket), IP(_IP), port(_port), event(_event) {
+    Client::Client(int _fd, Net::SocketInfo * _socket, std::string _IP, int _port) : fd(_fd), socket(_socket), IP(_IP), port(_port) {
 		read_pos = 0; write_pos = 0; last_activity = std::time(NULL); total_requests = 0;
 	}
-    Client::Client(const Client & src) : fd(src.fd), socket(src.socket), IP(src.IP), port(src.port), event(src.event), last_activity(src.last_activity), total_requests(src.total_requests), read_buffer(src.read_buffer), write_buffer(src.write_buffer) {}
+    Client::Client(const Client & src) : fd(src.fd), socket(src.socket), IP(src.IP), port(src.port), last_activity(src.last_activity), total_requests(src.total_requests), read_buffer(src.read_buffer), write_buffer(src.write_buffer) {}
 
 
 #pragma endregion
@@ -30,7 +30,7 @@
 	Client &	Client::operator=(const Client & rhs) {
         if (this != &rhs) {
             fd = rhs.fd; IP = rhs.IP; port = rhs.port; socket = rhs.socket; last_activity = rhs.last_activity;
-			total_requests = rhs.total_requests; read_buffer = rhs.read_buffer; write_buffer = rhs.write_buffer; event = rhs.event;
+			total_requests = rhs.total_requests; read_buffer = rhs.read_buffer; write_buffer = rhs.write_buffer;
         } return (*this);
     }
 
@@ -45,7 +45,7 @@
 
 	void Client::check_timeout(int interval) {
 		time_t current_time = std::time(NULL);
-		if (difftime(current_time, last_activity) > interval)  remove(true);
+		if (difftime(current_time, last_activity) > interval)  remove();
 	}
 
     void Client::update_last_activity() { last_activity = std::time(NULL); }
@@ -54,9 +54,9 @@
 
 #pragma region Remove
 
-	void	Client::remove(bool no_msg) {
-		(void) no_msg;
-		Net::epoll_del(&event); close(fd);
+	void	Client::remove() {
+		Net::epoll_del(fd);
+		if (fd != -1) { close(fd); }
 
 	    std::list <Client *>::iterator s_it = socket->clients.begin();
     	while (s_it != socket->clients.end()) {
@@ -67,6 +67,11 @@
 		std::list <Client>::iterator c_it = Net::clients.begin();
 		while (c_it != Net::clients.end()) {
 			if (*this == *c_it) {
+				
+		
+				Net::remove_event(fd);
+				Net::remove_events(this);
+		
 				Net::clients.erase(c_it);
 				Thread::mutex_set(Display::mutex, Thread::MTX_LOCK);
 				Net::total_clients--;

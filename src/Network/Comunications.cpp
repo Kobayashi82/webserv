@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/27 09:32:08 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/27 13:02:36 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/28 21:20:35 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,12 +35,12 @@
 
 				ssize_t bytes_peek = recv(event->fd, peek_buffer, EPOLL_BUFFER_SIZE + 1, MSG_PEEK);
 				if (bytes_peek <= 0) { event->client->remove(); return (1); }							//	Recv error or empty (empty = close client)
-
+				
 				event->client->update_last_activity();
 
 				ssize_t bytes_read = recv(event->fd, buffer, EPOLL_BUFFER_SIZE, 0);
 				if (bytes_read > 0) {
-					event->client->read_buffer.insert(event->client->read_buffer.end(), buffer, buffer + bytes_read);
+					event->read_buffer.insert(event->read_buffer.end(), buffer, buffer + bytes_read);
 
 					Thread::mutex_set(Display::mutex, Thread::MTX_LOCK);
 					read_bytes+= bytes_read;
@@ -48,9 +48,9 @@
 
 					//	if (event->client->read_buffer.size() >= max_request_size) return lo que sea
 
-					if (bytes_peek <= EPOLL_BUFFER_SIZE) {
-						std::string request(event->client->read_buffer.begin(), event->client->read_buffer.end());
-						event->client->read_buffer.clear();
+					if (static_cast<size_t>(bytes_peek) <= EPOLL_BUFFER_SIZE) {
+						std::string request(event->read_buffer.begin(), event->read_buffer.end());
+						event->read_buffer.clear();
 						event->client->total_requests++;
 
 						process_request(event, request);
@@ -66,24 +66,27 @@
 
 			int Net::read_data(EventInfo * event) {
 				char buffer[EPOLL_BUFFER_SIZE];				memset(buffer, 0, sizeof(buffer));
-				char peek_buffer[EPOLL_BUFFER_SIZE + 1];	memset(peek_buffer, 0, sizeof(peek_buffer));
 
-				ssize_t bytes_peek = recv(event->fd, peek_buffer, EPOLL_BUFFER_SIZE + 1, MSG_PEEK);
-				if (bytes_peek <= 0) { event->remove(); return (1); }									//	Recv error or empty
-
-				ssize_t bytes_read = recv(event->fd, buffer, EPOLL_BUFFER_SIZE, 0);
+				ssize_t bytes_read = read(event->fd, buffer, EPOLL_BUFFER_SIZE);
 				if (bytes_read > 0) {
-					event->read_buffer.insert(event->client->read_buffer.end(), buffer, buffer + bytes_read);
+					event->read_buffer.insert(event->read_buffer.end(), buffer, buffer + bytes_read);
+					event->data_size += bytes_read;
 
-					if (bytes_peek <= EPOLL_BUFFER_SIZE) {
-						std::string data(event->read_buffer.begin(), event->client->read_buffer.end());
+					if (event->data_size >= event->max_data_size) {
+						std::string data(event->read_buffer.begin(), event->read_buffer.end());
 
 						if (event->type == DATA && event->no_cache == false) cache.add(event->path, data);
-						event->read_buffer.clear();
 
-						process_data(event, data);
+						EventInfo * c_event = get_event(event->client->fd);
+						remove_event(event->fd);
+
+						process_data(c_event, data);
+						return (1);
 					}
-				} else if (bytes_read <= 0) { event->remove(); return (1); }							//	Read error or empty
+				} else if (bytes_read <= 0) { remove_event(event->fd); return (1); }							//	Read error or empty
+
+				size_t chunk = std::min(event->max_data_size - event->data_size, EPOLL_BUFFER_SIZE);
+				if (splice(event->pipe[0], NULL, event->pipe[1], NULL, chunk, SPLICE_F_MOVE) == -1) { remove_event(event->fd); return (1); }
 
 				return (0);
 			}
@@ -99,15 +102,15 @@
 			void Net::write_client(EventInfo *event) {
 				event->client->update_last_activity();
 
-				if (!event->client->write_buffer.empty()) {
+				if (!event->write_buffer.empty()) {
 
-					size_t buffer_size = event->client->write_buffer.size();
+					size_t buffer_size = event->write_buffer.size();
 					size_t chunk_size = std::min(buffer_size, static_cast<size_t>(EPOLL_BUFFER_SIZE));
 					
-					ssize_t bytes_written = write(event->fd, event->client->write_buffer.data(), chunk_size);
+					ssize_t bytes_written = write(event->fd, event->write_buffer.data(), chunk_size);
 
 					if (bytes_written > 0) {
-						event->client->write_buffer.erase(event->client->write_buffer.begin(), event->client->write_buffer.begin() + bytes_written);
+						event->write_buffer.erase(event->write_buffer.begin(), event->write_buffer.begin() + bytes_written);
 
 						Thread::mutex_set(Display::mutex, Thread::MTX_LOCK);
 						write_bytes+= bytes_written;
@@ -116,8 +119,8 @@
 					} else if (bytes_written < 0) { event->client->remove(); return; }					// write error
 				}
 				
-				if (event->client->write_buffer.empty()) {
-					epoll_set(event, true, false);
+				if (event->write_buffer.empty()) {
+					epoll_set(event->fd, true, false);
 
 					long MaxRequests = KEEP_ALIVE_TIMEOUT;
 
@@ -141,10 +144,10 @@
 
 				//	if (body > max_body_size) return lo que sea
 
-				std::istringstream request_stream(request); std::string line;
-				if (std::getline(request_stream, line)) Utils::trim(line);
-				Log::log(line, Log::BOTH_ACCESS);
-
+				// std::istringstream request_stream(request); std::string line;
+				// if (std::getline(request_stream, line)) Utils::trim(line);
+				// Log::log(line, Log::BOTH_ACCESS);
+				(void) request;
 				process_response(event);																//	ELIMINAR
 			}
 
@@ -152,19 +155,46 @@
 
 		#pragma region Response
 
+#include <sys/stat.h>
+
 			void Net::process_response(EventInfo * event) {
 				// Crear una respuesta HTTP básica
-				std::string body = "<html><body><h1>Hello, World!</h1></body></html>";
-				std::string response = 
-					"HTTP/1.1 200 OK\r\n"
-					"Content-Type: text/html\r\n"
-					"Content-Length: " + Utils::ltos(body.size()) + "\r\n"
-					"Connection: keep-alive\r\n"
-					//"Connection: close\r\n"
-					"\r\n" + body;
+				// std::string body = "<html><body><h1>Hello, World!</h1></body></html>";
+				// std::string response = 
+				// 	"HTTP/1.1 200 OK\r\n"
+				// 	"Content-Type: text/html\r\n"
+				// 	"Content-Length: " + Utils::ltos(body.size()) + "\r\n"
+				// 	"Connection: keep-alive\r\n"
+				// 	//"Connection: close\r\n"
+				// 	"\r\n" + body;
 
-				event->client->write_buffer.insert(event->client->write_buffer.end(), response.begin(), response.end());
-				epoll_set(event, true, true);
+				// event->client->write_buffer.insert(event->client->write_buffer.end(), response.begin(), response.end());
+				// epoll_set(event, true, true);
+
+				Cache::CacheInfo * fcache = cache.get("index.html");
+				if (fcache) {
+					process_data(get_event(event->fd), fcache->content);
+					return;
+				}
+
+				int fd = open("index.html", O_RDONLY);
+				if (fd == -1) { return; }
+				struct stat file_stat; if (fstat(fd, &file_stat) == -1) { close(fd); return; }			//	Size of the file
+
+				EventInfo event_data(fd, DATA, NULL, event->client);
+
+				event_data.path = "index.html";
+				event_data.no_cache = true;
+				if (pipe(event_data.pipe) == -1) { remove_event(event_data.fd); return; }					//	Create pipe
+				event_data.data_size = 0;
+				event_data.max_data_size = file_stat.st_size;
+				size_t chunk = std::min(event_data.max_data_size, EPOLL_BUFFER_SIZE);
+				if (splice(event_data.fd, NULL, event_data.pipe[1], NULL, chunk, SPLICE_F_MOVE) == -1) { close(event_data.fd); close(event_data.pipe[0]); close(event_data.pipe[1]); return; }
+				std::swap(event_data.fd, event_data.pipe[0]);
+				events[event_data.fd] = event_data;
+				if (epoll_add(event_data.fd, true, false) == -1) { remove_event(event_data.fd); return; }
+
+				return;
 			}
 
 		#pragma endregion
@@ -172,10 +202,20 @@
 		#pragma region Data
 
 			void Net::process_data(EventInfo * event, std::string data) {
-				(void) event;
-				std::istringstream request_stream(data); std::string line;
-				if (std::getline(request_stream, line)) Utils::trim(line);
-				Log::log(line, Log::BOTH_ACCESS);
+				if (!event) return;
+				// std::istringstream request_stream(data); std::string line;
+				// if (std::getline(request_stream, line)) Utils::trim(line);
+				// Log::log(line, Log::BOTH_ACCESS);
+				std::string response = 
+					"HTTP/1.1 200 OK\r\n"
+					"Content-Type: text/html\r\n"
+					"Content-Length: " + Utils::ltos(data.size()) + "\r\n"
+					"Connection: keep-alive\r\n"
+					//"Connection: close\r\n"
+					"\r\n" + data;
+
+				event->write_buffer.insert(event->write_buffer.end(), response.begin(), response.end());
+				epoll_set(event->fd, true, true);
 			}
 
 		#pragma endregion

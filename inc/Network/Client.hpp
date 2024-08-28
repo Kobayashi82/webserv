@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 21:49:48 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/26 22:06:40 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/28 19:04:07 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,6 @@ class Client {
 		Net::SocketInfo *	socket;																		//	Pointer to the associated SocketInfo
 		std::string			IP;																			//	IP address of the client
 		int					port;																		//	Port number of the client
-		Net::EventInfo		event;																		//	EventInfo associated with this client
     	time_t				last_activity;																//	Last activity timespan  (for keep-alive)
 		long				total_requests;																//	Maximum request allowed (for keep-alive)
 
@@ -36,7 +35,7 @@ class Client {
 		size_t				write_pos;																	//	Current position in the write buffer
 
 		//	Constructors
-		Client(int _fd, Net::SocketInfo * _socket, std::string _IP, int _port, Net::EventInfo _event);	//	Parameterized constructor
+		Client(int _fd, Net::SocketInfo * _socket, std::string _IP, int _port);							//	Parameterized constructor
 		Client(const Client & Cli);																		//	Copy constructor
 
 		//	Overloads
@@ -47,6 +46,6 @@ class Client {
 		void	check_timeout(int interval);															//	Checks if the client has timed out
 		void	update_last_activity();																	//	Updates the client last activity timestamp
 
-		void	remove(bool no_msg = false);															//	Removes the client by closing the connection and cleaning up associated resources
+		void	remove();																				//	Removes the client by closing the connection and cleaning up associated resources
 
 };

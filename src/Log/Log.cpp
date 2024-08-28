@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:32:38 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/26 22:27:58 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/28 14:23:20 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -245,7 +245,6 @@
 
 			Thread::mutex_set(mutex, Thread::MTX_LOCK);
 			_logs.push(LogInfo(msg, type, VServ, path, maxsize));
-			Thread::cond_set(cond_var, &mutex, Thread::COND_SIGNAL);
 			Thread::mutex_set(mutex, Thread::MTX_UNLOCK);
 		}
 	
@@ -259,10 +258,7 @@
 
 		void * Log::main(void * args) { (void) args;
 			while (Thread::get_bool(mutex, _terminate) == false) {
-				Thread::mutex_set(mutex, Thread::MTX_LOCK);
-				Thread::cond_set(cond_var, &mutex, Thread::COND_WAIT);
-				Thread::mutex_set(mutex, Thread::MTX_UNLOCK);
-				Log::process_logs();
+				Log::process_logs(); usleep(1000);
 			}
 			return (NULL);
 		}

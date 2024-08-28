@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 14:30:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/26 22:35:44 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/28 20:48:24 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
 
 	while (Display::isTerminate() == -1) Net::epoll_events();
 	
-	Net::epoll_close(); Net::socket_close_all();
+	Net::epoll_close(); Net::socket_close_all(); Net::remove_events();
 	Log::stop(); Display::stop(); Log::release_mutex();
 	Display::disableRawMode();
 
