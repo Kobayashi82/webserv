@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 14:30:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/28 20:48:24 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/28 21:43:00 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,10 +36,13 @@ int main(int argc, char **argv) {
 	Settings::load_args(argc, argv);
 
 	Log::start(); Display::start();
-	Net::epoll__create(); Net::socket_create_all();
+	Net::epoll__create();																				//	Si falla crear un modo que el servidor no puede ejecutarse, pero se pueden ver los vservers
+	Net::socket_create_all();
 	usleep(10000); Display::update();
 
-	while (Display::isTerminate() == -1) Net::epoll_events();
+	while (Display::isTerminate() == -1) {
+		Net::epoll_events();																			//	Si falla crear un modo que el servidor no puede ejecutarse, pero se pueden ver los vservers
+	}
 	
 	Net::epoll_close(); Net::socket_close_all(); Net::remove_events();
 	Log::stop(); Display::stop(); Log::release_mutex();

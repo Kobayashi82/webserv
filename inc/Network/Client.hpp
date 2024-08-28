@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 21:49:48 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/28 19:04:07 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/29 00:07:52 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,13 +26,8 @@ class Client {
 		Net::SocketInfo *	socket;																		//	Pointer to the associated SocketInfo
 		std::string			IP;																			//	IP address of the client
 		int					port;																		//	Port number of the client
-    	time_t				last_activity;																//	Last activity timespan  (for keep-alive)
-		long				total_requests;																//	Maximum request allowed (for keep-alive)
-
-		std::vector <char> 	read_buffer;																//	Buffer for reading data
-    	std::vector <char> 	write_buffer;																//	Buffer for writing data
-		size_t				read_pos;																	//	Current position in the read buffer
-		size_t				write_pos;																	//	Current position in the write buffer
+    	time_t				last_activity;																//	Last activity time point	(for keep-alive)
+		long				total_requests;																//	Maximum request allowed		(for keep-alive)
 
 		//	Constructors
 		Client(int _fd, Net::SocketInfo * _socket, std::string _IP, int _port);							//	Parameterized constructor
@@ -45,7 +40,6 @@ class Client {
 		//	Methods
 		void	check_timeout(int interval);															//	Checks if the client has timed out
 		void	update_last_activity();																	//	Updates the client last activity timestamp
-
-		void	remove();																				//	Removes the client by closing the connection and cleaning up associated resources
+		void	remove(bool from_socket = false);														//	Close the connection, removes the client and cleaning up resources
 
 };

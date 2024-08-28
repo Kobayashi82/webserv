@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 21:55:43 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/28 21:21:28 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/29 00:09:04 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,12 +21,14 @@
 	std::list<Net::SocketInfo>				Net::sockets;												//	List of all SocketInfo objects
 	std::list<Client>						Net::clients;												//	List of all Client objects
 	std::map <int, Net::EventInfo>			Net::events;												//	Map of all events objects
+	std::map <int, int>						Net::mierdas;
 	Cache									Net::cache(600, 100, 10);									//	Used to store cached data, such as files or HTML responses.	(arguments: expiration in seconds, max entries, max content size in MB)
 
 	int										Net::total_clients;											//	Total number of clients conected
 	long									Net::read_bytes;											//	Total number of bytes downloaded by the server
 	long									Net::write_bytes;											//	Total number of bytes uploaded by the server
 
+	bool									Net::do_cleanup = false;
 	int										Net::ask_socket = 0;										//	Flag indicating the request to create or close all sockets		(Used when Key_W is pressed)
 
 	std::list<std::pair <VServer *, int> >	Net::socket_action_list;									//	List of VServers to enable or disable							(Used when Key_V is pressed)
@@ -35,10 +37,10 @@
 	int										Net::timeout_fd = -1;										//	EventInfo structure used for generating events in epoll and checking client timeouts
 
 	const int								Net::MAX_EVENTS = 10;										//	Maximum number of events that can be handled per iteration by epoll
-	const size_t							Net::EPOLL_BUFFER_SIZE = 4096;								//	Size of the buffer for read and write operations
+	const size_t							Net::CHUNK_SIZE = 4096;										//	Size of the buffer for read and write operations
 	const int								Net::TIMEOUT_INTERVAL = 1;									//	Interval in seconds between timeout checks for inactive clients
 	
-	const int								Net::KEEP_ALIVE_TIMEOUT = 30;								//	Timeout in seconds for keep-alive (if a client is inactive for this amount of time, the connection will be closed)
+	const int								Net::KEEP_ALIVE_TIMEOUT = 2;								//	Timeout in seconds for keep-alive (if a client is inactive for this amount of time, the connection will be closed)
 	const int								Net::KEEP_ALIVE_REQUEST = 500;								//	Maximum request for keep-alive (if a client exceeds this number of requests, the connection will be closed)
 
 	#pragma region EventInfo
@@ -100,14 +102,16 @@
 		#pragma region Remove
 
 			void Net::SocketInfo::remove() {
-				Net::epoll_del(fd); close(fd);
+				Net::epoll_del(fd); close(fd); remove_event(fd);
 				std::list <SocketInfo>::iterator s_it = Net::sockets.begin();
 				while (s_it != Net::sockets.end()) {
 					if (*s_it == *this) {
 						std::list <Client *>::iterator c_it = clients.begin();
 						while (c_it != clients.end()) {
+							std::list <Client *>::iterator curr_c_it = c_it;
 							Client * current = *c_it; ++c_it;
-							current->remove();
+							current->remove(true);
+							clients.erase(curr_c_it);
 						}
 						Net::sockets.erase(s_it);
 						break;
@@ -121,6 +125,35 @@
 	#pragma endregion
 
 #pragma endregion
+
+void Net::cleanup_socket() {
+	if (!do_cleanup) return;
+    // Iterar sobre cada socket en la lista de sockets
+    std::list<SocketInfo>::iterator s_it = sockets.begin();
+    while (s_it != sockets.end()) {
+        // Iterar sobre cada cliente en la lista de clientes del socket
+        std::list<Client *>::iterator c_it = s_it->clients.begin();
+        while (c_it != s_it->clients.end()) {
+            // Comprobar si el cliente está en la lista general de clientes
+            bool found = false;
+            std::list<Client>::iterator gc_it = clients.begin();
+            while (gc_it != clients.end()) {
+                if (*gc_it == **c_it) {
+                    found = true;
+                    break;
+                }
+                ++gc_it;
+            }
+            // Si el cliente no está en la lista general, eliminarlo de la lista del socket
+            if (!found) {
+                c_it = s_it->clients.erase(c_it);
+            } else {
+                ++c_it;
+            }
+        }
+        ++s_it;
+    }
+}
 
 #pragma region Sockets
 
@@ -263,9 +296,9 @@
 
 	#pragma endregion
 
-	#pragma region Server Status
+	#pragma region Status
 
-		int Net::check_server_status() {
+		int Net::server_status() {
 			bool update_display = false;
 
 			Thread::mutex_set(Display::mutex, Thread::MTX_LOCK);
@@ -293,7 +326,7 @@
 			Thread::mutex_set(Display::mutex, Thread::MTX_LOCK);
 
 				if (ask_socket == 1) { ask_socket = 0; Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK); socket_create_all(); Display::update(); return (1); }
-				if (ask_socket == 2) { ask_socket = 0; Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK); socket_close_all();  Display::update(); return (2); }
+				if (ask_socket == 2) { ask_socket = 0; Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK); socket_close_all(); Display::update(); return (2); }
 
 			Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK);
 
@@ -304,61 +337,128 @@
 
 #pragma endregion
 
-	void Net::remove_events() {
-		if (events.size() == 0) return;
-		std::map<int, EventInfo>::iterator it = events.begin();
-		while (it != events.end()) {
-			std::map<int, EventInfo>::iterator current = it++;
-			epoll_del(current->second.fd);
-			if (current->second.fd != -1) close(current->second.fd);
-			if (current->second.type == DATA) {
-				if (current->second.pipe[0] != -1) close(current->second.pipe[0]);
-				if (current->second.pipe[1] != -1) close(current->second.pipe[1]);
-			}
-			events.erase(current);
-		}
-	}
+#pragma region Events
 
-	void Net::remove_events(Client * Cli) {
-		if (events.size() == 0) return;
-		std::map<int, EventInfo>::iterator it = events.begin();
-		while (it != events.end()) {
-			std::map<int, EventInfo>::iterator current = it++;
-			if (current->second.client == Cli) {
-				epoll_del(current->second.fd);
-				if (current->second.fd != -1) close(current->second.fd);
-				if (current->second.type == DATA) {
-					if (current->second.pipe[0] != -1) close(current->second.pipe[0]);
-					if (current->second.pipe[1] != -1) close(current->second.pipe[1]);
+	#pragma region Get
+
+		Net::EventInfo * Net::get_event(int fd) {
+			if (fd < 0) return (NULL);
+			std::map<int, EventInfo>::iterator it = events.find(fd);
+
+			if (it != events.end())		return (&it->second);
+			else 						return (NULL);
+		}
+
+	#pragma endregion
+
+	#pragma region Remove
+
+		#pragma region Remove (One)
+
+			int Net::remove_event(int fd) {
+				EventInfo * event = get_event(fd);
+				if (!event) return (1);
+
+				if (event->type == DATA) {
+					epoll_del(event->fd);
+					if (event->fd != -1) close(event->fd);
+					if (event->pipe[0] != -1) close(event->pipe[0]);
+					if (event->pipe[1] != -1) close(event->pipe[1]);
 				}
-				events.erase(current);
+				events.erase(event->fd);
+
+				return (0);
 			}
-		}
-	}
 
-	Net::EventInfo * Net::get_event(int fd) {
-		if (fd < 0) return (NULL);
-		std::map<int, EventInfo>::iterator it = events.find(fd);
+		#pragma endregion
 
-		if (it != events.end())		return (&it->second);
-		else 						return (NULL);
-	}
+		#pragma region Remove (Client)
 
-	int Net::remove_event(int fd) {
-		EventInfo * event = get_event(fd);
-		if (!event) return (1);
+			void Net::remove_events(Client * Cli) {
+				if (events.size() == 0) return;
+				std::map<int, EventInfo>::iterator it = events.begin();
+				while (it != events.end()) {
+					std::map<int, EventInfo>::iterator current = it++;
+					if (current->second.client == Cli) {
+						epoll_del(current->second.fd);
+						if (current->second.fd != -1) close(current->second.fd);
+						if (current->second.type == DATA) {
+							if (current->second.pipe[0] != -1) close(current->second.pipe[0]);
+							if (current->second.pipe[1] != -1) close(current->second.pipe[1]);
+						}
+						events.erase(current);
+					}
+				}
+			}
 
-		if (event->type == DATA) {
-			epoll_del(event->fd);
-			if (event->fd != -1) close(event->fd);
-			if (event->pipe[0] != -1) close(event->pipe[0]);
-			if (event->pipe[1] != -1) close(event->pipe[1]);
-		}
-		events.erase(event->fd);
-		return (0);
-	}
+		#pragma endregion
+
+		#pragma region Remove (All)
+
+			void Net::remove_events() {
+				if (events.size() == 0) return;
+				std::map<int, EventInfo>::iterator it = events.begin();
+				while (it != events.end()) {
+					std::map<int, EventInfo>::iterator current = it++;
+					epoll_del(current->second.fd);
+					if (current->second.fd != -1) close(current->second.fd);
+					if (current->second.type == DATA) {
+						if (current->second.pipe[0] != -1) close(current->second.pipe[0]);
+						if (current->second.pipe[1] != -1) close(current->second.pipe[1]);
+					}
+					events.erase(current);
+				}
+			}
+
+		#pragma endregion
+
+	#pragma endregion
+
+#pragma endregion
 
 #pragma region EPOLL
+
+	#pragma region Time-Out
+
+		#pragma region Create
+
+			int Net::create_timeout() {
+				timeout_fd = timerfd_create(CLOCK_MONOTONIC, 0);
+				if (timeout_fd == -1) return (1);
+
+				struct itimerspec new_value;
+				memset(&new_value, 0, sizeof(new_value));
+				new_value.it_value.tv_sec = Net::TIMEOUT_INTERVAL;		// Tiempo hasta la primera expiración
+				new_value.it_interval.tv_sec = Net::TIMEOUT_INTERVAL; 	// Intervalo entre expiraciones
+
+				if (timerfd_settime(timeout_fd, 0, &new_value, NULL) == -1) { close(timeout_fd); timeout_fd = -1; return (1); }
+
+				return (0);
+			}
+
+		#pragma endregion
+
+		#pragma region Check
+
+			void Net::check_timeout() {
+				uint64_t expirations;
+				read(timeout_fd, &expirations, sizeof(expirations));
+
+				long TimeOut = KEEP_ALIVE_TIMEOUT;
+
+				if (Settings::global.get("keepalive_timeout") != "") Utils::stol(Settings::global.get("keepalive_timeout"), TimeOut);
+				if (TimeOut == 0) return;
+
+				std::list<Client>::iterator it = clients.begin();
+				while (it != clients.end()) {
+					std::list<Client>::iterator current = it; ++it;
+					current->check_timeout(TimeOut);
+				}
+			}
+
+		#pragma endregion
+
+	#pragma endregion
 
 	#pragma region Create
 
@@ -366,7 +466,7 @@
 				if (epoll_fd != -1) epoll_close();
 
 				epoll_fd = epoll_create(1024);
-				if (epoll_fd == -1) { Log::log(RD "Cannot create " Y "EPOLL" NC, Log::BOTH_ERROR); return (1); }
+				if (epoll_fd == -1) { Log::log(RD "Cannot create " Y "EPOLL" NC, Log::MEM_ERROR); return (1); }
 				if (!create_timeout()) epoll_add(timeout_fd, true, false);
 
 				return (0);
@@ -431,11 +531,13 @@
 	#pragma region Events
 
 		int Net::epoll_events() {
+			if (epoll_fd < 0) return (2);
 			struct epoll_event events[MAX_EVENTS];
 
 			int eventCount = epoll_wait(epoll_fd, events, MAX_EVENTS, 100);
 			if (eventCount == -1) return (1);
 
+			//if (eventCount > 0 && events[0].data.fd != timeout_fd) Log::log("putos eventos: " + Utils::ltos(eventCount), Log::MEM_ACCESS);
 			for (int i = 0; i < eventCount; ++i) {
 				if (events[i].data.fd == timeout_fd) { Display::update(); check_timeout(); cache.remove_expired(); continue; }
 
@@ -444,67 +546,30 @@
 
 				if (events[i].events & EPOLLIN) {
 					switch (event->type) {
-						case SOCKET: 	{ socket_accept(event);											break; }
-						case DATA: 		{ if (read_data(event))		continue;							break; }
-						case CGI: 		{ if (read_data(event))		continue;							break; }
-						case CLIENT: 	{ if (read_client(event))	continue;							break; }
+						case SOCKET: 	{ socket_accept(event);		break; }
+						case DATA: 		{ read_data(event);			break; }
+						case CGI: 		{ read_data(event);			break; }
+						case CLIENT: 	{ read_client(event);		break; }
 					}
 				}
+
+				event = get_event(events[i].data.fd);
+				if (!event) continue;
+
 				if (events[i].events & EPOLLOUT) {
 					switch (event->type) {
-						case CLIENT: 	{ write_client(event);											break; }
-						case DATA: 		{																break; }
-						case CGI: 		{																break; }
+						case CLIENT: 	{ write_client(event);		break; }
+						case DATA: 		{							break; }
+						case CGI: 		{							break; }
 					}
 				}
-
 			}
 
-			check_server_status();
+			server_status();
+			cleanup_socket();
+
 			return (0);
 		}
-
-	#pragma endregion
-
-	#pragma region Time-Out
-
-		#pragma region Create
-
-			int Net::create_timeout() {
-				timeout_fd = timerfd_create(CLOCK_MONOTONIC, 0);
-				if (timeout_fd == -1) return (1);
-
-				struct itimerspec new_value;
-				memset(&new_value, 0, sizeof(new_value));
-				new_value.it_value.tv_sec = Net::TIMEOUT_INTERVAL;		// Tiempo hasta la primera expiración
-				new_value.it_interval.tv_sec = Net::TIMEOUT_INTERVAL; 	// Intervalo entre expiraciones
-
-				if (timerfd_settime(timeout_fd, 0, &new_value, NULL) == -1) { close(timeout_fd); timeout_fd = -1; return (1); }
-
-				return (0);
-			}
-
-		#pragma endregion
-
-		#pragma region Check
-
-			void Net::check_timeout() {
-				uint64_t expirations;
-				read(timeout_fd, &expirations, sizeof(expirations));
-
-				long TimeOut = KEEP_ALIVE_TIMEOUT;
-
-				if (Settings::global.get("keepalive_timeout") != "") Utils::stol(Settings::global.get("keepalive_timeout"), TimeOut);
-				if (TimeOut == 0) return;
-
-				std::list<Client>::iterator it = clients.begin();
-				while (it != clients.end()) {
-					std::list<Client>::iterator current = it; ++it;
-					current->check_timeout(TimeOut);
-				}
-			}
-
-		#pragma endregion
 
 	#pragma endregion
 

@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/27 09:32:08 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/28 21:20:35 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/08/29 00:12:36 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,15 +30,15 @@
 		#pragma region Client
 
 			int Net::read_client(EventInfo * event) {
-				char buffer[EPOLL_BUFFER_SIZE];				memset(buffer, 0, sizeof(buffer));
-				char peek_buffer[EPOLL_BUFFER_SIZE + 1];	memset(peek_buffer, 0, sizeof(peek_buffer));
+				char buffer[CHUNK_SIZE];			memset(buffer, 0, sizeof(buffer));
+				char peek_buffer[CHUNK_SIZE + 1];	memset(peek_buffer, 0, sizeof(peek_buffer));
 
-				ssize_t bytes_peek = recv(event->fd, peek_buffer, EPOLL_BUFFER_SIZE + 1, MSG_PEEK);
-				if (bytes_peek <= 0) { event->client->remove(); return (1); }							//	Recv error or empty (empty = close client)
+				ssize_t bytes_peek = recv(event->fd, peek_buffer, CHUNK_SIZE + 1, MSG_PEEK);
+				//if (bytes_peek <= 0) {event->client->remove(); return (1); }							//	Recv error or empty (empty = close client)
 				
 				event->client->update_last_activity();
 
-				ssize_t bytes_read = recv(event->fd, buffer, EPOLL_BUFFER_SIZE, 0);
+				ssize_t bytes_read = recv(event->fd, buffer, CHUNK_SIZE, 0);
 				if (bytes_read > 0) {
 					event->read_buffer.insert(event->read_buffer.end(), buffer, buffer + bytes_read);
 
@@ -46,16 +46,16 @@
 					read_bytes+= bytes_read;
 					Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK);
 
-					//	if (event->client->read_buffer.size() >= max_request_size) return lo que sea
+					//if (event->read_buffer.size() >= max_request_size) return lo que sea
 
-					if (static_cast<size_t>(bytes_peek) <= EPOLL_BUFFER_SIZE) {
+					if (static_cast<size_t>(bytes_peek) <= CHUNK_SIZE) {
 						std::string request(event->read_buffer.begin(), event->read_buffer.end());
 						event->read_buffer.clear();
 						event->client->total_requests++;
 
 						process_request(event, request);
 					}
-				} else if (bytes_read <= 0) { event->client->remove(); return (1); }					//	Read error or empty (empty = close client)
+				} else if (bytes_read <= 0) { if (get_event(event->fd)) event->client->remove(); return (1); }					//	Read error or empty (empty = close client)
 
 				return (0);
 			}
@@ -65,9 +65,9 @@
 		#pragma region Data
 
 			int Net::read_data(EventInfo * event) {
-				char buffer[EPOLL_BUFFER_SIZE];				memset(buffer, 0, sizeof(buffer));
+				char buffer[CHUNK_SIZE];			memset(buffer, 0, sizeof(buffer));
 
-				ssize_t bytes_read = read(event->fd, buffer, EPOLL_BUFFER_SIZE);
+				ssize_t bytes_read = read(event->fd, buffer, CHUNK_SIZE);
 				if (bytes_read > 0) {
 					event->read_buffer.insert(event->read_buffer.end(), buffer, buffer + bytes_read);
 					event->data_size += bytes_read;
@@ -85,7 +85,7 @@
 					}
 				} else if (bytes_read <= 0) { remove_event(event->fd); return (1); }							//	Read error or empty
 
-				size_t chunk = std::min(event->max_data_size - event->data_size, EPOLL_BUFFER_SIZE);
+				size_t chunk = std::min(event->max_data_size - event->data_size, CHUNK_SIZE);
 				if (splice(event->pipe[0], NULL, event->pipe[1], NULL, chunk, SPLICE_F_MOVE) == -1) { remove_event(event->fd); return (1); }
 
 				return (0);
@@ -105,7 +105,7 @@
 				if (!event->write_buffer.empty()) {
 
 					size_t buffer_size = event->write_buffer.size();
-					size_t chunk_size = std::min(buffer_size, static_cast<size_t>(EPOLL_BUFFER_SIZE));
+					size_t chunk_size = std::min(buffer_size, static_cast<size_t>(CHUNK_SIZE));
 					
 					ssize_t bytes_written = write(event->fd, event->write_buffer.data(), chunk_size);
 
@@ -133,7 +133,6 @@
 
 	#pragma endregion
 
-	//	HERE WORK MUST BE DONE (PERSON 1)
 	#pragma region PROCESS
 
 		#pragma region Request
@@ -184,11 +183,11 @@
 				EventInfo event_data(fd, DATA, NULL, event->client);
 
 				event_data.path = "index.html";
-				event_data.no_cache = true;
+				event_data.no_cache = false;
 				if (pipe(event_data.pipe) == -1) { remove_event(event_data.fd); return; }					//	Create pipe
 				event_data.data_size = 0;
 				event_data.max_data_size = file_stat.st_size;
-				size_t chunk = std::min(event_data.max_data_size, EPOLL_BUFFER_SIZE);
+				size_t chunk = std::min(event_data.max_data_size, CHUNK_SIZE);
 				if (splice(event_data.fd, NULL, event_data.pipe[1], NULL, chunk, SPLICE_F_MOVE) == -1) { close(event_data.fd); close(event_data.pipe[0]); close(event_data.pipe[1]); return; }
 				std::swap(event_data.fd, event_data.pipe[0]);
 				events[event_data.fd] = event_data;
@@ -221,7 +220,6 @@
 		#pragma endregion
 
 	#pragma endregion
-	//	HERE WORK MUST BE DONE (PERSON 1)
 
 #pragma endregion
 
