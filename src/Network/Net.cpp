@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 21:55:43 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/01 09:49:32 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/01 11:06:32 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,6 @@
 	std::list<Net::SocketInfo>				Net::sockets;												//	List of all SocketInfo objects
 	std::list<Client>						Net::clients;												//	List of all Client objects
 	std::map <int, Net::EventInfo>			Net::events;												//	Map of all events objects
-	std::map <int, int>						Net::mierdas;
 	Cache									Net::cache(600, 100, 10);									//	Used to store cached data, such as files or HTML responses.	(arguments: expiration in seconds, max entries, max content size in MB)
 
 	int										Net::total_clients;											//	Total number of clients conected
