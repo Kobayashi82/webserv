@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/27 09:32:08 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/01 13:02:15 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/01 18:02:23 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,7 @@
 #include "Display.hpp"
 #include "Thread.hpp"
 
-#include <sys/stat.h>
+#include <sys/stat.h>																					//	To get the size of a file
 
 //	!	IMPORTANT	The response must obtain the file size, generate the header and then read the file and write to the client at the same time so we dont have to load in memory a big file.
 //	!				This is in case the file is too big, if not, we can cache the file.
@@ -24,7 +24,6 @@
 
 //	!	IMPORTANT	In read_client i have to check for a new header in the buffer and then process the request. After that continue reading.
 //	!				So, i need a function to check if a header is in the buffer and where start a header (ignoring the first header, of course)
-
 
 #pragma region Comunications
 
@@ -250,3 +249,18 @@
 	}
 
 #pragma endregion
+
+//	void Net::process_request(EventInfo * event, std::string request)
+//
+//	Esta es la funcion de entrada para el procesado de lo que pide el cliente
+//	event es un puntero al EventInfo del cliente. 
+//	El EventInfo se guarda en Net::events y es un map de FD - EventInfo
+//	Para ver la implentacion de EventInfo, está en Net.hpp
+//
+//	request es un string con el contenido de la peticion.
+//	Esto incluye el header y body.
+//	Tu me pasarias a la funcion intermediaria el metodo (GET, POST, etc...), la ruta (/folder por ejemplo) y
+//	el * event (para obtener la ip del cliente).
+//
+//	Eso te devolverá una estructura que todavia no esta hecha, pero que te dará la información necesaria para
+//	construir la respuesta.

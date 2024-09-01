@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:30:57 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/01 15:10:45 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/01 17:36:08 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -552,7 +552,7 @@
 #pragma region Parser
 
 	void Settings::parser(std::ifstream & infile) {
-		std::string line; std::string oline; line_count = 0; VServer VServ; Location Loc; Method Met;
+		std::string line; std::string oline; int last_line_count = -1; line_count = 0; VServer VServ; Location Loc; Method Met;
 		bool is_http = false; int section = 0; int section_bracket_lvl[4] = {0, 0, 0, 0};
 
 		while (getline(infile, line)) {
@@ -587,7 +587,7 @@
 				if (firstPart == "location" && section == SERVER) { section = LOCATION; section_bracket_lvl[2] = bracket_lvl; Loc.clear(); }
 				if (firstPart == "limit_except" && section == LOCATION) { section = METHOD; section_bracket_lvl[3] = bracket_lvl; Met.clear(); }
 
-				if (section != ROOT && section != GLOBAL) VServ.config.push_back(oline);
+				if (section != ROOT && section != GLOBAL && last_line_count != line_count) { last_line_count = line_count; VServ.config.push_back(oline); }
 
 				if (firstPart == "http" && is_http == false) is_http = true;
 				else if (firstPart == "http" && is_http == true) invalid_directive(firstPart, line_count, ROOT);
