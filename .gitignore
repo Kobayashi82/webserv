@@ -12,3 +12,5 @@
 !bin/www
 !bin/www/**
 !.gitignore
+!.vscode
+!.vscode/**

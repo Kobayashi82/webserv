@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/27 09:32:08 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/01 11:05:49 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/01 13:02:15 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,7 +33,7 @@
 		#pragma region Client
 
 			int Net::read_client(EventInfo * event) {
-				if (!event) return;
+				if (!event) return (0);
 
 				char buffer[CHUNK_SIZE];			memset(buffer, 0, sizeof(buffer));
 				char peek_buffer[CHUNK_SIZE + 1];	memset(peek_buffer, 0, sizeof(peek_buffer));
@@ -70,7 +70,7 @@
 		#pragma region Data
 
 			int Net::read_data(EventInfo * event) {
-				if (!event) return;
+				if (!event) return (0);
 
 				char buffer[CHUNK_SIZE];			memset(buffer, 0, sizeof(buffer));
 

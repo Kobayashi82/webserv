@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 21:55:43 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/01 11:06:32 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/01 16:02:20 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,11 +47,11 @@
 		#pragma region Constructors
 
 			Net::EventInfo::EventInfo() : fd(-1), type(NOTHING), socket(NULL), client(NULL) {
-				pipe[0] = -1; pipe[1] = -1; data_fd = -14; data_size = 0; max_data_size = 0; path = ""; no_cache = false;
+				pipe[0] = -1; pipe[1] = -1; data_size = 0; max_data_size = 0; path = ""; no_cache = false;
 			}
 
 			Net::EventInfo::EventInfo(int _fd, int _type, Net::SocketInfo * _socket, Client * _client) : fd(_fd), type(_type), socket(_socket), client(_client) {
-				pipe[0] = -1; pipe[1] = -1; data_fd = -1; data_size = 0; max_data_size = 0; path = ""; no_cache = false;
+				pipe[0] = -1; pipe[1] = -1; data_size = 0; max_data_size = 0; path = ""; no_cache = false;
 			}
 
 			Net::EventInfo::EventInfo(const EventInfo & src) { *this = src; }
@@ -63,7 +63,7 @@
 			Net::EventInfo & Net::EventInfo::operator=(const EventInfo & rhs) {
 				if (this != &rhs) {
 					fd = rhs.fd; type = rhs.type; socket = rhs.socket; client = rhs.client; path = rhs.path; no_cache = rhs.no_cache;
-					pipe[0] = rhs.pipe[0]; pipe[1] = rhs.pipe[1]; data_fd = rhs.data_fd; data_size = rhs.data_size; max_data_size = rhs.max_data_size; read_buffer = rhs.read_buffer; write_buffer = rhs.write_buffer;
+					pipe[0] = rhs.pipe[0]; pipe[1] = rhs.pipe[1]; data_size = rhs.data_size; max_data_size = rhs.max_data_size; read_buffer = rhs.read_buffer; write_buffer = rhs.write_buffer;
 				}
 				return (*this);
 			}
@@ -125,6 +125,8 @@
 
 #pragma endregion
 
+#pragma region cleanup
+
 void Net::cleanup_socket() {
 	if (!do_cleanup) return;
     // Iterar sobre cada socket en la lista de sockets
@@ -137,22 +139,18 @@ void Net::cleanup_socket() {
             bool found = false;
             std::list<Client>::iterator gc_it = clients.begin();
             while (gc_it != clients.end()) {
-                if (*gc_it == **c_it) {
-                    found = true;
-                    break;
-                }
+                if (*gc_it == **c_it) { found = true; break; }
                 ++gc_it;
             }
             // Si el cliente no está en la lista general, eliminarlo de la lista del socket
-            if (!found) {
-                c_it = s_it->clients.erase(c_it);
-            } else {
-                ++c_it;
-            }
+            if (!found)				c_it = s_it->clients.erase(c_it);
+            else					++c_it;
         }
         ++s_it;
     }
 }
+
+#pragma endregion
 
 #pragma region Sockets
 
