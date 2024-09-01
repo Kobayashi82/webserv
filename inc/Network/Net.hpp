@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 21:49:50 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/29 00:15:03 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/01 10:34:29 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,8 +40,11 @@ class Net {
 			SocketInfo *			socket;																//	Pointer to the associated Client, if applicable
 			Client *				client;																//	Pointer to the associated Client, if applicable
 
-			int						pipe[2];
+			int						data_fd;
 			size_t					data_size;
+
+			int						pipe[2];
+			//size_t					data_size;
 			size_t					max_data_size;
 
 			std::vector <char>		read_buffer;														//	Buffer for reading data
@@ -187,6 +190,7 @@ class Net {
 		static void	write_client(EventInfo * event);
 
 		static void	process_data(EventInfo * event, std::string data);
+		static void	process_data(EventInfo * event, size_t data_size);
 		static void	process_request(EventInfo * event, std::string request);
 		static void	process_response(EventInfo * event);
 

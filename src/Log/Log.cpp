@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:32:38 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/01 08:33:03 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/01 09:23:26 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -104,7 +104,7 @@
 
 #pragma region Static
 	
-	#pragma region Truncate Logs
+	#pragma region Truncate Logs (MUST DELETE LATER)
 
 		void Log::truncate_log(const std::string & path, long long maxFileSize, long long extraSize) {	//	Truncate the log file to the maximum set in the config file (default to 1 MB | 0 MB = dont truncate | Max 10 MB)
 			const std::size_t blockSize = 8192;															//	Block size of data to read and write
@@ -172,8 +172,10 @@
 		void Log::log_to_file(const std::string & msg, std::string path, long maxsize) {
 			if (msg.empty() || path.empty()) return;
 
+			//	DELETE LATER
 			long extraSize = std::min(((maxsize * 25) / 100), static_cast<long>(5 * 1024 * 1024));
 			truncate_log(path, maxsize - extraSize / 2 - msg.size(), extraSize);
+			//	DELETE LATER
 
 			std::ofstream outfile; outfile.open(path.c_str(), std::ios_base::app);
 			if (outfile.is_open()) {

@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/27 09:32:08 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/01 08:28:18 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/01 10:35:01 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,8 @@
 #include "Client.hpp"
 #include "Display.hpp"
 #include "Thread.hpp"
+
+#include <sys/stat.h>
 
 //	!	IMPORTANT	The response must obtain the file size, generate the header and then read the file and write to the client at the same time so we dont have to load in memory a big file.
 //	!				This is in case the file is too big, if not, we can cache the file.
@@ -99,11 +101,12 @@
 
 		#pragma region Client
 
-			void Net::write_client(EventInfo *event) {
+		void Net::write_client(EventInfo * event) {
+				if (!event) return;
+
 				event->client->update_last_activity();
 
 				if (!event->write_buffer.empty()) {
-
 					size_t buffer_size = event->write_buffer.size();
 					size_t chunk_size = std::min(buffer_size, static_cast<size_t>(CHUNK_SIZE));
 					
@@ -116,13 +119,28 @@
 						write_bytes+= bytes_written;
 						Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK);
 
-					} else if (bytes_written < 0) { event->client->remove(); return; }					// write error
+					} else if (bytes_written < 0) { event->client->remove(); return; }					//	write error
+				} else if (event->pipe[0] != -1 && event->data_size > 0) {
+					size_t chunk = std::min(event->data_size, CHUNK_SIZE);
+					event->data_size -= chunk;				
+					if (splice(event->pipe[0], NULL, event->fd, NULL, chunk, SPLICE_F_MOVE) == -1) {	//	splice error
+						if (event->data_fd != -1) { close(event->data_fd); event->data_fd = -1; }
+						if (event->pipe[0] != -1) { close(event->pipe[0]); event->pipe[0] = -1; }
+						if (event->pipe[1] != -1) { close(event->pipe[1]); event->pipe[1] = -1; }
+						return;
+					}
+					Thread::mutex_set(Display::mutex, Thread::MTX_LOCK);
+					write_bytes+= chunk;
+					Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK);
 				}
 				
-				if (event->write_buffer.empty()) {
+				if (event->write_buffer.empty() && event->data_size <= 0) {
+					if (event->data_fd != -1) { close(event->data_fd); event->data_fd = -1; }
+					if (event->pipe[0] != -1) { close(event->pipe[0]); event->pipe[0] = -1; }
+					if (event->pipe[1] != -1) { close(event->pipe[1]); event->pipe[1] = -1; }
 					epoll_set(event->fd, true, false);
 
-					long MaxRequests = KEEP_ALIVE_TIMEOUT;
+					long MaxRequests = KEEP_ALIVE_REQUEST;
 
 					if (Settings::global.get("keepalive_requests") != "") Utils::stol(Settings::global.get("keepalive_requests"), MaxRequests);
 					if (event->client->total_requests >= MaxRequests) event->client->remove();
@@ -138,15 +156,14 @@
 		#pragma region Request
 
 			void Net::process_request(EventInfo * event, std::string request) {
-				//	Diferenciar entre dos request unidas. Se busca un header y eso determina el inicio de otro response?
-				//	Si tenemos body_length leemos solo hasta ahi y el resto va de vuelta al buffer
+				if (!event) return;
 
 				//	if (body > max_body_size) return lo que sea
 
-				// std::istringstream request_stream(request); std::string line;
-				// if (std::getline(request_stream, line)) Utils::trim(line);
-				// Log::log(line, Log::BOTH_ACCESS);
-				(void) request;
+				std::istringstream request_stream(request); std::string line;
+				if (std::getline(request_stream, line)) Utils::trim(line);
+				Log::log(line, Log::BOTH_ACCESS);
+				//(void) request;
 				process_response(event);																//	ELIMINAR
 			}
 
@@ -154,21 +171,8 @@
 
 		#pragma region Response
 
-#include <sys/stat.h>
-
 			void Net::process_response(EventInfo * event) {
-				// Crear una respuesta HTTP básica
-				// std::string body = "<html><body><h1>Hello, World!</h1></body></html>";
-				// std::string response = 
-				// 	"HTTP/1.1 200 OK\r\n"
-				// 	"Content-Type: text/html\r\n"
-				// 	"Content-Length: " + Utils::ltos(body.size()) + "\r\n"
-				// 	"Connection: keep-alive\r\n"
-				// 	//"Connection: close\r\n"
-				// 	"\r\n" + body;
-
-				// event->client->write_buffer.insert(event->client->write_buffer.end(), response.begin(), response.end());
-				// epoll_set(event, true, true);
+				if (!event) return;
 
 				Cache::CacheInfo * fcache = cache.get("index.html");
 				if (fcache) {
@@ -176,24 +180,20 @@
 					return;
 				}
 
-				int fd = open("index.html", O_RDONLY);
-				if (fd == -1) { return; }
-				struct stat file_stat; if (fstat(fd, &file_stat) == -1) { close(fd); return; }			//	Size of the file
+				event->data_fd = open("index.html", O_RDONLY);
+				if (event->data_fd == -1) { return; }
+				struct stat file_stat; if (fstat(event->data_fd, &file_stat) == -1) { close(event->data_fd); return; }			//	Size of the file
 
-				EventInfo event_data(fd, DATA, NULL, event->client);
+				event->data_size = file_stat.st_size;
+				if (pipe(event->pipe) == -1) { return; }												//	Create pipe
+				if (splice(event->data_fd, NULL, event->pipe[1], NULL, event->data_size, SPLICE_F_MOVE) == -1) {
+					if (event->data_fd != -1) { close(event->data_fd); event->data_fd = -1; }
+					if (event->pipe[0] != -1) { close(event->pipe[0]); event->pipe[0] = -1; }
+					if (event->pipe[1] != -1) { close(event->pipe[1]); event->pipe[1] = -1; }
+					return;
+				}
 
-				event_data.path = "index.html";
-				event_data.no_cache = false;
-				if (pipe(event_data.pipe) == -1) { remove_event(event_data.fd); return; }					//	Create pipe
-				event_data.data_size = 0;
-				event_data.max_data_size = file_stat.st_size;
-				size_t chunk = std::min(event_data.max_data_size, CHUNK_SIZE);
-				if (splice(event_data.fd, NULL, event_data.pipe[1], NULL, chunk, SPLICE_F_MOVE) == -1) { close(event_data.fd); close(event_data.pipe[0]); close(event_data.pipe[1]); return; }
-				std::swap(event_data.fd, event_data.pipe[0]);
-				events[event_data.fd] = event_data;
-				if (epoll_add(event_data.fd, true, false) == -1) { remove_event(event_data.fd); return; }
-
-				return;
+				process_data(event, event->data_size);
 			}
 
 		#pragma endregion
@@ -202,16 +202,27 @@
 
 			void Net::process_data(EventInfo * event, std::string data) {
 				if (!event) return;
-				// std::istringstream request_stream(data); std::string line;
-				// if (std::getline(request_stream, line)) Utils::trim(line);
-				// Log::log(line, Log::BOTH_ACCESS);
+
 				std::string response = 
 					"HTTP/1.1 200 OK\r\n"
 					"Content-Type: text/html\r\n"
 					"Content-Length: " + Utils::ltos(data.size()) + "\r\n"
 					"Connection: keep-alive\r\n"
-					//"Connection: close\r\n"
 					"\r\n" + data;
+
+				event->write_buffer.insert(event->write_buffer.end(), response.begin(), response.end());
+				epoll_set(event->fd, true, true);
+			}
+
+			void Net::process_data(EventInfo * event, size_t data_size) {
+				if (!event) return;
+
+				std::string response = 
+					"HTTP/1.1 200 OK\r\n"
+					"Content-Type: text/html\r\n"
+					"Content-Length: " + Utils::ltos(data_size) + "\r\n"
+					"Connection: keep-alive\r\n"
+					"\r\n";
 
 				event->write_buffer.insert(event->write_buffer.end(), response.begin(), response.end());
 				epoll_set(event->fd, true, true);
