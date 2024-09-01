@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:32:38 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/28 14:23:20 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/01 08:33:03 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -258,7 +258,7 @@
 
 		void * Log::main(void * args) { (void) args;
 			while (Thread::get_bool(mutex, _terminate) == false) {
-				Log::process_logs(); usleep(1000);
+				Log::process_logs(); usleep(10000);
 			}
 			return (NULL);
 		}
