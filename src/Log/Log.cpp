@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:32:38 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/01 09:23:26 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/02 18:14:01 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -150,7 +150,7 @@
 				if (Settings::check_only && Settings::loaded == false) {
 					if (msg.size() > 24) msg = msg.substr(24); else msg = "";
 				}
-				if (!msg.empty()) std::cout << " " << msg << NC << std::endl;
+				if (!Display::background && !msg.empty()) std::cout << " " << msg << NC << std::endl;
 			}
 
 			Thread::mutex_set(mutex, Thread::MTX_LOCK);

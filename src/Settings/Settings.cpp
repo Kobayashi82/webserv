@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:27:58 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/26 22:29:55 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/02 18:26:21 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -173,6 +173,7 @@
 			load_error_codes(); load_mime_types();
 			//	Incorrect arguments
 			if (argc == 3 && (!strcmp(argv[2], "-i") || !strcmp(argv[2], "-t"))) {	terminate = 1; check_only = true;
+				if (tcgetpgrp(STDIN_FILENO) != getpgrp()) return;
 				std::cout << RD "\n\t\t\tIncorrect arguments\n\n"
 						  << C "\tUsage: " Y "./webserv [" B "Opional " G "-t" C " or " G "-i" Y"] [" B "Opional " G "settings file" Y "]\n\n" NC
 						  << Y "   -t:  " C "Checks the configuration file for syntax and errors\n" NC
@@ -180,10 +181,12 @@
 
 			//	Option -i: Run the program in console mode
 			} else if ((argc == 2 || argc == 3) && !strcmp(argv[1], "-i")) {
-				Display::RawModeDisabled = true; Display::ForceRawModeDisabled = true; Display::Logo();
+				Display::RawModeDisabled = true; Display::ForceRawModeDisabled = true;
+				if (tcgetpgrp(STDIN_FILENO) == getpgrp()) Display::Logo();
 
 			//	Option -t: Checks the configuration file
 			} else if ((argc == 2 || argc == 3) && !strcmp(argv[1], "-t")) {		check_only = true;
+				if (tcgetpgrp(STDIN_FILENO) != getpgrp()) { terminate = 1; return; }
 				std::cout << std::endl;
 				
 				if (argc == 2) load();
@@ -199,6 +202,7 @@
 				terminate = 1;
 			//	Incorrect number of arguments
 			} else if (argc > 2) {													terminate = 1;
+				if (tcgetpgrp(STDIN_FILENO) != getpgrp()) return;
 				std::cout << RD "\n\t\t     Incorrect number of arguments\n\n"
 						  << C "\tUsage: " Y "./webserv [" B "Opional " G "-t" C " or " G "-i" Y"] [" B "Opional " G "settings file" Y "]\n\n" NC
 						  << Y "   -t:  " C "Checks the configuration file for syntax and errors\n" NC
@@ -207,8 +211,12 @@
 
 			//	Load the configuration file
 			if (terminate == -1) {
+				if (tcgetpgrp(STDIN_FILENO) != getpgrp()) {
+					Display::RawModeDisabled = true; Display::ForceRawModeDisabled = true; Display::background = true;
+				}
+
 				Display::enableRawMode();
-				if (Display::RawModeDisabled || Display::ForceRawModeDisabled) { std::cout << std::endl; }
+				if (!Display::background && (Display::RawModeDisabled || Display::ForceRawModeDisabled)) { std::cout << std::endl; }
 
 				if (argc == 1 || (argc == 2 && !strcmp(argv[1], "-i"))) load();
 				else if (argc == 2 && strcmp(argv[1], "-i")) load(argv[1]);
