@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 14:30:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/07 11:39:50 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/07 11:42:58 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@
 //	*		nc 127.0.0.1 8081	-	telnet 127.0.0.1 8081
 //	*		curl -v http://localhost:8081/
 
-//	*		siege -c 255 -t 10S 127.0.0.1:8081			135.000 transactions is a good measure
+//	*		siege -b -c 255 -t 10S 127.0.0.1:8081			135.000 transactions is a good measure
 
 //	?		X-Content-Type-Options: nosniff
 //	?		Reload config

@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 21:49:50 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/29 00:15:03 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/01 11:06:39 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -99,7 +99,6 @@ class Net {
 	    static std::list <SocketInfo>					sockets;										//	List of all SocketInfo objects
 		static std::list <Client>						clients;										//	List of all Client objects
 		static std::map <int, EventInfo>				events;											//	Map of all events objects
-		static std::map <int, int>						mierdas;										//	Map of all mierdas
 		static Cache									cache;											//	Used to store cached data, such as files or HTML responses
 
 
@@ -187,6 +186,7 @@ class Net {
 		static void	write_client(EventInfo * event);
 
 		static void	process_data(EventInfo * event, std::string data);
+		static void	process_data(EventInfo * event, size_t data_size);
 		static void	process_request(EventInfo * event, std::string request);
 		static void	process_response(EventInfo * event);
 

@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/27 09:32:08 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/29 00:12:36 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/01 18:02:23 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,8 @@
 #include "Client.hpp"
 #include "Display.hpp"
 #include "Thread.hpp"
+
+#include <sys/stat.h>																					//	To get the size of a file
 
 //	!	IMPORTANT	The response must obtain the file size, generate the header and then read the file and write to the client at the same time so we dont have to load in memory a big file.
 //	!				This is in case the file is too big, if not, we can cache the file.
@@ -30,6 +32,8 @@
 		#pragma region Client
 
 			int Net::read_client(EventInfo * event) {
+				if (!event) return (0);
+
 				char buffer[CHUNK_SIZE];			memset(buffer, 0, sizeof(buffer));
 				char peek_buffer[CHUNK_SIZE + 1];	memset(peek_buffer, 0, sizeof(peek_buffer));
 
@@ -65,6 +69,8 @@
 		#pragma region Data
 
 			int Net::read_data(EventInfo * event) {
+				if (!event) return (0);
+
 				char buffer[CHUNK_SIZE];			memset(buffer, 0, sizeof(buffer));
 
 				ssize_t bytes_read = read(event->fd, buffer, CHUNK_SIZE);
@@ -100,6 +106,8 @@
 		#pragma region Client
 
 			void Net::write_client(EventInfo *event) {
+				if (!event) return;
+
 				event->client->update_last_activity();
 
 				if (!event->write_buffer.empty()) {
@@ -116,7 +124,7 @@
 						write_bytes+= bytes_written;
 						Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK);
 
-					} else if (bytes_written < 0) { event->client->remove(); return; }					// write error
+					} else if (bytes_written < 0) { event->client->remove(); return; }					//	write error
 				}
 				
 				if (event->write_buffer.empty()) {
@@ -138,8 +146,7 @@
 		#pragma region Request
 
 			void Net::process_request(EventInfo * event, std::string request) {
-				//	Diferenciar entre dos request unidas. Se busca un header y eso determina el inicio de otro response?
-				//	Si tenemos body_length leemos solo hasta ahi y el resto va de vuelta al buffer
+				if (!event) return;
 
 				//	if (body > max_body_size) return lo que sea
 
@@ -154,21 +161,8 @@
 
 		#pragma region Response
 
-#include <sys/stat.h>
-
 			void Net::process_response(EventInfo * event) {
-				// Crear una respuesta HTTP básica
-				// std::string body = "<html><body><h1>Hello, World!</h1></body></html>";
-				// std::string response = 
-				// 	"HTTP/1.1 200 OK\r\n"
-				// 	"Content-Type: text/html\r\n"
-				// 	"Content-Length: " + Utils::ltos(body.size()) + "\r\n"
-				// 	"Connection: keep-alive\r\n"
-				// 	//"Connection: close\r\n"
-				// 	"\r\n" + body;
-
-				// event->client->write_buffer.insert(event->client->write_buffer.end(), response.begin(), response.end());
-				// epoll_set(event, true, true);
+				if (!event) return;
 
 				Cache::CacheInfo * fcache = cache.get("index.html");
 				if (fcache) {
@@ -202,6 +196,7 @@
 
 			void Net::process_data(EventInfo * event, std::string data) {
 				if (!event) return;
+
 				// std::istringstream request_stream(data); std::string line;
 				// if (std::getline(request_stream, line)) Utils::trim(line);
 				// Log::log(line, Log::BOTH_ACCESS);
@@ -210,7 +205,6 @@
 					"Content-Type: text/html\r\n"
 					"Content-Length: " + Utils::ltos(data.size()) + "\r\n"
 					"Connection: keep-alive\r\n"
-					//"Connection: close\r\n"
 					"\r\n" + data;
 
 				event->write_buffer.insert(event->write_buffer.end(), response.begin(), response.end());
@@ -255,3 +249,18 @@
 	}
 
 #pragma endregion
+
+//	void Net::process_request(EventInfo * event, std::string request)
+//
+//	Esta es la funcion de entrada para el procesado de lo que pide el cliente
+//	event es un puntero al EventInfo del cliente. 
+//	El EventInfo se guarda en Net::events y es un map de FD - EventInfo
+//	Para ver la implentacion de EventInfo, está en Net.hpp
+//
+//	request es un string con el contenido de la peticion.
+//	Esto incluye el header y body.
+//	Tu me pasarias a la funcion intermediaria el metodo (GET, POST, etc...), la ruta (/folder por ejemplo) y
+//	el * event (para obtener la ip del cliente).
+//
+//	Eso te devolverá una estructura que todavia no esta hecha, pero que te dará la información necesaria para
+//	construir la respuesta.

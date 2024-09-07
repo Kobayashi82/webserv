@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/14 14:37:32 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/26 13:15:39 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/02 18:17:50 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,11 +27,12 @@
 	bool					Display::ForceRawModeDisabled = false;										//	Force terminal in normal mode (not raw mode)
 	bool					Display::Resized = false;													//	True if the terminal has been resized
 	bool					Display::redraw = false;													//	Is in the middle of an Output()
+	bool					Display::background = false;
 
 	pthread_t				Display::_thread;
 	bool					Display::_terminate = false;												//	Flag the thread to finish
-	bool					Display::_update;															//	Flag for a redraw in the next iteration
-	bool					Display::_logo;																//	Flag for printing the logo
+	bool					Display::_update = false;													//	Flag for a redraw in the next iteration
+	bool					Display::_logo = false;														//	Flag for printing the logo
 
 	const int				Display::UPDATE_INTERVAL = 10;												//	Interval in miliseconds for the thread main loop
 
@@ -94,7 +95,7 @@
 				std::signal(SIGQUIT, quitHandler);
 				signalRegistered = true;
 			}
-			std::cout << CHIDE;
+			if (!background) std::cout << CHIDE;
 			if (Settings::check_only || ForceRawModeDisabled) return;
 			if (tcgetattr(STDIN_FILENO, &orig_termios) == -1) return;
 			struct termios raw = orig_termios; raw.c_lflag &= ~(ECHO | ICANON);
@@ -672,6 +673,8 @@
 	#pragma region Logo
 
 		void Display::Logo() {
+			Thread::set_bool(mutex, _logo, false);
+			if (background) return;
 			std::cout << C	"\n\n"
 					  <<	"\t ██╗    ██╗███████╗██████╗ ███████╗███████╗██████╗ ██╗   ██╗" 	<< "\n"
 					  <<	"\t ██║    ██║██╔════╝██╔══██╗██╔════╝██╔════╝██╔══██╗██║   ██║" << "\n"
@@ -680,7 +683,6 @@
 					  <<	"\t ╚███╔███╔╝███████╗██████╔╝███████║███████╗██║  ██║ ╚████╔╝ " << "\n"
 					  <<	"\t  ╚══╝╚══╝ ╚══════╝╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝  ╚═══╝  " << "\n"
 					  << NC "\n";
-			Thread::set_bool(mutex, _logo, false);
 		}
 
 	#pragma endregion

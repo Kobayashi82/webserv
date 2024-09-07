@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 21:55:43 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/29 00:09:04 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/01 16:10:53 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,6 @@
 	std::list<Net::SocketInfo>				Net::sockets;												//	List of all SocketInfo objects
 	std::list<Client>						Net::clients;												//	List of all Client objects
 	std::map <int, Net::EventInfo>			Net::events;												//	Map of all events objects
-	std::map <int, int>						Net::mierdas;
 	Cache									Net::cache(600, 100, 10);									//	Used to store cached data, such as files or HTML responses.	(arguments: expiration in seconds, max entries, max content size in MB)
 
 	int										Net::total_clients;											//	Total number of clients conected
@@ -48,7 +47,7 @@
 		#pragma region Constructors
 
 			Net::EventInfo::EventInfo() : fd(-1), type(NOTHING), socket(NULL), client(NULL) {
-				pipe[0] = -1; pipe[1] = -1; data_size = 0; data_size = 0; path = ""; no_cache = false;
+				pipe[0] = -1; pipe[1] = -1; data_size = 0; max_data_size = 0; path = ""; no_cache = false;
 			}
 
 			Net::EventInfo::EventInfo(int _fd, int _type, Net::SocketInfo * _socket, Client * _client) : fd(_fd), type(_type), socket(_socket), client(_client) {
@@ -126,6 +125,8 @@
 
 #pragma endregion
 
+#pragma region cleanup
+
 void Net::cleanup_socket() {
 	if (!do_cleanup) return;
     // Iterar sobre cada socket en la lista de sockets
@@ -138,22 +139,18 @@ void Net::cleanup_socket() {
             bool found = false;
             std::list<Client>::iterator gc_it = clients.begin();
             while (gc_it != clients.end()) {
-                if (*gc_it == **c_it) {
-                    found = true;
-                    break;
-                }
+                if (*gc_it == **c_it) { found = true; break; }
                 ++gc_it;
             }
             // Si el cliente no está en la lista general, eliminarlo de la lista del socket
-            if (!found) {
-                c_it = s_it->clients.erase(c_it);
-            } else {
-                ++c_it;
-            }
+            if (!found)				c_it = s_it->clients.erase(c_it);
+            else					++c_it;
         }
         ++s_it;
     }
 }
+
+#pragma endregion
 
 #pragma region Sockets
 

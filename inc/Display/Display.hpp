@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 11:59:38 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/26 22:16:10 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/02 18:11:16 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,6 +37,7 @@ class Display {
 		static bool				ForceRawModeDisabled;													//	Force terminal in normal mode (not raw mode)
 		static bool				Resized;																//	True if the terminal has been resized
 		static bool				redraw;																	//	Is in the middle of an Output()
+		static bool				background;
 
 		//	Methods
 		static void	Logo();																				//	Print the Webserv logo
