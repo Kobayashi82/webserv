@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 14:30:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/09 15:24:05 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/09 22:50:19 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,6 +36,12 @@
 int main(int argc, char **argv) {
 	Settings::load_args(argc, argv);
 
+	Log::log("GET", "/prueba", 100, 1024, "250", "127.0.0.1");
+	Log::log("HEAD", "/home/casa", 200, 1024, "250", "127.0.0.1");
+	Log::log("POST", "/algo", 300, 1024, "250", "127.0.0.1");
+	Log::log("PUT", "/hola/caracola", 400, 1024, "250", "127.0.0.1");
+	Log::log("DELETE", "/everything", 500, 1024, "250", "127.0.0.1");
+
 	Log::start(); Display::start();
 	Net::epoll__create();																				//	Si falla crear un modo que el servidor no puede ejecutarse, pero se pueden ver los vservers
 	Net::socket_create_all();
@@ -49,5 +55,6 @@ int main(int argc, char **argv) {
 	Log::stop(); Display::stop(); Log::release_mutex();
 	Display::disableRawMode();
 
+	Log::exec_logrot(Settings::program_path + ".logrotate.cfg");
 	return (Settings::terminate);
 }

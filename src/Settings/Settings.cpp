@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:27:58 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/02 18:26:21 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/09 21:48:37 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,6 +37,24 @@
 #pragma endregion
 
 #pragma region Global
+
+	#pragma region Data Get
+
+		std::string Settings::data_get(std::vector<std::pair<std::string, std::string> > * data, std::string key) {
+			for (std::vector<std::pair<std::string, std::string> >::const_iterator it = data->begin(); it != data->end(); ++it)
+				if (it->first == key) return it->second;
+
+			return ("");
+		}
+
+		std::string Settings::data_get(std::vector<std::pair<std::string, std::string> > & data, std::string key) {
+			for (std::vector<std::pair<std::string, std::string> >::const_iterator it = data.begin(); it != data.end(); ++it)
+				if (it->first == key) return it->second;
+
+			return ("");
+		}
+
+	#pragma endregion
 
     #pragma region Clear
 

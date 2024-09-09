@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:32:38 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/09 15:23:58 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/09 23:13:38 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,7 @@
 	std::queue <Log::LogInfo>	Log::_logs;																	//	Queue container with logs that need to be processed
 
 	const size_t				Log::MEM_MAXSIZE = 200;														//	Maximum number of logs for each memory log
-	long						Log::LOCAL_MAXSIZE = 10 * 1024 * 1024;										//	Maximum size of the log before rotate	(default to 10 MB | 0 MB = dont rotate | Max 100 MB)
+	long						Log::LOCAL_MAXSIZE = 1 * 1024 * 1024;										//	Maximum size of the log before rotate	(default to 1 MB | 0 MB = dont rotate | Max 100 MB)
 	int							Log::LOCAL_ROTATE = 7;														//	Number of rotations files 				(default to 7 | 0 = dont create rotations files | Max 100)
 
 	#pragma region LogInfo
@@ -111,9 +111,6 @@
 			void Log::log_to_memory(std::string msg, int type, VServer * VServ) {
 				if (msg.empty()) return ;
 				if (Settings::check_only || !Display::isRawMode() || Display::ForceRawModeDisabled) {
-					if (Settings::check_only && Settings::loaded == false) {
-						if (msg.size() > 24) msg = msg.substr(24); else msg = "";
-					}
 					if (!Display::background && !msg.empty()) std::cout << " " << msg << NC << std::endl;
 				}
 
@@ -162,7 +159,8 @@
 					Log::LogInfo log = logs.front(); logs.pop();
 					
 					Utils::trim(log.msg); if (log.msg.empty()) continue;
-					log.msg = "[" + Settings::timer.current_date() + " " + Settings::timer.current_time() + "] - " + log.msg;
+					if (!(Settings::check_only && Settings::loaded == false))
+						log.msg = BLUE600 "[" LIME600 + Settings::timer.current_date() + " " EMERALD400 + Settings::timer.current_time() + BLUE600 "]  " NC + log.msg;
 
 					if (!log.path.empty() && log.path[0] != '/') log.path = Settings::program_path + log.path;
 
@@ -183,27 +181,36 @@
 
 		#pragma region Log
 
-			void Log::log(std::string msg, int type, VServer * VServ, std::string path, std::string maxsize) {
+			void Log::log(std::string method, std::string re_path, int code, size_t bytes, std::string time, std::string ip, VServer * VServ, std::vector<std::pair<std::string, std::string> > * data) {
+				std::string method_color;
+				if (method == "GET") method_color = AMBER500;
+				if (method == "HEAD") method_color = GREEN600;
+				if (method == "POST") method_color = FUCHSIA600;
+				if (method == "PUT") method_color = TEAL400;
+				if (method == "DELETE") method_color = RED400;
+
+				std::string msg = UN BLUE400 + ip + NC + std::string("                ").substr(ip.size()) + method_color + method + std::string("           ").substr(method.size()) + BR + re_path + NC;
+				log(msg, BOTH_ACCESS, VServ, data);
+
+				std::string s_bytes = Utils::formatSize(bytes);
+				std::string code_color;
+				if (code >= 100 && code < 300) code_color = GREEN600;
+				if (code >= 300 && code < 400) code_color = ORANGE400;
+				if (code >= 400 && code < 600) code_color = RED400;
+
+				msg = BLUE800 "Transfered:     " AMBER200 + s_bytes + std::string("          ").substr(s_bytes.size()) + C " in " SKY700 + time + " ms " C "with code " + code_color + Utils::ltos(code) + C " (" + code_color + Settings::error_codes[code] + C ")" NC;
+				log(msg, BOTH_ACCESS, VServ, data);
+			}
+
+			void Log::log(std::string msg, int type, VServer * VServ, std::vector<std::pair<std::string, std::string> > * data) {
+				std::string path;
+
 				if (VServ == &(Settings::global)) VServ = NULL;
+				if (VServ)	data = &VServ->data;
+				else 		data = &Settings::global.data;
 
-				if (path.empty()) {
-					if (type == BOTH_ACCESS || type == LOCAL_ACCESS) {
-						if (VServ) path = VServ->get("access_log");
-						else path = Settings::global.get("access_log");
-					}
-					if (type == BOTH_ERROR || type == LOCAL_ERROR) {
-						if (VServ) path = VServ->get("error_log");
-						else path = Settings::global.get("error_log");
-					}
-				}
-
-				if (maxsize.empty()) {
-					if (VServ) maxsize = VServ->get("log_maxsize");
-					else maxsize = Settings::global.get("log_maxsize");
-				}
-				long check_size = LOCAL_MAXSIZE;
-				if (!maxsize.empty()) Utils::stol(maxsize, check_size);
-				if (Utils::filesize(path) < check_size) exec_logrot(Settings::program_path + ".logrotate.cfg");
+				if (type == BOTH_ACCESS || type == LOCAL_ACCESS)	path = Settings::data_get(data, "access_log");
+				if (type == BOTH_ERROR  || type == LOCAL_ERROR )	path = Settings::data_get(data, "error_log" );
 
 				Thread::mutex_set(mutex, Thread::MTX_LOCK);
 				_logs.push(LogInfo(msg, type, VServ, path));
@@ -284,6 +291,7 @@
 		#pragma region Execute
 
 			void Log::exec_logrot(const std::string config_path) {
+				return;
 				std::string logrotate_path = get_logrot_path();
 
 				if (logrotate_path.empty() || create_logrot(config_path)) return;

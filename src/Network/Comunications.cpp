@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/27 09:32:08 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/01 18:02:23 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/09 23:14:58 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -134,6 +134,8 @@
 
 					if (Settings::global.get("keepalive_requests") != "") Utils::stol(Settings::global.get("keepalive_requests"), MaxRequests);
 					if (event->client->total_requests >= MaxRequests) event->client->remove();
+
+					Log::log("GET", "/", 200, write_bytes, "250", event->client->IP);
 				}
 			}
 
@@ -153,6 +155,7 @@
 				// std::istringstream request_stream(request); std::string line;
 				// if (std::getline(request_stream, line)) Utils::trim(line);
 				// Log::log(line, Log::BOTH_ACCESS);
+				//Log::log("Prueba", Log::BOTH_ACCESS);
 				(void) request;
 				process_response(event);																//	ELIMINAR
 			}

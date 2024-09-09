@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:14:05 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/09 14:53:46 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/09 19:58:08 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,7 +46,9 @@ class Settings {
 		static int									terminate;											//	Flag the program to exit with the value in terminate (the default value of -1 don't exit)
 
 		//	Global
-		static void	clear(bool reset = false);															//	Delete all Keys, his Values and optionally reset config data
+		static std::string data_get(std::vector<std::pair<std::string, std::string> > * data, std::string key);		//	Get a value from a key in any "data" passed as a pointer
+		static std::string data_get(std::vector<std::pair<std::string, std::string> > & data, std::string key);		//	Get a value from a key in any "data" passed as a reference
+		static void	clear(bool reset = false);																		//	Delete all Keys, his Values and optionally reset config data
 
 		//	V-Server
 		static void	set(VServer & VServ);																//	Add or modify a V-Server

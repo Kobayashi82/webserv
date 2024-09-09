@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:32:23 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/09 15:08:29 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/09 23:13:58 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,7 +56,8 @@ class Log {
 
 		//	Local Log
 		static void process_logs();																								//	Save logs to memory and/or to a file
-		static void	log(std::string msg, int type, VServer * VServ = NULL, std::string path = "", std::string maxsize = "");	//	Add a new message to logs queue
+		static void	log(std::string msg, int type, VServer * VServ = NULL, std::vector<std::pair<std::string, std::string> > * data = NULL);	//	Add a new message to logs queue
+		static void log(std::string method, std::string re_path, int code, size_t bytes, std::string time, std::string ip, VServer * VServ = NULL, std::vector<std::pair<std::string, std::string> > * data = NULL);
 
 		//	Log Rotate
 		static void exec_logrot(const std::string config_path);											//	Execute logrotate (external program to manage logs rotation)
@@ -95,7 +96,7 @@ class Log {
 		static std::queue <LogInfo>	_logs;																//	Queue container with logs that need to be processed
 
 		static const size_t			MEM_MAXSIZE;														//	Maximum number of logs for each memory log
-		static long					LOCAL_MAXSIZE;														//	Maximum size of the log before rotate	(default to 10 MB | 0 MB = dont rotate | Max 100 MB)
+		static long					LOCAL_MAXSIZE;														//	Maximum size of the log before rotate	(default to 1 MB | 0 MB = dont rotate | Max 100 MB)
 		static int					LOCAL_ROTATE;														//	Number of rotations files 				(default to 7 | 0 = dont create rotations files | Max 100)
 
 		//	Logs
