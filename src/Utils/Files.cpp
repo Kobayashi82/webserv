@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 22:23:52 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/26 21:40:11 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/09 15:19:34 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,7 @@
 #include <errno.h>																						//	For errno
 #include <unistd.h>																						//	For readlink() and access()
 #include <limits.h>																						//	For PATH_MAX
-#include <sys/stat.h>																					//	For mkdir()
+#include <sys/stat.h>																					//	For mkdir() and get the size of a file
 
 #pragma region Program Path
 
@@ -112,5 +112,17 @@
 #pragma region IsSubpath
 
 	bool Utils::is_subpath(const std::string & path1, const std::string & path2) { return (path1.find(path2) == 0); }
+
+#pragma endregion
+
+#pragma region FileSize
+
+	long Utils::filesize(const std::string & path) {
+		if (path.empty()) return (-1);
+		struct stat path_stat;
+		
+		if (stat(path.c_str(), &path_stat) != 0) return (-1);
+		return (path_stat.st_size);
+	}
 
 #pragma endregion

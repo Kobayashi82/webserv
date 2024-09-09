@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:32:23 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/09 14:50:53 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/09 15:08:29 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,8 +55,8 @@ class Log {
 		void clear();																					//	clear all logs in 'access', 'error' and 'both'
 
 		//	Local Log
-		static void process_logs();																		//	Save logs to memory and/or to a file
-		static void	log(std::string msg, int type, VServer * VServ = NULL, std::string path = "");		//	Add a new message to logs queue
+		static void process_logs();																								//	Save logs to memory and/or to a file
+		static void	log(std::string msg, int type, VServer * VServ = NULL, std::string path = "", std::string maxsize = "");	//	Add a new message to logs queue
 
 		//	Log Rotate
 		static void exec_logrot(const std::string config_path);											//	Execute logrotate (external program to manage logs rotation)

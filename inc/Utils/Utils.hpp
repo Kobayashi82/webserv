@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:37:20 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/09 13:15:04 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/09 15:19:42 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,13 +34,13 @@ class Utils {
 		static int			str_nocolor_length(const std::string & str);								//	Get the length of a string without the colors chars
 		static std::string	str_nocolor_trunc(const std::string & str, int length);						//	Get a string truncated to the length without counting colors chars
 		static std::string	str_nocolor(const std::string & str);										//	Get a string without the colors chars
-		static std::string	replace_tabs(const std::string & str, int tabSize = 8);
+		static std::string	replace_tabs(const std::string & str, int tabSize = 8);						//	Replace tabs for spaces
 
 		//	Network
 		static bool			isValidIP(const std::string & IP);											//	Validate an IP
 		static bool			isValidMask(const std::string & mask);										//	Validate a mask
 		static bool			isIPInRange(const std::string & IP, const std::string & range);				//	Check if an IP is in a given range
-		static void			add_address(const std::string & IP, long port, VServer & VServ);
+		static void			add_address(const std::string & IP, long port, VServer & VServ);			//	
 		static bool			isValidPort(std::string port);												//	Validate a Port in string format
 		static bool			isValidPort(int port);														//	Validate a Port in numeric format
 		static bool 		valid_url(const std::string & url);											//	Validate a url or resource path
@@ -53,5 +53,6 @@ class Utils {
 		static bool			isDirectory(const std::string & path);										//	Check if a Path is a directory
 		static std::string	fullpath(const std::string & path);											//	Return the full path of path (process ./ and ../ and must be absolute)
 		static bool 		is_subpath(const std::string & path1, const std::string & path2);			//	Check if path1 is inside of path2
+		static long			filesize(const std::string & path);											//	Get the size of a file
 
 };

@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:32:38 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/09 14:56:14 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/09 15:23:58 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -183,7 +183,7 @@
 
 		#pragma region Log
 
-			void Log::log(std::string msg, int type, VServer * VServ, std::string path) {
+			void Log::log(std::string msg, int type, VServer * VServ, std::string path, std::string maxsize) {
 				if (VServ == &(Settings::global)) VServ = NULL;
 
 				if (path.empty()) {
@@ -196,6 +196,14 @@
 						else path = Settings::global.get("error_log");
 					}
 				}
+
+				if (maxsize.empty()) {
+					if (VServ) maxsize = VServ->get("log_maxsize");
+					else maxsize = Settings::global.get("log_maxsize");
+				}
+				long check_size = LOCAL_MAXSIZE;
+				if (!maxsize.empty()) Utils::stol(maxsize, check_size);
+				if (Utils::filesize(path) < check_size) exec_logrot(Settings::program_path + ".logrotate.cfg");
 
 				Thread::mutex_set(mutex, Thread::MTX_LOCK);
 				_logs.push(LogInfo(msg, type, VServ, path));
@@ -279,7 +287,7 @@
 				std::string logrotate_path = get_logrot_path();
 
 				if (logrotate_path.empty() || create_logrot(config_path)) return;
-				std::system((logrotate_path +  " " + config_path).c_str());
+				std::system((logrotate_path +  " '" + config_path + "' > /dev/null 2>&1").c_str());
 				remove(config_path.c_str());
 			}
 
