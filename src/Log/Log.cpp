@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:32:38 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/02 18:14:01 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/09 14:28:39 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,32 +18,31 @@
 #pragma region Variables
 
 	pthread_mutex_t				Log::mutex;																	//	Mutex for synchronizing access to shared resources
-	pthread_cond_t				Log::cond_var;																//	Condition variable for thread synchronization
 
 	pthread_t					Log::_thread;																//	Thread used for processing log entries
 	bool						Log::_terminate = false;													//	Flag the thread to finish
 	std::queue <Log::LogInfo>	Log::_logs;																	//	Queue container with logs that need to be processed
 
 	const size_t				Log::MEM_MAXSIZE = 200;														//	Maximum number of logs for each memory log
-	long						Log::LOCAL_MAXSIZE = 1 * 1024 * 1024;										//	Maximum size of the log in disk (default to 1 MB | 0 MB = dont truncate | Max 10 MB)
+	long						Log::LOCAL_MAXSIZE = 1 * 1024 * 1024 * 1024;								//	Maximum size of the log in disk (default to 10 MB | 0 MB = dont truncate | Max 10 MB)
 
 	#pragma region LogInfo
 
 		#pragma region Constructors
 
-			Log::LogInfo::LogInfo(std::string & _msg, int _type, VServer * _VServ, std::string _path, long _maxsize) : msg(_msg), type(_type), VServ(_VServ), path(_path), maxsize(_maxsize) {}
+			Log::LogInfo::LogInfo(std::string & _msg, int _type, VServer * _VServ, std::string _path) : msg(_msg), type(_type), VServ(_VServ), path(_path) {}
 
 		#pragma endregion
 
 		#pragma region Overloads
 
 			Log::LogInfo &	Log::LogInfo::operator=(const LogInfo & rhs) {
-				if (this != &rhs) { msg = rhs.msg; type = rhs.type; VServ = rhs.VServ; path = rhs.path; maxsize = rhs.maxsize; }
+				if (this != &rhs) { msg = rhs.msg; type = rhs.type; VServ = rhs.VServ; path = rhs.path; }
 				return (*this);
 			}
 
 			bool			Log::LogInfo::operator==(const LogInfo & rhs) {
-				return (msg == rhs.msg && type == rhs.type && VServ == rhs.VServ && path == rhs.path && maxsize == rhs.maxsize);
+				return (msg == rhs.msg && type == rhs.type && VServ == rhs.VServ && path == rhs.path);
 			}
 
 		#pragma endregion
@@ -104,152 +103,186 @@
 
 #pragma region Static
 	
-	#pragma region Truncate Logs (MUST DELETE LATER)
+	#pragma region Logs
 
-		void Log::truncate_log(const std::string & path, long long maxFileSize, long long extraSize) {	//	Truncate the log file to the maximum set in the config file (default to 1 MB | 0 MB = dont truncate | Max 10 MB)
-			const std::size_t blockSize = 8192;															//	Block size of data to read and write
-			char buffer[blockSize];																		//	Buffer to read in blocks
+		#pragma region Log to Memory
 
-			std::ifstream srcFile(path.c_str(), std::ios::binary);										//	Open the log file for reading
-			if (!srcFile) return;
-
-			srcFile.seekg(0, std::ios::end);															//	Go to the end of the file
-			long long fileSize = srcFile.tellg();														//	Get the size of the file
-
-			if (maxFileSize + extraSize <= 0 || fileSize <= maxFileSize + extraSize) return;			//	If the size of the file is lower than the maximum + extra, do nothing
-			if (maxFileSize <= 0 || fileSize <= maxFileSize) return;									//	If the size of the file is lower than the maximum, do nothing
-
-			srcFile.seekg(fileSize - maxFileSize, std::ios::beg);										//	Go to the begining position of the data tha we keep
-			std::string line; std::getline(srcFile, line);												//	Go to the next line so we don't cut a line
-
-			std::fstream dstFile(path.c_str(), std::ios::in | std::ios::out | std::ios::binary);		//	Open the log file for writing
-			if (!dstFile) { srcFile.close(); return; }
-
-			std::streampos writePos = 0;
-
-			while (srcFile.read(buffer, blockSize) || srcFile.gcount() > 0) {							//	Read in blocks the data
-				dstFile.seekp(writePos, std::ios::beg);													//	Go to the position for writing
-				dstFile.write(buffer, srcFile.gcount());												//	Write the buffer in the file
-				writePos += srcFile.gcount();															//	Update the position for the next write
-			}
-			dstFile.close();																			//	Close the file to save it to disk
-
-			int fd = open(path.c_str(), O_WRONLY);														//	Open the log file for writing
-			if (fd != -1) { ftruncate(fd, writePos); close(fd); }										//	Truncate the file from the las written position
-
-			srcFile.close();
-		}
-
-	#pragma endregion
-
-	#pragma region Log to Memory
-
-		void Log::log_to_memory(std::string msg, int type, VServer * VServ) {
-			if (msg.empty()) return ;
-			if (Settings::check_only || !Display::isRawMode() || Display::ForceRawModeDisabled) {
-				if (Settings::check_only && Settings::loaded == false) {
-					if (msg.size() > 24) msg = msg.substr(24); else msg = "";
+			void Log::log_to_memory(std::string msg, int type, VServer * VServ) {
+				if (msg.empty()) return ;
+				if (Settings::check_only || !Display::isRawMode() || Display::ForceRawModeDisabled) {
+					if (Settings::check_only && Settings::loaded == false) {
+						if (msg.size() > 24) msg = msg.substr(24); else msg = "";
+					}
+					if (!Display::background && !msg.empty()) std::cout << " " << msg << NC << std::endl;
 				}
-				if (!Display::background && !msg.empty()) std::cout << " " << msg << NC << std::endl;
+
+				Thread::mutex_set(mutex, Thread::MTX_LOCK);
+				if (type == MEM_ACCESS || type == BOTH_ACCESS) {
+					Settings::global.log.both_add(msg); Settings::global.log.access_add(msg);
+					if (VServ) { VServ->log.both_add(msg); VServ->log.access_add(msg); }
+				}
+				if (type == MEM_ERROR || type == BOTH_ERROR) {
+					Settings::global.log.both_add(msg); Settings::global.log.error_add(msg);
+					if (VServ) { VServ->log.both_add(msg); VServ->log.error_add(msg); }
+				}
+				Thread::mutex_set(mutex, Thread::MTX_UNLOCK);
 			}
 
-			Thread::mutex_set(mutex, Thread::MTX_LOCK);
-			if (type == MEM_ACCESS || type == BOTH_ACCESS) {
-				Settings::global.log.both_add(msg); Settings::global.log.access_add(msg);
-				if (VServ) { VServ->log.both_add(msg); VServ->log.access_add(msg); }
-			}
-			if (type == MEM_ERROR || type == BOTH_ERROR) {
-				Settings::global.log.both_add(msg); Settings::global.log.error_add(msg);
-				if (VServ) { VServ->log.both_add(msg); VServ->log.error_add(msg); }
-			}
-			Thread::mutex_set(mutex, Thread::MTX_UNLOCK);
-		}
+		#pragma endregion
 
-	#pragma endregion
+		#pragma region Log to File
 
-	#pragma region Log to File
+			void Log::log_to_file(const std::string & msg, std::string path) {
+				if (msg.empty() || path.empty()) return;
 
-		void Log::log_to_file(const std::string & msg, std::string path, long maxsize) {
-			if (msg.empty() || path.empty()) return;
-
-			//	DELETE LATER
-			long extraSize = std::min(((maxsize * 25) / 100), static_cast<long>(5 * 1024 * 1024));
-			truncate_log(path, maxsize - extraSize / 2 - msg.size(), extraSize);
-			//	DELETE LATER
-
-			std::ofstream outfile; outfile.open(path.c_str(), std::ios_base::app);
-			if (outfile.is_open()) {
-				outfile << msg; outfile.flush();
-				outfile.close();
-			}
-		}
-
-	#pragma endregion
-
-	#pragma region Process Logs
-
-		void Log::process_logs() {
-			std::queue <Log::LogInfo> logs;
-
-			Thread::mutex_set(mutex, Thread::MTX_LOCK);
-			if (!_logs.empty()) std::swap(logs, _logs);
-			Thread::mutex_set(mutex, Thread::MTX_UNLOCK);
-
-			if (logs.empty()) return;
-
-			std::map <std::string, std::pair <std::string, long> > logMap;
-
-			while (!logs.empty()) {
-				Log::LogInfo log = logs.front(); logs.pop();
-				
-				Utils::trim(log.msg); if (log.msg.empty()) continue;
-				log.msg = "[" + Settings::timer.current_date() + " " + Settings::timer.current_time() + "] - " + log.msg;
-
-				if (!log.path.empty() && log.path[0] != '/') log.path = Settings::program_path + log.path;
-
-				if (log.type < 4) log_to_memory(log.msg, log.type, log.VServ);
-				if (log.type > 1 && !log.path.empty()) {
-					logMap[log.path].first += Utils::str_nocolor(log.msg) + "\n";
-					logMap[log.path].second = log.maxsize;
+				std::ofstream outfile; outfile.open(path.c_str(), std::ios_base::app);
+				if (outfile.is_open()) {
+					outfile << msg; outfile.flush();
+					outfile.close();
 				}
 			}
 
-			for (std::map <std::string, std::pair <std::string, long> >::iterator it = logMap.begin(); it != logMap.end(); ++it)
-				log_to_file(it->second.first, it->first, it->second.second);
-			logMap.clear();
+		#pragma endregion
 
-			Display::update();
-		}
+		#pragma region Process Logs
+
+			void Log::process_logs() {
+				std::queue <Log::LogInfo> logs;
+
+				Thread::mutex_set(mutex, Thread::MTX_LOCK);
+				if (!_logs.empty()) std::swap(logs, _logs);
+				Thread::mutex_set(mutex, Thread::MTX_UNLOCK);
+
+				if (logs.empty()) return;
+
+				std::map<std::string, std::string> logMap;
+
+				while (!logs.empty()) {
+					Log::LogInfo log = logs.front(); logs.pop();
+					
+					Utils::trim(log.msg); if (log.msg.empty()) continue;
+					log.msg = "[" + Settings::timer.current_date() + " " + Settings::timer.current_time() + "] - " + log.msg;
+
+					if (!log.path.empty() && log.path[0] != '/') log.path = Settings::program_path + log.path;
+
+					if (log.type < 4) log_to_memory(log.msg, log.type, log.VServ);
+					if (log.type > 1 && !log.path.empty()) {
+						logMap[log.path] += Utils::str_nocolor(log.msg) + "\n";
+					}
+				}
+
+				for (std::map<std::string, std::string>::iterator it = logMap.begin(); it != logMap.end(); ++it)
+					log_to_file(it->second, it->first);
+				logMap.clear();
+
+				Display::update();
+			}
+
+		#pragma endregion
+
+		#pragma region Log
+
+			void Log::log(std::string msg, int type, VServer * VServ, std::string path) {
+				if (VServ == &(Settings::global)) VServ = NULL;
+
+				if (path.empty()) {
+					if (type == BOTH_ACCESS || type == LOCAL_ACCESS) {
+						if (VServ) path = VServ->get("access_log");
+						else path = Settings::global.get("access_log");
+					}
+					if (type == BOTH_ERROR || type == LOCAL_ERROR) {
+						if (VServ) path = VServ->get("error_log");
+						else path = Settings::global.get("error_log");
+					}
+				}
+
+				Thread::mutex_set(mutex, Thread::MTX_LOCK);
+				_logs.push(LogInfo(msg, type, VServ, path));
+				Thread::mutex_set(mutex, Thread::MTX_UNLOCK);
+			}
+
+		#pragma endregion
 
 	#pragma endregion
 
-	#pragma region Log
+	#pragma region Log Rotate
 
-		void Log::log(std::string msg, int type, VServer * VServ, std::string path, long maxsize) {
-			if (VServ == &(Settings::global)) VServ = NULL;
+		#pragma region Add
 
-			if (type > 1 && maxsize == -1) { long size;
-				if (VServ && Utils::stol(VServ->get("log_maxsize"), size) == false) maxsize = size;
-				else if (Utils::stol(Settings::global.get("log_maxsize"), size) == false) maxsize = size;
-				else maxsize = LOCAL_MAXSIZE;
+			void Log::add_logrot(std::ofstream & oss, const std::string & log_paths, std::string size, const std::string & user) {
+				if (log_paths.empty()) return;
+				if (size.empty()) size = Utils::ltos(LOCAL_MAXSIZE);
+
+				oss << "\n" << log_paths << " {\n";
+				oss << "\tsize " << size << "\n";
+				oss << "\trotate 7\n";
+				oss << "\tmissingok\n";
+				oss << "\tnotifempty\n";
+				if (!user.empty()) oss << "\tcreate 0640 " << user << " " << user << "\n";
+				oss << "}\n";
 			}
 
-			if (path.empty()) {
-				if (type == BOTH_ACCESS || type == LOCAL_ACCESS) {
-					if (VServ) path = VServ->get("access_log");
-					else path = Settings::global.get("access_log");
+		#pragma endregion
+
+		#pragma region Create
+
+			int Log::create_logrot(const std::string config_path) {
+				const char * user = getenv("USER");
+				if (user == NULL) user = "";
+
+				std::ofstream oss(config_path.c_str());
+				if (oss.is_open()) {
+					add_logrot(oss, Utils::escape_spaces(Settings::global.get("access_log")), Settings::global.get("log_maxsize"), user);
+					add_logrot(oss, Utils::escape_spaces(Settings::global.get("error_log")), Settings::global.get("log_maxsize"), user);
+
+					for (std::deque <VServer>::iterator vs_it = Settings::vserver.begin(); vs_it != Settings::vserver.end(); ++vs_it) {
+						add_logrot(oss, Utils::escape_spaces(vs_it->get("access_log")), vs_it->get("log_maxsize"), user);
+						add_logrot(oss, Utils::escape_spaces(vs_it->get("error_log")), vs_it->get("log_maxsize"), user);
+
+						for (std::deque <Location>::iterator loc_it = vs_it->location.begin(); loc_it != vs_it->location.end(); ++loc_it) {
+							add_logrot(oss, Utils::escape_spaces(loc_it->get("access_log")), loc_it->get("log_maxsize"), user);
+							add_logrot(oss, Utils::escape_spaces(loc_it->get("error_log")), loc_it->get("log_maxsize"), user);
+						}
+
+					} oss.close();
+
+					if (::access(config_path.c_str(), F_OK) == 0) return (0);
 				}
-				if (type == BOTH_ERROR || type == LOCAL_ERROR) {
-					if (VServ) path = VServ->get("error_log");
-					else path = Settings::global.get("error_log");
-				}
+
+				return (1);
 			}
 
-			Thread::mutex_set(mutex, Thread::MTX_LOCK);
-			_logs.push(LogInfo(msg, type, VServ, path, maxsize));
-			Thread::mutex_set(mutex, Thread::MTX_UNLOCK);
-		}
-	
+		#pragma endregion
+
+		#pragma region Get
+
+			std::string Log::get_logrot_path() {
+				const char* common_paths[] = {"/usr/sbin/", "/usr/bin/", "/sbin/", "/bin/"};
+				int num_paths = sizeof(common_paths) / sizeof(common_paths[0]);
+
+				for (int i = 0; i < num_paths; ++i) {
+					std::string full_path = common_paths[i];
+					if (::access((full_path + "logrotate").c_str(), F_OK) == 0 && ::access((full_path + "logrotate").c_str(), X_OK) == 0)
+						return (full_path + "logrotate");
+				}
+
+				return ("");
+			}
+
+		#pragma endregion
+
+		#pragma region Execute
+
+			void Log::exec_logrot(const std::string config_path) {
+				std::string logrotate_path = get_logrot_path();
+
+				if (logrotate_path.empty() || create_logrot(config_path)) return;
+				std::system((logrotate_path +  " " + config_path).c_str());
+				remove(config_path.c_str());
+			}
+
+		#pragma endregion
+
 	#pragma endregion
 
 #pragma endregion
@@ -271,7 +304,6 @@
 
 		void Log::start() {
 			Thread::mutex_set(mutex, Thread::MTX_INIT);
-			Thread::cond_set(cond_var, &mutex, Thread::COND_INIT);
 			Thread::set_bool(mutex, _terminate, false);
 			Thread::thread_set(_thread, Thread::THRD_CREATE, main);
 		}
@@ -282,12 +314,10 @@
 
 		void Log::stop() {
 			Thread::set_bool(mutex, _terminate, true);
-			Thread::cond_set(cond_var, &mutex, Thread::COND_SIGNAL);
 			Thread::thread_set(_thread, Thread::THRD_JOIN);
 		}
 
 		void Log::release_mutex() {
-			Thread::cond_set(cond_var, &mutex, Thread::COND_DESTROY);
 			Thread::mutex_set(mutex, Thread::MTX_DESTROY);
 		}
 

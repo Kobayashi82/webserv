@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 14:30:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/07 11:42:58 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/09 14:27:24 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,6 +36,8 @@
 int main(int argc, char **argv) {
 	Settings::load_args(argc, argv);
 
+	Log::exec_logrot(Settings::program_path + ".logrotate.cfg");
+	
 	Log::start(); Display::start();
 	Net::epoll__create();																				//	Si falla crear un modo que el servidor no puede ejecutarse, pero se pueden ver los vservers
 	Net::socket_create_all();

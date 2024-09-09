@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:32:23 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/26 22:18:06 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/09 14:15:23 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,11 @@
 #include <queue>																						//	For std::queue container	Used as an intermediary for thread-safe communication
 #include <map>																							//	For std::map container		Used to group logs and save them to a file in one operation
 
+#include <cstdlib>																						//	For std::system to run logrorate
+
 #include <pthread.h>																					//	For multi-threading and synchronization
+#include <unistd.h>																						//	For access() to checks the accessibility of logrotate
+#include <sys/stat.h>																					//	For chmod to change the file permissions of the config file for logrotate
 
 class VServer;
 class Log {
@@ -34,7 +38,6 @@ class Log {
 		std::deque <std::string>	both;																//	Logs for 'both' in a deque
 
 		static pthread_mutex_t		mutex;																//	Mutex for synchronizing access to shared resources
-		static pthread_cond_t		cond_var;															//	Condition variable for thread synchronization
 
 		//	Constructors
     	Log();																							//	Default constructor
@@ -52,8 +55,11 @@ class Log {
 		void clear();																					//	clear all logs in 'access', 'error' and 'both'
 
 		//	Local Log
-		static void process_logs();																						//	Save logs to memory and/or to a file
-		static void	log(std::string msg, int type, VServer * VServ = NULL, std::string path = "", long maxsize = -1);	//	Add a new message to logs queue
+		static void process_logs();																		//	Save logs to memory and/or to a file
+		static void	log(std::string msg, int type, VServer * VServ = NULL, std::string path = "");		//	Add a new message to logs queue
+
+		//	Log Rotate
+		static void exec_logrot(const std::string config_path);											//	Execute logrotate (external program to manage logs rotation)
 
 		//	Thread
 		static void	start();																			//	Start the thread
@@ -71,10 +77,9 @@ class Log {
 			int			type;																			//	Type of log (e_type enumarator)
 			VServer *	VServ;																			//	Pointer to the associated VServer
 			std::string	path;																			//	File path related to the log
-			long		maxsize;																		//	Maximum allowed size for the log in disk
 
 			//	Constructors
-			LogInfo(std::string & _msg, int _type, VServer * _VServ, std::string _path, long _maxsize);	//	Parameterized constructor
+			LogInfo(std::string & _msg, int _type, VServer * _VServ, std::string _path);				//	Parameterized constructor
 
 			//	Overloads
 			LogInfo &		operator=(const LogInfo & rhs);												//	Overload for asignation
@@ -92,9 +97,14 @@ class Log {
 		static const size_t			MEM_MAXSIZE;														//	Maximum number of logs for each memory log
 		static long					LOCAL_MAXSIZE;														//	Maximum size of the log in disk
 
-		static void	truncate_log(const std::string & path, long long maxFileSize, long long extraSize);	//	Truncate the log file to the maximum set in the config file (default to 1 MB | 0 MB = dont truncate | Max 10 MB)
+		//	Logs
 		static void	log_to_memory(std::string msg, int type, VServer * VServ = NULL);					//	Log to memory
-		static void	log_to_file(const std::string & msg, std::string path, long maxsize);				//	Save logs to file
+		static void	log_to_file(const std::string & msg, std::string path);								//	Save logs to file
+
+		//	Log Rotate
+		static void add_logrot(std::ofstream & oss, const std::string & log_paths, std::string size, const std::string & user);	//	Add a section to the config file for logrotate
+		static int create_logrot(const std::string config_path);																//	Create the config file for logrotate
+		static std::string get_logrot_path();																					//	Get the path of logrotate (if installed)
 
 		static void	* main(void * args);																//	Main loop function for the thread
 

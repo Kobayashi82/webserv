@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:36:49 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/25 19:40:50 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/09 13:14:15 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,6 +30,19 @@
 
 		while (end != start && std::isspace(static_cast<unsigned char>(*(end - 1)))) --end;
 		str = std::string(start, end);
+	}
+
+#pragma endregion
+
+#pragma region Escape Spaces
+
+	std::string Utils::escape_spaces(const std::string & str) {
+		std::string result;
+
+		for (std::string::const_iterator it = str.begin(); it != str.end(); ++it)
+			if (*it == ' ') result += "\\ "; else result += *it;
+
+		return (result);
 	}
 
 #pragma endregion
