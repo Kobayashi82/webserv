@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:30:57 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/01 17:36:08 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/09 14:55:20 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -106,8 +106,24 @@
 			}
 
 			long number; if (Utils::stol(str, number) || (str = Utils::ltos(number * multiplier)) == "") { str = ""; Log::log(RD + n_line + "Invalid value for '" Y "log_maxsize" RD "'" NC, Log::BOTH_ERROR); return (1); }
-			if (number * multiplier != 0 && number * multiplier < 1024) { str = ""; Log::log(RD + n_line + "Value for " Y "log_maxsize" RD " cannot be " Y "lower" RD " than " Y "1 MB" NC, Log::BOTH_ERROR); return (1); }
-			if (number * multiplier > 10 * 1024 * 1024) { str = ""; Log::log(RD + n_line + "Value for " Y "log_maxsize" RD " cannot be " Y "greater" RD " than " Y "10 MB" NC, Log::BOTH_ERROR); return (1); }
+			if (number * multiplier != 0 && number * multiplier < 102400) { str = ""; Log::log(RD + n_line + "Value for " Y "log_maxsize" RD " cannot be " Y "lower" RD " than " Y "1 KB" NC, Log::BOTH_ERROR); return (1); }
+			if (number * multiplier > 100 * 1024 * 1024) { str = ""; Log::log(RD + n_line + "Value for " Y "log_maxsize" RD " cannot be " Y "greater" RD " than " Y "100 MB" NC, Log::BOTH_ERROR); return (1); }
+
+			return (0);
+		}
+
+	#pragma endregion
+
+	#pragma region Log Rotate
+
+		int Settings::parse_log_rotate(std::string & str) {
+			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
+
+			if (str.empty()) { Log::log(RD + n_line + "Empty value for " Y "log_rotate" NC, Log::BOTH_ERROR); return (1); }
+
+			long number; if (Utils::stol(str, number) || (str = Utils::ltos(number)) == "") { str = ""; Log::log(RD + n_line + "Invalid value for '" Y "log_rotate" RD "'" NC, Log::BOTH_ERROR); return (1); }
+			if (number < 0) 	{ str = ""; Log::log(RD + n_line + "Value for " Y "log_rotate" RD " cannot be " Y "lower" RD " than " Y "0" NC, Log::BOTH_ERROR); return (1); }
+			if (number > 100)	{ str = ""; Log::log(RD + n_line + "Value for " Y "log_rotate" RD " cannot be " Y "greater" RD " than " Y "100" NC, Log::BOTH_ERROR); return (1); }
 
 			return (0);
 		}
@@ -512,6 +528,7 @@
 				if (firstPart == "access_log") return (0);
 				if (firstPart == "error_log") return (0);
 				if (firstPart == "log_maxsize") return (0);
+				if (firstPart == "log_rotate") return (0);
 				if (firstPart == "root") return (0);
 				if (firstPart == "index") return (0);
 				if (firstPart == "uploads") return (0);
@@ -600,6 +617,7 @@
 				if ((section == GLOBAL || section == SERVER || section == LOCATION) && !firstPart.empty()) {
 					if (firstPart == "access_log" || firstPart == "error_log") parse_path(firstPart, secondPart, true, true);
 					if (!NoAdd && firstPart == "log_maxsize") parse_log_maxsize(secondPart);
+					if (!NoAdd && firstPart == "log_rotate") parse_log_rotate(secondPart);
 					if (!NoAdd && firstPart == "root" && parse_path(firstPart, secondPart, false, false))									BadConfig = true;
 					if (!NoAdd && firstPart == "uploads" && parse_path(firstPart, secondPart, false, false))								BadConfig = true;
 					if (!NoAdd && firstPart == "client_max_body_size" && parse_body_size(secondPart))										BadConfig = true;
@@ -652,10 +670,10 @@
 				}
 
 				if (bracket_mode != 0) { bracket_lvl += bracket_mode;
-					if (section == METHOD && section_bracket_lvl[3] == bracket_lvl) { section = LOCATION; section_bracket_lvl[3] = 0; Loc.add(Met); }
+					if (section == METHOD && section_bracket_lvl[3] == bracket_lvl)   { section = LOCATION; section_bracket_lvl[3] = 0; Loc.add(Met); }
 					if (section == LOCATION && section_bracket_lvl[2] == bracket_lvl) { section = SERVER; section_bracket_lvl[2] = 0; VServ.add(Loc); }
-					if (section == SERVER && section_bracket_lvl[1] == bracket_lvl) { section = GLOBAL; section_bracket_lvl[1] = 0; Settings::add(VServ); }
-					if (section == GLOBAL && section_bracket_lvl[0] == bracket_lvl) { section = ROOT; section_bracket_lvl[0] = 0; }
+					if (section == SERVER && section_bracket_lvl[1] == bracket_lvl)   { section = GLOBAL; section_bracket_lvl[1] = 0; Settings::add(VServ); }
+					if (section == GLOBAL && section_bracket_lvl[0] == bracket_lvl)   { section = ROOT; section_bracket_lvl[0] = 0; }
 				}
 			}
 		}

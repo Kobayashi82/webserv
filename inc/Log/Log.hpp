@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:32:23 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/09 14:15:23 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/09 14:50:53 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -95,16 +95,17 @@ class Log {
 		static std::queue <LogInfo>	_logs;																//	Queue container with logs that need to be processed
 
 		static const size_t			MEM_MAXSIZE;														//	Maximum number of logs for each memory log
-		static long					LOCAL_MAXSIZE;														//	Maximum size of the log in disk
+		static long					LOCAL_MAXSIZE;														//	Maximum size of the log before rotate	(default to 10 MB | 0 MB = dont rotate | Max 100 MB)
+		static int					LOCAL_ROTATE;														//	Number of rotations files 				(default to 7 | 0 = dont create rotations files | Max 100)
 
 		//	Logs
 		static void	log_to_memory(std::string msg, int type, VServer * VServ = NULL);					//	Log to memory
 		static void	log_to_file(const std::string & msg, std::string path);								//	Save logs to file
 
 		//	Log Rotate
-		static void add_logrot(std::ofstream & oss, const std::string & log_paths, std::string size, const std::string & user);	//	Add a section to the config file for logrotate
-		static int create_logrot(const std::string config_path);																//	Create the config file for logrotate
-		static std::string get_logrot_path();																					//	Get the path of logrotate (if installed)
+		static void add_logrot(std::ofstream & oss, const std::string & log_paths, std::string size, std::string rotate, const std::string & user);	//	Add a section to the config file for logrotate
+		static int create_logrot(const std::string config_path);																					//	Create the config file for logrotate
+		static std::string get_logrot_path();																										//	Get the path of logrotate (if installed)
 
 		static void	* main(void * args);																//	Main loop function for the thread
 

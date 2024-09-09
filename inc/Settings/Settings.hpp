@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:14:05 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/26 22:13:53 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/09 14:53:46 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,6 +77,7 @@ class Settings {
 		static int	parse_keepalive_timeout(std::string & str);
 		static int	parse_keepalive_requests(std::string & str);
 		static int	parse_log_maxsize(std::string & str);
+		static int	parse_log_rotate(std::string & str);
 		static int	parse_body_size(std::string & str);
 		static int	parse_errors(const std::string & firstPart, const std::string & secondPart);
 		static int	parse_errors(const std::string & firstPart, const std::string & secondPart, VServer & VServ);

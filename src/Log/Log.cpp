@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:32:38 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/09 14:28:39 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/09 14:56:14 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,8 @@
 	std::queue <Log::LogInfo>	Log::_logs;																	//	Queue container with logs that need to be processed
 
 	const size_t				Log::MEM_MAXSIZE = 200;														//	Maximum number of logs for each memory log
-	long						Log::LOCAL_MAXSIZE = 1 * 1024 * 1024 * 1024;								//	Maximum size of the log in disk (default to 10 MB | 0 MB = dont truncate | Max 10 MB)
+	long						Log::LOCAL_MAXSIZE = 10 * 1024 * 1024;										//	Maximum size of the log before rotate	(default to 10 MB | 0 MB = dont rotate | Max 100 MB)
+	int							Log::LOCAL_ROTATE = 7;														//	Number of rotations files 				(default to 7 | 0 = dont create rotations files | Max 100)
 
 	#pragma region LogInfo
 
@@ -205,17 +206,18 @@
 
 	#pragma endregion
 
-	#pragma region Log Rotate
+	#pragma region Rotate
 
 		#pragma region Add
 
-			void Log::add_logrot(std::ofstream & oss, const std::string & log_paths, std::string size, const std::string & user) {
+			void Log::add_logrot(std::ofstream & oss, const std::string & log_paths, std::string size, std::string rotate, const std::string & user) {
 				if (log_paths.empty()) return;
 				if (size.empty()) size = Utils::ltos(LOCAL_MAXSIZE);
+				if (rotate.empty()) rotate = Utils::ltos(LOCAL_ROTATE);
 
 				oss << "\n" << log_paths << " {\n";
 				oss << "\tsize " << size << "\n";
-				oss << "\trotate 7\n";
+				oss << "\trotate " << rotate << "\n";
 				oss << "\tmissingok\n";
 				oss << "\tnotifempty\n";
 				if (!user.empty()) oss << "\tcreate 0640 " << user << " " << user << "\n";
@@ -232,16 +234,16 @@
 
 				std::ofstream oss(config_path.c_str());
 				if (oss.is_open()) {
-					add_logrot(oss, Utils::escape_spaces(Settings::global.get("access_log")), Settings::global.get("log_maxsize"), user);
-					add_logrot(oss, Utils::escape_spaces(Settings::global.get("error_log")), Settings::global.get("log_maxsize"), user);
+					add_logrot(oss, Utils::escape_spaces(Settings::global.get("access_log")), Settings::global.get("log_maxsize"), Settings::global.get("log_rotate"), user);
+					add_logrot(oss, Utils::escape_spaces(Settings::global.get("error_log")), Settings::global.get("log_maxsize"), Settings::global.get("log_rotate"), user);
 
 					for (std::deque <VServer>::iterator vs_it = Settings::vserver.begin(); vs_it != Settings::vserver.end(); ++vs_it) {
-						add_logrot(oss, Utils::escape_spaces(vs_it->get("access_log")), vs_it->get("log_maxsize"), user);
-						add_logrot(oss, Utils::escape_spaces(vs_it->get("error_log")), vs_it->get("log_maxsize"), user);
+						add_logrot(oss, Utils::escape_spaces(vs_it->get("access_log")), vs_it->get("log_maxsize"), vs_it->get("log_rotate"), user);
+						add_logrot(oss, Utils::escape_spaces(vs_it->get("error_log")), vs_it->get("log_maxsize"), vs_it->get("log_rotate"), user);
 
 						for (std::deque <Location>::iterator loc_it = vs_it->location.begin(); loc_it != vs_it->location.end(); ++loc_it) {
-							add_logrot(oss, Utils::escape_spaces(loc_it->get("access_log")), loc_it->get("log_maxsize"), user);
-							add_logrot(oss, Utils::escape_spaces(loc_it->get("error_log")), loc_it->get("log_maxsize"), user);
+							add_logrot(oss, Utils::escape_spaces(loc_it->get("access_log")), loc_it->get("log_maxsize"), loc_it->get("log_rotate"), user);
+							add_logrot(oss, Utils::escape_spaces(loc_it->get("error_log")), loc_it->get("log_maxsize"), loc_it->get("log_rotate"), user);
 						}
 
 					} oss.close();
