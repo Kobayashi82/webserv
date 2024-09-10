@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:27:58 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/09 21:48:37 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/10 18:43:32 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -151,15 +151,16 @@
 
 			if (infile.is_open()) { parser(infile); infile.close(); loaded = true;
 				if (BadConfig || check_only) return;
-				if (isDefault)									Log::log(G "Default configuration file loaded" NC, Log::MEM_ACCESS);
-				else											Log::log(G "Configuration file '" Y + File + G "' loaded" NC, Log::MEM_ACCESS);
+				if (Settings::global.log.error.size() > 0)																										Log::log("---", Log::GLOBAL_ACCESS);
+				if (isDefault)								{	Log::log(G "Default configuration file loaded" NC, Log::MEM_ACCESS);							Log::log("---", Log::GLOBAL_ACCESS); }
+				else										{	Log::log(G "Configuration file '" Y + File + G "' loaded" NC, Log::MEM_ACCESS);					Log::log("---", Log::GLOBAL_ACCESS); }
 			} else {
 				BadConfig = true;
-				if (isDefault)									Log::log(RD "Could not create the " Y "default configuration" RD " file" NC, Log::BOTH_ERROR);
+				if (isDefault)								{	Log::log(RD "Could not create the " Y "default configuration" RD " file" NC, Log::BOTH_ERROR);	Log::log("---", Log::GLOBAL_ACCESS); }
 				else {
-					if (Utils::file_exists(File) == 1)			Log::log(RD "The configuration file '" Y + File + RD "' does not exist" NC, Log::BOTH_ERROR);
-					else if (Utils::file_exists(File) == 2)		Log::log(RD "Cannot read the file '" Y + File + RD "'" NC, Log::BOTH_ERROR);
-					else										Log::log(RD "Could not load the configuration file '" Y + File + RD "'" NC, Log::BOTH_ERROR);
+					if (Utils::file_exists(File) == 1)		{	Log::log(RD "The configuration file '" Y + File + RD "' does not exist" NC, Log::BOTH_ERROR);	Log::log("---", Log::GLOBAL_ACCESS); }
+					else if (Utils::file_exists(File) == 2)	{	Log::log(RD "Cannot read the file '" Y + File + RD "'" NC, Log::BOTH_ERROR);					Log::log("---", Log::GLOBAL_ACCESS); }
+					else									{	Log::log(RD "Could not load the configuration file '" Y + File + RD "'" NC, Log::BOTH_ERROR);	Log::log("---", Log::GLOBAL_ACCESS); }
 				}
 			}
 			Log::process_logs();
@@ -243,7 +244,7 @@
 				if (BadConfig == false) {
 					Settings::global.status = true;
 				} else {
-					Log::log(RD "Could not load configuration file" NC, Log::BOTH_ERROR);
+					// Log::log(RD "Could not load configuration file" NC, Log::BOTH_ERROR);  Log::log("---", Log::GLOBAL_ACCESS);
 					if (Display::RawModeDisabled || Display::ForceRawModeDisabled) terminate = 1;
 				}
 			}

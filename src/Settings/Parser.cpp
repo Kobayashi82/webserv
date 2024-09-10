@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:30:57 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/09 14:55:20 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/10 18:42:10 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,8 @@
 	#pragma region Path
 
 		int Settings::parse_path(const std::string & firstPart, std::string & str, bool isFile = false, bool check_path = false, bool check_write = false) {
-			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] "; struct stat info;
+			std::string space = ""; if (line_count - 1 < 10) space = " ";
+			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] " + space; struct stat info;
 
 			if (str.empty()) {										Log::log(RD + n_line + "Empty value for " Y + firstPart + NC, Log::BOTH_ERROR); return (1); }
 			if (str[0] != '/') str = program_path + str;
@@ -60,7 +61,8 @@
 	#pragma region Keep-Alive Timeout
 
 		int Settings::parse_keepalive_timeout(std::string & str) {
-			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
+			std::string space = ""; if (line_count - 1 < 10) space = " ";
+			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] " + space;
 
 			if (str.empty()) { Log::log(RD + n_line + "Empty value for " Y "keepalive_timeout" NC, Log::BOTH_ERROR); return (1); }
 
@@ -76,7 +78,8 @@
 	#pragma region Keep-Alive Requests
 
 		int Settings::parse_keepalive_requests(std::string & str) {
-			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
+			std::string space = ""; if (line_count - 1 < 10) space = " ";
+			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] " + space;
 
 			if (str.empty()) { Log::log(RD + n_line + "Empty value for " Y "keepalive_requests" NC, Log::BOTH_ERROR); return (1); }
 
@@ -92,7 +95,8 @@
 	#pragma region Log MaxSize
 
 		int Settings::parse_log_maxsize(std::string & str) {
-			long multiplier = 1; std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
+			long multiplier = 1; std::string space = ""; if (line_count - 1 < 10) space = " ";
+			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] " + space;
 
 			if (str.empty()) { Log::log(RD + n_line + "Empty value for " Y "log_maxsize" NC, Log::BOTH_ERROR); return (1); }
 			if (str.size() > 1 && !std::isdigit(str[str.size() - 1]) && !std::isdigit(str[str.size() - 2]) && std::tolower(str[str.size() - 1]) == 'b') str.erase(str.size() - 1);
@@ -117,7 +121,8 @@
 	#pragma region Log Rotate
 
 		int Settings::parse_log_rotate(std::string & str) {
-			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
+			std::string space = ""; if (line_count - 1 < 10) space = " ";
+			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] " + space;
 
 			if (str.empty()) { Log::log(RD + n_line + "Empty value for " Y "log_rotate" NC, Log::BOTH_ERROR); return (1); }
 
@@ -133,7 +138,8 @@
 	#pragma region Body Size
 
 		int Settings::parse_body_size(std::string & str) {
-			long multiplier = 1; std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
+			long multiplier = 1; std::string space = ""; if (line_count - 1 < 10) space = " ";
+			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] " + space;
 
 			if (str.empty()) { Log::log(RD + n_line + "Empty value for " Y "client_max_body_size" NC, Log::BOTH_ERROR); return (1); }
 			if (str.size() > 1 && !std::isdigit(str[str.size() - 1]) && !std::isdigit(str[str.size() - 2]) && std::tolower(str[str.size() - 1]) == 'b') str.erase(str.size() - 1);
@@ -159,7 +165,8 @@
 	#pragma region Error Codes
 
 		int Settings::parse_errors(const std::string & firstPart, const std::string & secondPart) {
-			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
+			std::string space = ""; if (line_count - 1 < 10) space = " ";
+			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] " + space;
 			std::istringstream stream(secondPart);
 			std::vector<std::string> errors; std::string error;
 
@@ -182,7 +189,8 @@
 		}
 
 		int Settings::parse_errors(const std::string & firstPart, const std::string & secondPart, VServer & VServ) {
-			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
+			std::string space = ""; if (line_count - 1 < 10) space = " ";
+			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] " + space;
 			std::istringstream stream(secondPart);
 			std::vector<std::string> errors; std::string error;
 
@@ -205,7 +213,8 @@
 		}
 
 		int Settings::parse_errors(const std::string & firstPart, const std::string & secondPart, Location & Loc) {
-			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
+			std::string space = ""; if (line_count - 1 < 10) space = " ";
+			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] " + space;
 			std::istringstream stream(secondPart);
 			std::vector<std::string> errors; std::string error;
 
@@ -232,7 +241,8 @@
 	#pragma region Autoindex
 
 		int Settings::parse_autoindex(std::string & str) {
-			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
+			std::string space = ""; if (line_count - 1 < 10) space = " ";
+			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] " + space;
 
 			if (str.empty()) {					Log::log(RD + n_line + "Empty value for " Y "autoindex" NC, Log::BOTH_ERROR); return (1); }
 			if (str != "on" && str != "off") {	Log::log(RD + n_line + "Invalid value for " Y "autoindex" NC, Log::BOTH_ERROR); return (1); }
@@ -245,7 +255,8 @@
 	#pragma region Index
 
 		int Settings::parse_index(std::string & str) {
-			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
+			std::string space = ""; if (line_count - 1 < 10) space = " ";
+			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] " + space;
 
 			if (str.empty()) {		Log::log(RD + n_line + "Empty value for " Y "index" NC, Log::BOTH_ERROR); return (1); }
 			if (str[0] == '/') {	Log::log(RD + n_line + "Invalid value for " Y "index" NC, Log::BOTH_ERROR); return (1); }
@@ -258,7 +269,8 @@
 	#pragma region Listen
 
 		int Settings::parse_listen(std::string & str, VServer & VServ) {
-			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
+			std::string space = ""; if (line_count - 1 < 10) space = " ";
+			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] " + space;
 			std::string temp; std::istringstream stream(str); stream >> temp;
 			std::string IP; std::string port; std::string::size_type slashPos = temp.find(':');	
 			
@@ -300,7 +312,8 @@
 	#pragma region Return
 
 		int Settings::parse_return(std::string & str) {
-			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
+			std::string space = ""; if (line_count - 1 < 10) space = " ";
+			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] " + space;
 			std::istringstream stream(str); std::string code, path;
 
 			stream >> code; stream >> path;
@@ -322,7 +335,8 @@
 	#pragma region Alias
 
 		int Settings::parse_alias(std::string & firstPart, std::string & str) {
-			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
+			std::string space = ""; if (line_count - 1 < 10) space = " ";
+			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] " + space;
 			
 			if (str.empty()) {			Log::log(RD + n_line + "Empty value for " Y + "alias" + NC, Log::BOTH_ERROR); return (1); }
 
@@ -339,7 +353,8 @@
 	#pragma region Try_Files
 
 		int Settings::parse_try_files(std::string & str) {
-			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
+			std::string space = ""; if (line_count - 1 < 10) space = " ";
+			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] " + space;
 			std::istringstream stream(str); std::string code;
 			if (str.empty()) {			Log::log(RD + n_line + "Empty value for " Y + "try_files" + NC, Log::BOTH_ERROR); return (1); }
 
@@ -358,7 +373,8 @@
 	#pragma region CGI
 
 		int Settings::parse_cgi(const std::string & firstPart, const std::string & secondPart) {
-			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
+			std::string space = ""; if (line_count - 1 < 10) space = " ";
+			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] " + space;
 			std::istringstream stream(secondPart); std::vector<std::string> values; std::string value;
 
 			while (stream >> value) values.push_back(value);
@@ -375,7 +391,8 @@
 		}
 
 		int Settings::parse_cgi(const std::string & firstPart, const std::string & secondPart, VServer & VServ) {
-			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
+			std::string space = ""; if (line_count - 1 < 10) space = " ";
+			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] " + space;
 			std::istringstream stream(secondPart); std::vector<std::string> values; std::string value;
 
 			while (stream >> value) values.push_back(value);
@@ -392,7 +409,8 @@
 		}
 
 		int Settings::parse_cgi(const std::string & firstPart, const std::string & secondPart, Location & Loc) {
-			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
+			std::string space = ""; if (line_count - 1 < 10) space = " ";
+			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] " + space;
 			std::istringstream stream(secondPart); std::vector<std::string> values; std::string value;
 
 			while (stream >> value) values.push_back(value);
@@ -412,7 +430,8 @@
 	#pragma region Allow
 
 		int Settings::parse_allow(std::string & str) {
-			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
+			std::string space = ""; if (line_count - 1 < 10) space = " ";
+			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] " + space;
 			std::string temp; std::istringstream stream(str); stream >> temp;
 			std::string::size_type slashPos;
 			
@@ -438,7 +457,8 @@
 	#pragma region Deny
 
 		int Settings::parse_deny(std::string & str) {
-			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
+			std::string space = ""; if (line_count - 1 < 10) space = " ";
+			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] " + space;
 			std::string temp; std::istringstream stream(str); stream >> temp;
 			std::string::size_type slashPos;
 			
@@ -464,7 +484,8 @@
 	#pragma region Limit_Except
 
 		int Settings::parse_limit_except(std::string & str) {
-			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
+			std::string space = ""; if (line_count - 1 < 10) space = " ";
+			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] " + space;
 			
 			if (str.empty()) {			Log::log(RD + n_line + "Empty value for " Y + "limit_except" NC, Log::BOTH_ERROR); return (1); }
 
@@ -484,7 +505,8 @@
 	#pragma region Location
 
 		int Settings::parse_location(std::string & str) {
-			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
+			std::string space = ""; if (line_count - 1 < 10) space = " ";
+			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] " + space;
 			
 			if (str.empty()) {										Log::log(RD + n_line + "Empty value for " Y "Location" NC, Log::BOTH_ERROR); return (1); }
 
@@ -506,7 +528,8 @@
 	#pragma region Repeated
 
 		int Settings::repeated_directive(const std::string & str, const std::vector<std::pair<std::string, std::string> > & data, int line_count) {
-			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
+			std::string space = ""; if (line_count - 1 < 10) space = " ";
+			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] " + space;
 
 			if (str.empty() || data.size() == 0 || str == "listen" || str == "allow" || str == "deny") return (0);
 
@@ -521,7 +544,8 @@
 	#pragma region Invalid
 
 		int Settings::invalid_directive(std::string firstPart, int line_count, int section) {
-			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
+			std::string space = ""; if (line_count - 1 < 10) space = " ";
+			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] " + space;
 
 			if (firstPart.empty()) return (0);
 			if (section == GLOBAL || section == SERVER || section == LOCATION) {
@@ -584,7 +608,8 @@
 				} else {
 					temp = line; line.clear(); if (temp.empty()) continue;
 					if (temp.find("http") != 0 && temp.find("server") != 0 && temp.find("location") != 0 && temp.find("limit_except") != 0) {
-						std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] ";
+						std::string space = ""; if (line_count - 1 < 10) space = " ";
+						std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] " + space;
 						Log::log(RD + n_line + "Missing '" Y ";" RD "' at the end of the statement" NC, Log::BOTH_ERROR); BadConfig = true; continue;
 					}
 				}

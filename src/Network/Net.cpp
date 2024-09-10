@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 21:55:43 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/10 13:13:21 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/10 19:07:38 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -250,6 +250,7 @@ void Net::cleanup_socket() {
 					SocketInfo current = *s_it; ++s_it;
 					current.remove();
 				}
+				Thread::set_int(Display::mutex, total_clients, 0);
 			}
 
 		#pragma endregion

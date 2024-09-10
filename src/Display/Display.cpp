@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/14 14:37:32 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/09 23:24:44 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/10 19:23:35 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -274,10 +274,12 @@
 
 				Thread::mutex_set(Display::mutex, Thread::MTX_LOCK);
 
-					VServ->force_off = !VServ->force_off;
+					if (Settings::global.status) {
+						VServ->force_off = !VServ->force_off;
 
-					if		(VServ->status)																	Net::socket_action_list.push_back(std::make_pair(VServ, Net::CLOSE));
-					else if (VServ->force_off == false)														Net::socket_action_list.push_back(std::make_pair(VServ, Net::CREATE));
+						if		(VServ->status)																Net::socket_action_list.push_back(std::make_pair(VServ, Net::CLOSE));
+						else if (VServ->force_off == false)													Net::socket_action_list.push_back(std::make_pair(VServ, Net::CREATE));
+					}
 
 				Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK);
 
@@ -352,7 +354,7 @@
 			if (c == 'c' || c == 'C')	Key_C();																						//	(C)lear log
 			if (c == 'l' || c == 'L')	Key_L();																						//	(L)og
 			if (c == 's' || c == 'S')	Key_S();																						//	(S)ettings
-			if (c == 'e' || c == 'E')	Thread::set_int(mutex, Settings::terminate, 0);												//	(E)xit
+			if (c == 'e' || c == 'E')	Thread::set_int(mutex, Settings::terminate, 0);													//	(E)xit
 			if (c == 'r' || c == 'R') { std::cout << CB CHIDE CS CUU; std::cout.clear();  drawing = false; failCount = 0; Output(); }	//	(R)eset terminal
 		}
 
@@ -405,6 +407,8 @@
 		#pragma region Print Log
 
 			void print_log(const std::deque<std::string> & log, size_t index, std::ostringstream &oss, int &cols, int &row) {
+				if (log.size() > 0 && index > 0) index--;
+
 				while (++row < total_rows - 3) {
 					int length = 0; std::string temp = "";
 					if (index < log.size()) temp = log[index++];
@@ -413,9 +417,16 @@
 					if (length > cols + 2) temp = Utils::str_nocolor_trunc(temp, cols - 1);
 					length = (cols + 2) - Utils::str_nocolor_length(temp);
 					if (length < 0) length = 0;
-					oss << C "│" NC << temp;
-					setLine(C, " ", length, oss);
-					oss << C "│" NC << "\n";
+					if (temp == "---") {
+						if (index == log.size()) { oss << C "│"; setLine(C, " ", cols + 2, oss); oss << C "│" NC << "\n"; continue; }
+						oss << C "├" NC;
+						setLine(SKY900, "─", cols + 2, oss);
+						oss << C "┤" NC << "\n";
+					} else {
+						oss << C "│" NC << temp;
+						setLine(C, " ", length, oss);
+						oss << C "│" NC << "\n";
+					}
 				}
 			}
 
@@ -566,6 +577,7 @@
 
 			void Display::Output() {
 				if (drawing || Settings::check_only || !isRawMode() || ForceRawModeDisabled) return; else  drawing = true;
+				std::string CGREEN = GREEN700, CRED = RED700, CYELLOW = ORANGE400;
 				bool isUpdate = Thread::get_bool(mutex, _update);
 
 			//	VARIABLES
@@ -573,10 +585,10 @@
 				total_cols = cols; total_rows = w.ws_row; log_rows = total_rows - 9;
 
 				std::ostringstream oss; std::ostringstream ss; ss << Settings::vserver.size(); std::string temp = ss.str();
-				std::string Status = RD; std::string Color = RD; std::string LArrow = "  ", RArrow = "  ";
+				std::string Status = CRED; std::string Color = CRED; std::string LArrow = "  ", RArrow = "  ";
 
-				if (Thread::get_bool(mutex, Settings::global.status))																		Status = G;
-				if (Settings::vserver.size() > 0)																							Color = G;
+				if (Thread::get_bool(mutex, Settings::global.status))																		Status = CGREEN;
+				if (Settings::vserver.size() > 0)																							Color  = CGREEN;
 				if (Settings::vserver.size() > 0) { 																						LArrow = "◄ "; RArrow = "► "; }
 
 			//	TITLE
@@ -588,15 +600,15 @@
 			//	COLOR LINES
 				bool some = false;
 				if	(Settings::vserver.size() > 0 && Settings::current_vserver != -1
-					&& Thread::get_bool(mutex, Settings::vserver[Settings::current_vserver].status))										Status = G;
-				else if (Settings::vserver.size() > 0 && Settings::current_vserver == -1) {													Status = RD;
+					&& Thread::get_bool(mutex, Settings::vserver[Settings::current_vserver].status))										Status = CGREEN;
+				else if (Settings::vserver.size() > 0 && Settings::current_vserver == -1) {													Status = CRED;
 					for (size_t i = 0; i < Settings::vserver.size(); ++i) {
-						if (Thread::get_bool(mutex, Settings::vserver[i].status))															Status = G;
+						if (Thread::get_bool(mutex, Settings::vserver[i].status))															Status = CGREEN;
 						else if (!Thread::get_bool(mutex, Settings::vserver[i].status))														some = true;
 					}
-				} else 																														Status = RD;
-				if (Thread::get_bool(mutex, Settings::global.status) == false)																Status = RD;
-				if (Status != RD && some)																									Status = Y;
+				} else 																														Status = CRED;
+				if (Thread::get_bool(mutex, Settings::global.status) == false)																Status = CRED;
+				if (Status != CRED && some)																								Status = CYELLOW;
 
 			//	MEM & CPU
 				temp = monitor.getMEMinStr();
@@ -613,7 +625,7 @@
 					} else {																												ss << Settings::current_vserver + 1;
 																																			temp = "(" + ss.str() + ") " + Settings::vserver[Settings::current_vserver].get("server_name");
 					}
-				} else if (Status == RD && Settings::vserver.size() > 0)																	temp = "Virtual servers offline";
+				} else if (Status == CRED && Settings::vserver.size() > 0)																	temp = "Virtual servers offline";
 				else if (Settings::vserver.size() > 0 && Settings::current_vserver == -1)
 					if (some)																												temp = "Some virtual servers online";
 					else																													temp = "Virtual servers online";
@@ -647,6 +659,7 @@
 				Thread::mutex_set(Log::mutex, Thread::MTX_UNLOCK);
 			//	BUTTONS
 				print_buttons(oss, cols, row);
+				setLine(C, " ", cols + 4, oss);
 			//	PRINT
 				if (redraw) { drawing = false; redraw = false; std::cout.flush(); std::cout.clear(); failCount = 0; Output(); return; }
 				std::cout << oss.str(); std::cout.flush();
@@ -718,7 +731,7 @@
 
 			if (!Settings::check_only && isRawMode() && !ForceRawModeDisabled) {
 				usleep(100000); std::cout.flush(); std::cout.clear(); maxFails = 10; failCount = 0; drawing = false;
-				Log::log(G "WebServ 1.0 closed successfully", Log::MEM_ACCESS); Log::process_logs(); Output();
+				Log::log(G "WebServ 1.0 closed successfully", Log::GLOBAL_ACCESS); Log::log("---", Log::GLOBAL_ACCESS); Log::process_logs(); Output();
 			} else std::cout << CSHOW << std::endl;
 			return (NULL);
 		}

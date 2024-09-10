@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:32:23 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/09 23:17:45 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/10 17:31:57 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,7 @@ class Log {
 	public:
 	
 		//	Variables
-		enum e_type { MEM_ACCESS, MEM_ERROR, BOTH_ACCESS, BOTH_ERROR, LOCAL_ACCESS, LOCAL_ERROR };
+		enum e_type { MEM_ACCESS, MEM_ERROR, VSERV_ACCESS, VSERV_ERROR, GLOBAL_ACCESS, GLOBAL_ERROR, BOTH_ACCESS, BOTH_ERROR, LOCAL_ACCESS, LOCAL_ERROR };
 		
 		std::deque <std::string>	access;																//	Logs for 'access' in a deque
 		std::deque <std::string>	error;																//	Logs for 'error' in a deque
@@ -80,7 +80,7 @@ class Log {
 			std::string	path;																			//	File path related to the log
 
 			//	Constructors
-			LogInfo(std::string & _msg, int _type, VServer * _VServ, std::string _path);				//	Parameterized constructor
+			LogInfo(std::string _msg, int _type, VServer * _VServ, std::string _path);					//	Parameterized constructor
 
 			//	Overloads
 			LogInfo &		operator=(const LogInfo & rhs);												//	Overload for asignation
