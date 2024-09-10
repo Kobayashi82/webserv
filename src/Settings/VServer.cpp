@@ -6,11 +6,12 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 11:54:43 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/18 17:43:52 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/10 23:05:48 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "VServer.hpp"
+#include "Settings.hpp"
 
 #pragma region Constructors
 
@@ -40,6 +41,7 @@
         std::string VServer::get(const std::string & Key) {
 			for (std::vector <std::pair<std::string, std::string> >::iterator it = data.begin(); it != data.end(); ++it)
 				if (it->first == Key) return (it->second);
+
 			return ("");
         }
 
@@ -50,6 +52,7 @@
         void VServer::set(const std::string & Key, const std::string & Value, bool Force) {
 			for (std::vector <std::pair<std::string, std::string> >::iterator it = data.begin(); it != data.end(); ++it)
 				if (!Force && it->first == Key) { it->second = Value; return; }
+
 			data.push_back(std::make_pair(Key, Value));
         }
 

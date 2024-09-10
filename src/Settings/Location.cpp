@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 11:54:47 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/18 14:34:48 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/10 23:03:27 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,6 +44,7 @@
         void Location::set(const std::string & Key, const std::string & Value, bool Force) {
 			for (std::vector <std::pair<std::string, std::string> >::iterator it = data.begin(); it != data.end(); ++it)
 				if (!Force && it->first == Key) { it->second = Value; return; }
+
 			data.push_back(std::make_pair(Key, Value));
         }
 

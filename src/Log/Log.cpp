@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:32:38 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/10 18:45:37 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/10 23:06:10 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -168,6 +168,7 @@
 				if (logs.empty()) return;
 
 				std::map<std::string, std::string> logMap;
+				std::ostringstream oss;
 
 				while (!logs.empty()) {
 					Log::LogInfo log = logs.front(); logs.pop();
@@ -178,10 +179,8 @@
 
 					if (!log.path.empty() && log.path[0] != '/') log.path = Settings::program_path + log.path;
 
-					if (log.type < LOCAL_ACCESS) log_to_memory(log.msg, log.type, log.VServ);
-					if (log.type > VSERV_ERROR && !log.path.empty()) {
-						logMap[log.path] += Utils::str_nocolor(log.msg) + "\n";
-					}
+					if (log.type < LOCAL_ACCESS)						log_to_memory(log.msg, log.type, log.VServ);
+					if   (log.type > GLOBAL_ERROR && !log.path.empty())	logMap[log.path] += Utils::str_nocolor(log.msg) + "\n";
 				}
 
 				for (std::map<std::string, std::string>::iterator it = logMap.begin(); it != logMap.end(); ++it)
@@ -220,21 +219,58 @@
 			void Log::log(std::string msg, int type, VServer * VServ, std::vector<std::pair<std::string, std::string> > * data) {
 				std::string path;
 
-				if (Display::background || type == LOCAL_ACCESS || type == LOCAL_ERROR) return;
+				if (Display::background) return;
 
 				if (VServ == &(Settings::global)) VServ = NULL;
-				if (VServ)	data = &VServ->data;
-				else 		data = &Settings::global.data;
 
-				if (type == BOTH_ACCESS || type == LOCAL_ACCESS)	path = Settings::data_get(data, "access_log");
-				if (type == BOTH_ERROR  || type == LOCAL_ERROR )	path = Settings::data_get(data, "error_log" );
+				if (!VServ) {
+					if (type == BOTH_ACCESS || type == LOCAL_ACCESS)	path = Settings::data_get(Settings::global.data, "access_log");
+					if (type == BOTH_ERROR  || type == LOCAL_ERROR )	path = Settings::data_get(Settings::global.data, "error_log" );
 
-				Thread::mutex_set(mutex, Thread::MTX_LOCK);
+					Thread::mutex_set(mutex, Thread::MTX_LOCK);
 
-					_logs.push(LogInfo(msg, type, VServ, path));
+						_logs.push(LogInfo(msg, type, VServ, path));
 
-				Thread::mutex_set(mutex, Thread::MTX_UNLOCK);
+					Thread::mutex_set(mutex, Thread::MTX_UNLOCK);
+				} else {
+					std::string global_path;
+
+					if (!data) data = &VServ->data;
+
+					if (type == BOTH_ACCESS || type == LOCAL_ACCESS)	path = Settings::data_get(data, "access_log");
+					if (type == BOTH_ERROR  || type == LOCAL_ERROR )	path = Settings::data_get(data, "error_log" );
+
+					if (type == BOTH_ACCESS || type == LOCAL_ACCESS)	global_path = Settings::data_get(Settings::global.data, "access_log");
+					if (type == BOTH_ERROR  || type == LOCAL_ERROR )	global_path = Settings::data_get(Settings::global.data, "error_log" );
+
+					Thread::mutex_set(mutex, Thread::MTX_LOCK);
+
+						if (type == BOTH_ACCESS || type == LOCAL_ACCESS)	_logs.push(LogInfo(msg, LOCAL_ACCESS, NULL, global_path));
+						if (type == BOTH_ERROR || type == LOCAL_ERROR)		_logs.push(LogInfo(msg, LOCAL_ERROR, NULL, global_path));
+						_logs.push(LogInfo(msg, type, VServ, path));
+
+					Thread::mutex_set(mutex, Thread::MTX_UNLOCK);
+				}
 			}
+
+			// void Log::log(std::string msg, int type, VServer * VServ, std::vector<std::pair<std::string, std::string> > * data) {
+			// 	std::string path;
+
+			// 	if (Display::background) return;
+
+			// 	if (VServ == &(Settings::global)) VServ = NULL;
+			// 	if (VServ)	data = &VServ->data;
+			// 	//else 		data = &Settings::global.data;
+
+			// 	if (type == BOTH_ACCESS || type == LOCAL_ACCESS)	path = Settings::data_get(data, "access_log");
+			// 	if (type == BOTH_ERROR  || type == LOCAL_ERROR )	path = Settings::data_get(data, "error_log" );
+
+			// 	Thread::mutex_set(mutex, Thread::MTX_LOCK);
+
+			// 		_logs.push(LogInfo(msg, type, VServ, path));
+
+			// 	Thread::mutex_set(mutex, Thread::MTX_UNLOCK);
+			// }
 
 		#pragma endregion
 

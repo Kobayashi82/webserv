@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:27:58 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/10 18:43:32 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/10 23:08:22 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,7 +70,7 @@
 
 		void Settings::set(VServer & VServ) {
 			std::deque <VServer>::iterator it = std::find(vserver.begin(), vserver.end(), VServ);
-			if (it == vserver.end()) { vserver.push_back(VServ); }
+			if (it == vserver.end()) vserver.push_back(VServ);
 			else *it = VServ;
 		}
 
@@ -156,11 +156,11 @@
 				else										{	Log::log(G "Configuration file '" Y + File + G "' loaded" NC, Log::MEM_ACCESS);					Log::log("---", Log::GLOBAL_ACCESS); }
 			} else {
 				BadConfig = true;
-				if (isDefault)								{	Log::log(RD "Could not create the " Y "default configuration" RD " file" NC, Log::BOTH_ERROR);	Log::log("---", Log::GLOBAL_ACCESS); }
+				if (isDefault)								{	Log::log(RD "Could not create the " Y "default configuration" RD " file" NC, Log::MEM_ERROR);	Log::log("---", Log::GLOBAL_ACCESS); }
 				else {
-					if (Utils::file_exists(File) == 1)		{	Log::log(RD "The configuration file '" Y + File + RD "' does not exist" NC, Log::BOTH_ERROR);	Log::log("---", Log::GLOBAL_ACCESS); }
-					else if (Utils::file_exists(File) == 2)	{	Log::log(RD "Cannot read the file '" Y + File + RD "'" NC, Log::BOTH_ERROR);					Log::log("---", Log::GLOBAL_ACCESS); }
-					else									{	Log::log(RD "Could not load the configuration file '" Y + File + RD "'" NC, Log::BOTH_ERROR);	Log::log("---", Log::GLOBAL_ACCESS); }
+					if (Utils::file_exists(File) == 1)		{	Log::log(RD "The configuration file '" Y + File + RD "' does not exist" NC, Log::MEM_ERROR);	Log::log("---", Log::GLOBAL_ACCESS); }
+					else if (Utils::file_exists(File) == 2)	{	Log::log(RD "Cannot read the file '" Y + File + RD "'" NC, Log::MEM_ERROR);						Log::log("---", Log::GLOBAL_ACCESS); }
+					else									{	Log::log(RD "Could not load the configuration file '" Y + File + RD "'" NC, Log::MEM_ERROR);	Log::log("---", Log::GLOBAL_ACCESS); }
 				}
 			}
 			Log::process_logs();

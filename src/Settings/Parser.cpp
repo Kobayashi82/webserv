@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:30:57 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/10 18:42:10 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/10 23:05:25 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -640,7 +640,7 @@
 				else if (invalid_directive(firstPart, line_count, section))	{																NoAdd = true; BadConfig = true; }
 
 				if ((section == GLOBAL || section == SERVER || section == LOCATION) && !firstPart.empty()) {
-					if (firstPart == "access_log" || firstPart == "error_log") parse_path(firstPart, secondPart, true, true);
+					if (!NoAdd && (firstPart == "access_log" || firstPart == "error_log")) parse_path(firstPart, secondPart, true, true);
 					if (!NoAdd && firstPart == "log_maxsize") parse_log_maxsize(secondPart);
 					if (!NoAdd && firstPart == "log_rotate") parse_log_rotate(secondPart);
 					if (!NoAdd && firstPart == "root" && parse_path(firstPart, secondPart, false, false))									BadConfig = true;
@@ -669,7 +669,7 @@
 					if (!NoAdd && firstPart == "cgi") parse_cgi(firstPart, secondPart, VServ);
 
 					if (!NoAdd && (firstPart == "listen" || firstPart == "allow" || firstPart == "deny"))									VServ.add(firstPart, secondPart, true);
-					else if (!NoAdd && firstPart != "server" && firstPart == "error_page" && firstPart != "listen" && firstPart != "cgi")	VServ.add(firstPart, secondPart);
+					else if (!NoAdd && firstPart != "server" && firstPart != "error_page" && firstPart != "cgi")							VServ.add(firstPart, secondPart);
 				}
 
 				if (section == LOCATION && !firstPart.empty()) {
