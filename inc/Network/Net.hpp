@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 21:49:50 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/09 20:36:56 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/10 13:15:31 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,9 +46,11 @@ class Net {
 
 			std::vector <char>		read_buffer;														//	Buffer for reading data
     		std::vector <char>		write_buffer;														//	Buffer for writing data
+			std::string				request;															//	Request of the client
 
 			std::string 			path;																//	Path of the file
 			bool					no_cache;															//	Do not keep in cache
+			bool					close;																//	Close the conection... please
 
 			//	Constructors
 			EventInfo();																				//	Default constructor
@@ -180,6 +182,7 @@ class Net {
 
 
 		//	Comunications (Work in progress)
+
 		static int	read_data(EventInfo * event);
 		static int	read_client(EventInfo * event);
 
@@ -187,7 +190,7 @@ class Net {
 
 		static void	process_data(EventInfo * event, std::string data);
 		static void	process_data(EventInfo * event, size_t data_size);
-		static void	process_request(EventInfo * event, std::string request);
+		static void	process_request(EventInfo * event);
 		static void	process_response(EventInfo * event);
 
 		//	Resolve request

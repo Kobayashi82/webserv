@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 22:23:52 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/09 15:19:34 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/10 12:38:58 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -117,11 +117,19 @@
 
 #pragma region FileSize
 
-	long Utils::filesize(const std::string & path) {
-		if (path.empty()) return (-1);
+	size_t Utils::filesize(const std::string & path) {
+		if (path.empty()) return (std::string::npos);
 		struct stat path_stat;
 		
-		if (stat(path.c_str(), &path_stat) != 0) return (-1);
+		if (stat(path.c_str(), &path_stat) != 0) return (std::string::npos);
+		return (path_stat.st_size);
+	}
+
+	size_t Utils::filesize(const int fd) {
+		if (fd == -1) return (std::string::npos);
+		struct stat path_stat;
+
+		if (fstat(fd, &path_stat) == -1) { return (std::string::npos); }
 		return (path_stat.st_size);
 	}
 

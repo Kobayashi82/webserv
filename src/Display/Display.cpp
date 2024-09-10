@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/14 14:37:32 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/02 18:17:50 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/09 23:24:44 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -647,15 +647,8 @@
 				Thread::mutex_set(Log::mutex, Thread::MTX_UNLOCK);
 			//	BUTTONS
 				print_buttons(oss, cols, row);
-
 			//	PRINT
 				if (redraw) { drawing = false; redraw = false; std::cout.flush(); std::cout.clear(); failCount = 0; Output(); return; }
-				// std::string output = oss.str();
-				// const size_t chunkSize = 1024; // Tamaño del fragmento, por ejemplo, 1024 caracteres
-				// for (size_t i = 0; i < output.size(); i += chunkSize) {
-				// 	std::cout << output.substr(i, chunkSize);
-				// 	std::cout.flush(); // Asegura que se vacíe el buffer después de cada fragmento
-				// }
 				std::cout << oss.str(); std::cout.flush();
 				if (std::cout.fail()) {
 					std::cout.clear(); drawing = false; failCount++;

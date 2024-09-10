@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:37:20 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/09 15:19:42 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/10 12:30:38 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,6 +53,7 @@ class Utils {
 		static bool			isDirectory(const std::string & path);										//	Check if a Path is a directory
 		static std::string	fullpath(const std::string & path);											//	Return the full path of path (process ./ and ../ and must be absolute)
 		static bool 		is_subpath(const std::string & path1, const std::string & path2);			//	Check if path1 is inside of path2
-		static long			filesize(const std::string & path);											//	Get the size of a file
+		static size_t 		filesize(const std::string & path);											//	Get the size of a file from a path
+		static size_t 		filesize(const int fd);														//	Get the size of a file from a FD
 
 };

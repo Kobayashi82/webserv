@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/27 09:32:08 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/09 23:14:58 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/10 13:23:48 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,13 +16,11 @@
 #include "Display.hpp"
 #include "Thread.hpp"
 
-#include <sys/stat.h>																					//	To get the size of a file
-
 //	!	IMPORTANT	The response must obtain the file size, generate the header and then read the file and write to the client at the same time so we dont have to load in memory a big file.
 //	!				This is in case the file is too big, if not, we can cache the file.
 //	!				The problem is if the file asked is too big and with the current implementation it will be loaded in memory. A file of 1 GB is not aceptable.
 
-//	!	IMPORTANT	In read_client i have to check for a new header in the buffer and then process the request. After that continue reading.
+//	!	IMPORTANT	In read_client i have to check for a new header in the buffer and then process the request. After that continue reading. (really?)
 //	!				So, i need a function to check if a header is in the buffer and where start a header (ignoring the first header, of course)
 
 #pragma region Comunications
@@ -50,16 +48,18 @@
 					read_bytes+= bytes_read;
 					Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK);
 
-					//if (event->read_buffer.size() >= max_request_size) return lo que sea
-
 					if (static_cast<size_t>(bytes_peek) <= CHUNK_SIZE) {
-						std::string request(event->read_buffer.begin(), event->read_buffer.end());
+						event->request = std::string(event->read_buffer.begin(), event->read_buffer.end());
 						event->read_buffer.clear();
 						event->client->total_requests++;
 
-						process_request(event, request);
+						process_request(event);
 					}
-				} else if (bytes_read <= 0) { if (get_event(event->fd)) event->client->remove(); return (1); }					//	Read error or empty (empty = close client)
+				} else if (bytes_read <= 0) {															//	Read error or empty (empty = close client)
+					if (get_event(event->fd)) event->client->remove();
+					if (bytes_read < 0) Log::log(RED500 "Comunication failed with " BLUE400 + event->client->IP + NC, Log::BOTH_ERROR, event->socket->VServ);
+					return (1);
+				}
 
 				return (0);
 			}
@@ -133,9 +133,9 @@
 					long MaxRequests = KEEP_ALIVE_TIMEOUT;
 
 					if (Settings::global.get("keepalive_requests") != "") Utils::stol(Settings::global.get("keepalive_requests"), MaxRequests);
-					if (event->client->total_requests >= MaxRequests) event->client->remove();
+					if (event->close || event->client->total_requests >= MaxRequests) event->client->remove();
 
-					Log::log("GET", "/", 200, write_bytes, "250", event->client->IP);
+					Log::log("GET", "/", 200, write_bytes, "250", event->client->IP, event->socket->VServ);
 				}
 			}
 
@@ -147,7 +147,7 @@
 
 		#pragma region Request
 
-			void Net::process_request(EventInfo * event, std::string request) {
+			void Net::process_request(EventInfo * event) {
 				if (!event) return;
 
 				//	if (body > max_body_size) return lo que sea
@@ -156,7 +156,6 @@
 				// if (std::getline(request_stream, line)) Utils::trim(line);
 				// Log::log(line, Log::BOTH_ACCESS);
 				//Log::log("Prueba", Log::BOTH_ACCESS);
-				(void) request;
 				process_response(event);																//	ELIMINAR
 			}
 
@@ -175,7 +174,8 @@
 
 				int fd = open("index.html", O_RDONLY);
 				if (fd == -1) { return; }
-				struct stat file_stat; if (fstat(fd, &file_stat) == -1) { close(fd); return; }			//	Size of the file
+				size_t filesize = Utils::filesize(fd);
+				if (filesize == std::string::npos) { close(fd); return; }
 
 				EventInfo event_data(fd, DATA, NULL, event->client);
 
@@ -183,7 +183,7 @@
 				event_data.no_cache = false;
 				if (pipe(event_data.pipe) == -1) { remove_event(event_data.fd); return; }					//	Create pipe
 				event_data.data_size = 0;
-				event_data.max_data_size = file_stat.st_size;
+				event_data.max_data_size = filesize;
 				size_t chunk = std::min(event_data.max_data_size, CHUNK_SIZE);
 				if (splice(event_data.fd, NULL, event_data.pipe[1], NULL, chunk, SPLICE_F_MOVE) == -1) { close(event_data.fd); close(event_data.pipe[0]); close(event_data.pipe[1]); return; }
 				std::swap(event_data.fd, event_data.pipe[0]);
