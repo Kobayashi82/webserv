@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 11:54:47 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/17 17:48:05 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/12 13:18:27 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,16 +14,16 @@
 
 #pragma region Constructors
 
-    Method::Method() {}
+    Method::Method() { Loc = NULL; }
     Method::Method(const Method & src) { *this = src; }
-    Method::~Method() { clear(); }
+    Method::~Method() { clear(); Loc = NULL; }
 
 #pragma endregion
 
 #pragma region Overloads
 
-	Method &	Method::operator=(const Method & rhs) { if (this != &rhs) { data = rhs.data; } return (*this); }
-	bool		Method::operator==(const Method & rhs) const { return (data == rhs.data); }
+	Method &	Method::operator=(const Method & rhs) { if (this != &rhs) { data = rhs.data; Loc = rhs.Loc; } return (*this); }
+	bool		Method::operator==(const Method & rhs) const { return (data == rhs.data && Loc == rhs.Loc); }
 
 #pragma endregion
 

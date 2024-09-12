@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/14 14:37:32 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/10 19:23:35 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/12 20:14:11 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -249,7 +249,7 @@
 		#pragma region Key_W
 
 			static void Key_W() {
-				if (Settings::vserver.size() == 0)															return;
+				if (Settings::vserver.size() == 0 || Settings::global.bad_config) return;
 
 				Thread::mutex_set(Display::mutex, Thread::MTX_LOCK);
 
@@ -268,7 +268,7 @@
 		#pragma region Key_V
 
 			static void Key_V() {
-				if (Settings::vserver.size() == 0 || Settings::current_vserver == -1) 						return;
+				if (Settings::vserver.size() == 0 || Settings::current_vserver == -1 || Settings::vserver[Settings::current_vserver].bad_config || Settings::global.bad_config) return;
 
 				VServer * VServ = &Settings::vserver[Settings::current_vserver];
 
@@ -340,7 +340,7 @@
 			if (isRawMode() == false) return;
 
 			char c, seq[2];
-			if (read(STDIN_FILENO, &c, 1) != 1) return ;																				//	This is Non-Blocking
+			if (read(STDIN_FILENO, &c, 1) != 1) return ;																							//	This is Non-Blocking
 			if (c == '\033' && read(STDIN_FILENO, &seq[0], 1) == 1 && read(STDIN_FILENO, &seq[1], 1) == 1 && seq[0] == '[') {
 				if (seq[1] == 'D')		Left();
 				if (seq[1] == 'C')		Right();
@@ -349,13 +349,13 @@
 				if (seq[1] == 'H')		Home();
 				if (seq[1] == 'F')		End();
 			}
-			if (c == 'w' || c == 'W')	Key_W();																						//	(S)tart / (S)top
-			if (c == 'v' || c == 'V')	Key_V();																						//	(V)server start
-			if (c == 'c' || c == 'C')	Key_C();																						//	(C)lear log
-			if (c == 'l' || c == 'L')	Key_L();																						//	(L)og
-			if (c == 's' || c == 'S')	Key_S();																						//	(S)ettings
-			if (c == 'e' || c == 'E')	Thread::set_int(mutex, Settings::terminate, 0);													//	(E)xit
-			if (c == 'r' || c == 'R') { std::cout << CB CHIDE CS CUU; std::cout.clear();  drawing = false; failCount = 0; Output(); }	//	(R)eset terminal
+			if (c == 'w' || c == 'W')	Key_W();																									//	(S)tart / (S)top
+			if (c == 'v' || c == 'V')	Key_V();																									//	(V)server start
+			if (c == 'c' || c == 'C')	Key_C();																									//	(C)lear log
+			if (c == 'l' || c == 'L')	Key_L();																									//	(L)og
+			if (c == 's' || c == 'S')	Key_S();																									//	(S)ettings
+			if (c == 'e' || c == 'E') { Thread::set_bool(mutex, Settings::global.status, false); Thread::set_int(mutex, Settings::terminate, 0); }	//	(E)xit
+			if (c == 'r' || c == 'R') { std::cout << CB CHIDE CS CUU; std::cout.clear();  drawing = false; failCount = 0; Output(); }				//	(R)eset terminal
 		}
 
 	#pragma endregion

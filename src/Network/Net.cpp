@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 21:55:43 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/10 19:07:38 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/12 13:53:51 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -174,7 +174,7 @@ void Net::cleanup_socket() {
 		#pragma region Create VServer
 
 			int Net::socket_create(VServer * VServ) {
-				if (Thread::get_bool(Display::mutex, Settings::global.status) == false || Thread::get_bool(Display::mutex, VServ->force_off)) return (1);
+				if (Thread::get_bool(Display::mutex, Settings::global.status) == false || VServ->bad_config || Thread::get_bool(Display::mutex, VServ->force_off)) return (1);
 
 				bool nothing_created = true;
 

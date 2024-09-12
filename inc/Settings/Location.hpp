@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 11:53:37 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/18 14:33:59 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/12 13:17:11 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,7 @@
 #include <vector>																						//	For std::vector container
 #include <deque>																						//	For std::deque container
 
+class VServer;
 class Location {
 
 	public:
@@ -26,6 +27,7 @@ class Location {
 		//	Variables
 		std::vector <std::pair<std::string, std::string> >	data;										//	Values of the current Location
 		std::deque <Method>									method;										//	Method of the current Location
+		VServer *											VServ;										//	Pointer to the parent VServer
 
 		//	Constructors
 		Location();																						//	Default constructor

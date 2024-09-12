@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:14:05 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/09 19:58:08 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/12 19:59:45 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,31 +75,35 @@ class Settings {
 		static void load_mime_types();																	//	Load MIME types in a map
 
 		//	Parser
-		static int	parse_path(const std::string & firstPart, std::string & str, bool isFile, bool check_path, bool check_write);
-		static int	parse_keepalive_timeout(std::string & str);
-		static int	parse_keepalive_requests(std::string & str);
-		static int	parse_log_maxsize(std::string & str);
-		static int	parse_log_rotate(std::string & str);
-		static int	parse_body_size(std::string & str);
-		static int	parse_errors(const std::string & firstPart, const std::string & secondPart);
+		static void	log_servers(std::string msg, VServer * VServ);
+		static void	log_access_add(std::string msg);
+		static void	log_error_add(std::string msg);
+
+		static int	parse_path(const std::string & firstPart, std::string & str, bool isFile, bool check_path, bool check_write, VServer * VServ);
+		static int	parse_keepalive_timeout(std::string & str, VServer * VServ);
+		static int	parse_keepalive_requests(std::string & str, VServer * VServ);
+		static int	parse_log_maxsize(std::string & str, VServer * VServ);
+		static int	parse_log_rotate(std::string & str, VServer * VServ);
+		static int	parse_body_size(std::string & str, VServer * VServ);
+		static int	parse_errors(const std::string & firstPart, const std::string & secondPart, VServer * VServ);
 		static int	parse_errors(const std::string & firstPart, const std::string & secondPart, VServer & VServ);
 		static int	parse_errors(const std::string & firstPart, const std::string & secondPart, Location & Loc);
-		static int	parse_autoindex(std::string & str);
-		static int	parse_index(std::string & str);
+		static int	parse_autoindex(std::string & str, VServer * VServ);
+		static int	parse_index(std::string & str, VServer * VServ);
 		static int	parse_listen(std::string & str, VServer & VServ);
-		static int	parse_return(std::string & str);
-		static int	parse_alias(std::string & firstPart, std::string & str);
-		static int	parse_try_files(std::string & str);
-		static int	parse_allow(std::string & str);
-		static int	parse_deny(std::string & str);
-		static int	parse_limit_except(std::string & str);
-		static int	parse_location(std::string & str);
-		static int	parse_cgi(const std::string & firstPart, const std::string & secondPart);
+		static int	parse_return(std::string & str, VServer * VServ);
+		static int	parse_alias(std::string & firstPart, std::string & str, VServer * VServ);
+		static int	parse_try_files(std::string & str, VServer * VServ);
+		static int	parse_allow(std::string & str, VServer * VServ);
+		static int	parse_deny(std::string & str, VServer * VServ);
+		static int	parse_method(std::string & str, VServer * VServ);
+		static int	parse_location(std::string & str, VServer * VServ);
+		static int	parse_cgi(const std::string & firstPart, const std::string & secondPart, VServer * VServ);
 		static int	parse_cgi(const std::string & firstPart, const std::string & secondPart, VServer & VServ);
 		static int	parse_cgi(const std::string & firstPart, const std::string & secondPart, Location & Loc);
 
-		static int	repeated_directive(const std::string & str, const std::vector<std::pair<std::string, std::string> > & data, int line_count);
-		static int	invalid_directive(std::string firstPart, int line_count, int section);
+		static int	repeated_directive(const std::string & str, const std::vector<std::pair<std::string, std::string> > & data, int line_count, VServer * VServ);
+		static int	invalid_directive(std::string firstPart, int line_count, int section, VServer * VServ);
 
 		static void	parser(std::ifstream & infile);														//	Main parser function that read the config file
 

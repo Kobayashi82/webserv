@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 11:53:48 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/19 23:49:08 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/12 13:10:06 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,6 +36,7 @@ class VServer {
 		Log													log;										//	Logs (access, error and both)
 		bool												status;										//	Status of the VServer (Started/Stoped)
 		bool												force_off;									//	The VServer is disabled by user;
+		bool												bad_config;									//	The configuration is bad (disable the VServer)
 		
 		//	Constructors
 		VServer();																						//	Default constructor

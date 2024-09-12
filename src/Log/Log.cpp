@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:32:38 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/10 23:06:10 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/12 18:52:31 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -111,9 +111,10 @@
 			void Log::log_to_memory(std::string msg, int type, VServer * VServ) {
 				if (msg.empty()) return ;
 				if (Settings::check_only || !Display::isRawMode() || Display::ForceRawModeDisabled) {
+					static bool separated = false;
 					if (!Display::background && !msg.empty()) {
-						if (msg == "---")	std::cout << " " << Y "-----------------------------------------------------------------------------------------" << NC << std::endl;
-						else				std::cout << " " << msg << NC << std::endl;
+						if (msg == "---") {	if (separated == false) { std::cout << " " << Y "-----------------------------------------------------------------------------------------" << NC << std::endl; separated = true; }}
+						else			  {	std::cout << " " << msg << NC << std::endl; separated = false; }
 					}
 				}
 
@@ -180,7 +181,7 @@
 					if (!log.path.empty() && log.path[0] != '/') log.path = Settings::program_path + log.path;
 
 					if (log.type < LOCAL_ACCESS)						log_to_memory(log.msg, log.type, log.VServ);
-					if   (log.type > GLOBAL_ERROR && !log.path.empty())	logMap[log.path] += Utils::str_nocolor(log.msg) + "\n";
+					if (log.type > GLOBAL_ERROR && !log.path.empty())	logMap[log.path] += Utils::str_nocolor(log.msg) + "\n";
 				}
 
 				for (std::map<std::string, std::string>::iterator it = logMap.begin(); it != logMap.end(); ++it)

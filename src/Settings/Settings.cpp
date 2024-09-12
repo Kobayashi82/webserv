@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:27:58 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/10 23:08:22 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/12 20:38:24 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,6 @@
 	int									Settings::current_vserver = -1;									//	Current selected V-Server (-1 = None)
 	int 								Settings::terminate = -1;										//	Flag the program to exit with the value in terminate (the default value of -1 don't exit)
 
-	bool 								Settings::BadConfig = false;									//	Indicate if there are errors in the config file
 	int									Settings::line_count = 0;										//	Number of the current line of the configuration file (use to indicate the line of an error in the configuration file)
 	int									Settings::bracket_lvl = 0;										//	Level of the bracket (use to parse the configuration file)
 
@@ -111,7 +110,7 @@
 						<< "\taccess_log logs/access.log;\n"
 						<< "\terror_log logs/error.log;\n\n"
 
-						<< "\tclient_max_body_size 10M;\n\n"
+						<< "\tbody_maxsize 10M;\n\n"
 
 						<< "\terror_page 404 /404.html;\n"
 						<< "\terror_page 500 502 503 504 /50x.html;\n\n"
@@ -150,17 +149,22 @@
 			std::string	line; std::ifstream infile(File.c_str());
 
 			if (infile.is_open()) { parser(infile); infile.close(); loaded = true;
-				if (BadConfig || check_only) return;
-				if (Settings::global.log.error.size() > 0)																										Log::log("---", Log::GLOBAL_ACCESS);
-				if (isDefault)								{	Log::log(G "Default configuration file loaded" NC, Log::MEM_ACCESS);							Log::log("---", Log::GLOBAL_ACCESS); }
-				else										{	Log::log(G "Configuration file '" Y + File + G "' loaded" NC, Log::MEM_ACCESS);					Log::log("---", Log::GLOBAL_ACCESS); }
+				if (check_only) return;
+				if (global.bad_config) { log_access_add("---"); return; }
+
+				bool print_sep = (global.log.error.size() > 0);
+				for (std::deque<VServer>::iterator it = vserver.begin(); it != vserver.end(); ++it)
+					if (it->log.error.size() > 0) print_sep = true;
+				if (print_sep)								{																									log_access_add("---"); }
+				if (isDefault)								{	log_access_add(G "Default configuration file loaded" NC);										log_access_add("---"); }
+				else										{	log_access_add(G "Configuration file '" Y + File + G "' loaded" NC);							log_access_add("---"); }
 			} else {
-				BadConfig = true;
-				if (isDefault)								{	Log::log(RD "Could not create the " Y "default configuration" RD " file" NC, Log::MEM_ERROR);	Log::log("---", Log::GLOBAL_ACCESS); }
+				global.bad_config = true;
+				if (isDefault)								{	log_error_add(RD "Could not create the " Y "default configuration" RD " file" NC);				log_access_add("---"); }
 				else {
-					if (Utils::file_exists(File) == 1)		{	Log::log(RD "The configuration file '" Y + File + RD "' does not exist" NC, Log::MEM_ERROR);	Log::log("---", Log::GLOBAL_ACCESS); }
-					else if (Utils::file_exists(File) == 2)	{	Log::log(RD "Cannot read the file '" Y + File + RD "'" NC, Log::MEM_ERROR);						Log::log("---", Log::GLOBAL_ACCESS); }
-					else									{	Log::log(RD "Could not load the configuration file '" Y + File + RD "'" NC, Log::MEM_ERROR);	Log::log("---", Log::GLOBAL_ACCESS); }
+					if (Utils::file_exists(File) == 1)		{	log_error_add(RD "The configuration file '" Y + File + RD "' does not exist" NC);				log_access_add("---"); }
+					else if (Utils::file_exists(File) == 2)	{	log_error_add(RD "Cannot read the file '" Y + File + RD "'" NC);								log_access_add("---"); }
+					else									{	log_error_add(RD "Could not load the configuration file '" Y + File + RD "'" NC);				log_access_add("---"); }
 				}
 			}
 			Log::process_logs();
@@ -175,9 +179,9 @@
 			int fileStatus = Utils::file_exists(File);
 
 			if (fileStatus) {
-				if (fileStatus == 1)							Log::log(RD "Default configuration file does not exist, generating a default config file" NC, Log::MEM_ACCESS);
-				else if (fileStatus == 2) {						Log::log(RD "Cannot read the default configuration file, generating a default config file" NC, Log::MEM_ACCESS); remove(File.c_str()); }
-				else {											Log::log(RD "Could not load the default configuration file, generating a default config file" NC, Log::MEM_ACCESS); remove(File.c_str()); }
+				if (fileStatus == 1)							log_error_add(RD "Default configuration file does not exist, generating a default config file" NC);
+				else if (fileStatus == 2) {						log_error_add(RD "Cannot read the default configuration file, generating a default config file" NC); 	remove(File.c_str()); }
+				else {											log_error_add(RD "Could not load the default configuration file, generating a default config file" NC); remove(File.c_str()); }
 				generate_config(File, program_path);
 			}
 
@@ -211,12 +215,25 @@
 				if (argc == 2) load();
 				if (argc == 3) load(argv[2]);
 				
-				if (BadConfig == false && global.log.error.size() == 0 && global.log.access.size() > 0) std::cout << std::endl;
+				int errors = global.log.error.size();
+				for (std::deque<std::string>::const_iterator it = global.log.both.begin(); it != global.log.both.end(); ++it) {
+					if (it->empty()) continue;
+					if (global.log.both.size() > 1 && Utils::str_nocolor(*it).size() > 23 + 28 && Utils::str_nocolor(*it).substr(23, 28) == "There are no virtual servers") {
+						std::cout << std::endl;
+						if (Utils::str_nocolor(*it).substr(23, 38) == "There are no virtual servers available") errors--;
+					}
+					if (*it != "---" && it->size() >= 98) { std::cout << " " << it->substr(98) << NC << std::endl; }
+				}
 
-				if (BadConfig == false && global.log.error.size() > 0)				std::cout << C "\n\t\tThe configuration file is correct with some " Y "minor errors" NC << std::endl;
-				else if (BadConfig == false)										std::cout << C "\t\tThe configuration file is correct" NC << std::endl;
-				else if (global.log.error.size() == 1)								std::cout << C "\n\t\tThere is "  Y "1" C " error in total" NC << std::endl;
-				else 																std::cout << C "\n\t\tThere are " Y << global.log.error.size() << C " errors in total" NC << std::endl;
+				bool disabled_servers = false;
+				for (std::deque<VServer>::const_iterator it = vserver.begin(); it != vserver.end(); ++it)
+					if (it->bad_config == true) { disabled_servers = true; break; }
+
+				if (global.bad_config == false && !disabled_servers && errors)		std::cout << C "\n\t\tThe configuration file is correct with some " Y "minor errors" NC << std::endl;
+				else if (global.bad_config == false && errors)						std::cout << C "\n\t\tThe configuration file is correct with some " Y "virtual servers" C " disabled" NC << std::endl;
+				else if (global.bad_config == false)								std::cout << C "\t\tThe configuration file is correct" NC << std::endl;
+				else if (errors == 1)												std::cout << C "\n\t\tThere is "  Y "1" C " error in total" NC << std::endl;
+				else 																std::cout << C "\n\t\tThere are " Y << errors << C " errors in total" NC << std::endl;
 
 				terminate = 1;
 			//	Incorrect number of arguments
@@ -230,9 +247,7 @@
 
 			//	Load the configuration file
 			if (terminate == -1) {
-				if (tcgetpgrp(STDIN_FILENO) != getpgrp()) {
-					Display::RawModeDisabled = true; Display::ForceRawModeDisabled = true; Display::background = true;
-				}
+				if (tcgetpgrp(STDIN_FILENO) != getpgrp()) { Display::RawModeDisabled = true; Display::ForceRawModeDisabled = true; Display::background = true; }
 
 				Display::enableRawMode();
 				if (!Display::background && (Display::RawModeDisabled || Display::ForceRawModeDisabled)) { std::cout << std::endl; }
@@ -241,11 +256,29 @@
 				else if (argc == 2 && strcmp(argv[1], "-i")) load(argv[1]);
 				else if (argc == 3) load(argv[2]);
 
-				if (BadConfig == false) {
+				bool no_servers = true;
+				for (std::deque<VServer>::iterator it = vserver.begin(); it != vserver.end(); ++it) {
+					if (it->log.error.size() > 0) { it->log.access_add("---"); it->log.both_add("---"); }
+					if (it->bad_config == false) no_servers = false;
+				}
+				if (global.bad_config == false && no_servers == false) {
 					Settings::global.status = true;
+					if (!Display::background && (Display::RawModeDisabled || Display::ForceRawModeDisabled)) {
+						std::cout << " " << Y "-----------------------------------------------------------------------------------------" << NC << std::endl;
+						for (std::deque<std::string>::const_iterator it = global.log.both.begin(); it != global.log.both.end(); ++it) {
+							if (*it == "---")			std::cout << " " << Y "-----------------------------------------------------------------------------------------" << NC << std::endl;
+							else if (it->size() >= 98)	std::cout << " " << it->substr(98) << NC << std::endl;
+						}
+					}
 				} else {
-					// Log::log(RD "Could not load configuration file" NC, Log::BOTH_ERROR);  Log::log("---", Log::GLOBAL_ACCESS);
-					if (Display::RawModeDisabled || Display::ForceRawModeDisabled) terminate = 1;
+					if (!Display::background && (Display::RawModeDisabled || Display::ForceRawModeDisabled)) {
+						std::cout << " " << Y "-----------------------------------------------------------------------------------------" << NC << std::endl;
+						for (std::deque<std::string>::const_iterator it = global.log.both.begin(); it != global.log.both.end(); ++it) {
+							if (*it == "---")			std::cout << " " << Y "-----------------------------------------------------------------------------------------" << NC << std::endl;
+							else if (it->size() >= 98)	std::cout << " " << it->substr(98) << NC << std::endl;
+						}
+					}
+					if (Display::RawModeDisabled || Display::ForceRawModeDisabled)	terminate = 1;
 				}
 			}
 		}
