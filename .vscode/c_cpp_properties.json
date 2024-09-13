@@ -10,7 +10,8 @@
 				"${workspaceFolder}/inc/Utils",
 				"${workspaceFolder}/inc/Display",
 				"${workspaceFolder}/inc/Thread",
-				"${workspaceFolder}/inc/Network"
+				"${workspaceFolder}/inc/Network",
+				"${workspaceFolder}/inc/Protocol"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/g++",

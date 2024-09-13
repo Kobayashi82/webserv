@@ -6,7 +6,7 @@
 #    By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/02/20 17:51:39 by vzurera-          #+#    #+#              #
-#    Updated: 2024/09/09 20:49:50 by vzurera-         ###   ########.fr        #
+#    Updated: 2024/09/13 14:04:34 by vzurera-         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -49,7 +49,7 @@ FLAGS				= -Wall -Wextra -Werror -std=c++98 -g # -fsanitize=thread
 # ───────────────── #
 
 SRC_DIR				= ./src/
-INC_DIR				= -I./inc -I./inc/Thread -I./inc/Log -I./inc/Settings -I./inc/Display -I./inc/Utils  -I./inc/Network
+INC_DIR				= -I./inc -I./inc/Thread -I./inc/Log -I./inc/Settings -I./inc/Display -I./inc/Utils -I./inc/Network -I./inc/Protocol
 OBJ_DIR				= ./build/obj/
 
 # ────────── #
@@ -64,6 +64,7 @@ SRCS	=	Thread/Thread.cpp																							\
 			Display/Display.cpp Display/Monitor.cpp																		\
 			Utils/String.cpp Utils/Network.cpp Utils/Files.cpp															\
 			Network/Net.cpp Network/Client.cpp Network/Comunications.cpp Network/Cache.cpp Network/Security.cpp			\
+			Protocol/Intermediary.cpp																					\
 			main.cpp
 
 # ────────────────────────────────────────────────────────── #

@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 21:55:43 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/12 13:53:51 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/13 16:15:57 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -195,6 +195,8 @@ void Net::cleanup_socket() {
 
 					sockaddr_in address; std::memset(&address, 0, sizeof(address));
 					address.sin_family = AF_INET;
+					//	ARREGLAR ESTO ********************************************
+					// if (0.0.0.0 or nothing) address.sin_addr.s_addr = INADDR_ANY;
 					address.sin_port = htons(addr_it->second);
 					inet_pton(AF_INET, addr_it->first.c_str(), &address.sin_addr);
 

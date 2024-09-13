@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:30:57 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/12 20:15:00 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/13 12:43:24 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,30 +16,32 @@
 #include <unistd.h>																						//	For access() to checks the accessibility of a file or directory
 #include <sys/stat.h>																					//	For stat() to retrieves information about a file or directory
 
-//	TODO	add return to global
-//	TODO	method with return?
 //	TODO	uploads es necesario?
 
-void Settings::log_servers(std::string msg, VServer * VServ = NULL) {
-	Utils::trim(msg); if (msg.empty()) return;
-	msg = BLUE600 "[" LIME600 + timer.current_date() + " " EMERALD400 + timer.current_time() + BLUE600 "]  " NC + msg;
-	if (VServ && !check_only) { VServ->log.error_add(msg); VServ->log.both_add(msg); }
-	global.log.error_add(msg); global.log.both_add(msg);
-}
+#pragma region Logging
 
-void Settings::log_access_add(std::string msg) {
-	Utils::trim(msg); if (msg.empty()) return;
-	if (msg != "---")
+	void Settings::log_servers(std::string msg, VServer * VServ = NULL) {
+		Utils::trim(msg); if (msg.empty()) return;
 		msg = BLUE600 "[" LIME600 + timer.current_date() + " " EMERALD400 + timer.current_time() + BLUE600 "]  " NC + msg;
-	global.log.access_add(msg); global.log.both_add(msg);
-}
+		if (VServ && !check_only) { VServ->log.error_add(msg); VServ->log.both_add(msg); }
+		global.log.error_add(msg); global.log.both_add(msg);
+	}
 
-void Settings::log_error_add(std::string msg) {
-	Utils::trim(msg); if (msg.empty()) return;
-	if (msg != "---")
-		msg = BLUE600 "[" LIME600 + timer.current_date() + " " EMERALD400 + timer.current_time() + BLUE600 "]  " NC + msg;
-	global.log.error_add(msg); global.log.both_add(msg);
-}
+	void Settings::log_access_add(std::string msg) {
+		Utils::trim(msg); if (msg.empty()) return;
+		if (msg != "---")
+			msg = BLUE600 "[" LIME600 + timer.current_date() + " " EMERALD400 + timer.current_time() + BLUE600 "]  " NC + msg;
+		global.log.access_add(msg); global.log.both_add(msg);
+	}
+
+	void Settings::log_error_add(std::string msg) {
+		Utils::trim(msg); if (msg.empty()) return;
+		if (msg != "---")
+			msg = BLUE600 "[" LIME600 + timer.current_date() + " " EMERALD400 + timer.current_time() + BLUE600 "]  " NC + msg;
+		global.log.error_add(msg); global.log.both_add(msg);
+	}
+
+#pragma endregion
 
 #pragma region Directives
 
@@ -607,6 +609,7 @@ void Settings::log_error_add(std::string msg) {
 				if (firstPart == "deny") return (0);
 				if (firstPart == "error_page") return (0);
 				if (firstPart == "cgi") return (0);
+				if (firstPart == "return") return (0);
 			}
 			if (section == GLOBAL) {
 				if (firstPart == "http") return (0);
@@ -616,17 +619,16 @@ void Settings::log_error_add(std::string msg) {
 				if (firstPart == "server") return (0);
 				if (firstPart == "server_name") return (0);
 				if (firstPart == "listen") return (0);
-				if (firstPart == "return") return (0);
 			} else if (section == LOCATION) {
 				if (firstPart == "location") return (0);
 				if (firstPart == "try_files") return (0);
 				if (firstPart == "alias") return (0);
 				if (firstPart == "internal") return (0);
-				if (firstPart == "return") return (0);
 			} else if (section == METHOD) {
+				if (firstPart == "method") return (0);
 				if (firstPart == "allow") return (0);
 				if (firstPart == "deny") return (0);
-				if (firstPart == "method") return (0);
+				if (firstPart == "return") return (0);
 			}
 			log_servers(RD + n_line + "Invalid directive " Y + firstPart + NC, VServ); return (1);
 		}
@@ -697,6 +699,7 @@ void Settings::log_error_add(std::string msg) {
 					if (!NoAdd && firstPart == "index" && parse_index(secondPart, PVServ)) {												if (section > GLOBAL) VServ.bad_config = true; else global.bad_config = true; }
 					if (!NoAdd && firstPart == "allow" && parse_allow(secondPart, PVServ)) {												if (section > GLOBAL) VServ.bad_config = true; else global.bad_config = true; }
 					if (!NoAdd && firstPart == "deny" && parse_deny(secondPart, PVServ)) {													if (section > GLOBAL) VServ.bad_config = true; else global.bad_config = true; }
+					if (!NoAdd && firstPart == "return" && parse_return(secondPart, PVServ)) {												if (section > GLOBAL) VServ.bad_config = true; else global.bad_config = true; }
 				}
 
 				if (section == GLOBAL && !firstPart.empty()) {
@@ -711,7 +714,6 @@ void Settings::log_error_add(std::string msg) {
 
 				if (section == SERVER && !firstPart.empty()) {
 					if (!NoAdd && firstPart == "listen" && parse_listen(secondPart, VServ))													VServ.bad_config = true;
-					if (!NoAdd && firstPart == "return" && parse_return(secondPart, PVServ))												VServ.bad_config = true;
 					if (!NoAdd && firstPart == "error_page") parse_errors(firstPart, secondPart, VServ);
 					if (!NoAdd && firstPart == "cgi") parse_cgi(firstPart, secondPart, VServ);
 
@@ -723,7 +725,6 @@ void Settings::log_error_add(std::string msg) {
 					if (!NoAdd && firstPart == "location" && parse_location(secondPart, PVServ))											VServ.bad_config = true;
 					if (!NoAdd && firstPart == "alias" && parse_alias(firstPart, secondPart, PVServ))										VServ.bad_config = true;
 					if (!NoAdd && firstPart == "try_files" && parse_try_files(secondPart, PVServ))											VServ.bad_config = true;
-					if (!NoAdd && firstPart == "return" && parse_return(secondPart, PVServ))												VServ.bad_config = true;
 					if (!NoAdd && firstPart == "error_page") parse_errors(firstPart, secondPart, Loc);
 					if (!NoAdd && firstPart == "cgi") parse_cgi(firstPart, secondPart, VServ);
 

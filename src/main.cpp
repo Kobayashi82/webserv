@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 14:30:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/12 20:14:20 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/13 12:44:56 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,9 +20,6 @@
 //	*		siege -b -c 255 -t 10S 127.0.0.1:8081			135.000 transactions is a good measure
 
 //	?		X-Content-Type-Options: nosniff
-
-//	TODO	Process_requested_path
-//	TODO	Variables $request_uri $uri
 
 //	TODO	Verifica el tipo MIME del archivo y el nombre del archivo para asegurarte de que coincide con el tipo esperado.
 //	TODO	Limita el tamaño de los archivos que los usuarios pueden cargar para prevenir ataques de denegación de servicio (DoS) mediante la carga de archivos extremadamente grandes
