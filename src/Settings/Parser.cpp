@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:30:57 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/13 12:43:24 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/14 23:20:42 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,8 +15,6 @@
 
 #include <unistd.h>																						//	For access() to checks the accessibility of a file or directory
 #include <sys/stat.h>																					//	For stat() to retrieves information about a file or directory
-
-//	TODO	uploads es necesario?
 
 #pragma region Logging
 
@@ -52,6 +50,7 @@
 			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] " + space; struct stat info;
 
 			if (str.empty()) {										log_servers(RD + n_line + "Empty value for " Y + firstPart + NC, VServ); return (1); }
+			if (str[0] == '~') str = Utils::expand_tilde(str);
 			if (str[0] != '/') str = program_path + str;
 
 			if (isFile && check_path) {
@@ -119,13 +118,13 @@
 
 	#pragma endregion
 
-	#pragma region Log MaxSize
+	#pragma region Log RotateSize
 
-		int Settings::parse_log_maxsize(std::string & str, VServer * VServ = NULL) {
+		int Settings::parse_log_rotatesize(std::string & str, VServer * VServ = NULL) {
 			long multiplier = 1; std::string space = ""; if (line_count - 1 < 10) space = " ";
 			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] " + space;
 
-			if (str.empty()) { log_servers(RD + n_line + "Empty value for " Y "log_maxsize" NC, VServ); return (1); }
+			if (str.empty()) { log_servers(RD + n_line + "Empty value for " Y "log_rotatesize" NC, VServ); return (1); }
 			if (str.size() > 1 && !std::isdigit(str[str.size() - 1]) && !std::isdigit(str[str.size() - 2])) {
 				if ((std::tolower(str[str.size() - 2]) == 'k' || std::tolower(str[str.size() - 2]) == 'm') && std::tolower(str[str.size() - 1]) == 'b') str.erase(str.size() - 1);
 			}
@@ -134,13 +133,13 @@
 					case 'k': multiplier = 1024; break;
 					case 'm': multiplier = 1024 * 1024; break;
 					case 'b' : break;
-					default : { str = ""; log_servers(RD + n_line + "Invalid value for " Y "log_maxsize" NC, VServ); return (1); }
+					default : { str = ""; log_servers(RD + n_line + "Invalid value for " Y "log_rotatesize" NC, VServ); return (1); }
 				} str.erase(str.size() - 1);
 			}
 
-			long number; if (Utils::stol(str, number) || (str = Utils::ltos(number * multiplier)) == "") { str = ""; log_servers(RD + n_line + "Invalid value for '" Y "log_maxsize" RD "'" NC, VServ); return (1); }
-			if (number * multiplier != 0 && number * multiplier < 102400) { str = ""; log_servers(RD + n_line + "Value for " Y "log_maxsize" RD " cannot be " Y "lower" RD " than " Y "1 KB" NC, VServ); return (1); }
-			if (number * multiplier > 100 * 1024 * 1024) { str = ""; log_servers(RD + n_line + "Value for " Y "log_maxsize" RD " cannot be " Y "greater" RD " than " Y "100 MB" NC, VServ); return (1); }
+			long number; if (Utils::stol(str, number) || (str = Utils::ltos(number * multiplier)) == "") { str = ""; log_servers(RD + n_line + "Invalid value for '" Y "log_rotatesize" RD "'" NC, VServ); return (1); }
+			if (number * multiplier != 0 && number * multiplier < 102400) { str = ""; log_servers(RD + n_line + "Value for " Y "log_rotatesize" RD " cannot be " Y "lower" RD " than " Y "1 KB" NC, VServ); return (1); }
+			if (number * multiplier > 100 * 1024 * 1024) { str = ""; log_servers(RD + n_line + "Value for " Y "log_rotatesize" RD " cannot be " Y "greater" RD " than " Y "100 MB" NC, VServ); return (1); }
 
 			return (0);
 		}
@@ -598,7 +597,7 @@
 			if (section == GLOBAL || section == SERVER || section == LOCATION) {
 				if (firstPart == "access_log") return (0);
 				if (firstPart == "error_log") return (0);
-				if (firstPart == "log_maxsize") return (0);
+				if (firstPart == "log_rotatesize") return (0);
 				if (firstPart == "log_rotate") return (0);
 				if (firstPart == "root") return (0);
 				if (firstPart == "index") return (0);
@@ -690,7 +689,7 @@
 
 				if ((section == GLOBAL || section == SERVER || section == LOCATION) && !firstPart.empty()) {
 					if (!NoAdd && (firstPart == "access_log" || firstPart == "error_log")) parse_path(firstPart, secondPart, true, true, false, PVServ);
-					if (!NoAdd && firstPart == "log_maxsize") parse_log_maxsize(secondPart, PVServ);
+					if (!NoAdd && firstPart == "log_rotatesize") parse_log_rotatesize(secondPart, PVServ);
 					if (!NoAdd && firstPart == "log_rotate") parse_log_rotate(secondPart, PVServ);
 					if (!NoAdd && firstPart == "root" && parse_path(firstPart, secondPart, false, false, false, PVServ)) {					if (section > GLOBAL) VServ.bad_config = true; else global.bad_config = true; }
 					if (!NoAdd && firstPart == "uploads" && parse_path(firstPart, secondPart, false, false, false, PVServ)) {				if (section > GLOBAL) VServ.bad_config = true; else global.bad_config = true; }

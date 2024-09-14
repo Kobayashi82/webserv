@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:37:20 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/10 12:30:38 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/14 12:42:41 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,5 +55,6 @@ class Utils {
 		static bool 		is_subpath(const std::string & path1, const std::string & path2);			//	Check if path1 is inside of path2
 		static size_t 		filesize(const std::string & path);											//	Get the size of a file from a path
 		static size_t 		filesize(const int fd);														//	Get the size of a file from a FD
+		static std::string	expand_tilde(const std::string & path);										//	Expand '~' to the user home directory
 
 };

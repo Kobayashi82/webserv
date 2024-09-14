@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 21:55:43 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/13 16:15:57 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/14 23:18:21 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -125,7 +125,7 @@
 
 #pragma endregion
 
-#pragma region cleanup
+#pragma region Cleanup
 
 void Net::cleanup_socket() {
 	if (!do_cleanup) return;
@@ -537,7 +537,6 @@ void Net::cleanup_socket() {
 			int eventCount = epoll_wait(epoll_fd, events, MAX_EVENTS, 100);
 			if (eventCount == -1) return (1);
 
-			//if (eventCount > 0 && events[0].data.fd != timeout_fd) Log::log("putos eventos: " + Utils::ltos(eventCount), Log::MEM_ACCESS);
 			for (int i = 0; i < eventCount; ++i) {
 				if (events[i].data.fd == timeout_fd) { Display::update(); check_timeout(); cache.remove_expired(); continue; }
 

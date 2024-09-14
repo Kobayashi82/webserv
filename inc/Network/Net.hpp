@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 21:49:50 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/13 13:50:18 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/14 23:18:07 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,11 +61,7 @@ class Net {
 			EventInfo &		operator=(const EventInfo & rhs);											//	Overload for asignation
 			bool			operator==(const EventInfo & rhs) const;									//	Overload for comparison
 
-			//int 			remove();																	//	Remove the corresponding owner of the EventInfo (client, socket or event_data)
-
 		};
-
-		//static EventInfo * create_event_data(int _fd, int _type, EventInfo * parent);
 
 		#pragma endregion
 
@@ -103,7 +99,6 @@ class Net {
 		static std::map <int, EventInfo>				events;											//	Map of all events objects
 		static Cache									cache;											//	Used to store cached data, such as files or HTML responses
 
-
 		static int										total_clients;									//	Total number of clients conected
 		static long										read_bytes;										//	Total number of bytes downloaded by the server
 		static long										write_bytes;									//	Total number of bytes uploaded by the server
@@ -134,7 +129,6 @@ class Net {
 		static void			cleanup_socket();
 
 	private:
-
 
 		#pragma region ResolveInfo
 

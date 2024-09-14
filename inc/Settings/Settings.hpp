@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:14:05 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/12 19:59:45 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/14 12:53:39 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,7 +82,7 @@ class Settings {
 		static int	parse_path(const std::string & firstPart, std::string & str, bool isFile, bool check_path, bool check_write, VServer * VServ);
 		static int	parse_keepalive_timeout(std::string & str, VServer * VServ);
 		static int	parse_keepalive_requests(std::string & str, VServer * VServ);
-		static int	parse_log_maxsize(std::string & str, VServer * VServ);
+		static int	parse_log_rotatesize(std::string & str, VServer * VServ);
 		static int	parse_log_rotate(std::string & str, VServer * VServ);
 		static int	parse_body_size(std::string & str, VServer * VServ);
 		static int	parse_errors(const std::string & firstPart, const std::string & secondPart, VServer * VServ);

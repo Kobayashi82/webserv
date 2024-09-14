@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 22:23:52 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/10 12:38:58 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/14 12:43:15 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 #include <unistd.h>																						//	For readlink() and access()
 #include <limits.h>																						//	For PATH_MAX
 #include <sys/stat.h>																					//	For mkdir() and get the size of a file
+#include <pwd.h>																						//	For getpwuid() to get the user home directory
 
 #pragma region Program Path
 
@@ -131,6 +132,16 @@
 
 		if (fstat(fd, &path_stat) == -1) { return (std::string::npos); }
 		return (path_stat.st_size);
+	}
+
+#pragma endregion
+
+#pragma region Expand Tilde
+
+	std::string Utils::expand_tilde(const std::string & path) {
+		const char * home = getenv("HOME");
+		if (!home) home = getpwuid(getuid())->pw_dir;
+		return (std::string(home) + path.substr(1));
 	}
 
 #pragma endregion

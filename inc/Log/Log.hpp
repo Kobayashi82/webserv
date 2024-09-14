@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:32:23 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/10 17:31:57 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/14 13:16:32 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -96,7 +96,7 @@ class Log {
 		static std::queue <LogInfo>	_logs;																//	Queue container with logs that need to be processed
 
 		static const size_t			MEM_MAXSIZE;														//	Maximum number of logs for each memory log
-		static long					LOCAL_MAXSIZE;														//	Maximum size of the log before rotate	(default to 1 MB | 0 MB = dont rotate | Max 100 MB)
+		static long					LOCAL_ROTATESIZE;													//	Maximum size of the log before rotate	(default to 1 MB | 0 MB = dont rotate | Max 100 MB)
 		static int					LOCAL_ROTATE;														//	Number of rotations files 				(default to 7 | 0 = dont create rotations files | Max 100)
 
 		//	Logs

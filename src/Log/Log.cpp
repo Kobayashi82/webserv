@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:32:38 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/12 18:52:31 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/14 13:16:46 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,7 @@
 	std::queue <Log::LogInfo>	Log::_logs;																	//	Queue container with logs that need to be processed
 
 	const size_t				Log::MEM_MAXSIZE = 200;														//	Maximum number of logs for each memory log
-	long						Log::LOCAL_MAXSIZE = 1 * 1024 * 1024;										//	Maximum size of the log before rotate	(default to 1 MB | 0 MB = dont rotate | Max 100 MB)
+	long						Log::LOCAL_ROTATESIZE = 1 * 1024 * 1024;									//	Maximum size of the log before rotate	(default to 1 MB | 0 MB = dont rotate | Max 100 MB)
 	int							Log::LOCAL_ROTATE = 7;														//	Number of rotations files 				(default to 7 | 0 = dont create rotations files | Max 100)
 
 	#pragma region LogInfo
@@ -283,7 +283,7 @@
 
 			void Log::add_logrot(std::ofstream & oss, const std::string & log_paths, std::string size, std::string rotate, const std::string & user) {
 				if (log_paths.empty()) return;
-				if (size.empty()) size = Utils::ltos(LOCAL_MAXSIZE);
+				if (size.empty()) size = Utils::ltos(LOCAL_ROTATESIZE);
 				if (rotate.empty()) rotate = Utils::ltos(LOCAL_ROTATE);
 
 				oss << "\n" << log_paths << " {\n";
