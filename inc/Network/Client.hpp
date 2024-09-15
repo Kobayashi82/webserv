@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 21:49:48 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/29 00:07:52 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/15 11:48:32 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,7 @@ class Client {
 		std::string			IP;																			//	IP address of the client
 		int					port;																		//	Port number of the client
     	time_t				last_activity;																//	Last activity time point	(for keep-alive)
-		long				total_requests;																//	Maximum request allowed		(for keep-alive)
+		long				total_requests;																//	Number of requests 			(for keep-alive)
 
 		//	Constructors
 		Client(int _fd, Net::SocketInfo * _socket, std::string _IP, int _port);							//	Parameterized constructor

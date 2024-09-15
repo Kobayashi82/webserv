@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 21:55:43 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/14 23:18:21 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/15 12:29:43 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -127,28 +127,28 @@
 
 #pragma region Cleanup
 
-void Net::cleanup_socket() {
-	if (!do_cleanup) return;
-    // Iterar sobre cada socket en la lista de sockets
-    std::list<SocketInfo>::iterator s_it = sockets.begin();
-    while (s_it != sockets.end()) {
-        // Iterar sobre cada cliente en la lista de clientes del socket
-        std::list<Client *>::iterator c_it = s_it->clients.begin();
-        while (c_it != s_it->clients.end()) {
-            // Comprobar si el cliente está en la lista general de clientes
-            bool found = false;
-            std::list<Client>::iterator gc_it = clients.begin();
-            while (gc_it != clients.end()) {
-                if (*gc_it == **c_it) { found = true; break; }
-                ++gc_it;
-            }
-            // Si el cliente no está en la lista general, eliminarlo de la lista del socket
-            if (!found)				c_it = s_it->clients.erase(c_it);
-            else					++c_it;
-        }
-        ++s_it;
-    }
-}
+	void Net::cleanup_socket() {
+		if (!do_cleanup) return;
+		// Iterar sobre cada socket en la lista de sockets
+		std::list<SocketInfo>::iterator s_it = sockets.begin();
+		while (s_it != sockets.end()) {
+			// Iterar sobre cada cliente en la lista de clientes del socket
+			std::list<Client *>::iterator c_it = s_it->clients.begin();
+			while (c_it != s_it->clients.end()) {
+				// Comprobar si el cliente está en la lista general de clientes
+				bool found = false;
+				std::list<Client>::iterator gc_it = clients.begin();
+				while (gc_it != clients.end()) {
+					if (*gc_it == **c_it) { found = true; break; }
+					++gc_it;
+				}
+				// Si el cliente no está en la lista general, eliminarlo de la lista del socket
+				if (!found)				c_it = s_it->clients.erase(c_it);
+				else					++c_it;
+			}
+			++s_it;
+		}
+	}
 
 #pragma endregion
 

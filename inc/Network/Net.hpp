@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 21:49:50 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/14 23:18:07 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/15 11:23:48 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -130,7 +130,7 @@ class Net {
 
 	private:
 
-		#pragma region ResolveInfo
+		#pragma region ResolveInfo				//	(SIN USAR)
 
 		struct ResolveInfo {
 
