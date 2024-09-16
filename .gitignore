@@ -11,8 +11,6 @@
 !bin/conf/**
 !bin/www
 !bin/www/**
-!images
-!images/**
 !.gitignore
 !.vscode
 !.vscode/**
