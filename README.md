@@ -110,7 +110,7 @@ EJEMPLO DE ARCHIVO DE CONFIGURACIÓN
 
 A continuación vamos a ver un ejemplo de un archivo de configuración comentado para poder visualizar mejor la lógica explicada en la página anterior.
 
-http { # EJEMPLO DE UN ARCHIVO DE CONFIGURACIÓN DE WEBSERV 1.0![](images/Aspose.Words.79cd982b-d2dd-47fc-86d5-cff1b0426bbb.003.png)
+http { # EJEMPLO DE UN ARCHIVO DE CONFIGURACIÓN DE WEBSERV 1.0
 
 access\_log logs/access.log; # Archivo de log access para el global error\_log logs/error.log; # Archivo de log error para el global
 
@@ -213,7 +213,7 @@ Estas **variables** se deben crear usando el encabezado de la petición y son im
 
 A continuación hay una explicación de todas las **variables** y sus valores.
 
-EJEMPLO DE UNA SOLICITUD DE UN CLIENTE![](images/Aspose.Words.79cd982b-d2dd-47fc-86d5-cff1b0426bbb.004.png)
+EJEMPLO DE UNA SOLICITUD DE UN CLIENTE
 
 GET /products/details?item=123&color=red HTTP/1.1
 
@@ -223,7 +223,7 @@ User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML,
 
 Cookie: sessionid=abcdef1234567890; theme=dark
 
-**$request\_uri** Es la **URI completa** incluyendo la cadena de consulta (**query string**) /products/details?item=123&color=red **~~$uri, $document\_uri~~** Es la **URI** sin incluir la cadena de consulta (**query string**). /products/details **$args, $query\_string** Es la cadena de consulta (**query string**), que contiene los parámetros enviados después de ? item=123&color=red **$request** La **solicitud** completa. GET/products/details?item=123&color=red HTTP/1.1 **$request\_method** El **método** HTTP utilizado en la solicitud (GET, POST, PUT, DELETE, etc.). GET **$host** El nombre del **host** solicitado. Si no se especifica, se usa **server\_name** o la dirección IP del servidor. www.example.com **$remote\_addr** La **dirección IP** del cliente que hizo la solicitud. 203.0.113.45 **$remote\_port** El **puerto** del cliente que hizo la solicitud. 54321 **$server\_addr** La **dirección IP** del servidor que está manejando la solicitud. 192.168.1.10 **$server\_port** El **puerto** del servidor que está manejando la solicitud. 80 **$server\_name** El **nombre** del servidor virtual que está manejando la solicitud. www.example.com **$http\_referer** El valor de **referer**, que indica la página anterior a la que se hizo la solicitud https://www.google.com/search?q=webserv **$http\_cookie** El valor de la **cookie** enviada en la solicitud HTTP. sessionid=abcdef1234567890; theme=dark **$http\_host** El valor del encabezado **host**, que es el nombre del dominio o la dirección IP solicitada. www.example.com **$http\_user\_agent** El contenido del encabezado **user-agent**, que identifica el navegador del cliente. Mozilla/5.0 (Windows NT 10.0; Win64; x64)...![](images/Aspose.Words.79cd982b-d2dd-47fc-86d5-cff1b0426bbb.005.png)
+**$request\_uri** Es la **URI completa** incluyendo la cadena de consulta (**query string**) /products/details?item=123&color=red **~~$uri, $document\_uri~~** Es la **URI** sin incluir la cadena de consulta (**query string**). /products/details **$args, $query\_string** Es la cadena de consulta (**query string**), que contiene los parámetros enviados después de ? item=123&color=red **$request** La **solicitud** completa. GET/products/details?item=123&color=red HTTP/1.1 **$request\_method** El **método** HTTP utilizado en la solicitud (GET, POST, PUT, DELETE, etc.). GET **$host** El nombre del **host** solicitado. Si no se especifica, se usa **server\_name** o la dirección IP del servidor. www.example.com **$remote\_addr** La **dirección IP** del cliente que hizo la solicitud. 203.0.113.45 **$remote\_port** El **puerto** del cliente que hizo la solicitud. 54321 **$server\_addr** La **dirección IP** del servidor que está manejando la solicitud. 192.168.1.10 **$server\_port** El **puerto** del servidor que está manejando la solicitud. 80 **$server\_name** El **nombre** del servidor virtual que está manejando la solicitud. www.example.com **$http\_referer** El valor de **referer**, que indica la página anterior a la que se hizo la solicitud https://www.google.com/search?q=webserv **$http\_cookie** El valor de la **cookie** enviada en la solicitud HTTP. sessionid=abcdef1234567890; theme=dark **$http\_host** El valor del encabezado **host**, que es el nombre del dominio o la dirección IP solicitada. www.example.com **$http\_user\_agent** El contenido del encabezado **user-agent**, que identifica el navegador del cliente. Mozilla/5.0 (Windows NT 10.0; Win64; x64)...
 
 LOGS
 
