@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/14 14:37:32 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/14 23:41:38 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/16 17:24:53 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -335,6 +335,8 @@
 			#pragma region Key_E
 
 				static void Key_E() {
+					for (std::deque<VServer>::iterator it = Settings::vserver.begin(); it != Settings::vserver.end(); ++it)
+						Thread::set_bool(Display::mutex, it->force_off, true);
 					Thread::set_bool(Display::mutex, Settings::global.status, false);
 					Thread::set_int(Display::mutex, Settings::terminate, 0);
 				}
@@ -367,15 +369,6 @@
 					if (seq[1] == 'H')		Home();
 					if (seq[1] == 'F')		End();
 					return;
-				}
-				if (seq[1] == '1' && read(STDIN_FILENO, &seq[2], 1) == 1 && seq[2] == ';' && read(STDIN_FILENO, &seq[3], 1) == 1) {
-                    if (seq[3] == '5' && read(STDIN_FILENO, &seq[3], 1) == 1) {
-						// if (seq[1] == 'D')		Ctrl_Left();
-						// if (seq[1] == 'C')		Ctrl_Right();
-						// if (seq[1] == 'A') 		Ctrl_Up();
-						// if (seq[1] == 'B')		Ctrl_Down();
-						return;
-					}
 				}
 				if (c == 'w' || c == 'W')	Key_W();																									//	(S)tart / (S)top
 				if (c == 'v' || c == 'V')	Key_V();																									//	(V)server start
@@ -629,7 +622,10 @@
 					winsize w; ioctl(0, TIOCGWINSZ, &w); int cols = w.ws_col - 4, row = 0;
 					total_cols = cols; total_rows = w.ws_row; log_rows = total_rows - 9;
 
-					std::ostringstream oss; std::ostringstream ss; ss << Settings::vserver.size(); std::string temp = ss.str();
+					int active_servers = 0;
+					for (std::deque<VServer>::iterator it = Settings::vserver.begin(); it != Settings::vserver.end(); ++it)
+						if (Thread::get_bool(mutex, it->force_off) == false) active_servers++;
+					std::ostringstream oss; std::ostringstream ss; ss << active_servers; std::string temp = ss.str();
 					std::string Status = CRED; std::string Color = CRED; std::string LArrow = "  ", RArrow = "  ";
 
 					if (Thread::get_bool(mutex, Settings::global.status))																		Status = CGREEN;
@@ -645,15 +641,15 @@
 				//	COLOR LINES
 					bool some = false;
 					if	(Settings::vserver.size() > 0 && Settings::current_vserver != -1
-						&& Thread::get_bool(mutex, Settings::vserver[Settings::current_vserver].status))										Status = CGREEN;
+						&& Thread::get_bool(mutex, Settings::vserver[Settings::current_vserver].force_off) == false)							Status = CGREEN;
 					else if (Settings::vserver.size() > 0 && Settings::current_vserver == -1) {													Status = CRED;
 						for (size_t i = 0; i < Settings::vserver.size(); ++i) {
-							if (Thread::get_bool(mutex, Settings::vserver[i].status))															Status = CGREEN;
-							else if (!Thread::get_bool(mutex, Settings::vserver[i].status))														some = true;
+							if (Thread::get_bool(mutex, Settings::vserver[i].force_off) == false)												Status = CGREEN;
+							else if (Thread::get_bool(mutex, Settings::vserver[i].force_off) == true)											some = true;
 						}
 					} else 																														Status = CRED;
 					if (Thread::get_bool(mutex, Settings::global.status) == false)																Status = CRED;
-					if (Status != CRED && some)																								Status = CYELLOW;
+					if (Status != CRED && some)																									Status = CYELLOW;
 
 				//	MEM & CPU
 					temp = monitor.getMEMinStr();

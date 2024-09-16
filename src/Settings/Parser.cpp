@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:30:57 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/14 23:20:42 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/16 17:07:51 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -757,7 +757,6 @@
 				if (it->bad_config == false) { valid_vserver = true; break; }
 			if (valid_vserver == false && vserver.size() > 0) {		global.bad_config = true; log_access_add("---"); log_error_add(RD "There are no " Y "virtual servers" RD " available" NC); }
 		}
-		//Log::process_logs();
 	}
 
 #pragma endregion

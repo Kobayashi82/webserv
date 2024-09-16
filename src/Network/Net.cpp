@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 21:55:43 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/15 12:29:43 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/16 17:19:40 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,6 +41,8 @@
 	
 	const int								Net::KEEP_ALIVE_TIMEOUT = 2;								//	Timeout in seconds for keep-alive (if a client is inactive for this amount of time, the connection will be closed)
 	const int								Net::KEEP_ALIVE_REQUEST = 500;								//	Maximum request for keep-alive (if a client exceeds this number of requests, the connection will be closed)
+
+	enum e_socket_error { SK_CREATE, SK_CONFIGURE, SK_BIND, SK_LISTEN, SK_EPOLL };						//	Enumaration for socket errors
 
 	#pragma region EventInfo
 
@@ -173,57 +175,76 @@
 
 		#pragma region Create VServer
 
+			#pragma region Error Messages
+
+				static void socket_error(std::vector <std::pair<std::string, int> >::const_iterator addr_it, VServer * VServ, int type) {
+					return;
+					switch (type) {
+						case SK_CREATE:
+							Log::log("Socket " + addr_it->first + ":" + Utils::ltos(addr_it->second) + " cannot be created", Log::MEM_ERROR, VServ); break;
+						case SK_CONFIGURE:
+							Log::log("Socket " + addr_it->first + ":" + Utils::ltos(addr_it->second) + " cannot be configured", Log::MEM_ERROR, VServ); break;
+						case SK_BIND:
+							Log::log("Socket " + addr_it->first + ":" + Utils::ltos(addr_it->second) + " cannot be binded", Log::MEM_ERROR, VServ); break;
+						case SK_LISTEN:
+							Log::log("Socket " + addr_it->first + ":" + Utils::ltos(addr_it->second) + " cannot listen", Log::MEM_ERROR, VServ); break;
+						case SK_EPOLL:
+							Log::log("Socket " + addr_it->first + ":" + Utils::ltos(addr_it->second) + " cannot be added to EPOLL", Log::MEM_ERROR, VServ); break;
+					}
+				}
+
+			#pragma endregion
+
 			int Net::socket_create(VServer * VServ) {
+				//	If the server or the virtual server is disabled do nothing
+				bool nothing_created = true;
 				if (Thread::get_bool(Display::mutex, Settings::global.status) == false || VServ->bad_config || Thread::get_bool(Display::mutex, VServ->force_off)) return (1);
 
-				bool nothing_created = true;
-
+				//	For every IP address in the virtual server create a socket
 				for (std::vector <std::pair<std::string, int> >::const_iterator addr_it = VServ->addresses.begin(); addr_it != VServ->addresses.end(); ++addr_it) {
 					if (socket_exists(addr_it->first, addr_it->second)) continue;
 
+					//	Create socket
 					int fd = socket(AF_INET, SOCK_STREAM, 0);
-					if (fd == -1) {
-						Log::log("Socket " + addr_it->first + ":" + Utils::ltos(addr_it->second) + " cannot be created", Log::BOTH_ERROR, VServ);
-						continue;
-					}
+					if (fd == -1) { socket_error(addr_it, VServ, SK_CREATE); continue; }
 
+					//	Configure socket
 					int options = 1;
-					if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &options, sizeof(options)) == -1) {
-						Log::log("Socket " + addr_it->first + ":" + Utils::ltos(addr_it->second) + " cannot be created", Log::BOTH_ERROR, VServ);
-						close(fd); continue;
-					}
+					if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &options, sizeof(options)) == -1) { socket_error(addr_it, VServ, SK_CONFIGURE); close(fd); continue; }
 
+					//	Initialize the socket address structure with the IP address and port
 					sockaddr_in address; std::memset(&address, 0, sizeof(address));
 					address.sin_family = AF_INET;
-					//	ARREGLAR ESTO ********************************************
-					// if (0.0.0.0 or nothing) address.sin_addr.s_addr = INADDR_ANY;
 					address.sin_port = htons(addr_it->second);
-					inet_pton(AF_INET, addr_it->first.c_str(), &address.sin_addr);
+					if (addr_it->first == "0.0.0.0")	address.sin_addr.s_addr = INADDR_ANY;
+					else 								inet_pton(AF_INET, addr_it->first.c_str(), &address.sin_addr);
 
-					if (bind(fd, (sockaddr *)&address, sizeof(address)) == -1) {
-						//Log::log(Utils::ltos(errno) + "Error vinculando el socket para " + addr_it->first + ":" + Utils::ltos(addr_it->second));
-						close(fd); continue;
-					}
+					//	Link the address to the socket (0.0.0.0 links to all available network interfaces)
+					if (bind(fd, (sockaddr *)&address, sizeof(address)) == -1) { socket_error(addr_it, VServ, SK_BIND); close(fd); continue; }
 
-					if (listen(fd, SOMAXCONN) == -1) {
-						Log::log("Socket " + addr_it->first + ":" + Utils::ltos(addr_it->second) + " cannot be created", Log::BOTH_ERROR, VServ);
-						close(fd); continue;
-					}
+					//	Listen on the address for incoming connections
+					if (listen(fd, SOMAXCONN) == -1) { socket_error(addr_it, VServ, SK_LISTEN); close(fd); continue; }
 
-					// Add the new socket as SocketInfo to Net::sockets
+					//	Add the socket FD to EPOLL
+					if (epoll_add(fd, true, false) == -1) { socket_error(addr_it, VServ,SK_EPOLL); close(fd); continue; }
+
+					// Create a SocketInfo, an EventInfo and add them to Net::sockets and Net::events
 					sockets.push_back(SocketInfo(fd, addr_it->first, addr_it->second, VServ));
 					events[fd] = EventInfo(fd, SOCKET, &sockets.back(), NULL);
 
-					if (epoll_add(fd, true, false) == -1) {
-						Log::log("Socket " + addr_it->first + ":" + Utils::ltos(addr_it->second) + " cannot be created", Log::BOTH_ERROR, VServ);
-						close(fd); sockets.pop_back(); continue;
-					}
-
+					//	Set the virtual server as active (this means it has sockets associated with it)
 					if (Thread::get_bool(Display::mutex, VServ->status) == false) Thread::set_bool(Display::mutex, VServ->status, true);
-					//Log::log("Socket " + addr_it->first + ":" + Utils::ltos(addr_it->second) + " waiting for connections", Log::BOTH_ACCESS, VServ);
+
+					//	Log message
+					std::string ip = addr_it->first;
+					if (ip == "0.0.0.0") ip = "All interfaces";
+					std::string port = Utils::ltos(addr_it->second);
+					std::string msg = UN BLUE400 + ip + NC + std::string("                ").substr(ip.size()) + C " listening on port " + UN BLUE400 + port + NC;
+					Log::log(msg, Log::MEM_ACCESS, VServ);
+
 					nothing_created = false;
 				}
-
+				if (!nothing_created) Log::log("---", Log::MEM_ACCESS, VServ);
 				return (nothing_created);
 			}
 
@@ -300,6 +321,7 @@
 
 		int Net::server_status() {
 			bool update_display = false;
+			bool recreate_sockets = false;
 
 			Thread::mutex_set(Display::mutex, Thread::MTX_LOCK);
 
@@ -310,7 +332,7 @@
 					Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK);
 
 						if (it->second == CREATE) socket_create(it->first);
-						if (it->second == CLOSE) socket_close(it->first);
+						if (it->second == CLOSE) { socket_close(it->first); recreate_sockets = true; }
 						
 					Thread::mutex_set(Display::mutex, Thread::MTX_LOCK);
 
@@ -321,6 +343,7 @@
 
 			Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK);
 	
+			if (recreate_sockets) socket_create_all();
 			if (update_display) Display::update();
 
 			Thread::mutex_set(Display::mutex, Thread::MTX_LOCK);

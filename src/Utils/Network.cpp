@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/12 13:59:39 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/25 18:56:19 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/16 15:21:11 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -153,6 +153,7 @@
 	}
 
 	void Utils::add_address(const std::string & IP, long port, VServer & VServ) {
+		if (IP == "0.0.0.0") { VServ.addresses.insert(VServ.addresses.begin(), (std::make_pair(IP, port))); return; }
 		std::string ip = IP; std::string mask = "255.255.255.255";
 
 		size_t slash_pos = IP.find('/');

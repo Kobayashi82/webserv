@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 14:30:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/14 23:46:01 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/16 17:25:44 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,9 +15,42 @@
 #include "Settings.hpp"
 #include "Net.hpp"
 
-//  *       service nginx reload
-//	*		nc 127.0.0.1 8081	-	telnet 127.0.0.1 8081	-	curl -v http://127.0.0.1:8081/
-//	*		siege -b -c 255 -t 10S 127.0.0.1:8081			135.000 transactions is a good measure
+//	service nginx reload
+//	nc 127.0.0.1 8081	-	telnet 127.0.0.1 8081	-	curl -v http://127.0.0.1:8081/
+//	siege -b -c 255 -t 10S 127.0.0.1:8081			135.000 transactions is a good measure
+
+//	 ?		Non-bloquing fd
+//	 ?		Log through epoll
+
+//				DISPLAY
+//	 TODO	Info on IPs active in vserver
+//	 TODO	Log position to first key down need tWo taps
+//	 TODO	Global log only log what is not in other logs
+//	 TODO	Display add access, error or both to logs
+//	 TODO	Positions for access, error and log 
+//	 TODO	Better name for vservers
+//	 TODO	Reload config button
+//	 TODO	./webserv -i with siege overloaded with logs
+
+//			CONFIG
+//	 TODO	Method in global, server y location
+//	 TODO	Root y listen obligatorios 
+//	 TODO	Si hay errores en config, no se añaden a data
+//	 TODO	Limit config file size (dont read a 100 MB file duh)
+//	 TODO	cgi DIR cgi_path for directories
+
+//			INTERMEDIARY
+//	 TODO	Intermediario
+//	 TODO	Index usa index.html por defecto
+//	 TODO	Update resource path with alias or any modified path before cgi
+//	 TODO	If cgi, cant load request first, must analyze header before
+
+//			COMUNICATIONS
+//	 TODO	Transfer big files
+
+//			DOCUMENTATION
+//	 TODO	Documentation (conexiones, cache, request, response, cgi, methods, cookies and sessions, directories)
+//	 TODO	Diagram
 
 //  Entry point
 int main(int argc, char **argv) {

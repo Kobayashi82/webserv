@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:27:58 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/12 20:38:24 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/16 17:07:11 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,6 +68,7 @@
 	#pragma region Set/Add
 
 		void Settings::set(VServer & VServ) {
+			if (VServ.bad_config) VServ.force_off = true;
 			std::deque <VServer>::iterator it = std::find(vserver.begin(), vserver.end(), VServ);
 			if (it == vserver.end()) vserver.push_back(VServ);
 			else *it = VServ;
