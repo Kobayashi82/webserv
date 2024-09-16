@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/27 09:32:08 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/14 23:44:11 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/16 18:28:32 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -137,9 +137,8 @@
 					long MaxRequests = KEEP_ALIVE_TIMEOUT;
 
 					if (Settings::global.get("keepalive_requests") != "") Utils::stol(Settings::global.get("keepalive_requests"), MaxRequests);
-					if (event->close || event->client->total_requests >= MaxRequests) event->client->remove();
-
 					Log::log("GET", "/", 200, write_bytes, "250", event->client->IP, event->socket->VServ);
+					if (event->close || event->client->total_requests >= MaxRequests) event->client->remove();
 				}
 			}
 

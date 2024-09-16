@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 14:30:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/16 17:25:44 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/16 20:11:47 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,10 @@
 //	 ?		Non-bloquing fd
 //	 ?		Log through epoll
 
+//				CONNECTIONS
+//	 TODO	Vserver take control if other is disabled
+//	 TODO	Si 0.0.0.0 o sin ip, usar any.
+
 //				DISPLAY
 //	 TODO	Info on IPs active in vserver
 //	 TODO	Log position to first key down need tWo taps
@@ -34,10 +38,6 @@
 
 //			CONFIG
 //	 TODO	Method in global, server y location
-//	 TODO	Root y listen obligatorios 
-//	 TODO	Si hay errores en config, no se añaden a data
-//	 TODO	Limit config file size (dont read a 100 MB file duh)
-//	 TODO	cgi DIR cgi_path for directories
 
 //			INTERMEDIARY
 //	 TODO	Intermediario

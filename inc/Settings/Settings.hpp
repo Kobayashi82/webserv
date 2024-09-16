@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:14:05 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/14 12:53:39 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/16 19:52:25 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,9 +66,11 @@ class Settings {
 		//	Variables
 		enum e_section { ROOT, GLOBAL, SERVER, LOCATION, METHOD };										//	Enumarator for the sections of the config file
 		
-		static int	line_count;																			//	Number of the current line of the configuration file (use to indicate the line of an error in the configuration file)
-		static int	bracket_lvl;																		//	Level of the bracket (use to parse the configuration file)
-		static bool	BadConfig;																			//	Indicate if there are errors in the config file
+
+		static int		line_count;																		//	Number of the current line of the configuration file (use to indicate the line of an error in the configuration file)
+		static int		bracket_lvl;																	//	Level of the bracket (use to parse the configuration file)
+		static bool		BadConfig;																		//	Indicate if there are errors in the config file
+		static size_t	FILE_MAXSIZE;																	//	Maximum size allowed for the configuration file
 
 		//	Errors and MIMEs
 		static void load_error_codes();																	//	Load error codes in a map
@@ -104,6 +106,7 @@ class Settings {
 
 		static int	repeated_directive(const std::string & str, const std::vector<std::pair<std::string, std::string> > & data, int line_count, VServer * VServ);
 		static int	invalid_directive(std::string firstPart, int line_count, int section, VServer * VServ);
+		static void	missing_directive(VServer & VServ);
 
 		static void	parser(std::ifstream & infile);														//	Main parser function that read the config file
 

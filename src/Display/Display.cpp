@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/14 14:37:32 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/16 17:24:53 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/16 19:21:45 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -629,7 +629,7 @@
 					std::string Status = CRED; std::string Color = CRED; std::string LArrow = "  ", RArrow = "  ";
 
 					if (Thread::get_bool(mutex, Settings::global.status))																		Status = CGREEN;
-					if (Settings::vserver.size() > 0)																							Color  = CGREEN;
+					if (active_servers > 0)																										Color  = CGREEN;
 					if (Settings::vserver.size() > 0) { 																						LArrow = "◄ "; RArrow = "► "; }
 
 				//	TITLE

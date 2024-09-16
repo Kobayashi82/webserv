@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:27:58 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/16 17:07:11 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/16 19:41:14 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,6 +32,8 @@
 
 	int									Settings::line_count = 0;										//	Number of the current line of the configuration file (use to indicate the line of an error in the configuration file)
 	int									Settings::bracket_lvl = 0;										//	Level of the bracket (use to parse the configuration file)
+
+	size_t								Settings::FILE_MAXSIZE = 1 * 1024 * 1024;						//	Maximum size allowed for the configuration file
 
 #pragma endregion
 
@@ -68,7 +70,6 @@
 	#pragma region Set/Add
 
 		void Settings::set(VServer & VServ) {
-			if (VServ.bad_config) VServ.force_off = true;
 			std::deque <VServer>::iterator it = std::find(vserver.begin(), vserver.end(), VServ);
 			if (it == vserver.end()) vserver.push_back(VServ);
 			else *it = VServ;
@@ -145,9 +146,18 @@
 
 	#pragma region Load File
 
-		void Settings::load(const std::string & File) {
-			bool isDefault = (File == config_path + "default.cfg"); clear();
-			std::string	line; std::ifstream infile(File.c_str());
+		void Settings::load(const std::string & file) {
+			bool isDefault = (file == config_path + "default.cfg"); clear();
+
+			if (Utils::filesize(file) > FILE_MAXSIZE) {
+				if (isDefault)									log_access_add(RD "The " Y "default configuration" RD " file is larger than " Y "1 MB" NC);
+				else											log_access_add(RD "The configuration file '" Y + file + RD "' is larger than " Y "1 MB" NC);
+				log_access_add("---");
+				global.bad_config = true;
+				return;
+			}
+
+			std::string	line; std::ifstream infile(file.c_str());
 
 			if (infile.is_open()) { parser(infile); infile.close(); loaded = true;
 				if (check_only) return;
@@ -158,14 +168,14 @@
 					if (it->log.error.size() > 0) print_sep = true;
 				if (print_sep)								{																									log_access_add("---"); }
 				if (isDefault)								{	log_access_add(G "Default configuration file loaded" NC);										log_access_add("---"); }
-				else										{	log_access_add(G "Configuration file '" Y + File + G "' loaded" NC);							log_access_add("---"); }
+				else										{	log_access_add(G "Configuration file '" Y + file + G "' loaded" NC);							log_access_add("---"); }
 			} else {
 				global.bad_config = true;
 				if (isDefault)								{	log_error_add(RD "Could not create the " Y "default configuration" RD " file" NC);				log_access_add("---"); }
 				else {
-					if (Utils::file_exists(File) == 1)		{	log_error_add(RD "The configuration file '" Y + File + RD "' does not exist" NC);				log_access_add("---"); }
-					else if (Utils::file_exists(File) == 2)	{	log_error_add(RD "Cannot read the file '" Y + File + RD "'" NC);								log_access_add("---"); }
-					else									{	log_error_add(RD "Could not load the configuration file '" Y + File + RD "'" NC);				log_access_add("---"); }
+					if (Utils::file_exists(file) == 1)		{	log_error_add(RD "The configuration file '" Y + file + RD "' does not exist" NC);				log_access_add("---"); }
+					else if (Utils::file_exists(file) == 2)	{	log_error_add(RD "Cannot read the file '" Y + file + RD "'" NC);								log_access_add("---"); }
+					else									{	log_error_add(RD "Could not load the configuration file '" Y + file + RD "'" NC);				log_access_add("---"); }
 				}
 			}
 			Log::process_logs();

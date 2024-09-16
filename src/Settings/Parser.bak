@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:30:57 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/16 20:11:40 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/16 18:07:22 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,8 @@
 
 //			CONFIG
 //	 TODO	Method in global, server y location
+//	 TODO	Root y listen obligatorios 
+//	 TODO	Si hay errores en config, no se añaden a data
 
 #pragma region Logging
 
@@ -637,40 +639,6 @@
 
 	#pragma endregion
 
-	#pragma region Missing
-
-		void Settings::missing_directive(VServer & VServ) {
-			if (VServ.get("listen") == "") {
-				std::string msg = RD "Missing directive " Y "listen" NC;
-				msg = BLUE600 "[" LIME600 + timer.current_date() + " " EMERALD400 + timer.current_time() + BLUE600 "]  " NC + msg;
-				if (!check_only) { VServ.log.error_add(msg); VServ.log.both_add(msg); }
-
-				msg = RD "Missing directive " Y "listen" RD " for a virtual server" NC;
-				msg = BLUE600 "[" LIME600 + timer.current_date() + " " EMERALD400 + timer.current_time() + BLUE600 "]  " NC + msg;
-				if (!check_only) { global.log.error_add(msg); global.log.both_add(msg); }
-
-				VServ.bad_config = true;
-			}
-
-			bool Loc_root = true, VServ_root = (!VServ.get("root").empty() || !global.get("root").empty());
-			for (std::deque<Location>::iterator it = VServ.location.begin(); it != VServ.location.end(); ++it)
-				if (it->get("root").empty() && !VServ_root) { Loc_root = false; break; }
-
-			if (!VServ_root && (VServ.location.size() == 0 || Loc_root == false)) {
-				std::string msg = RD "Missing directive " Y "root" NC;
-				msg = BLUE600 "[" LIME600 + timer.current_date() + " " EMERALD400 + timer.current_time() + BLUE600 "]  " NC + msg;
-				if (!check_only) { VServ.log.error_add(msg); VServ.log.both_add(msg); }
-
-				msg = RD "Missing directive " Y "root" RD " for a virtual server" NC;
-				msg = BLUE600 "[" LIME600 + timer.current_date() + " " EMERALD400 + timer.current_time() + BLUE600 "]  " NC + msg;
-				if (!check_only) { global.log.error_add(msg); global.log.both_add(msg); }
-					
-				VServ.bad_config = true;
-			}
-		}
-
-	#pragma endregion
-
 #pragma endregion
 
 #pragma region Parser
@@ -717,80 +685,77 @@
 				if (section != ROOT && section != GLOBAL && last_line_count != line_count) { last_line_count = line_count; VServ.config.push_back(oline); }
 
 				if (firstPart == "http" && is_http == false) is_http = true;
-				else if (firstPart == "http" && is_http == true) { invalid_directive(firstPart, line_count, ROOT, PVServ);							NoAdd = true; }
+				else if (firstPart == "http" && is_http == true) invalid_directive(firstPart, line_count, ROOT, PVServ);
 				else if (section == GLOBAL && repeated_directive(firstPart, global.data, line_count, PVServ)) 										NoAdd = true;
 				else if (section == SERVER && repeated_directive(firstPart, VServ.data, line_count, PVServ)) 										NoAdd = true;
 				else if (section == LOCATION && repeated_directive(firstPart, Loc.data, line_count, PVServ)) 										NoAdd = true;
 				else if (section == METHOD && repeated_directive(firstPart, Met.data, line_count, PVServ)) 											NoAdd = true;
-				else if (invalid_directive(firstPart, line_count, section, PVServ))	{																NoAdd = true; firstPart = ""; if (section > GLOBAL) VServ.bad_config = true; else global.bad_config = true; }
+				else if (invalid_directive(firstPart, line_count, section, PVServ))	{																NoAdd = true; if (section > GLOBAL) VServ.bad_config = true; else global.bad_config = true; }
 
 				if ((section == GLOBAL || section == SERVER || section == LOCATION) && !firstPart.empty()) {
-					if (!NoAdd && (firstPart == "access_log" || firstPart == "error_log") && parse_path(firstPart, secondPart, true, true, false, PVServ))	firstPart = "";
-					if (!NoAdd && firstPart == "log_rotatesize" && parse_log_rotatesize(secondPart, PVServ))												firstPart = ""; 
-					if (!NoAdd && firstPart == "log_rotate" && parse_log_rotate(secondPart, PVServ))														firstPart = ""; 
-					if (!NoAdd && firstPart == "root" && parse_path(firstPart, secondPart, false, false, false, PVServ)) {					firstPart = ""; if (section > GLOBAL) VServ.bad_config = true; else global.bad_config = true; }
-					if (!NoAdd && firstPart == "uploads" && parse_path(firstPart, secondPart, false, false, false, PVServ)) {				firstPart = ""; if (section > GLOBAL) VServ.bad_config = true; else global.bad_config = true; }
-					if (!NoAdd && firstPart == "body_maxsize" && parse_body_size(secondPart, PVServ)) {										firstPart = ""; if (section > GLOBAL) VServ.bad_config = true; else global.bad_config = true; }
-					if (!NoAdd && firstPart == "autoindex" && parse_autoindex(secondPart, PVServ)) {										firstPart = ""; if (section > GLOBAL) VServ.bad_config = true; else global.bad_config = true; }
-					if (!NoAdd && firstPart == "index" && parse_index(secondPart, PVServ)) {												firstPart = ""; if (section > GLOBAL) VServ.bad_config = true; else global.bad_config = true; }
-					if (!NoAdd && firstPart == "allow" && parse_allow(secondPart, PVServ)) {												firstPart = ""; if (section > GLOBAL) VServ.bad_config = true; else global.bad_config = true; }
-					if (!NoAdd && firstPart == "deny" && parse_deny(secondPart, PVServ)) {													firstPart = ""; if (section > GLOBAL) VServ.bad_config = true; else global.bad_config = true; }
-					if (!NoAdd && firstPart == "return" && parse_return(secondPart, PVServ)) {												firstPart = ""; if (section > GLOBAL) VServ.bad_config = true; else global.bad_config = true; }
+					if (!NoAdd && (firstPart == "access_log" || firstPart == "error_log")) parse_path(firstPart, secondPart, true, true, false, PVServ);
+					if (!NoAdd && firstPart == "log_rotatesize") parse_log_rotatesize(secondPart, PVServ);
+					if (!NoAdd && firstPart == "log_rotate") parse_log_rotate(secondPart, PVServ);
+					if (!NoAdd && firstPart == "root" && parse_path(firstPart, secondPart, false, false, false, PVServ)) {					if (section > GLOBAL) VServ.bad_config = true; else global.bad_config = true; }
+					if (!NoAdd && firstPart == "uploads" && parse_path(firstPart, secondPart, false, false, false, PVServ)) {				if (section > GLOBAL) VServ.bad_config = true; else global.bad_config = true; }
+					if (!NoAdd && firstPart == "body_maxsize" && parse_body_size(secondPart, PVServ)) {										if (section > GLOBAL) VServ.bad_config = true; else global.bad_config = true; }
+					if (!NoAdd && firstPart == "autoindex" && parse_autoindex(secondPart, PVServ)) {										if (section > GLOBAL) VServ.bad_config = true; else global.bad_config = true; }
+					if (!NoAdd && firstPart == "index" && parse_index(secondPart, PVServ)) {												if (section > GLOBAL) VServ.bad_config = true; else global.bad_config = true; }
+					if (!NoAdd && firstPart == "allow" && parse_allow(secondPart, PVServ)) {												if (section > GLOBAL) VServ.bad_config = true; else global.bad_config = true; }
+					if (!NoAdd && firstPart == "deny" && parse_deny(secondPart, PVServ)) {													if (section > GLOBAL) VServ.bad_config = true; else global.bad_config = true; }
+					if (!NoAdd && firstPart == "return" && parse_return(secondPart, PVServ)) {												if (section > GLOBAL) VServ.bad_config = true; else global.bad_config = true; }
 				}
 
 				if (section == GLOBAL && !firstPart.empty()) {
-					if (!NoAdd && firstPart == "keepalive_timeout" && parse_keepalive_timeout(secondPart, PVServ))							{ firstPart = ""; global.bad_config = true; }
-					if (!NoAdd && firstPart == "keepalive_requests" && parse_keepalive_requests(secondPart, PVServ))						{ firstPart = ""; global.bad_config = true; }
+					if (!NoAdd && firstPart == "keepalive_timeout" && parse_keepalive_timeout(secondPart, PVServ))							global.bad_config = true;
+					if (!NoAdd && firstPart == "keepalive_requests" && parse_keepalive_requests(secondPart, PVServ))						global.bad_config = true;
 					if (!NoAdd && firstPart == "error_page") parse_errors(firstPart, secondPart, PVServ);
 					if (!NoAdd && firstPart == "cgi") parse_cgi(firstPart, secondPart, PVServ);
 
 					if (!NoAdd && (firstPart == "allow" || firstPart == "deny"))															global.add(firstPart, secondPart, true);
-					else if (!NoAdd && !firstPart.empty() && firstPart != "http" && firstPart != "error_page" && firstPart != "cgi")		global.add(firstPart, secondPart);
+					else if (!NoAdd && firstPart != "http" && firstPart != "error_page" && firstPart != "cgi")								global.add(firstPart, secondPart);
 				}
 
 				if (section == SERVER && !firstPart.empty()) {
-					if (!NoAdd && firstPart == "listen" && parse_listen(secondPart, VServ))													{ firstPart = ""; VServ.bad_config = true; }
+					if (!NoAdd && firstPart == "listen" && parse_listen(secondPart, VServ))													VServ.bad_config = true;
 					if (!NoAdd && firstPart == "error_page") parse_errors(firstPart, secondPart, VServ);
 					if (!NoAdd && firstPart == "cgi") parse_cgi(firstPart, secondPart, VServ);
 
 					if (!NoAdd && (firstPart == "listen" || firstPart == "allow" || firstPart == "deny"))									VServ.add(firstPart, secondPart, true);
-					else if (!NoAdd && !firstPart.empty() && firstPart != "server" && firstPart != "error_page" && firstPart != "cgi")		VServ.add(firstPart, secondPart);
+					else if (!NoAdd && firstPart != "server" && firstPart != "error_page" && firstPart != "cgi")							VServ.add(firstPart, secondPart);
 				}
 
 				if (section == LOCATION && !firstPart.empty()) {
-					if (!NoAdd && firstPart == "location" && parse_location(secondPart, PVServ))											{ firstPart = ""; VServ.bad_config = true; }
-					if (!NoAdd && firstPart == "alias" && parse_alias(firstPart, secondPart, PVServ))										{ firstPart = ""; VServ.bad_config = true; }
-					if (!NoAdd && firstPart == "try_files" && parse_try_files(secondPart, PVServ))											{ firstPart = ""; VServ.bad_config = true; }
+					if (!NoAdd && firstPart == "location" && parse_location(secondPart, PVServ))											VServ.bad_config = true;
+					if (!NoAdd && firstPart == "alias" && parse_alias(firstPart, secondPart, PVServ))										VServ.bad_config = true;
+					if (!NoAdd && firstPart == "try_files" && parse_try_files(secondPart, PVServ))											VServ.bad_config = true;
 					if (!NoAdd && firstPart == "error_page") parse_errors(firstPart, secondPart, Loc);
 					if (!NoAdd && firstPart == "cgi") parse_cgi(firstPart, secondPart, VServ);
 
 					if (!NoAdd && (firstPart == "allow" || firstPart == "deny"))															Loc.add(firstPart, secondPart, true);
-					else if (!NoAdd && !firstPart.empty() && firstPart != "error_page" && firstPart != "cgi")								Loc.add(firstPart, secondPart);
+					else if (!NoAdd && firstPart != "error_page" && firstPart != "cgi")														Loc.add(firstPart, secondPart);
 				}
 
 				if (section == METHOD && !firstPart.empty()) {
-					if (!NoAdd && firstPart == "method" && parse_method(secondPart, PVServ))												{ firstPart = ""; VServ.bad_config = true; }
-					if (!NoAdd && firstPart == "allow" && parse_allow(secondPart, PVServ))													{ firstPart = ""; VServ.bad_config = true; }
-					if (!NoAdd && firstPart == "deny" && parse_deny(secondPart, PVServ))													{ firstPart = ""; VServ.bad_config = true; }
-					if (!NoAdd && firstPart == "return" && parse_return(secondPart, PVServ))												{ firstPart = ""; VServ.bad_config = true; }
+					if (!NoAdd && firstPart == "method" && parse_method(secondPart, PVServ))												VServ.bad_config = true;
+					if (!NoAdd && firstPart == "allow" && parse_allow(secondPart, PVServ))													VServ.bad_config = true;
+					if (!NoAdd && firstPart == "deny" && parse_deny(secondPart, PVServ))													VServ.bad_config = true;
+					if (!NoAdd && firstPart == "return" && parse_return(secondPart, PVServ))												VServ.bad_config = true;
 
 					if (!NoAdd && (firstPart == "allow" || firstPart == "deny"))															Met.add(firstPart, secondPart, true);
-					else if (!firstPart.empty())	 																						Met.add(firstPart, secondPart);
+					else	 																												Met.add(firstPart, secondPart);
 				}
 
 				if (bracket_mode != 0) { bracket_lvl += bracket_mode;
 					if (section == METHOD && section_bracket_lvl[3] == bracket_lvl)   { section = LOCATION; section_bracket_lvl[3] = 0; Met.Loc = &vserver[vserver.size() - 1].location[vserver[vserver.size() - 1].location.size() - 1]; Loc.add(Met); }
 					if (section == LOCATION && section_bracket_lvl[2] == bracket_lvl) { section = SERVER; section_bracket_lvl[2] = 0; Loc.VServ = &vserver[vserver.size() - 1]; VServ.add(Loc); }
-					if (section == SERVER && section_bracket_lvl[1] == bracket_lvl)   {
-						section = GLOBAL; section_bracket_lvl[1] = 0; missing_directive(VServ); if (VServ.bad_config) VServ.force_off = true;
-						add(VServ); VServ.bad_config = false; VServ.force_off = false; VServ.clear(); PVServ = NULL;
-					}
+					if (section == SERVER && section_bracket_lvl[1] == bracket_lvl)   { section = GLOBAL; section_bracket_lvl[1] = 0; add(VServ); VServ.bad_config = false; VServ.clear(); PVServ = NULL; }
 					if (section == GLOBAL && section_bracket_lvl[0] == bracket_lvl)   { section = ROOT; section_bracket_lvl[0] = 0; }
 				}
 			}
 		}
-		if		(bracket_lvl != 0)    		{								global.bad_config = true; log_error_add(RD "Brackets error" NC); }
-		else if	(vserver.size() == 0)		{								global.bad_config = true; log_access_add("---"); log_error_add(RD "There are no " Y "virtual servers" RD " in the configuration file" NC); }
+		if		(bracket_lvl != 0)    {								global.bad_config = true; log_error_add(RD "Brackets error" NC); }
+		else if	(vserver.size() == 0) {								global.bad_config = true; log_access_add("---"); log_error_add(RD "There are no " Y "virtual servers" RD " in the configuration file" NC); }
 		else {
 			bool valid_vserver = false;
 			for (std::deque<VServer>::iterator it = vserver.begin(); it != vserver.end(); ++it)
