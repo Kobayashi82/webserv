@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:32:38 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/17 13:03:11 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/17 16:26:54 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -203,6 +203,7 @@
 					if (method == "HEAD") method_color = GREEN600;
 					if (method == "POST") method_color = FUCHSIA600;
 					if (method == "PUT") method_color = TEAL400;
+					if (method == "PATCH") method_color = TEAL400;
 					if (method == "DELETE") method_color = RED400;
 
 					std::string msg = UN BLUE400 + ip + NC + std::string("                ").substr(ip.size()) + method_color + method + std::string("           ").substr(method.size()) + BR + re_path + NC;

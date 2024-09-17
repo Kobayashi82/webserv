@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 14:30:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/17 14:25:55 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/17 16:31:39 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,52 +15,54 @@
 #include "Settings.hpp"
 #include "Net.hpp"
 
-//	service nginx reload
-//	nc 127.0.0.1 8081	-	telnet 127.0.0.1 8081	-	curl -v http://127.0.0.1:8081/
-//	siege -b -c 255 -t 10S 127.0.0.1:8081			135.000 transactions is a good measure
+//	*		nc 127.0.0.1 8081	-	telnet 127.0.0.1 8081	-	curl -v http://127.0.0.1:8081/
+//	*		siege -b -c 255 -t 10S 127.0.0.1:8081
 
 //	?		Non-bloquing fd
-//	?		Log through epoll
 
 //			CONNECTIONS
 //	TODO	Vserver take control if other is disabled
+//	TODO	EPOLL fail error (create or events)
 
 //			DISPLAY
 //	TODO	./webserv -i with siege overloaded with logs
 
 //			INTERMEDIARY
 //	TODO	Intermediario
-//	TODO	Log path in event
+//	TODO	data of vserver/location in event
 //	TODO	Index usa index.html por defecto
 //	TODO	Update resource path with alias or any modified path before cgi
-//	TODO	If cgi, cant load request first, must analyze header before
 
 //			COMUNICATIONS
 //	TODO	Transfer big files
+//	TODO	Comunications time-out
 
-//			DOCUMENTATION
-//	TODO	Documentation (conexiones, cache, request, response, cgi, methods, cookies and sessions, directories)
-//	TODO	Diagram
+//			I MA NOT DOING THESE
+//	*		Process request
+//	*		Generate response
+//	*		CGI   (POST, PUT, PATCH, DELETE)
+//	*		CGI   (php, py)
+//	*		CGI   (directory)
+//	*		CGI   (uploads)
+//	*		Web (error pages)
+//	*		Web (session manager and cookies)
+//	*		Web (uploads)
+//	*		Web (CGI)
+//	*		Web (directory)
 
 //  Entry point
 int main(int argc, char **argv) {
 	Settings::load_args(argc, argv);
 
-	// Log::log("GET", "/prueba", 100, 1024, "250", "127.0.0.1");
-	// Log::log("HEAD", "/home/casa", 200, 1024, "250", "127.0.0.1");
-	// Log::log("POST", "/algo", 300, 1024, "250", "127.0.0.1");
-	// Log::log("PUT", "/hola/caracola", 400, 1024, "250", "127.0.0.1");
-	// Log::log("DELETE", "/everything", 500, 1024, "250", "127.0.0.1");
-
 	Log::start(); Display::start();
 	
-	Net::epoll__create();																				//	Si falla crear un modo que el servidor no puede ejecutarse, pero se pueden ver los vservers
+	Net::epoll__create();
 	Net::socket_create_all();
 
 	usleep(10000); Display::update();
 
 	while (Display::isTerminate() == -1) {
-		Net::epoll_events();																			//	Si falla crear un modo que el servidor no puede ejecutarse, pero se pueden ver los vservers
+		Net::epoll_events();
 	}
 	
 	Net::epoll_close();
