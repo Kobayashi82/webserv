@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/14 14:37:32 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/17 14:00:44 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/17 19:20:47 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,8 @@
 	bool					Display::ForceRawModeDisabled = false;										//	Force terminal in normal mode (not raw mode)
 	bool					Display::Resized = false;													//	True if the terminal has been resized
 	bool					Display::redraw = false;													//	Is in the middle of an Output()
-	bool					Display::background = false;
+	bool					Display::background = false;												//	True if the program is running in background (&)
+	int						Display::signal = 0;														//	Last signal code
 
 	pthread_t				Display::_thread;
 	bool					Display::_terminate = false;												//	Flag the thread to finish
@@ -38,7 +39,6 @@
 
 	static Monitor			monitor;																	//	Class to obtain MEM and CPU ussage
 	static struct termios	orig_termios;																//	Structure for terminal information
-	static bool				signalRegistered = false;													//	Signals already registered
 	static int				total_cols = 0;																//	Number of columns in the terminal
 	static int				total_rows = 0;																//	Number of rows in the terminal
 	static int				log_rows = 0;																//	Number of rows available for logs or settings
@@ -47,37 +47,61 @@
 
 #pragma region Signals
 
-	static void killHandler(int signum) {
-		if (Settings::check_only || !Display::isRawMode() || Display::ForceRawModeDisabled) std::cout << CL CL "  ";
-		Thread::set_int(Display::mutex, Settings::terminate, signum + 128);
-	}
+	#pragma region Type
 
-	static void resizeHandler(int signum) {
-		(void) signum;
-		Thread::set_bool(Display::mutex, Display::Resized, true);
-	}
+		static void killHandler(int signum)		{ Display::signal = 128 + signum; }
+		static void quitHandler(int signum)		{ Display::signal = 128 + signum; }
 
-	static void stopHandler(int signum) {
-		(void) signum;
-		if (Settings::check_only || !Display::isRawMode() || Display::ForceRawModeDisabled) std::cout << CL CL "  ";
-		Thread::mutex_set(Display::mutex, Thread::MTX_LOCK);
-		Display::disableRawMode();
-		Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK);
-		raise(SIGSTOP);
-	}
+		static void stopHandler(int signum)		{ Display::signal = 128 + signum; }
+		static void resumeHandler(int signum)	{ Display::signal = 128 + signum; }
 
-    static void resumeHandler(int signum) {
-        (void) signum;
-		Thread::mutex_set(Display::mutex, Thread::MTX_LOCK);
-        Display::enableRawMode();
-		Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK);
-		if (Settings::check_only || !Display::isRawMode() || Display::ForceRawModeDisabled) Display::logo();
-    }
+		static void resizeHandler(int signum)	{ Thread::set_bool(Display::mutex, Display::Resized, (signum)); }
 
-	static void quitHandler(int signum) {
-		if (Settings::check_only || !Display::isRawMode() || Display::ForceRawModeDisabled) std::cout << CL CL "  ";
-		Thread::set_int(Display::mutex, Settings::terminate, signum + 128);
- 	}
+	#pragma endregion
+
+	#pragma region Handler
+
+		void Display::signal_handler() {
+			std::signal(SIGINT, killHandler);
+			std::signal(SIGWINCH, resizeHandler);
+			std::signal(SIGTSTP, stopHandler);
+			std::signal(SIGCONT, resumeHandler);
+			std::signal(SIGQUIT, quitHandler);
+		}
+
+	#pragma endregion
+
+	#pragma region Check
+
+		int Display::signal_check() {
+			if (signal == 130 || signal == 131) {
+				if (Settings::check_only || !isRawMode() || ForceRawModeDisabled) {
+					std::cout << NC CL CL;
+					if (!background) std::cout << " ";
+				}
+
+				return (1);
+			}
+			if (signal == 148) { signal = 0;
+				if (Settings::check_only || !isRawMode() || ForceRawModeDisabled) std::cout << NC CL CL "  ";
+
+				Thread::mutex_set(mutex, Thread::MTX_LOCK);
+					disableRawMode();
+				Thread::mutex_set(mutex, Thread::MTX_UNLOCK);
+			}
+			if (signal == 146) { signal = 0;
+
+				Thread::mutex_set(mutex, Thread::MTX_LOCK);
+					enableRawMode();
+				Thread::mutex_set(mutex, Thread::MTX_UNLOCK);
+
+				if (!background && (Settings::check_only || !isRawMode() || ForceRawModeDisabled)) logo();
+			}
+
+			return (0);
+		}
+
+#pragma endregion
 
 #pragma endregion
 
@@ -88,14 +112,6 @@
 		#pragma region Enable
 
 			void Display::enableRawMode() {
-				if (!signalRegistered) {
-					std::signal(SIGINT, killHandler);
-					std::signal(SIGWINCH, resizeHandler);
-					std::signal(SIGTSTP, stopHandler);
-					std::signal(SIGCONT, resumeHandler);
-					std::signal(SIGQUIT, quitHandler);
-					signalRegistered = true;
-				}
 				if (!background) std::cout << CHIDE;
 				if (Settings::check_only || ForceRawModeDisabled) return;
 				if (tcgetattr(STDIN_FILENO, &orig_termios) == -1) return;
@@ -508,7 +524,7 @@
 						std::string bottom = C "└──────┴";
 						int	length = (cols + 2) - 7;
 
-						if (Settings::vserver.size() > 0) {
+						if (!Settings::global.bad_config && Settings::vserver.size() > 0) {
 							top += C "─────────┬";
 							middle += " " + Color1 + "W" + Color2 + "ebServ " C "│";
 							bottom +=  "─────────┴";
@@ -735,10 +751,13 @@
 				usleep(UPDATE_INTERVAL * 1000);
 			}
 
-			if (!Settings::check_only && isRawMode() && !ForceRawModeDisabled) {
+			if (!background && !Settings::check_only && isRawMode() && !ForceRawModeDisabled) {
 				usleep(100000); std::cout.flush(); std::cout.clear(); maxFails = 10; failCount = 0; drawing = false;
 				Log::log(G "WebServ 1.0 closed successfully", Log::GLOBAL_ACCESS); Log::log("---", Log::GLOBAL_ACCESS); Log::process_logs(); Output();
-			} else std::cout << CSHOW << std::endl;
+			} else if (!background && !Settings::check_only)
+				std::cout << G "WebServ 1.0 closed successfully\n" << CSHOW << std::endl;
+			else if (!background)
+				std::cout << CSHOW << std::endl;
 			return (NULL);
 		}
 

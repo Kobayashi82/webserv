@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:27:58 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/16 19:41:14 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/17 16:47:23 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -149,9 +149,10 @@
 		void Settings::load(const std::string & file) {
 			bool isDefault = (file == config_path + "default.cfg"); clear();
 
-			if (Utils::filesize(file) > FILE_MAXSIZE) {
+			size_t filesize = Utils::filesize(file);
+			if (filesize != std::string::npos && filesize > FILE_MAXSIZE) {
 				if (isDefault)									log_access_add(RD "The " Y "default configuration" RD " file is larger than " Y "1 MB" NC);
-				else											log_access_add(RD "The configuration file '" Y + file + RD "' is larger than " Y "1 MB" NC);
+				else											log_access_add(RD "The configuration file '" + Utils::ltos(FILE_MAXSIZE) + Y + file + RD "' is larger than " Y "1 MB" NC);
 				log_access_add("---");
 				global.bad_config = true;
 				return;

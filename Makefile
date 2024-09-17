@@ -6,7 +6,7 @@
 #    By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/02/20 17:51:39 by vzurera-          #+#    #+#              #
-#    Updated: 2024/09/17 14:42:32 by vzurera-         ###   ########.fr        #
+#    Updated: 2024/09/17 18:57:32 by vzurera-         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -42,7 +42,7 @@ COUNTER 			= 0
 # ─────────── #
 
 CC					= clang++
-FLAGS				= -Wall -Wextra -Werror -std=c++98 -g -fsanitize=thread
+FLAGS				= -Wall -Wextra -Werror -std=c++98 -g # -fsanitize=thread
 
 # ───────────────── #
 # ── DIRECTORIES ── #
@@ -268,4 +268,8 @@ progress:
 # ── PHONY ── #
 # ─────────── #
 
-.PHONY: all clean fclean re normal delete_objects title hide_cursor show_cursor progress Compile UpToDate
+
+wipe:
+	@rm -rf build; rm -f .is_re; rm -f $(NAME); rm -f bin/$(NAME);
+
+.PHONY: all clean fclean re normal delete_objects title hide_cursor show_cursor progress Compile UpToDate wipe

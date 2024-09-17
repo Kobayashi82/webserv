@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:30:57 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/17 14:25:50 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/17 19:05:26 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -539,7 +539,7 @@
 			while (stream >> method) {
 				std::string lmethod = method; Utils::toLower(lmethod);
 				if (method.empty()) {	log_servers(RD + n_line + "Empty method for " Y + "method" NC, VServ); return (1); }
-				if (method != "head" && lmethod != "get" && lmethod != "post" && lmethod != "put" && lmethod != "patch" && lmethod != "delete") {
+				if (lmethod != "head" && lmethod != "get" && lmethod != "post" && lmethod != "put" && lmethod != "patch" && lmethod != "delete") {
 					log_servers(RD + n_line + "Invalid method " Y + method + RD " for " Y + "method" NC, VServ); return (1); }
 			}
 

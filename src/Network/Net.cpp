@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 21:55:43 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/17 14:38:33 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/17 19:20:43 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -198,7 +198,7 @@
 			int Net::socket_create(VServer * VServ) {
 				//	If the server or the virtual server is disabled do nothing
 				bool nothing_created = true;
-				if (Thread::get_bool(Display::mutex, Settings::global.status) == false || VServ->bad_config || Thread::get_bool(Display::mutex, VServ->force_off)) return (1);
+				if (Thread::get_bool(Display::mutex, Settings::global.status) == false  || Settings::global.bad_config || VServ->bad_config || Thread::get_bool(Display::mutex, VServ->force_off)) return (1);
 
 				//	For every IP address in the virtual server create a socket
 				for (std::vector <std::pair<std::string, int> >::const_iterator addr_it = VServ->addresses.begin(); addr_it != VServ->addresses.end(); ++addr_it) {
@@ -451,10 +451,13 @@
 
 				struct itimerspec new_value;
 				memset(&new_value, 0, sizeof(new_value));
-				new_value.it_value.tv_sec = Net::TIMEOUT_INTERVAL;		// Tiempo hasta la primera expiración
-				new_value.it_interval.tv_sec = Net::TIMEOUT_INTERVAL; 	// Intervalo entre expiraciones
+				new_value.it_value.tv_sec = Net::TIMEOUT_INTERVAL;										//	Time to the first expiration
+				new_value.it_interval.tv_sec = Net::TIMEOUT_INTERVAL;									//	Interval between expirations
 
-				if (timerfd_settime(timeout_fd, 0, &new_value, NULL) == -1) { close(timeout_fd); timeout_fd = -1; return (1); }
+				if (timerfd_settime(timeout_fd, 0, &new_value, NULL) != -1) {
+					Log::log(RD "Error creating " Y "Time-Out" RD " monitor" NC, Log::MEM_ERROR); Log::log("---", Log::MEM_ACCESS);
+					close(timeout_fd); timeout_fd = -1; return (1);
+				}
 
 				return (0);
 			}
@@ -489,7 +492,10 @@
 				if (epoll_fd != -1) epoll_close();
 
 				epoll_fd = epoll_create(1024);
-				if (epoll_fd == -1) { Log::log(RD "Cannot create " Y "EPOLL" NC, Log::MEM_ERROR); return (1); }
+				if (epoll_fd == -1) {
+					Log::log(RD "Fatal error creating " Y "EPOLL" NC, Log::MEM_ERROR); Log::log("---", Log::MEM_ACCESS);
+					Settings::global.status = false; Settings::global.bad_config = true; return (1);
+				}
 				if (!create_timeout()) epoll_add(timeout_fd, true, false);
 
 				return (0);
@@ -558,7 +564,10 @@
 			struct epoll_event events[MAX_EVENTS];
 
 			int eventCount = epoll_wait(epoll_fd, events, MAX_EVENTS, 100);
-			if (eventCount == -1) return (1);
+			if (eventCount == -1) {
+				Log::log(RD "Fatal error in " Y "EPOLL" NC, Log::MEM_ERROR); Log::log("---", Log::MEM_ACCESS);
+				Settings::global.status = false; Settings::global.bad_config = true; return (1);
+			}
 
 			for (int i = 0; i < eventCount; ++i) {
 				if (events[i].data.fd == timeout_fd) { Display::update(); check_timeout(); cache.remove_expired(); continue; }

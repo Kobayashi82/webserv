@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 14:30:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/17 16:31:39 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/17 19:09:02 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 #include "Display.hpp"
 #include "Settings.hpp"
 #include "Net.hpp"
+#include "Thread.hpp"
 
 //	*		nc 127.0.0.1 8081	-	telnet 127.0.0.1 8081	-	curl -v http://127.0.0.1:8081/
 //	*		siege -b -c 255 -t 10S 127.0.0.1:8081
@@ -54,6 +55,7 @@
 int main(int argc, char **argv) {
 	Settings::load_args(argc, argv);
 
+	Display::signal_handler();
 	Log::start(); Display::start();
 	
 	Net::epoll__create();
@@ -62,7 +64,10 @@ int main(int argc, char **argv) {
 	usleep(10000); Display::update();
 
 	while (Display::isTerminate() == -1) {
-		Net::epoll_events();
+		if (Display::signal_check()) break;
+		if (Net::epoll_events()) {
+			break;
+		}
 	}
 	
 	Net::epoll_close();

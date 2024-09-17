@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:32:38 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/17 16:26:54 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/17 18:55:03 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -181,7 +181,11 @@
 					if (!log.path.empty() && log.path[0] != '/') log.path = Settings::program_path + log.path;
 
 					if (log.type < LOCAL_ACCESS)						log_to_memory(log.msg, log.type, log.VServ);
-					if (log.type > GLOBAL_ERROR && !log.path.empty())	logMap[log.path] += Utils::str_nocolor(log.msg) + "\n";
+					if (log.type > GLOBAL_ERROR && !log.path.empty())	{
+						if (log.msg.find("Transfered") != std::string::npos) log.msg = "\t " + Utils::str_nocolor(log.msg).substr(23);
+						logMap[log.path] += Utils::str_nocolor(log.msg);
+						if (log.msg.find("GET") == std::string::npos) logMap[log.path] += "\n";
+					}
 				}
 
 				for (std::map<std::string, std::string>::iterator it = logMap.begin(); it != logMap.end(); ++it)
