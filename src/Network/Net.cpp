@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 21:55:43 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/17 19:20:43 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/17 19:26:22 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -454,7 +454,7 @@
 				new_value.it_value.tv_sec = Net::TIMEOUT_INTERVAL;										//	Time to the first expiration
 				new_value.it_interval.tv_sec = Net::TIMEOUT_INTERVAL;									//	Interval between expirations
 
-				if (timerfd_settime(timeout_fd, 0, &new_value, NULL) != -1) {
+				if (timerfd_settime(timeout_fd, 0, &new_value, NULL) == -1) {
 					Log::log(RD "Error creating " Y "Time-Out" RD " monitor" NC, Log::MEM_ERROR); Log::log("---", Log::MEM_ACCESS);
 					close(timeout_fd); timeout_fd = -1; return (1);
 				}
@@ -564,7 +564,7 @@
 			struct epoll_event events[MAX_EVENTS];
 
 			int eventCount = epoll_wait(epoll_fd, events, MAX_EVENTS, 100);
-			if (eventCount == -1) {
+			if (eventCount == -1 && Display::signal == 0) {
 				Log::log(RD "Fatal error in " Y "EPOLL" NC, Log::MEM_ERROR); Log::log("---", Log::MEM_ACCESS);
 				Settings::global.status = false; Settings::global.bad_config = true; return (1);
 			}
