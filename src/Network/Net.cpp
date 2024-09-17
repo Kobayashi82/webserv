@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 21:55:43 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/16 19:01:55 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/17 13:02:29 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,11 +49,11 @@
 		#pragma region Constructors
 
 			Net::EventInfo::EventInfo() : fd(-1), type(NOTHING), socket(NULL), client(NULL) {
-				pipe[0] = -1; pipe[1] = -1; data_size = 0; max_data_size = 0; path = ""; no_cache = false; close = false;
+				pipe[0] = -1; pipe[1] = -1; data_size = 0; max_data_size = 0; path = ""; no_cache = false; close = false; vserver_data = NULL;
 			}
 
 			Net::EventInfo::EventInfo(int _fd, int _type, Net::SocketInfo * _socket, Client * _client) : fd(_fd), type(_type), socket(_socket), client(_client) {
-				pipe[0] = -1; pipe[1] = -1; data_size = 0; max_data_size = 0; path = ""; no_cache = false; close = false;
+				pipe[0] = -1; pipe[1] = -1; data_size = 0; max_data_size = 0; path = ""; no_cache = false; close = false; vserver_data = NULL;
 			}
 
 			Net::EventInfo::EventInfo(const EventInfo & src) { *this = src; }
@@ -64,7 +64,7 @@
 
 			Net::EventInfo & Net::EventInfo::operator=(const EventInfo & rhs) {
 				if (this != &rhs) {
-					fd = rhs.fd; type = rhs.type; socket = rhs.socket; client = rhs.client; path = rhs.path; no_cache = rhs.no_cache; close = rhs.close; request = rhs.request;
+					fd = rhs.fd; type = rhs.type; socket = rhs.socket; client = rhs.client; path = rhs.path; no_cache = rhs.no_cache; close = rhs.close; request = rhs.request; vserver_data = rhs.vserver_data;
 					pipe[0] = rhs.pipe[0]; pipe[1] = rhs.pipe[1]; data_size = rhs.data_size; max_data_size = rhs.max_data_size; read_buffer = rhs.read_buffer; write_buffer = rhs.write_buffer;
 				}
 				return (*this);

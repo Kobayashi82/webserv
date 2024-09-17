@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/14 14:37:32 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/16 19:21:45 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/17 12:47:50 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -163,8 +163,12 @@
 					if 		(Settings::current_vserver == -1)													VServ = &Settings::global;
 					else 																						VServ = &Settings::vserver[Settings::current_vserver];
 
-					if 		(VServ->config_displayed == false && VServ->log_index > 0) {						VServ->log_index--; VServ->autolog = false; }
-					else if (VServ->config_displayed == true && VServ->config_index > 0)						VServ->config_index--;
+					Thread::mutex_set(Log::mutex, Thread::MTX_LOCK);
+
+						if 		(VServ->config_displayed == false && VServ->log_index > 1) {						VServ->log_index--; VServ->autolog = false; }
+						else if (VServ->config_displayed == true && VServ->config_index > 0)						VServ->config_index--;
+
+					Thread::mutex_set(Log::mutex, Thread::MTX_UNLOCK);
 
 					if (Display::drawing) { Display::redraw = true; return; } Display::Output();
 				}
@@ -180,16 +184,15 @@
 
 					Thread::mutex_set(Log::mutex, Thread::MTX_LOCK);
 
-					if		(VServ->config_displayed == false
-							&& static_cast<int>(VServ->log.both.size()) >= log_rows
-							&& static_cast<int>(VServ->log.both.size()) - (log_rows - 1) > static_cast<int>(VServ->log_index)) {	if (++VServ->log_index == VServ->log.both.size() - (log_rows - 1)) VServ->autolog = true; }
+						if		(VServ->config_displayed == false
+								&& static_cast<int>(VServ->log.both.size()) >= log_rows
+								&& static_cast<int>(VServ->log.both.size()) - (log_rows - 1) > static_cast<int>(VServ->log_index)) {	if (++VServ->log_index == VServ->log.both.size() - (log_rows - 1)) VServ->autolog = true; }
 
-					else if (VServ->config_displayed == true
-							&& static_cast<int>(VServ->config.size()) >= log_rows
-							&& static_cast<int>(VServ->config.size()) - (log_rows - 1) > static_cast<int>(VServ->config_index))		Settings::global.config_index++;
+						else if (VServ->config_displayed == true
+								&& static_cast<int>(VServ->config.size()) >= log_rows
+								&& static_cast<int>(VServ->config.size()) - (log_rows - 1) > static_cast<int>(VServ->config_index))		Settings::global.config_index++;
 
 					Thread::mutex_set(Log::mutex, Thread::MTX_UNLOCK);
-
 
 					if (Display::drawing) { Display::redraw = true; return; } Display::Output();
 				}
@@ -203,7 +206,7 @@
 					if 		(Settings::current_vserver == -1)													VServ = &Settings::global;
 					else 																						VServ = &Settings::vserver[Settings::current_vserver];
 			
-					if		(VServ->config_displayed == false && VServ->log_index > 0) {						VServ->log_index = 0; VServ->autolog = false; }
+					if		(VServ->config_displayed == false && VServ->log_index > 1) {						VServ->log_index = 1; VServ->autolog = false; }
 					else if ( VServ->config_displayed == true && VServ->config_index > 0)						VServ->config_index = 0;
 
 					if (Display::drawing) { Display::redraw = true; return; } Display::Output();
@@ -660,12 +663,10 @@
 				//	NAME
 					ss.str("");
 					if (Settings::vserver.size() > 0 && Settings::current_vserver != -1) {
-						if (Settings::vserver[Settings::current_vserver].get("server_name").empty() && Settings::current_vserver == 0)			temp = "(1) Default";
-						else if (Settings::vserver[Settings::current_vserver].get("server_name").empty()) {										ss << Settings::current_vserver + 1;
-																																				temp = "(" + ss.str() + ") V-Server";
-						} else {																												ss << Settings::current_vserver + 1;
-																																				temp = "(" + ss.str() + ") " + Settings::vserver[Settings::current_vserver].get("server_name");
-						}
+						ss << Settings::current_vserver + 1; temp = "(" + ss.str() + ") ";
+						if (Settings::vserver[Settings::current_vserver].get("server_name").empty())											temp += "Unnamed V-Server";
+						else if (Settings::vserver[Settings::current_vserver].get("server_name") == "_")										temp += "Unnamed V-Server";
+						else																													temp += Settings::vserver[Settings::current_vserver].get("server_name");
 					} else if (Status == CRED && Settings::vserver.size() > 0)																	temp = "Virtual servers offline";
 					else if (Settings::vserver.size() > 0 && Settings::current_vserver == -1)
 						if (some)																												temp = "Some virtual servers online";

@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 21:49:50 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/16 16:54:55 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/17 13:00:09 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,6 +51,7 @@ class Net {
 			std::string 			path;																//	Path of the file
 			bool					no_cache;															//	Do not keep in cache
 			bool					close;																//	Close the conection... please
+			std::vector<std::pair<std::string, std::string> > * vserver_data;							//	Data container where the request is server (VServer, Location...)
 
 			//	Constructors
 			EventInfo();																				//	Default constructor

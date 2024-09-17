@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 14:30:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/16 20:11:47 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/17 13:05:00 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,38 +19,31 @@
 //	nc 127.0.0.1 8081	-	telnet 127.0.0.1 8081	-	curl -v http://127.0.0.1:8081/
 //	siege -b -c 255 -t 10S 127.0.0.1:8081			135.000 transactions is a good measure
 
-//	 ?		Non-bloquing fd
-//	 ?		Log through epoll
+//	?		Non-bloquing fd
+//	?		Log through epoll
 
-//				CONNECTIONS
-//	 TODO	Vserver take control if other is disabled
-//	 TODO	Si 0.0.0.0 o sin ip, usar any.
+//			CONNECTIONS
+//	TODO	Vserver take control if other is disabled
 
-//				DISPLAY
-//	 TODO	Info on IPs active in vserver
-//	 TODO	Log position to first key down need tWo taps
-//	 TODO	Global log only log what is not in other logs
-//	 TODO	Display add access, error or both to logs
-//	 TODO	Positions for access, error and log 
-//	 TODO	Better name for vservers
-//	 TODO	Reload config button
-//	 TODO	./webserv -i with siege overloaded with logs
+//			DISPLAY
+//	TODO	./webserv -i with siege overloaded with logs
 
 //			CONFIG
-//	 TODO	Method in global, server y location
+//	TODO	Method in global, server y location
 
 //			INTERMEDIARY
-//	 TODO	Intermediario
-//	 TODO	Index usa index.html por defecto
-//	 TODO	Update resource path with alias or any modified path before cgi
-//	 TODO	If cgi, cant load request first, must analyze header before
+//	TODO	Intermediario
+//	TODO	Log path in event
+//	TODO	Index usa index.html por defecto
+//	TODO	Update resource path with alias or any modified path before cgi
+//	TODO	If cgi, cant load request first, must analyze header before
 
 //			COMUNICATIONS
-//	 TODO	Transfer big files
+//	TODO	Transfer big files
 
 //			DOCUMENTATION
-//	 TODO	Documentation (conexiones, cache, request, response, cgi, methods, cookies and sessions, directories)
-//	 TODO	Diagram
+//	TODO	Documentation (conexiones, cache, request, response, cgi, methods, cookies and sessions, directories)
+//	TODO	Diagram
 
 //  Entry point
 int main(int argc, char **argv) {

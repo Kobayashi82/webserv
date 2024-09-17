@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:32:38 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/14 13:16:46 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/17 13:03:11 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -195,83 +195,70 @@
 
 		#pragma region Log
 
-			void Log::log(std::string method, std::string re_path, int code, size_t bytes, std::string time, std::string ip, VServer * VServ, std::vector<std::pair<std::string, std::string> > * data) {
-				std::string method_color;
-				if (method == "GET") method_color = AMBER500;
-				if (method == "HEAD") method_color = GREEN600;
-				if (method == "POST") method_color = FUCHSIA600;
-				if (method == "PUT") method_color = TEAL400;
-				if (method == "DELETE") method_color = RED400;
+			#pragma region Log Request
 
-				std::string msg = UN BLUE400 + ip + NC + std::string("                ").substr(ip.size()) + method_color + method + std::string("           ").substr(method.size()) + BR + re_path + NC;
-				log(msg, BOTH_ACCESS, VServ, data);
+				void Log::log(std::string method, std::string re_path, int code, size_t bytes, std::string time, std::string ip, VServer * VServ, std::vector<std::pair<std::string, std::string> > * data) {
+					std::string method_color;
+					if (method == "GET") method_color = AMBER500;
+					if (method == "HEAD") method_color = GREEN600;
+					if (method == "POST") method_color = FUCHSIA600;
+					if (method == "PUT") method_color = TEAL400;
+					if (method == "DELETE") method_color = RED400;
 
-				std::string s_bytes = Utils::formatSize(bytes);
-				std::string code_color;
-				if (code >= 100 && code < 300) code_color = GREEN600;
-				if (code >= 300 && code < 400) code_color = ORANGE400;
-				if (code >= 400 && code < 600) code_color = RED400;
+					std::string msg = UN BLUE400 + ip + NC + std::string("                ").substr(ip.size()) + method_color + method + std::string("           ").substr(method.size()) + BR + re_path + NC;
+					log(msg, BOTH_ACCESS, VServ, data);
 
-				msg = BLUE800 "Transfered:     " AMBER200 + s_bytes + std::string("          ").substr(s_bytes.size()) + C " in " SKY700 + time + " ms " C "with code " + code_color + Utils::ltos(code) + C " (" + code_color + Settings::error_codes[code] + C ")" NC;
-				log(msg, BOTH_ACCESS, VServ, data);
-				log("---", MEM_ACCESS, VServ, data);
-			}
+					std::string s_bytes = Utils::formatSize(bytes);
+					std::string code_color;
+					if (code >= 100 && code < 300) code_color = GREEN600;
+					if (code >= 300 && code < 400) code_color = ORANGE400;
+					if (code >= 400 && code < 600) code_color = RED400;
 
-			void Log::log(std::string msg, int type, VServer * VServ, std::vector<std::pair<std::string, std::string> > * data) {
-				std::string path;
-
-				if (Display::background) return;
-
-				if (VServ == &(Settings::global)) VServ = NULL;
-
-				if (!VServ) {
-					if (type == BOTH_ACCESS || type == LOCAL_ACCESS)	path = Settings::data_get(Settings::global.data, "access_log");
-					if (type == BOTH_ERROR  || type == LOCAL_ERROR )	path = Settings::data_get(Settings::global.data, "error_log" );
-
-					Thread::mutex_set(mutex, Thread::MTX_LOCK);
-
-						_logs.push(LogInfo(msg, type, VServ, path));
-
-					Thread::mutex_set(mutex, Thread::MTX_UNLOCK);
-				} else {
-					std::string global_path;
-
-					if (!data) data = &VServ->data;
-
-					if (type == BOTH_ACCESS || type == LOCAL_ACCESS)	path = Settings::data_get(data, "access_log");
-					if (type == BOTH_ERROR  || type == LOCAL_ERROR )	path = Settings::data_get(data, "error_log" );
-
-					if (type == BOTH_ACCESS || type == LOCAL_ACCESS)	global_path = Settings::data_get(Settings::global.data, "access_log");
-					if (type == BOTH_ERROR  || type == LOCAL_ERROR )	global_path = Settings::data_get(Settings::global.data, "error_log" );
-
-					Thread::mutex_set(mutex, Thread::MTX_LOCK);
-
-						if (type == BOTH_ACCESS || type == LOCAL_ACCESS)	_logs.push(LogInfo(msg, LOCAL_ACCESS, NULL, global_path));
-						if (type == BOTH_ERROR || type == LOCAL_ERROR)		_logs.push(LogInfo(msg, LOCAL_ERROR, NULL, global_path));
-						_logs.push(LogInfo(msg, type, VServ, path));
-
-					Thread::mutex_set(mutex, Thread::MTX_UNLOCK);
+					msg = BLUE800 "Transfered:     " AMBER200 + s_bytes + std::string("          ").substr(s_bytes.size()) + C " in " SKY700 + time + " ms " C "with code " + code_color + Utils::ltos(code) + C " (" + code_color + Settings::error_codes[code] + C ")" NC;
+					log(msg, BOTH_ACCESS, VServ, data);
+					log("---", MEM_ACCESS, VServ, data);
 				}
-			}
 
-			// void Log::log(std::string msg, int type, VServer * VServ, std::vector<std::pair<std::string, std::string> > * data) {
-			// 	std::string path;
+			#pragma endregion
 
-			// 	if (Display::background) return;
+			#pragma region Log
 
-			// 	if (VServ == &(Settings::global)) VServ = NULL;
-			// 	if (VServ)	data = &VServ->data;
-			// 	//else 		data = &Settings::global.data;
+				void Log::log(std::string msg, int type, VServer * VServ, std::vector<std::pair<std::string, std::string> > * data) {
+					std::string path;
 
-			// 	if (type == BOTH_ACCESS || type == LOCAL_ACCESS)	path = Settings::data_get(data, "access_log");
-			// 	if (type == BOTH_ERROR  || type == LOCAL_ERROR )	path = Settings::data_get(data, "error_log" );
+					if (Display::background) return;
 
-			// 	Thread::mutex_set(mutex, Thread::MTX_LOCK);
+					if (VServ == &(Settings::global)) VServ = NULL;
 
-			// 		_logs.push(LogInfo(msg, type, VServ, path));
+					if (!VServ) {
+						if (type == BOTH_ACCESS || type == LOCAL_ACCESS)	path = Settings::data_get(Settings::global.data, "access_log");
+						if (type == BOTH_ERROR  || type == LOCAL_ERROR )	path = Settings::data_get(Settings::global.data, "error_log" );
 
-			// 	Thread::mutex_set(mutex, Thread::MTX_UNLOCK);
-			// }
+						Thread::mutex_set(mutex, Thread::MTX_LOCK);
+
+							_logs.push(LogInfo(msg, type, VServ, path));
+
+						Thread::mutex_set(mutex, Thread::MTX_UNLOCK);
+					} else {
+						if (!data) data = &VServ->data;
+
+						if (type == BOTH_ACCESS || type == LOCAL_ACCESS)	path = Settings::data_get(data, "access_log");
+						if (type == BOTH_ERROR  || type == LOCAL_ERROR )	path = Settings::data_get(data, "error_log" );
+
+						if (path.empty()) {
+							if (type == BOTH_ACCESS || type == LOCAL_ACCESS)	path = Settings::data_get(Settings::global.data, "access_log");
+							if (type == BOTH_ERROR  || type == LOCAL_ERROR )	path = Settings::data_get(Settings::global.data, "error_log" );
+						}
+
+						Thread::mutex_set(mutex, Thread::MTX_LOCK);
+
+							_logs.push(LogInfo(msg, type, VServ, path));
+
+						Thread::mutex_set(mutex, Thread::MTX_UNLOCK);
+					}
+				}
+
+			#pragma endregion
 
 		#pragma endregion
 
