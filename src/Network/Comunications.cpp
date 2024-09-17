@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/27 09:32:08 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/17 13:02:33 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/17 14:25:31 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -169,6 +169,7 @@
 			void Net::process_response(EventInfo * event) {
 				if (!event) return;
 
+				event->close = true;
 				Cache::CacheInfo * fcache = cache.get("index.html");
 				if (fcache) {
 					process_data(get_event(event->fd), fcache->content);

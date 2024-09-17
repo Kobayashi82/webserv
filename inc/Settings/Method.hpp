@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 11:53:37 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/12 13:18:17 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/17 13:38:40 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 #include <iostream>																						//	For strings and standard input/output like std::cin, std::cout
 #include <vector>																						//	For std::vector container
 
+class VServer;
 class Location;
 class Method {
 
@@ -22,6 +23,7 @@ class Method {
 
 		//	Variables
 		std::vector <std::pair<std::string, std::string> >	data;										//	Values of the current Method
+		VServer *											VServ;										//	Pointer to the parent VServer
 		Location *											Loc;										//	Pointer to the parent Location
 
 		//	Constructors

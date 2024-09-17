@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 11:53:48 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/12 13:10:06 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/17 13:09:28 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,6 +28,7 @@ class VServer {
 		std::vector <std::pair<std::string, std::string> >	data;										//	Values of the current VServer
 		std::vector <std::pair<std::string, int> >			addresses;									//	Values of the current VServer
 		std::deque <Location>								location;									//	Locations of the current VServer
+		std::deque <Method>									method;										//	Method of the current VServer
 		std::vector <std::string>							config;										//	Settings in a vector of the current VServer
 		bool												config_displayed;							//	Is the log or the settings displayed
 		size_t												config_index;								//	Current index of the settings
@@ -62,5 +63,9 @@ class VServer {
 		void		set(const Location & Loc);															//	Add or modify a Location
 		void		add(const Location & Loc);															//	Alias for 'set'
 		void		del(const Location & Loc);															//	Delete a Location
+
+		void		set(const Method & Met);															//	Add or modify a Method
+		void		add(const Method & Met);															//	Alias for 'set'
+		void		del(const Method & Met);															//	Delete a Method
 
 };

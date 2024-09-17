@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 21:55:43 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/17 13:02:29 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/17 14:38:33 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -103,7 +103,7 @@
 		#pragma region Remove
 
 			void Net::SocketInfo::remove() {
-				Net::epoll_del(fd); close(fd); remove_event(fd);
+				if (fd != -1) { Net::epoll_del(fd); close(fd); } remove_event(fd);
 				std::list <SocketInfo>::iterator s_it = Net::sockets.begin();
 				while (s_it != Net::sockets.end()) {
 					if (*s_it == *this) {

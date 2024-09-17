@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 14:30:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/17 13:05:00 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/17 14:25:55 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,9 +27,6 @@
 
 //			DISPLAY
 //	TODO	./webserv -i with siege overloaded with logs
-
-//			CONFIG
-//	TODO	Method in global, server y location
 
 //			INTERMEDIARY
 //	TODO	Intermediario

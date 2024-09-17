@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/18 11:28:40 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/16 20:13:02 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/17 14:38:41 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,7 +54,7 @@
 #pragma region Remove
 
 	void	Client::remove(bool from_socket) {
-		Net::epoll_del(fd); if (fd != -1) close(fd);
+		if (fd != -1) { Net::epoll_del(fd); close(fd); }
 		Net::events.erase(fd);
 
 		// if (socket && socket->clients.size() > 0) {

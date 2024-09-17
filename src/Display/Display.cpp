@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/14 14:37:32 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/17 12:47:50 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/17 14:00:44 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -190,7 +190,7 @@
 
 						else if (VServ->config_displayed == true
 								&& static_cast<int>(VServ->config.size()) >= log_rows
-								&& static_cast<int>(VServ->config.size()) - (log_rows - 1) > static_cast<int>(VServ->config_index))		Settings::global.config_index++;
+								&& static_cast<int>(VServ->config.size()) - (log_rows - 1) > static_cast<int>(VServ->config_index))		VServ->config_index++;
 
 					Thread::mutex_set(Log::mutex, Thread::MTX_UNLOCK);
 

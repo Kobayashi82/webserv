@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:30:57 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/16 20:11:40 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/17 14:25:50 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,9 +15,6 @@
 
 #include <unistd.h>																						//	For access() to checks the accessibility of a file or directory
 #include <sys/stat.h>																					//	For stat() to retrieves information about a file or directory
-
-//			CONFIG
-//	 TODO	Method in global, server y location
 
 #pragma region Logging
 
@@ -677,11 +674,11 @@
 
 	void Settings::parser(std::ifstream & infile) {
 		std::string line; std::string oline; int last_line_count = -1; line_count = 0; VServer * PVServ = NULL; VServer VServ; Location Loc; Method Met;
-		bool is_http = false; int section = 0; int section_bracket_lvl[4] = {0, 0, 0, 0};
+		bool is_http = false; int section = 0, subsection = 0; int section_bracket_lvl[4] = {0, 0, 0, 0};
 
 		while (getline(infile, line)) {
 			bool NoAdd = false; std::string temp; oline = line; ++line_count; global.config.push_back(oline);
-			Utils::trim(line); if (line.empty()) { if (section != ROOT && section != GLOBAL) VServ.config.push_back(oline); continue; }
+			Utils::trim(line); if (line.empty()) { if (section != ROOT && section != GLOBAL && subsection != GLOBAL) VServ.config.push_back(oline); continue; }
 
 			while (!line.empty()) { int bracket_mode = 0;
 				size_t pos = line.find_first_of("{};");
@@ -712,17 +709,17 @@
 				if (firstPart == "http" && section == ROOT && is_http == false) { section = GLOBAL; section_bracket_lvl[0] = bracket_lvl; clear(); }
 				if (firstPart == "server" && section == GLOBAL) { section = SERVER; section_bracket_lvl[1] = bracket_lvl; PVServ = &VServ; }
 				if (firstPart == "location" && section == SERVER) { section = LOCATION; section_bracket_lvl[2] = bracket_lvl; Loc.clear(); }
-				if (firstPart == "method" && section == LOCATION) { section = METHOD; section_bracket_lvl[3] = bracket_lvl; Met.clear(); }
+				if (firstPart == "method" && section > ROOT && section < METHOD) { subsection = section; section = METHOD; section_bracket_lvl[3] = bracket_lvl; Met.clear(); }
 
-				if (section != ROOT && section != GLOBAL && last_line_count != line_count) { last_line_count = line_count; VServ.config.push_back(oline); }
+				if (section != ROOT && section != GLOBAL && subsection != GLOBAL && last_line_count != line_count) { last_line_count = line_count; VServ.config.push_back(oline); }
 
 				if (firstPart == "http" && is_http == false) is_http = true;
-				else if (firstPart == "http" && is_http == true) { invalid_directive(firstPart, line_count, ROOT, PVServ);							NoAdd = true; }
-				else if (section == GLOBAL && repeated_directive(firstPart, global.data, line_count, PVServ)) 										NoAdd = true;
-				else if (section == SERVER && repeated_directive(firstPart, VServ.data, line_count, PVServ)) 										NoAdd = true;
-				else if (section == LOCATION && repeated_directive(firstPart, Loc.data, line_count, PVServ)) 										NoAdd = true;
-				else if (section == METHOD && repeated_directive(firstPart, Met.data, line_count, PVServ)) 											NoAdd = true;
-				else if (invalid_directive(firstPart, line_count, section, PVServ))	{																NoAdd = true; firstPart = ""; if (section > GLOBAL) VServ.bad_config = true; else global.bad_config = true; }
+				else if (firstPart == "http" && is_http == true) { invalid_directive(firstPart, line_count, ROOT, PVServ);					NoAdd = true; }
+				else if (section == GLOBAL && repeated_directive(firstPart, global.data, line_count, PVServ)) 								NoAdd = true;
+				else if (section == SERVER && repeated_directive(firstPart, VServ.data, line_count, PVServ)) 								NoAdd = true;
+				else if (section == LOCATION && repeated_directive(firstPart, Loc.data, line_count, PVServ)) 								NoAdd = true;
+				else if (section == METHOD && repeated_directive(firstPart, Met.data, line_count, PVServ)) 									NoAdd = true;
+				else if (invalid_directive(firstPart, line_count, section, PVServ))	{														NoAdd = true; firstPart = ""; if (section > GLOBAL) VServ.bad_config = true; else global.bad_config = true; }
 
 				if ((section == GLOBAL || section == SERVER || section == LOCATION) && !firstPart.empty()) {
 					if (!NoAdd && (firstPart == "access_log" || firstPart == "error_log") && parse_path(firstPart, secondPart, true, true, false, PVServ))	firstPart = "";
@@ -769,22 +766,45 @@
 				}
 
 				if (section == METHOD && !firstPart.empty()) {
-					if (!NoAdd && firstPart == "method" && parse_method(secondPart, PVServ))												{ firstPart = ""; VServ.bad_config = true; }
-					if (!NoAdd && firstPart == "allow" && parse_allow(secondPart, PVServ))													{ firstPart = ""; VServ.bad_config = true; }
-					if (!NoAdd && firstPart == "deny" && parse_deny(secondPart, PVServ))													{ firstPart = ""; VServ.bad_config = true; }
-					if (!NoAdd && firstPart == "return" && parse_return(secondPart, PVServ))												{ firstPart = ""; VServ.bad_config = true; }
+					if (!NoAdd && firstPart == "method" && parse_method(secondPart, PVServ))												{ firstPart = ""; if (subsection > GLOBAL) VServ.bad_config = true; else global.bad_config = true; }
+					if (!NoAdd && firstPart == "allow" && parse_allow(secondPart, PVServ))													{ firstPart = ""; if (subsection > GLOBAL) VServ.bad_config = true; else global.bad_config = true; }
+					if (!NoAdd && firstPart == "deny" && parse_deny(secondPart, PVServ))													{ firstPart = ""; if (subsection > GLOBAL) VServ.bad_config = true; else global.bad_config = true; }
+					if (!NoAdd && firstPart == "return" && parse_return(secondPart, PVServ))												{ firstPart = ""; if (subsection > GLOBAL) VServ.bad_config = true; else global.bad_config = true; }
 
 					if (!NoAdd && (firstPart == "allow" || firstPart == "deny"))															Met.add(firstPart, secondPart, true);
 					else if (!firstPart.empty())	 																						Met.add(firstPart, secondPart);
 				}
 
 				if (bracket_mode != 0) { bracket_lvl += bracket_mode;
-					if (section == METHOD && section_bracket_lvl[3] == bracket_lvl)   { section = LOCATION; section_bracket_lvl[3] = 0; Met.Loc = &vserver[vserver.size() - 1].location[vserver[vserver.size() - 1].location.size() - 1]; Loc.add(Met); }
-					if (section == LOCATION && section_bracket_lvl[2] == bracket_lvl) { section = SERVER; section_bracket_lvl[2] = 0; Loc.VServ = &vserver[vserver.size() - 1]; VServ.add(Loc); }
+					if (section == METHOD && section_bracket_lvl[3] == bracket_lvl)   {
+						section = subsection; subsection = 0; section_bracket_lvl[3] = 0;
+						if (section == GLOBAL) {
+							Met.VServ = &global; global.add(Met);
+							global.add("method", Utils::ltos(global.method.size() - 1), true);
+						}
+						if (section == SERVER) {
+							VServ.add(Met); VServ.add("method", Utils::ltos(VServ.method.size() - 1), true);
+						}
+						if (section == LOCATION) {
+							Loc.add(Met); Loc.add("method", Utils::ltos(Loc.method.size() - 1), true);
+						}
+					}
+
+					if (section == LOCATION && section_bracket_lvl[2] == bracket_lvl) {
+						section = SERVER; section_bracket_lvl[2] = 0;
+						VServ.add(Loc); VServ.add("location", Utils::ltos(VServ.location.size() - 1), true);
+					}
+
 					if (section == SERVER && section_bracket_lvl[1] == bracket_lvl)   {
 						section = GLOBAL; section_bracket_lvl[1] = 0; missing_directive(VServ); if (VServ.bad_config) VServ.force_off = true;
 						add(VServ); VServ.bad_config = false; VServ.force_off = false; VServ.clear(); PVServ = NULL;
+
+						for (std::deque<Location>::iterator l_it = vserver[vserver.size() - 1].location.begin(); l_it != vserver[vserver.size() - 1].location.end(); ++l_it) {
+							for (std::deque<Method>::iterator m_it =  l_it->method.begin(); m_it != l_it->method.end(); ++m_it)  m_it->Loc = &(*l_it);
+							l_it->VServ = &vserver[vserver.size() - 1];
+						}
 					}
+
 					if (section == GLOBAL && section_bracket_lvl[0] == bracket_lvl)   { section = ROOT; section_bracket_lvl[0] = 0; }
 				}
 			}
