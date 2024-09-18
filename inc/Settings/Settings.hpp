@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:14:05 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/18 12:10:59 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/18 15:35:01 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,8 @@
 
 #include <cstring>																						//	For strcmp()
 
+#pragma region Settings
+
 class Settings {
 
 	public:
@@ -41,6 +43,7 @@ class Settings {
 		static std::map <std::string, std::string>	mime_types;											//	MIME types in a map
 
 		static bool									check_only;											//	Check the config file, but don't start the server
+		static bool 								config_created;										//	The config file has been created
 		static bool									loaded;												//	The config file loaded successfully (but may contains errors)
 		static int									current_vserver;									//	Current selected V-Server (-1 = None)
 		static int									terminate;											//	Flag the program to exit with the value in terminate (the default value of -1 don't exit)
@@ -60,6 +63,7 @@ class Settings {
 		static void	vserver_clear();																	//	Delete all V-Servers
 
 		//	Load
+		static void	generate_config(const std::string & File, const std::string & path);
 		static void	load();																				//	Load the default configuration file
 		static void	load(const std::string & File);														//	Load a configuration file
 		static void	load_args(int argc, char **argv);													//	Load a configuration file based on the defined arguments
@@ -69,7 +73,6 @@ class Settings {
 		//	Variables
 		enum e_section { ROOT, GLOBAL, SERVER, LOCATION, METHOD };										//	Enumarator for the sections of the config file
 		
-
 		static int		line_count;																		//	Number of the current line of the configuration file (use to indicate the line of an error in the configuration file)
 		static int		bracket_lvl;																	//	Level of the bracket (use to parse the configuration file)
 		static bool		BadConfig;																		//	Indicate if there are errors in the config file
@@ -114,3 +117,5 @@ class Settings {
 		static void	parser(std::ifstream & infile);														//	Main parser function that read the config file
 
 };
+
+#pragma endregion

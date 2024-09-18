@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/18 11:28:40 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/18 13:19:57 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/18 13:57:03 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,16 +59,6 @@
 	void	Client::remove(bool from_socket) {
 		if (fd != -1) { Epoll::remove(fd); close(fd); }
 		Event::events.erase(fd);
-
-		// if (socket && socket->clients.size() > 0) {
-		// 	std::list <Client *>::iterator s_it = socket->clients.begin();
-		// 	while (s_it != socket->clients.end()) {
-		// 		if (*s_it == this) { s_it = socket->clients.erase(s_it); break; }
-		// 		++s_it;
-		// 	}
-		// }
-
-		// socket = NULL;
 
 		if (Comunication::clients.size() == 0) return;
 		std::list <Client>::iterator c_it = Comunication::clients.begin();

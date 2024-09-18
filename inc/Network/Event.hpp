@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/18 11:20:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/18 12:59:40 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/18 14:05:37 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,6 +59,8 @@ enum e_type { NOTHING, SOCKET, CLIENT, DATA, CGI };
 
 #pragma endregion
 
+#pragma region Event
+
 class Event {
 
 	public:
@@ -71,3 +73,5 @@ class Event {
 		static int			remove_event(int fd);
 
 };
+
+#pragma endregion

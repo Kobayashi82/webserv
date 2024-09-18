@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 21:49:48 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/18 12:30:11 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/18 14:03:55 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,8 @@
 
 #include <iostream>																						//	For standard input/output stream objects like std::cin, std::cout
 #include <vector>																						//	For std::vector container
+
+#pragma region Client
 
 struct SocketInfo;
 class Client {
@@ -42,3 +44,5 @@ class Client {
 		void	remove(bool from_socket = false);														//	Close the connection, removes the client and cleaning up resources
 
 };
+
+#pragma endregion

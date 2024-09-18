@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 18:57:42 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/26 22:05:46 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/18 14:13:05 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,8 @@
 #include <sstream>																						//	For std::stringstream to format strings
 #include <iomanip>																						//	For stream manipulators like std::setw and std::setfill
 #include <ctime>																						//	For time-related functions and types
+
+#pragma region Timer
 
 class Timer {
 
@@ -40,3 +42,5 @@ class Timer {
 		std::string	current_date() const;																//	Get the current date in DD:MM:YYYY format
 
 };
+
+#pragma endregion

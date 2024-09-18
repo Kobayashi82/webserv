@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/18 10:58:42 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/18 13:28:54 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/18 14:05:48 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,10 +21,9 @@
 
 #include <arpa/inet.h>																					//	For sockets and address conversion
 
-class VServer;
-
 #pragma region SocketInfo
 
+	class VServer;
 	struct SocketInfo {
 
 		//	Variables
@@ -45,6 +44,8 @@ class VServer;
 	};
 
 #pragma endregion
+
+#pragma region Socket
 
 struct EventInfo;
 class Socket {
@@ -81,3 +82,5 @@ class Socket {
 		static void	error_msg(std::vector <std::pair<std::string, int> >::const_iterator addr_it, VServer * VServ, int type);
 
 };
+
+#pragma endregion

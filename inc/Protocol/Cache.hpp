@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/24 19:39:57 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/26 22:06:18 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/18 14:02:08 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,34 +17,36 @@
 #include <list>																							//	For std::list container
 #include <ctime>																						//	For time-related functions and types
 
+#pragma region CacheInfo
+
+	struct CacheInfo {
+
+		//	Variables
+		std::string	path;																				//	The file path or key associated with the cache entry
+		std::string	content;																			//	The content stored in the cache for the given path
+		size_t		size;																				//	The size of the cached content, typically in bytes
+		time_t		expire;																				//	The expiration time of the cache entry
+
+		//	Constructors
+		CacheInfo(const std::string & _path, const std::string & _content, time_t _expire);				//	Parameterized constructor
+		CacheInfo(const CacheInfo & src);																//	Copy constructor
+
+		//	Overloads
+		CacheInfo & 	operator=(const CacheInfo & rhs);												//	Overload for asignation
+		bool 			operator==(const CacheInfo & rhs) const;										//	Overload for comparison
+
+		//	Methods
+		bool			isExpired() const;																//	Return true if the CacheInfo expired
+
+	};
+
+#pragma endregion
+
+#pragma region Cache
+
 class Cache {
 
 	public:
-
-		#pragma region CacheInfo
-
-		struct CacheInfo {
-
-			//	Variables
-			std::string	path;																			//	The file path or key associated with the cache entry
-			std::string	content;																		//	The content stored in the cache for the given path
-			size_t		size;																			//	The size of the cached content, typically in bytes
-			time_t		expire;																			//	The expiration time of the cache entry
-
-			//	Constructors
-			CacheInfo(const std::string & _path, const std::string & _content, time_t _expire);			//	Parameterized constructor
-			CacheInfo(const CacheInfo & src);															//	Copy constructor
-
-			//	Overloads
-			CacheInfo & 	operator=(const CacheInfo & rhs);											//	Overload for asignation
-			bool 			operator==(const CacheInfo & rhs) const;									//	Overload for comparison
-
-			//	Methods
-			bool			isExpired() const;															//	Return true if the CacheInfo expired
-
-		};
-
-		#pragma endregion
 
 		//	Constructors
 		Cache();																						//	Default constructor
@@ -77,3 +79,5 @@ class Cache {
 		size_t														_max_content_size;					//	Maximum size of the content allowed
 
 };
+
+#pragma endregion

@@ -6,9 +6,11 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/18 12:44:04 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/18 12:50:13 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/18 14:03:54 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+
+#pragma once
 
 #include "Settings.hpp"
 #include "Security.hpp"
@@ -20,7 +22,7 @@
 
 #include <sys/socket.h>
 
-#pragma once
+#pragma region Comunication
 
 struct EventInfo;
 class Client;
@@ -56,3 +58,5 @@ class Comunication {
 		static void	resolve_request(const std::string host, const std::string method, std::string path, EventInfo * event);
 
 };
+
+#pragma endregion

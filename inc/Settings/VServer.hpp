@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 11:53:48 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/17 13:09:28 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/18 14:08:13 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,8 @@
 #include <algorithm>																					//	For std::find()
 #include <vector>																						//	For std::vector container
 #include <deque>																						//	For std::deque container
+
+#pragma region VServer
 
 class VServer {
 
@@ -69,3 +71,5 @@ class VServer {
 		void		del(const Method & Met);															//	Delete a Method
 
 };
+
+#pragma endregion

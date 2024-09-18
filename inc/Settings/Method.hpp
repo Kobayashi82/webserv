@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 11:53:37 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/17 13:38:40 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/18 14:07:12 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,8 @@
 
 #include <iostream>																						//	For strings and standard input/output like std::cin, std::cout
 #include <vector>																						//	For std::vector container
+
+#pragma region Method
 
 class VServer;
 class Location;
@@ -43,3 +45,5 @@ class Method {
 		void		clear();																			//	Delete all Keys and his Values
 
 };
+
+#pragma endregion

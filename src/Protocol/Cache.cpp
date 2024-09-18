@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/24 19:40:07 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/28 13:21:02 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/18 14:01:44 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,19 +16,19 @@
 
 	#pragma region Constructors
 
-		Cache::CacheInfo::CacheInfo(const std::string & _path, const std::string & _content, time_t _expire) : path(_path), content(_content), expire(time(NULL) + _expire) {}
-		Cache::CacheInfo::CacheInfo(const CacheInfo & src) { *this = src; }
+		CacheInfo::CacheInfo(const std::string & _path, const std::string & _content, time_t _expire) : path(_path), content(_content), expire(time(NULL) + _expire) {}
+		CacheInfo::CacheInfo(const CacheInfo & src) { *this = src; }
 
 	#pragma endregion
 
 	#pragma region Overloads
 
-		Cache::CacheInfo & Cache::CacheInfo::operator=(const CacheInfo & rhs) {
+		CacheInfo & CacheInfo::operator=(const CacheInfo & rhs) {
 			if (this != &rhs) { path = rhs.path; content = rhs.content; size = rhs.size; expire = rhs.expire; }
 			return (*this);
 		}
 
-		bool Cache::CacheInfo::operator==(const CacheInfo & rhs) const {
+		bool CacheInfo::operator==(const CacheInfo & rhs) const {
 			return (path == rhs.path && content == rhs.content && size == rhs.size && expire == rhs.expire);
 		}
 
@@ -36,7 +36,7 @@
 
 	#pragma region isExpired
 
-		bool Cache::CacheInfo::isExpired() const { return time(NULL) > expire; }
+		bool CacheInfo::isExpired() const { return time(NULL) > expire; }
 
 	#pragma endregion
 
@@ -72,7 +72,7 @@
 
 		#pragma region Get
 
-			Cache::CacheInfo * Cache::get(const std::string & path) {
+			CacheInfo * Cache::get(const std::string & path) {
 				std::map <std::string, CacheInfo>::iterator it = _cache.find(path);
 				if (it != _cache.end()) {
 					CacheInfo & info = it->second;

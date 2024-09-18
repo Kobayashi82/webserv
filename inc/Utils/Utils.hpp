@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:37:20 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/14 12:42:41 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/18 14:08:51 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,8 @@
 #include "VServer.hpp"
 
 #include <iostream>																						//	For strings and standard input/output like std::cin, std::cout
+
+#pragma region Utils
 
 class Utils {
 
@@ -58,3 +60,5 @@ class Utils {
 		static std::string	expand_tilde(const std::string & path);										//	Expand '~' to the user home directory
 
 };
+
+#pragma endregion

@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 11:01:21 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/26 22:15:54 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/18 14:08:45 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,8 @@
 
 #include <iostream>																						//	For strings and standard input/output like std::cin, std::cout
 #include <pthread.h>																					//	For multi-threading and synchronization
+
+#pragma region Thread
 
 class Thread {
 
@@ -38,3 +40,5 @@ class Thread {
 		static void			set_long	(pthread_mutex_t & mutex, long & value1, long value2);
 		static long			get_long	(pthread_mutex_t & mutex, long & value1);
 };
+
+#pragma endregion

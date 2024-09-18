@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/03 13:52:15 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/26 22:01:35 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/18 14:10:33 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,8 @@
 
 #include <unistd.h>																						//	For sysconf() to calculate the page size
 
+#pragma region Monitor
+
 class Monitor {
 
 	private:
@@ -30,8 +32,10 @@ class Monitor {
 		//	Variables
 		std::time_t		_prev_time;																		//	Stores the previous time point for calculating elapsed time
 		std::clock_t	_prev_cpu_time;																	//	Stores the previous CPU time for calculating CPU usage
+
 		std::string		_CPUinStr;																		//	Last string representation of the CPU usage
 		double			_CPU;																			//	Last numeric representation of the CPU usage
+
 		std::string		_MEMinStr;																		//	Last string representation of the memory usage
 		size_t			_MEM;																			//	Last numeric representation of the memory usage
 
@@ -54,6 +58,8 @@ class Monitor {
 
 };
 
+#pragma endregion
+
 #pragma region Information
 
 //	/proc/self/statm	Is a file that is part of the procfs filesystem, which is a virtual filesystem that provides information about the system and processes in real-time.
@@ -70,3 +76,4 @@ class Monitor {
 //	sysconf(_SC_PAGESIZE) obtains the system's page size at runtime and multiplies it by resident to calculate the total size in bytes.
 
 #pragma endregion
+

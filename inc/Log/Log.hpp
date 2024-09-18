@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:32:23 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/14 13:16:32 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/18 14:12:17 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,8 @@
 #include <pthread.h>																					//	For multi-threading and synchronization
 #include <unistd.h>																						//	For access() to checks the accessibility of logrotate
 #include <sys/stat.h>																					//	For chmod to change the file permissions of the config file for logrotate
+
+#pragma region Log
 
 class VServer;
 class Log {
@@ -112,7 +114,9 @@ class Log {
 
 };
 
-	#pragma region Information
+#pragma endregion
+
+#pragma region Information
 
 	//	There are 2 types of logs:
 	//
@@ -134,24 +138,27 @@ class Log {
 	//		Local logs are stored in files on the disk, and their location is obtained from the configuration file.
 	//		It is necessary to specify the location of the log files, or they will not be saved.
 
-	#pragma endregion
+#pragma endregion
 
+#pragma region LogRotate
 
-// LOGROTATE
+	// LOGROTATE
 
-// logrotate -d /path/to/your/logrotate.conf				-d ejecuta logrotate en modo de depuración, mostrando lo que haría sin realizar cambios reales
-// logrotate -f /path/to/your/logrotate.conf				-f fuerza la rotación de logs, independientemente de si se cumplen las condiciones normales
+	// logrotate -d /path/to/your/logrotate.conf				-d ejecuta logrotate en modo de depuración, mostrando lo que haría sin realizar cambios reales
+	// logrotate -f /path/to/your/logrotate.conf				-f fuerza la rotación de logs, independientemente de si se cumplen las condiciones normales
 
-// /path/to/log {
-// 	# daily								# Rotar los logs diariamente
-// 	size 1M								# Rotar si alcanza los 50 MB (k, M, G)
-// 	rotate 7							# Mantener los últimos 7 archivos rotados
-// 	# compress							# Comprimir los logs rotados
-// 	# delaycompress							# Comprime los logs en la siguiente rotación (útil si deseas tener el archivo más reciente sin compresión)
-// 	missingok							# Evita errores si el archivo de log no existe
-// 	notifempty							# No rota el archivo si está vacío
-// 	create 0640 tu_usuario tu_usuario				# Crea un nuevo archivo de log con los permisos y propiedad especificados
-// 	# postrotate							# Acción después de rotar el archivo
-// 	#	/bin/ls
-//     endscript
-// }
+	// /path/to/log {
+	// 	# daily								# Rotar los logs diariamente
+	// 	size 1M								# Rotar si alcanza los 50 MB (k, M, G)
+	// 	rotate 7							# Mantener los últimos 7 archivos rotados
+	// 	# compress							# Comprimir los logs rotados
+	// 	# delaycompress							# Comprime los logs en la siguiente rotación (útil si deseas tener el archivo más reciente sin compresión)
+	// 	missingok							# Evita errores si el archivo de log no existe
+	// 	notifempty							# No rota el archivo si está vacío
+	// 	create 0640 tu_usuario tu_usuario				# Crea un nuevo archivo de log con los permisos y propiedad especificados
+	// 	# postrotate							# Acción después de rotar el archivo
+	// 	#	/bin/ls
+	//     endscript
+	// }
+
+#pragma endregion

@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/25 11:19:12 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/26 22:10:16 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/18 14:05:09 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,8 @@
 #include <sstream>																						//	For std::stringstream to format strings
 #include <iomanip>																						//	For stream manipulators like std::setw and std::setfill
 #include <vector>
+
+#pragma region Security
 
 class Security {
 
@@ -43,3 +45,5 @@ class Security {
 		static std::string	decode_javascript(const std::string & content);								//	Decodes JavaScript content to retrieve the original text from its encoded form
 		
 };
+
+#pragma endregion

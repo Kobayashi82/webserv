@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/18 11:54:41 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/18 13:18:51 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/18 14:05:33 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,8 @@
 
 #include <sys/timerfd.h>																				//	For timerfd to create a FD that triggers events in epoll
 #include <sys/epoll.h>																					//	For epoll
+
+#pragma region Epoll
 
 class Epoll {
 
@@ -43,3 +45,5 @@ class Epoll {
 		static void check_timeout();																	//	Checks for clients that have timed out
 
 };
+
+#pragma endregion

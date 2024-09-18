@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:27:58 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/18 13:49:46 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/18 15:35:52 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,7 @@
 	std::map <std::string, std::string>	Settings::mime_types;											//	MIME types in a map
 
 	bool 								Settings::check_only = false;									//	Check the config file, but don't start the server
+	bool 								Settings::config_created = false;								//	The config file has been created
 	bool 								Settings::loaded = false;										//	The config file loaded successfully (but may contains errors)
 	int									Settings::current_vserver = -1;									//	Current selected V-Server (-1 = None)
 	int 								Settings::terminate = -1;										//	Flag the program to exit with the value in terminate (the default value of -1 don't exit)
@@ -106,7 +107,7 @@
 
 	#pragma region Generate Config
 
-		static void generate_config(const std::string & File, const std::string & path) {
+		void Settings::generate_config(const std::string & File, const std::string & path) {
 			Utils::createPath(File); std::ofstream outfile;
 			outfile.open(File.c_str(), std::ios_base::app);
 
@@ -129,7 +130,7 @@
 
 						<< "\tserver {\n"
 						<< "\t\tlisten 8081;\n"
-						<< "\t\troot " << path + "www/html" << ";\n"
+						<< "\t\troot " << path + "www/html/" << ";\n"
 						<< "\t\tindex index.html;\n"
 						<< "\t\tserver_name default;\n\n"
 
@@ -140,8 +141,10 @@
 						<< "}" << std::endl;
 				outfile.close();
 
-				Utils::createPath(path + "www/html");
-				Log::log(G "Default configuration file created succesfully" NC, Log::MEM_ACCESS);
+				config_created = true;
+				Utils::createPath(path + "www/html/");
+				Utils::createPath(path + "logs/");
+				log_access_add("---"); log_access_add(G "Default configuration file created succesfully" NC); log_access_add("---");
 			}
 		}
 
@@ -167,7 +170,7 @@
 				if (check_only) return;
 				if (global.bad_config) { log_access_add("---"); return; }
 
-				bool print_sep = (global.log.error.size() > 0);
+				bool print_sep = (global.log.error.size() > 0 && !(global.log.error.size() == 1 && config_created));
 				for (std::deque<VServer>::iterator it = vserver.begin(); it != vserver.end(); ++it)
 					if (it->log.error.size() > 0) print_sep = true;
 				if (print_sep)								{																									log_access_add("---"); }

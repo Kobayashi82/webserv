@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 11:59:38 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/17 18:33:02 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/18 15:34:19 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,8 @@
 #include <fcntl.h>																						//	For file control options like fcntl to set non-blocking mode
 #include <termios.h>																					//	For terminal I/O interfaces to enable/disable raw mode
 #include <sys/ioctl.h>																					//	For terminal control functions like ioctl to get window size
+
+#pragma region Display
 
 class Display {
 
@@ -71,3 +73,5 @@ class Display {
 		static void	* main(void * args);																//	Main loop function for the thread
 
 };
+
+#pragma endregion

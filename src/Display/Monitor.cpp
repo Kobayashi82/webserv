@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/03 14:10:10 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/08/26 22:01:05 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/18 14:16:13 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,8 +17,10 @@
 	Monitor::Monitor() {
 		_prev_time = std::time(0);
 		_prev_cpu_time = std::clock();
+
 		_CPUinStr = "0.08 %";
 		_CPU = 0;
+		
 		_MEMinStr = "0.00 MB";
 		_MEM = 0;
 	}
@@ -30,10 +32,8 @@
 #pragma region Overloads
 
 	Monitor & Monitor::operator=(const Monitor & rhs) {
-        if (this != &rhs) {
-        	_prev_time = rhs._prev_time; _prev_cpu_time = rhs._prev_cpu_time;
-            _CPU = rhs._CPU; _CPUinStr = rhs._CPUinStr;
-        } return (*this);
+        if (this != &rhs) { _prev_time = rhs._prev_time; _prev_cpu_time = rhs._prev_cpu_time; _CPU = rhs._CPU; _CPUinStr = rhs._CPUinStr; }
+		return (*this);
     }
 
 #pragma endregion
