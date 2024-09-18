@@ -6,14 +6,16 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 14:30:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/17 19:09:02 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/18 13:21:35 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Log.hpp"
 #include "Display.hpp"
 #include "Settings.hpp"
-#include "Net.hpp"
+#include "Socket.hpp"
+#include "Event.hpp"
+#include "EPOLL.hpp"
 #include "Thread.hpp"
 
 //	*		nc 127.0.0.1 8081	-	telnet 127.0.0.1 8081	-	curl -v http://127.0.0.1:8081/
@@ -58,21 +60,21 @@ int main(int argc, char **argv) {
 	Display::signal_handler();
 	Log::start(); Display::start();
 	
-	Net::epoll__create();
-	Net::socket_create_all();
+	Epoll::create();
+	Socket::create();
 
 	usleep(10000); Display::update();
 
 	while (Display::isTerminate() == -1) {
 		if (Display::signal_check()) break;
-		if (Net::epoll_events()) {
+		if (Epoll::events()) {
 			break;
 		}
 	}
 	
-	Net::epoll_close();
-	Net::socket_close_all();
-	Net::remove_events();
+	Epoll::close();
+	Socket::close();
+	Event::remove_events();
 
 	Log::stop(); Display::stop(); Log::release_mutex(); Display::disableRawMode();
 

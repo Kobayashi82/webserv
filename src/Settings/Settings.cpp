@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:27:58 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/17 16:47:23 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/18 13:49:46 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,6 +34,9 @@
 	int									Settings::bracket_lvl = 0;										//	Level of the bracket (use to parse the configuration file)
 
 	size_t								Settings::FILE_MAXSIZE = 1 * 1024 * 1024;						//	Maximum size allowed for the configuration file
+	const int							Settings::KEEP_ALIVE_TIMEOUT = 75;								//	Timeout in seconds for keep-alive (if a client is inactive for this amount of time, the connection will be closed)
+	const int							Settings::KEEP_ALIVE_REQUEST = 500;								//	Maximum request for keep-alive (if a client exceeds this number of requests, the connection will be closed)
+
 
 #pragma endregion
 

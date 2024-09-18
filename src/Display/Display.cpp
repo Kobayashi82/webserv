@@ -6,15 +6,16 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/14 14:37:32 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/17 19:24:53 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/18 12:58:19 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Display.hpp"
+#include "Thread.hpp"
 #include "Monitor.hpp"
 #include "Settings.hpp"
-#include "Net.hpp"
-#include "Thread.hpp"
+#include "Socket.hpp"
+#include "Comunication.hpp"
 
 #pragma region Variables
 
@@ -274,8 +275,8 @@
 
 						Settings::global.status = !Settings::global.status;
 
-						if (Settings::global.status)															Net::ask_socket = 1;
-						else																					Net::ask_socket = 2;
+						if (Settings::global.status)															Socket::ask_socket = 1;
+						else																					Socket::ask_socket = 2;
 
 					Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK);
 
@@ -296,8 +297,8 @@
 						if (Settings::global.status) {
 							VServ->force_off = !VServ->force_off;
 
-							if		(VServ->status)																Net::socket_action_list.push_back(std::make_pair(VServ, Net::CLOSE));
-							else if (VServ->force_off == false)													Net::socket_action_list.push_back(std::make_pair(VServ, Net::CREATE));
+							if		(VServ->status)																Socket::socket_action_list.push_back(std::make_pair(VServ, Socket::CLOSE));
+							else if (VServ->force_off == false)													Socket::socket_action_list.push_back(std::make_pair(VServ, Socket::CREATE));
 						}
 
 					Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK);
@@ -585,17 +586,17 @@
 						std::string data1, data2, Downloaded, Uploaded, Conect;
 						int Downloaded_size, Uploaded_size; std::ostringstream ss;
 
-						Utils::formatSize(Net::read_bytes, data1, data2);
-						ss << std::left << std::fixed << std::setprecision(2) << Utils::formatSizeDbl(Net::read_bytes); data1 = ss.str();
+						Utils::formatSize(Comunication::read_bytes, data1, data2);
+						ss << std::left << std::fixed << std::setprecision(2) << Utils::formatSizeDbl(Comunication::read_bytes); data1 = ss.str();
 						Downloaded = Y + data1 + " " C + data2 + NC;
 						Downloaded_size = data1.size() + data2.size() + 1;
 
-						Utils::formatSize(Net::write_bytes, data1, data2);
-						ss.str(""); ss << std::left << std::fixed << std::setprecision(2) << Utils::formatSizeDbl(Net::write_bytes); data1 = ss.str();
+						Utils::formatSize(Comunication::write_bytes, data1, data2);
+						ss.str(""); ss << std::left << std::fixed << std::setprecision(2) << Utils::formatSizeDbl(Comunication::write_bytes); data1 = ss.str();
 						Uploaded = Y + data1 + " " C + data2 + NC;
 						Uploaded_size = data1.size() + data2.size() + 1;
 
-						ss.str(""); ss << std::left << std::setw(3) << Utils::ltos(Net::total_clients);
+						ss.str(""); ss << std::left << std::setw(3) << Utils::ltos(Comunication::total_clients);
 						Conect = ss.str();
 						
 					Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK);

@@ -1,20 +1,22 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Comunications.cpp                                  :+:      :+:    :+:   */
+/*   Comunication.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/27 09:32:08 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/17 18:55:50 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/18 13:48:28 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Colors.hpp"
-#include "Net.hpp"
-#include "Client.hpp"
+#include "Comunication.hpp"
 #include "Display.hpp"
 #include "Thread.hpp"
+#include "Client.hpp"
+#include "Socket.hpp"
+#include "Event.hpp"
+#include "Epoll.hpp"
 
 //	!	IMPORTANT	The response must obtain the file size, generate the header and then read the file and write to the client at the same time so we dont have to load in memory a big file.
 //	!				This is in case the file is too big, if not, we can cache the file.
@@ -27,13 +29,26 @@
 //	TODO	Verifica el tipo MIME del archivo y el nombre del archivo para asegurarte de que coincide con el tipo esperado.
 //	TODO	Limita el tamaño máximo de las solicitudes HTTP. Esto puede prevenir que un atacante agote los recursos del servidor con solicitudes grandes.
 
+#pragma region Variables
+
+	std::list<Client>	Comunication::clients;															//	List of all Client objects
+	Cache				Comunication::cache(600, 100, 10);												//	Used to store cached data, such as files or HTML responses.	(arguments: expiration in seconds, max entries, max content size in MB)
+
+	int					Comunication::total_clients;													//	Total number of clients conected
+	long				Comunication::read_bytes;														//	Total number of bytes downloaded by the server
+	long				Comunication::write_bytes;														//	Total number of bytes uploaded by the server
+
+	const size_t		Comunication::CHUNK_SIZE = 4096;												//	Size of the buffer for read and write operations
+
+#pragma endregion
+
 #pragma region Comunications
 
 	#pragma region READ
 
 		#pragma region Client
 
-			int Net::read_client(EventInfo * event) {
+			int Comunication::read_client(EventInfo * event) {
 				if (!event) return (0);
 
 				char buffer[CHUNK_SIZE];			memset(buffer, 0, sizeof(buffer));
@@ -49,7 +64,7 @@
 					event->read_buffer.insert(event->read_buffer.end(), buffer, buffer + bytes_read);
 
 					Thread::mutex_set(Display::mutex, Thread::MTX_LOCK);
-					read_bytes+= bytes_read;
+						read_bytes+= bytes_read;
 					Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK);
 
 					if (static_cast<size_t>(bytes_peek) <= CHUNK_SIZE) {
@@ -60,8 +75,8 @@
 						process_request(event);
 					}
 				} else if (bytes_read <= 0) {															//	Read error or empty (empty = close client)
-					if (get_event(event->fd)) event->client->remove();
-					if (bytes_read < 0) Log::log(RED500 "Comunication failed with " BLUE400 + event->client->IP + NC, Log::BOTH_ERROR, event->socket->VServ);
+					if (Event::get_event(event->fd)) event->client->remove();
+					if (bytes_read < 0) Log::log(RED500 "Comunication failed with " BLUE400 + event->client->ip + NC, Log::BOTH_ERROR, event->socket->VServ);
 					return (1);
 				}
 
@@ -72,7 +87,7 @@
 
 		#pragma region Data
 
-			int Net::read_data(EventInfo * event) {
+			int Comunication::read_data(EventInfo * event) {
 				if (!event) return (0);
 
 				char buffer[CHUNK_SIZE];			memset(buffer, 0, sizeof(buffer));
@@ -87,16 +102,16 @@
 
 						if (event->type == DATA && event->no_cache == false) cache.add(event->path, data);
 
-						EventInfo * c_event = get_event(event->client->fd);
-						remove_event(event->fd);
+						EventInfo * c_event = Event::get_event(event->client->fd);
+						Event::remove_event(event->fd);
 
 						process_data(c_event, data);
 						return (1);
 					}
-				} else if (bytes_read <= 0) { remove_event(event->fd); return (1); }							//	Read error or empty
+				} else if (bytes_read <= 0) { Event::remove_event(event->fd); return (1); }							//	Read error or empty
 
 				size_t chunk = std::min(event->max_data_size - event->data_size, CHUNK_SIZE);
-				if (splice(event->pipe[0], NULL, event->pipe[1], NULL, chunk, SPLICE_F_MOVE) == -1) { remove_event(event->fd); return (1); }
+				if (splice(event->pipe[0], NULL, event->pipe[1], NULL, chunk, SPLICE_F_MOVE) == -1) { Event::remove_event(event->fd); return (1); }
 
 				return (0);
 			}
@@ -109,7 +124,7 @@
 
 		#pragma region Client
 
-			void Net::write_client(EventInfo *event) {
+			void Comunication::write_client(EventInfo *event) {
 				if (!event) return;
 
 				event->client->update_last_activity();
@@ -132,12 +147,12 @@
 				}
 				
 				if (event->write_buffer.empty()) {
-					epoll_set(event->fd, true, false);
+					Epoll::set(event->fd, true, false);
 
-					long MaxRequests = KEEP_ALIVE_TIMEOUT;
+					long MaxRequests = Settings::KEEP_ALIVE_TIMEOUT;
 
 					if (Settings::global.get("keepalive_requests") != "") Utils::stol(Settings::global.get("keepalive_requests"), MaxRequests);
-					Log::log("GET", "/", 200, write_bytes, "250", event->client->IP, event->socket->VServ, event->vserver_data);
+					Log::log("GET", "/", 200, write_bytes, "250", event->client->ip, event->socket->VServ, event->vserver_data);
 					if (event->close || event->client->total_requests >= MaxRequests) event->client->remove();
 				}
 			}
@@ -150,7 +165,7 @@
 
 		#pragma region Request
 
-			void Net::process_request(EventInfo * event) {
+			void Comunication::process_request(EventInfo * event) {
 				if (!event) return;
 
 				//	if (body > max_body_size) return lo que sea
@@ -166,13 +181,13 @@
 
 		#pragma region Response
 
-			void Net::process_response(EventInfo * event) {
+			void Comunication::process_response(EventInfo * event) {
 				if (!event) return;
 
 				event->close = true;
 				Cache::CacheInfo * fcache = cache.get("index.html");
 				if (fcache) {
-					process_data(get_event(event->fd), fcache->content);
+					process_data(Event::get_event(event->fd), fcache->content);
 					return;
 				}
 
@@ -184,15 +199,15 @@
 				EventInfo event_data(fd, DATA, NULL, event->client);
 
 				event_data.path = "index.html";
-				event_data.no_cache = false;
-				if (pipe(event_data.pipe) == -1) { remove_event(event_data.fd); return; }					//	Create pipe
+				event_data.no_cache = true;
+				if (pipe(event_data.pipe) == -1) { Event::remove_event(event_data.fd); return; }					//	Create pipe
 				event_data.data_size = 0;
 				event_data.max_data_size = filesize;
 				size_t chunk = std::min(event_data.max_data_size, CHUNK_SIZE);
 				if (splice(event_data.fd, NULL, event_data.pipe[1], NULL, chunk, SPLICE_F_MOVE) == -1) { close(event_data.fd); close(event_data.pipe[0]); close(event_data.pipe[1]); return; }
 				std::swap(event_data.fd, event_data.pipe[0]);
-				events[event_data.fd] = event_data;
-				if (epoll_add(event_data.fd, true, false) == -1) { remove_event(event_data.fd); return; }
+				Event::events[event_data.fd] = event_data;
+				if (Epoll::add(event_data.fd, true, false) == -1) { Event::remove_event(event_data.fd); return; }
 
 				return;
 			}
@@ -201,7 +216,7 @@
 
 		#pragma region Data
 
-			void Net::process_data(EventInfo * event, std::string data) {
+			void Comunication::process_data(EventInfo * event, std::string data) {
 				if (!event) return;
 
 				// std::istringstream request_stream(data); std::string line;
@@ -215,7 +230,7 @@
 					"\r\n" + data;
 
 				event->write_buffer.insert(event->write_buffer.end(), response.begin(), response.end());
-				epoll_set(event->fd, true, true);
+				Epoll::set(event->fd, true, true);
 			}
 
 		#pragma endregion
@@ -227,7 +242,7 @@
 #pragma region Resolve Request
 
 	//	Return structure with info about the result
-	void Net::resolve_request(const std::string host, const std::string method, std::string path, EventInfo * event) {
+	void Comunication::resolve_request(const std::string host, const std::string method, std::string path, EventInfo * event) {
 		(void) host;
 		(void) method;
 		(void) path;
@@ -257,11 +272,11 @@
 
 #pragma endregion
 
-//	void Net::process_request(EventInfo * event, std::string request)
+//	void Comunication::process_request(EventInfo * event, std::string request)
 //
 //	Esta es la funcion de entrada para el procesado de lo que pide el cliente
 //	event es un puntero al EventInfo del cliente. 
-//	El EventInfo se guarda en Net::events y es un map de FD - EventInfo
+//	El EventInfo se guarda en Comunication::events y es un map de FD - EventInfo
 //	Para ver la implentacion de EventInfo, está en Net.hpp
 //
 //	request es un string con el contenido de la peticion.

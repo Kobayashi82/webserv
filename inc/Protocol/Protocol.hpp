@@ -6,24 +6,24 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 12:49:42 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/13 15:26:55 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/18 13:14:14 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
-#include "Net.hpp"
-
+#include <iostream>																						//	For standard input/output stream objects like std::cin, std::cout
 #include <map>																							//	For std::map container
 
 #pragma region Intermediary
 
+	struct EventInfo;
 	class Intermediary {
 
 		public:
 
 			//	Methods
-			static std::map<std::string, std::string>	response_data(Net::EventInfo * event);
+			static std::map<std::string, std::string>	response_data(EventInfo * event);
 
 	};
 

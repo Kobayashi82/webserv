@@ -6,14 +6,15 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 12:49:18 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/13 15:25:02 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/18 13:01:09 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Protocol.hpp"
 #include "Settings.hpp"
+#include "Event.hpp"
 
-std::map<std::string, std::string> Intermediary::response_data(Net::EventInfo * event) {
+std::map<std::string, std::string> Intermediary::response_data(EventInfo * event) {
 	if (!event)	throw std::runtime_error("Event is null");
 	std::map<std::string, std::string>	data;
 

@@ -6,7 +6,7 @@
 #    By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/02/20 17:51:39 by vzurera-          #+#    #+#              #
-#    Updated: 2024/09/17 18:57:32 by vzurera-         ###   ########.fr        #
+#    Updated: 2024/09/18 13:47:57 by vzurera-         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -42,7 +42,7 @@ COUNTER 			= 0
 # ─────────── #
 
 CC					= clang++
-FLAGS				= -Wall -Wextra -Werror -std=c++98 -g # -fsanitize=thread
+FLAGS				= -Wall -Wextra -Werror -std=c++98 -g -fsanitize=thread
 
 # ───────────────── #
 # ── DIRECTORIES ── #
@@ -63,7 +63,8 @@ SRCS	=	Thread/Thread.cpp																							\
 			Settings/Parser.cpp																							\
 			Display/Display.cpp Display/Monitor.cpp																		\
 			Utils/String.cpp Utils/Network.cpp Utils/Files.cpp															\
-			Network/Net.cpp Network/Client.cpp Network/Comunications.cpp Network/Cache.cpp Network/Security.cpp			\
+			Network/Client.cpp Network/Cache.cpp Network/Security.cpp									\
+			Network/Socket.cpp Network/Event.cpp Network/Comunication.cpp  Network/Epoll.cpp							\
 			Protocol/Intermediary.cpp																					\
 			main.cpp
 

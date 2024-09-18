@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:14:05 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/16 19:52:25 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/18 12:10:59 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,6 +44,9 @@ class Settings {
 		static bool									loaded;												//	The config file loaded successfully (but may contains errors)
 		static int									current_vserver;									//	Current selected V-Server (-1 = None)
 		static int									terminate;											//	Flag the program to exit with the value in terminate (the default value of -1 don't exit)
+
+		static const int							KEEP_ALIVE_TIMEOUT;									//	Timeout in seconds for keep-alive (if a client is inactive for this amount of time, the connection will be closed)
+		static const int							KEEP_ALIVE_REQUEST;									//	Maximum request for keep-alive (if a client exceeds this number of requests, the connection will be closed)
 
 		//	Global
 		static std::string data_get(std::vector<std::pair<std::string, std::string> > * data, std::string key);		//	Get a value from a key in any "data" passed as a pointer
