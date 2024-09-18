@@ -6,14 +6,14 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/18 10:59:39 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/18 13:56:56 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/18 18:54:53 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Socket.hpp"
 #include "Settings.hpp"
 #include "Display.hpp"
 #include "Thread.hpp"
+#include "Socket.hpp"
 #include "Event.hpp"
 #include "Epoll.hpp"
 #include "Comunication.hpp"
@@ -21,11 +21,9 @@
 #pragma region Variables
 
 	std::list<SocketInfo>					Socket::sockets;											//	List of all SocketInfo objects
-
 	int										Socket::ask_socket = 0;										//	Flag indicating the request to create or close all sockets		(Used when Key_W is pressed)
 	std::list<std::pair <VServer *, int> >	Socket::socket_action_list;									//	List of VServers to enable or disable							(Used when Key_V is pressed)
-
-	bool									Socket::do_cleanup = false;									//	
+	bool									Socket::do_cleanup = false;									//	Flag indicating that a cleanup of sockets is necessary
 
 #pragma endregion
 
@@ -74,26 +72,6 @@
 
 		#pragma region Create VServer
 
-			#pragma region Error Messages
-
-				void Socket::error_msg(std::vector <std::pair<std::string, int> >::const_iterator addr_it, VServer * VServ, int type) {
-					return;
-					switch (type) {
-						case SK_CREATE:
-							Log::log("Socket " + addr_it->first + ":" + Utils::ltos(addr_it->second) + " cannot be created", Log::MEM_ERROR, VServ); break;
-						case SK_CONFIGURE:
-							Log::log("Socket " + addr_it->first + ":" + Utils::ltos(addr_it->second) + " cannot be configured", Log::MEM_ERROR, VServ); break;
-						case SK_BIND:
-							Log::log("Socket " + addr_it->first + ":" + Utils::ltos(addr_it->second) + " cannot be binded", Log::MEM_ERROR, VServ); break;
-						case SK_LISTEN:
-							Log::log("Socket " + addr_it->first + ":" + Utils::ltos(addr_it->second) + " cannot listen", Log::MEM_ERROR, VServ); break;
-						case SK_EPOLL:
-							Log::log("Socket " + addr_it->first + ":" + Utils::ltos(addr_it->second) + " cannot be added to EPOLL", Log::MEM_ERROR, VServ); break;
-					}
-				}
-
-			#pragma endregion
-
 			int Socket::create(VServer * VServ) {
 				//	If the server or the virtual server is disabled do nothing
 				bool nothing_created = true;
@@ -101,15 +79,15 @@
 
 				//	For every IP address in the virtual server create a socket
 				for (std::vector <std::pair<std::string, int> >::const_iterator addr_it = VServ->addresses.begin(); addr_it != VServ->addresses.end(); ++addr_it) {
-					if (socket_exists(addr_it->first, addr_it->second)) continue;
+					if (exists(addr_it->first, addr_it->second)) continue;
 
 					//	Create socket
 					int fd = socket(AF_INET, SOCK_STREAM, 0);
-					if (fd == -1) { error_msg(addr_it, VServ, SK_CREATE); continue; }
+					if (fd == -1) { error_msg(addr_it->first, addr_it->second, VServ, SK_CREATE); continue; }
 
 					//	Configure socket
 					int options = 1;
-					if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &options, sizeof(options)) == -1) { error_msg(addr_it, VServ, SK_CONFIGURE); ::close(fd); continue; }
+					if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &options, sizeof(options)) == -1) { error_msg(addr_it->first, addr_it->second, VServ, SK_CONFIGURE); ::close(fd); continue; }
 
 					//	Initialize the socket address structure with the IP address and port
 					sockaddr_in address; std::memset(&address, 0, sizeof(address));
@@ -119,13 +97,13 @@
 					else 								inet_pton(AF_INET, addr_it->first.c_str(), &address.sin_addr);
 
 					//	Link the address to the socket (0.0.0.0 links to all available network interfaces)
-					if (bind(fd, (sockaddr *)&address, sizeof(address)) == -1) { error_msg(addr_it, VServ, SK_BIND); ::close(fd); continue; }
+					if (bind(fd, (sockaddr *)&address, sizeof(address)) == -1) { error_msg(addr_it->first, addr_it->second, VServ, SK_BIND); ::close(fd); continue; }
 
 					//	Listen on the address for incoming connections
-					if (listen(fd, SOMAXCONN) == -1) { error_msg(addr_it, VServ, SK_LISTEN); ::close(fd); continue; }
+					if (listen(fd, SOMAXCONN) == -1) { error_msg(addr_it->first, addr_it->second, VServ, SK_LISTEN); ::close(fd); continue; }
 
 					//	Add the socket FD to EPOLL
-					if (Epoll::add(fd, true, false) == -1) { error_msg(addr_it, VServ,SK_EPOLL); ::close(fd); continue; }
+					if (Epoll::add(fd, true, false) == -1) { error_msg(addr_it->first, addr_it->second, VServ,SK_EPOLL); ::close(fd); continue; }
 
 					// Create a SocketInfo, an EventInfo and add them to Socket::sockets and Socket::events
 					sockets.push_back(SocketInfo(fd, addr_it->first, addr_it->second, VServ));
@@ -148,16 +126,6 @@
 			}
 
 		#pragma endregion	
-
-		#pragma region Exists
-
-			bool Socket::socket_exists(const std::string & ip, int port) {
-				for (std::list <SocketInfo>::const_iterator it = sockets.begin(); it != sockets.end(); ++it)
-					if (it->ip == ip && it->port == port) return (true);
-				return (false);
-			}
-
-		#pragma endregion
 
 	#pragma endregion
 
@@ -197,11 +165,11 @@
 	#pragma region Remove
 
 		void Socket::remove() {
-			
+		    while (!sockets.empty()) remove(sockets.front());
 		}
 
 		void Socket::remove(SocketInfo & socket) {
-			if (socket.fd != -1) { Epoll::remove(socket.fd); ::close(socket.fd); } Event::remove_event(socket.fd);
+			if (socket.fd != -1) { Epoll::remove(socket.fd); ::close(socket.fd); } Event::remove(socket.fd);
 			std::list <SocketInfo>::iterator s_it = sockets.begin();
 			while (s_it != sockets.end()) {
 				if (*s_it == socket) {
@@ -284,26 +252,22 @@
 
 	#pragma endregion
 		
-	#pragma region Cleanup
+	#pragma region Clean Up
 
 		void Socket::cleanup_socket() {
-			if (!do_cleanup) return;
-			// Iterar sobre cada socket en la lista de sockets
+			if (!do_cleanup) return;																	//	Only clean up if necessary
+
 			std::list<SocketInfo>::iterator s_it = sockets.begin();
-			while (s_it != sockets.end()) {
-				// Iterar sobre cada cliente en la lista de clientes del socket
-				std::list<Client *>::iterator c_it = s_it->clients.begin();
-				while (c_it != s_it->clients.end()) {
-					// Comprobar si el cliente está en la lista general de clientes
-					bool found = false;
-					std::list<Client>::iterator gc_it = Comunication::clients.begin();
-					while (gc_it != Comunication::clients.end()) {
-						if (*gc_it == **c_it) { found = true; break; }
-						++gc_it;
+			while (s_it != sockets.end()) {																//	Iterate over sockets
+				std::list<Client *>::iterator sc_it = s_it->clients.begin();
+				while (sc_it != s_it->clients.end()) { bool found = false;								//	Iterate over socket clients				
+					std::list<Client>::iterator c_it = Comunication::clients.begin();
+					while (c_it != Comunication::clients.end()) {										//	Iterate over clients
+						if (*c_it == **sc_it) { found = true; break; }									//	client = socket client
+						++c_it;
 					}
-					// Si el cliente no está en la lista general, eliminarlo de la lista del socket
-					if (!found)				c_it = s_it->clients.erase(c_it);
-					else					++c_it;
+					if (!found)				sc_it = s_it->clients.erase(sc_it);							// If socket client is not in clients, remove it
+					else					++sc_it;
 				}
 				++s_it;
 			}
@@ -311,4 +275,39 @@
 
 	#pragma endregion
 
+	//	DISABLED FOR NOW
+
+	#pragma region Exists
+
+		bool Socket::exists(const std::string & ip, int port) {
+			return (false);																				//	Disabled for now
+			for (std::list <SocketInfo>::const_iterator it = sockets.begin(); it != sockets.end(); ++it)
+				if (it->ip == ip && it->port == port) return (true);
+			return (false);
+		}
+
+	#pragma endregion
+
+	#pragma region Error Messages
+
+		void Socket::error_msg(const std::string & ip, const int port, VServer * VServ, int type) {
+			return;																						//	Disabled for now
+			switch (type) {
+				case SK_CREATE:
+					Log::log("Socket " + ip + ":" + Utils::ltos(port) + " cannot be created", Log::MEM_ERROR, VServ); break;
+				case SK_CONFIGURE:
+					Log::log("Socket " + ip + ":" + Utils::ltos(port) + " cannot be configured", Log::MEM_ERROR, VServ); break;
+				case SK_BIND:
+					Log::log("Socket " + ip + ":" + Utils::ltos(port) + " cannot be binded", Log::MEM_ERROR, VServ); break;
+				case SK_LISTEN:
+					Log::log("Socket " + ip + ":" + Utils::ltos(port) + " cannot listen", Log::MEM_ERROR, VServ); break;
+				case SK_EPOLL:
+					Log::log("Socket " + ip + ":" + Utils::ltos(port) + " cannot be added to EPOLL", Log::MEM_ERROR, VServ); break;
+			}
+		}
+
+	#pragma endregion
+
+	//	DISABLED FOR NOW
+	
 #pragma endregion

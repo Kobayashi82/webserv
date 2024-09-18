@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/18 11:20:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/18 14:05:37 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/18 19:07:18 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,35 +16,35 @@
 
 #include <iostream>																						//	For standard input/output stream objects like std::cin, std::cout
 #include <vector>																						//	For std::vector container
-#include <deque>																						//	For std::deque container
-#include <list>																							//	For std::list container
 #include <map>																							//	For std::map container
-
-enum e_type { NOTHING, SOCKET, CLIENT, DATA, CGI };	
 
 #pragma region EventInfo
 
-	struct SocketInfo;
+	//	Enumerators
+	enum e_type { NOTHING, SOCKET, CLIENT, DATA, CGI };
+
+	struct SocketInfo;																					//	Forward declaration of SocketInfo
 	struct EventInfo {
 
 		//	Variables
-		int						fd;																		//	File descriptor associated with the event
-		int						type;																	//	Type of the event (SOCKET, CLIENT, DATA, CGI)
-		SocketInfo *			socket;																	//	Pointer to the associated Client, if applicable
-		Client *				client;																	//	Pointer to the associated Client, if applicable
+		int													fd;											//	File descriptor associated with the event
+		int													type;										//	Type of the event (SOCKET, CLIENT, DATA, CGI)
+		SocketInfo *										socket;										//	Pointer to the associated Socket (if applicable)
+		Client *											client;										//	Pointer to the associated Client (if applicable)
 
-		int						pipe[2];
-		size_t					data_size;
-		size_t					max_data_size;
+		std::vector <char>									read_buffer;								//	Buffer for reading data
+   		std::vector <char>									write_buffer;								//	Buffer for writing data
+		std::string											request;									//	Request from the client
 
-		std::vector <char>		read_buffer;															//	Buffer for reading data
-   		std::vector <char>		write_buffer;															//	Buffer for writing data
-		std::string				request;																//	Request of the client
+		int													pipe[2];									//	Pipe used to redirect the file's FD using splice(), so it can be added to EPOLL
+		std::string 										file_path;									//	Path of a file
+		size_t												file_read;									//	Total bytes read from a file
+		size_t												file_size;									//	The file size
 
-		std::string 			path;																	//	Path of the file
-		bool					no_cache;																//	Do not keep in cache
-		bool					close;																	//	Close the conection... please
-		std::vector<std::pair<std::string, std::string> > * vserver_data;								//	Data container where the request is server (VServer, Location...)
+		bool												no_cache;									//	Do not keep in cache
+		bool												close;										//	Close the conection... please
+
+		std::vector<std::pair<std::string, std::string> > * vserver_data;								//	Data container from which the request is served (Global, VServer, Location)
 
 		//	Constructors
 		EventInfo();																					//	Default constructor
@@ -52,7 +52,7 @@ enum e_type { NOTHING, SOCKET, CLIENT, DATA, CGI };
 		EventInfo(int _fd, int _type, SocketInfo * _socket, Client * _client);							//	Parameterized constructor
 
 		//	Overloads
-		EventInfo &		operator=(const EventInfo & rhs);												//	Overload for asignation
+		EventInfo &		operator=(const EventInfo & rhs);												//	Overload for assignation
 		bool			operator==(const EventInfo & rhs) const;										//	Overload for comparison
 
 	};
@@ -61,17 +61,19 @@ enum e_type { NOTHING, SOCKET, CLIENT, DATA, CGI };
 
 #pragma region Event
 
-class Event {
+	class Event {
 
-	public:
+		public:
 
-		static std::map <int, EventInfo>	events;														//	Map of all events objects
-		
-		static void			remove_events();
-		static void			remove_events(Client * Cli);
-		static EventInfo *	get_event(int fd);
-		static int			remove_event(int fd);
+			//	Variables
+			static std::map <int, EventInfo>	events;													//	Map of all events objects
+			
+			//	Methods
+			static EventInfo *	get(int fd);															//	Gets the event associated with an FD
+			static void			remove();																//	Removes all events
+			static void			remove(Client * Cli);													//	Removes all events associated with a client
+			static int			remove(int fd);															//	Removes an event associated with an FD
 
-};
+	};
 
 #pragma endregion

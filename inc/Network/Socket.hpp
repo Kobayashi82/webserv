@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/18 10:58:42 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/18 14:05:48 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/18 21:30:58 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,15 +15,13 @@
 #include "Client.hpp"
 
 #include <iostream>																						//	For standard input/output stream objects like std::cin, std::cout
-#include <vector>																						//	For std::vector container
-#include <deque>																						//	For std::deque container
 #include <list>																							//	For std::list container
 
 #include <arpa/inet.h>																					//	For sockets and address conversion
 
 #pragma region SocketInfo
 
-	class VServer;
+	class VServer;																						//	Forward declaration of VServer
 	struct SocketInfo {
 
 		//	Variables
@@ -31,14 +29,14 @@
 		std::string				ip;																		//	IP address of the socket
 		int						port;																	//	Port number of the socket
 		VServer *				VServ;																	//	Pointer to the associated VServer
-		std::list <Client *>	clients;																//	List of clients conected to this socket
+		std::list <Client *>	clients;																//	List of clients connected to this socket
 
 		//	Constructors
 		SocketInfo(const SocketInfo & src);																//	Copy constructor
 		SocketInfo(int _fd, const std::string & _ip, int _port, VServer * _VServ);						//	Parameterized constructor
 
 		//	Overloads
-		SocketInfo & 	operator=(const SocketInfo & rhs);												//	Overload for asignation
+		SocketInfo & 	operator=(const SocketInfo & rhs);												//	Overload for assignation
 		bool 			operator==(const SocketInfo & rhs) const;										//	Overload for comparison
 
 	};
@@ -47,40 +45,42 @@
 
 #pragma region Socket
 
-struct EventInfo;
-class Socket {
+	struct EventInfo;																					//	Forward declaration of EventInfo
+	class Socket {
 
-	public:
+		public:
 
-		enum e_socket_action { CREATE = 101, CLOSE = 102 };	
-		enum e_type { NOTHING, SOCKET, CLIENT, DATA, CGI };	
-		enum e_socket_error { SK_CREATE, SK_CONFIGURE, SK_BIND, SK_LISTEN, SK_EPOLL };						//	Enumaration for socket errors
-		
+			//	Enumerators
+			enum e_action { CREATE = 101, CLOSE = 102 };
+			enum e_error { SK_CREATE = 140, SK_CONFIGURE = 141, SK_BIND = 142, SK_LISTEN = 143, SK_EPOLL = 144 };
 
-		static std::list <SocketInfo>					sockets;										//	List of all SocketInfo objects
-		static int										ask_socket;										//	Flag indicating the request to create or close all sockets		(Used when Key_W is pressed)
-		static std::list <std::pair <VServer *, int> >	socket_action_list;								//	List of VServers to enable or disable							(Used when Key_V is pressed)
-		static bool										do_cleanup;										//
+			//	Variables
+			static std::list <SocketInfo>					sockets;									//	List of all SocketInfo objects
+			static int										ask_socket;									//	Flag indicating the request to create or close all sockets		(Used when Key_W is pressed)
+			static std::list <std::pair <VServer *, int> >	socket_action_list;							//	List of VServers to enable or disable							(Used when Key_V is pressed)
+			static bool										do_cleanup;									//	Flag indicating that a cleanup of sockets is necessary
 
-		static int	create();																			//	Creates all sockets from all VServers
-		static int	create(VServer * VServ);															//	Creates all sockets from a VServer
+			//	Methods
+			static int	create();																		//	Creates all sockets from all VServers
+			static int	create(VServer * VServ);														//	Creates all sockets from a VServer
 
-		static void	close();																			//	Closes all sockets
-		static void	close(VServer * VServ);																//	Closes all sockets associated with a VServer
+			static void	close();																		//	Closes all sockets
+			static void	close(VServer * VServ);															//	Closes all sockets associated with a VServer
 
-		static void remove();
-		static void remove(SocketInfo & socket);
+			static void remove();																		//	Removes all sockets
+			static void remove(SocketInfo & socket);													//	Removes all sockets associated with a VServer
 
-		static void accept(EventInfo * event);
+			static void accept(EventInfo * event);														//	Accept a new connection (client)
 
-		static int	server_status();																	//
-		static void	cleanup_socket();
-		
-	private:
+			static int	server_status();																//	Check if there are any pending changes to the server or virtual servers
+			static void	cleanup_socket();																//	Cleans up removed clients from each socket's own client list
+			
+		private:
 
-		static bool	socket_exists(const std::string & ip, int port);
-		static void	error_msg(std::vector <std::pair<std::string, int> >::const_iterator addr_it, VServer * VServ, int type);
+			//	Methods
+			static bool	exists(const std::string & ip, int port);										//	Checks if an IP address and port already exist in a socket
+			static void	error_msg(const std::string & ip, const int port, VServer * VServ, int type);	//	Logs socket error messages
 
-};
+	};
 
 #pragma endregion

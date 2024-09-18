@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:27:58 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/18 15:35:52 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/18 21:28:15 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,8 +19,8 @@
 	std::string							Settings::program_path = Utils::programPath();					//	Path of the executable
 	std::string							Settings::config_path = Utils::programPath();					//	Path of the default configuration file
 	
-	VServer								Settings::global;												//	Global settings in a vector
-	std::deque <VServer> 				Settings::vserver;												//	V-Servers in a deque
+	VServer								Settings::global;												//	Global settings
+	std::deque <VServer> 				Settings::vserver;												//	VServers in a deque
 	
 	std::map <int, std::string>			Settings::error_codes;											//	Error codes in a map
 	std::map <std::string, std::string>	Settings::mime_types;											//	MIME types in a map
@@ -28,16 +28,16 @@
 	bool 								Settings::check_only = false;									//	Check the config file, but don't start the server
 	bool 								Settings::config_created = false;								//	The config file has been created
 	bool 								Settings::loaded = false;										//	The config file loaded successfully (but may contains errors)
-	int									Settings::current_vserver = -1;									//	Current selected V-Server (-1 = None)
-	int 								Settings::terminate = -1;										//	Flag the program to exit with the value in terminate (the default value of -1 don't exit)
+	int									Settings::current_vserver = -1;									//	Current selected VServer (-1 = None)
+	int 								Settings::terminate = -1;										//	Flags the program to exit with the value in terminate (the default value -1 don't exit)
+
+	const int							Settings::KEEP_ALIVE_TIMEOUT = 75;								//	Timeout in seconds for keep-alive (if a client is inactive for this amount of time, the connection will be closed)
+	const int							Settings::KEEP_ALIVE_REQUEST = 500;								//	Maximum request for keep-alive (if a client exceeds this number of requests, the connection will be closed)
 
 	int									Settings::line_count = 0;										//	Number of the current line of the configuration file (use to indicate the line of an error in the configuration file)
 	int									Settings::bracket_lvl = 0;										//	Level of the bracket (use to parse the configuration file)
 
 	size_t								Settings::FILE_MAXSIZE = 1 * 1024 * 1024;						//	Maximum size allowed for the configuration file
-	const int							Settings::KEEP_ALIVE_TIMEOUT = 75;								//	Timeout in seconds for keep-alive (if a client is inactive for this amount of time, the connection will be closed)
-	const int							Settings::KEEP_ALIVE_REQUEST = 500;								//	Maximum request for keep-alive (if a client exceeds this number of requests, the connection will be closed)
-
 
 #pragma endregion
 

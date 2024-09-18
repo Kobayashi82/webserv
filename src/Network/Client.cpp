@@ -6,18 +6,17 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/18 11:28:40 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/18 13:57:03 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/18 19:11:09 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Display.hpp"
-#include "Client.hpp"
-#include "Comunication.hpp"
 #include "Thread.hpp"
-#include "Log.hpp"
 #include "Socket.hpp"
 #include "Event.hpp"
+#include "Client.hpp"
 #include "Epoll.hpp"
+#include "Comunication.hpp"
 
 #pragma region Constructors
 
@@ -32,9 +31,8 @@
 #pragma region Overloads
 
 	Client &	Client::operator=(const Client & rhs) {
-        if (this != &rhs) {
-            fd = rhs.fd; ip = rhs.ip; port = rhs.port; socket = rhs.socket; last_activity = rhs.last_activity; total_requests = rhs.total_requests;
-        } return (*this);
+        if (this != &rhs) { fd = rhs.fd; ip = rhs.ip; port = rhs.port; socket = rhs.socket; last_activity = rhs.last_activity; total_requests = rhs.total_requests; }
+		return (*this);
     }
 
 	bool		Client::operator==(const Client & rhs) const {
@@ -64,7 +62,7 @@
 		std::list <Client>::iterator c_it = Comunication::clients.begin();
 		while (c_it != Comunication::clients.end()) {
 			if (*this == *c_it) {
-				Event::remove_events(this);
+				Event::remove(this);
 				Comunication::clients.erase(c_it);
 
 				Thread::mutex_set(Display::mutex, Thread::MTX_LOCK);

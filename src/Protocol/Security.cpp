@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/25 11:19:15 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/18 13:56:57 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/18 20:50:21 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,7 @@
 
 	#pragma region URL
 
-		//	Al enviar una url o recibir una url (en un GET por ejemplo)
+		//	When sending or receiving a URL (ex. in a GET request)
 
 		#pragma region Encode
 
@@ -77,7 +77,7 @@
 
 	#pragma region HTML
 
-	//	Al enviar html y recibir un Content-Type = text/html
+	//	When sending HTML and receiving a Content-Type of text/html
 
 		#pragma region Encode
 
@@ -133,7 +133,7 @@
 
 	#pragma region CSS
 
-		//	Al enviar css y recibir un Content-Type = text/css
+		//	When sending CSS and receiving a Content-Type of text/css
 
 		#pragma region Encode
 
@@ -190,7 +190,7 @@
 
 	#pragma region XML
 
-		//	Al enviar xml y recibir un Content-Type = text/xml o application/xml
+		//	When sending XML and receiving a Content-Type of text/xml or application/xml
 
 		#pragma region Encode
 
@@ -243,7 +243,7 @@
 
 	#pragma region JSON
 
-		//	Al enviar json y recibir un Content-Type = application/json
+		//	When sending JSON and receiving a Content-Type of application/json
 
 		#pragma region Encode
 
@@ -306,7 +306,7 @@
 
 	#pragma region JavaScript
 
-		//	Al enviar javascript y recibir un Content-Type = application/javascript o text/javascript
+		//	When sending JavaScript, if the Content-Type is application/javascript or text/javascript
 
 		#pragma region Encode
 

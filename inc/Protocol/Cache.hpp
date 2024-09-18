@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/24 19:39:57 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/18 14:02:08 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/18 20:54:51 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,11 +32,11 @@
 		CacheInfo(const CacheInfo & src);																//	Copy constructor
 
 		//	Overloads
-		CacheInfo & 	operator=(const CacheInfo & rhs);												//	Overload for asignation
+		CacheInfo & 	operator=(const CacheInfo & rhs);												//	Overload for assignation
 		bool 			operator==(const CacheInfo & rhs) const;										//	Overload for comparison
 
 		//	Methods
-		bool			isExpired() const;																//	Return true if the CacheInfo expired
+		bool			isExpired() const;																//	Return true if the CacheInfo has expired
 
 	};
 
@@ -56,12 +56,12 @@ class Cache {
 		~Cache();																						//	Destructor
 
 		//	Overloads
-		Cache &	operator=(const Cache & rhs);															//	Overload for asignation
+		Cache &	operator=(const Cache & rhs);															//	Overload for assignation
 		bool	operator==(const Cache & rhs) const;													//	Overload for comparison
 
 		//	Methods
-		CacheInfo *	get(const std::string & path);														//	Get a pointer to cache entry if it exists and update the last usage order
-		void		add(const std::string & path, const std::string & content);							//	Add a new entry. If the cache exceeds the maximum size, removes the least used
+		CacheInfo *	get(const std::string & path);														//	Gets a pointer to the cache entry if it exists and updates the last usage order
+		void		add(const std::string & path, const std::string & content);							//	Adds a new entry. If the cache exceeds the maximum size, removes the least used entry
 		void		remove(const std::string & path);													//	Removes the cache entry associated with the given path
 		void		remove_expired();																	//	Removes all expired cache entries
 		void		remove_least_used();																//	Removes the least recently used cache entry

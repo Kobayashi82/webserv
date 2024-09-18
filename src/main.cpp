@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 14:30:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/18 13:21:35 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/18 21:32:23 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,17 +15,13 @@
 #include "Settings.hpp"
 #include "Socket.hpp"
 #include "Event.hpp"
-#include "EPOLL.hpp"
+#include "Epoll.hpp"
 #include "Thread.hpp"
 
 //	*		nc 127.0.0.1 8081	-	telnet 127.0.0.1 8081	-	curl -v http://127.0.0.1:8081/
 //	*		siege -b -c 255 -t 10S 127.0.0.1:8081
 
 //	?		Non-bloquing fd
-
-//			CONNECTIONS
-//	TODO	Vserver take control if other is disabled
-//	TODO	EPOLL fail error (create or events)
 
 //			DISPLAY
 //	TODO	./webserv -i with siege overloaded with logs
@@ -74,7 +70,7 @@ int main(int argc, char **argv) {
 	
 	Epoll::close();
 	Socket::close();
-	Event::remove_events();
+	Event::remove();
 
 	Log::stop(); Display::stop(); Log::release_mutex(); Display::disableRawMode();
 

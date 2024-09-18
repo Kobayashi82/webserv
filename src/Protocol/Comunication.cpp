@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/27 09:32:08 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/18 14:02:06 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/18 21:39:17 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,7 +75,7 @@
 						process_request(event);
 					}
 				} else if (bytes_read <= 0) {															//	Read error or empty (empty = close client)
-					if (Event::get_event(event->fd)) event->client->remove();
+					if (Event::get(event->fd)) event->client->remove();
 					if (bytes_read < 0) Log::log(RED500 "Comunication failed with " BLUE400 + event->client->ip + NC, Log::BOTH_ERROR, event->socket->VServ);
 					return (1);
 				}
@@ -95,23 +95,23 @@
 				ssize_t bytes_read = read(event->fd, buffer, CHUNK_SIZE);
 				if (bytes_read > 0) {
 					event->read_buffer.insert(event->read_buffer.end(), buffer, buffer + bytes_read);
-					event->data_size += bytes_read;
+					event->file_read += bytes_read;
 
-					if (event->data_size >= event->max_data_size) {
+					if (event->file_read >= event->file_size) {
 						std::string data(event->read_buffer.begin(), event->read_buffer.end());
 
-						if (event->type == DATA && event->no_cache == false) cache.add(event->path, data);
+						if (event->type == DATA && event->no_cache == false) cache.add(event->file_path, data);
 
-						EventInfo * c_event = Event::get_event(event->client->fd);
-						Event::remove_event(event->fd);
+						EventInfo * c_event = Event::get(event->client->fd);
+						Event::remove(event->fd);
 
 						process_data(c_event, data);
 						return (1);
 					}
-				} else if (bytes_read <= 0) { Event::remove_event(event->fd); return (1); }							//	Read error or empty
+				} else if (bytes_read <= 0) { Event::remove(event->fd); return (1); }							//	Read error or empty
 
-				size_t chunk = std::min(event->max_data_size - event->data_size, CHUNK_SIZE);
-				if (splice(event->pipe[0], NULL, event->pipe[1], NULL, chunk, SPLICE_F_MOVE) == -1) { Event::remove_event(event->fd); return (1); }
+				size_t chunk = std::min(event->file_size - event->file_read, CHUNK_SIZE);
+				if (splice(event->pipe[0], NULL, event->pipe[1], NULL, chunk, SPLICE_F_MOVE) == -1) { Event::remove(event->fd); return (1); }
 
 				return (0);
 			}
@@ -187,7 +187,7 @@
 				event->close = true;
 				CacheInfo * fcache = cache.get("index.html");
 				if (fcache) {
-					process_data(Event::get_event(event->fd), fcache->content);
+					process_data(Event::get(event->fd), fcache->content);
 					return;
 				}
 
@@ -198,16 +198,16 @@
 
 				EventInfo event_data(fd, DATA, NULL, event->client);
 
-				event_data.path = "index.html";
+				event_data.file_path = "index.html";
 				event_data.no_cache = true;
-				if (pipe(event_data.pipe) == -1) { Event::remove_event(event_data.fd); return; }					//	Create pipe
-				event_data.data_size = 0;
-				event_data.max_data_size = filesize;
-				size_t chunk = std::min(event_data.max_data_size, CHUNK_SIZE);
+				if (pipe(event_data.pipe) == -1) { Event::remove(event_data.fd); return; }					//	Create pipe
+				event_data.file_read = 0;
+				event_data.file_size = filesize;
+				size_t chunk = std::min(event_data.file_size, CHUNK_SIZE);
 				if (splice(event_data.fd, NULL, event_data.pipe[1], NULL, chunk, SPLICE_F_MOVE) == -1) { close(event_data.fd); close(event_data.pipe[0]); close(event_data.pipe[1]); return; }
 				std::swap(event_data.fd, event_data.pipe[0]);
 				Event::events[event_data.fd] = event_data;
-				if (Epoll::add(event_data.fd, true, false) == -1) { Event::remove_event(event_data.fd); return; }
+				if (Epoll::add(event_data.fd, true, false) == -1) { Event::remove(event_data.fd); return; }
 
 				return;
 			}

@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/14 14:37:32 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/18 15:42:07 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/18 19:50:44 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,26 +19,26 @@
 
 #pragma region Variables
 
-	pthread_mutex_t			Display::mutex;
+	pthread_mutex_t			Display::mutex;																//	Mutex for synchronizing access to shared resources
 	
-	bool					Display::drawing = false;													//	Is in the middle of an Output()
-	int						Display::failCount = 0;														//	Current number of fails when printing in the the terminal
-	int						Display::maxFails = 3;														//	Maximum numbers of retries to print in the terminal if something fails
+	bool					Display::drawing = false;													//	True if printing to the terminal
+	int						Display::failCount = 0;														//	Current number of failures when printing to the terminal
+	int						Display::maxFails = 3;														//	Maximum numbers of retries to print to the terminal if something fails
 	bool					Display::RawModeDisabled = true;											//	Status of the terminal (false if in raw mode)
 	bool					Display::ForceRawModeDisabled = false;										//	Force terminal in normal mode (not raw mode)
 	bool					Display::Resized = false;													//	True if the terminal has been resized
-	bool					Display::redraw = false;													//	Is in the middle of an Output()
-	bool					Display::background = false;												//	True if the program is running in background (&)
+	bool					Display::redraw = false;													//	Flags for a redraw of the terminal
+	bool					Display::background = false;												//	True if the program is running in the background (&)
 	int						Display::signal = 0;														//	Last signal code
 
 	pthread_t				Display::_thread;
-	bool					Display::_terminate = false;												//	Flag the thread to finish
-	bool					Display::_update = false;													//	Flag for a redraw in the next iteration
-	bool					Display::_logo = false;														//	Flag for printing the logo
+	bool					Display::_terminate = false;												//	Flags the thread to finish
+	bool					Display::_update = false;													//	Flags for a redraw in the next iteration
+	bool					Display::_logo = false;														//	Flags for printing the logo
 
-	const int				Display::UPDATE_INTERVAL = 10;												//	Interval in miliseconds for the thread main loop
+	const int				Display::UPDATE_INTERVAL = 10;												//	Interval in milliseconds for the thread main loop
 
-	static Monitor			monitor;																	//	Class to obtain MEM and CPU ussage
+	static Monitor			monitor;																	//	Class to obtain MEM and CPU usage
 	static struct termios	orig_termios;																//	Structure for terminal information
 	static int				total_cols = 0;																//	Number of columns in the terminal
 	static int				total_rows = 0;																//	Number of rows in the terminal

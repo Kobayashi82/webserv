@@ -6,23 +6,23 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/18 11:54:24 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/18 15:42:11 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/18 21:33:06 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Epoll.hpp"
 #include "Display.hpp"
 #include "Socket.hpp"
 #include "Event.hpp"
+#include "Epoll.hpp"
 #include "Comunication.hpp"
 
 #pragma region Variables
 
-	int				Epoll::epoll_fd = -1;																//	File descriptor for epoll
-	int				Epoll::timeout_fd = -1;																//	EventInfo structure used for generating events in epoll and checking client timeouts
+	int			Epoll::epoll_fd = -1;																	//	File descriptor for epoll
+	int			Epoll::timeout_fd = -1;																	//	File descriptor used to generating events in EPOLL and checking client timeouts
 
-	const int		Epoll::MAX_EVENTS = 10;																//	Maximum number of events that can be handled per iteration by epoll
-	const int		Epoll::TIMEOUT_INTERVAL = 1;														//	Interval in seconds between timeout checks for inactive clients
+	const int	Epoll::MAX_EVENTS = 10;																	//	Maximum number of events that can be handled per iteration by epoll
+	const int	Epoll::TIMEOUT_INTERVAL = 1;															//	Interval in seconds between timeout checks for inactive clients
 
 
 #pragma endregion
@@ -39,8 +39,8 @@
 
 				struct itimerspec new_value;
 				memset(&new_value, 0, sizeof(new_value));
-				new_value.it_value.tv_sec = TIMEOUT_INTERVAL;										//	Time to the first expiration
-				new_value.it_interval.tv_sec = TIMEOUT_INTERVAL;									//	Interval between expirations
+				new_value.it_value.tv_sec = TIMEOUT_INTERVAL;											//	Time to the first expiration
+				new_value.it_interval.tv_sec = TIMEOUT_INTERVAL;										//	Interval between expirations
 
 				if (timerfd_settime(timeout_fd, 0, &new_value, NULL) == -1) {
 					Log::log(RD "Error creating " Y "Time-Out" RD " monitor" NC, Log::MEM_ERROR); Log::log("---", Log::MEM_ACCESS);
@@ -160,7 +160,7 @@
 			for (int i = 0; i < eventCount; ++i) {
 				if (events[i].data.fd == timeout_fd) { Display::update(); check_timeout(); Comunication::cache.remove_expired(); continue; }
 
-				EventInfo * event = Event::get_event(events[i].data.fd);
+				EventInfo * event = Event::get(events[i].data.fd);
 				if (!event) continue;
 
 				if (events[i].events & EPOLLIN) {
@@ -172,7 +172,7 @@
 					}
 				}
 
-				event = Event::get_event(events[i].data.fd);
+				event = Event::get(events[i].data.fd);
 				if (!event) continue;
 
 				if (events[i].events & EPOLLOUT) {

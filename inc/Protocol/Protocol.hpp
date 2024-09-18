@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 12:49:42 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/18 14:05:59 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/18 19:52:05 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@
 
 #pragma region Intermediary
 
-	struct EventInfo;
+	struct EventInfo;																					//	Forward declaration of EventInfo
 	class Intermediary {
 
 		public:

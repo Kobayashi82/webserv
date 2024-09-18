@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:32:38 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/18 15:34:07 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/18 19:38:47 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,8 +24,8 @@
 	std::queue <Log::LogInfo>	Log::_logs;																	//	Queue container with logs that need to be processed
 
 	const size_t				Log::MEM_MAXSIZE = 200;														//	Maximum number of logs for each memory log
-	long						Log::LOCAL_ROTATESIZE = 1 * 1024 * 1024;									//	Maximum size of the log before rotate	(default to 1 MB | 0 MB = dont rotate | Max 100 MB)
-	int							Log::LOCAL_ROTATE = 7;														//	Number of rotations files 				(default to 7 | 0 = dont create rotations files | Max 100)
+	long						Log::LOCAL_ROTATESIZE = 1 * 1024 * 1024;									//	Maximum size of the log before rotation	(default to 1 MB | 0 MB = no rotation | Max 100 MB)
+	int							Log::LOCAL_ROTATE = 7;														//	Number of rotations files 				(default to 7 | 0 = no rotations files | Max 100)
 
 	#pragma region LogInfo
 

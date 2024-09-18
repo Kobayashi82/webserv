@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:37:20 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/18 14:08:51 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/18 20:47:08 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,40 +23,40 @@ class Utils {
 	public:
 
 		//	String
-		static void 		trim(std::string & str);													//	Trim a string passed as reference from spaces in both sides and also trim any "# comments"
-		static std::string	escape_spaces(const std::string & str);										//	Escape spaces in the string passed as reference and return a new string
-		static void 		toLower(std::string & str);													//	Convert a string passed as reference to lower case
-		static void			toUpper(std::string & str);													//	Convert a string passed as reference to upper case
-		static bool			stol(const std::string & str, long & number, bool ignore_eof = false);		//	Convert a string to a number passed as reference (return 0 if success)
-		static std::string	ltos(long number);															//	Convert a long number to string
-		static std::string	dtos(double number);														//	Convert a double number to string
-		static std::string	formatSize(size_t bytes, bool just_suffix = false);							//	Format a size to string (byte, KB, MB, GB, TB)
-		static void			formatSize(size_t bytes, std::string & data1, std::string & data2);			//	Format a size to string (byte, KB, MB, GB, TB) and set it to data1 and data2
-		static double		formatSizeDbl(size_t bytes);												//	Format a size to double (byte, KB, MB, GB, TB)
-		static int			str_nocolor_length(const std::string & str);								//	Get the length of a string without the colors chars
-		static std::string	str_nocolor_trunc(const std::string & str, int length);						//	Get a string truncated to the length without counting colors chars
-		static std::string	str_nocolor(const std::string & str);										//	Get a string without the colors chars
-		static std::string	replace_tabs(const std::string & str, int tabSize = 8);						//	Replace tabs for spaces
+		static void 		trim(std::string & str);													//	Trim a string passed by reference from spaces on both sides and also trim any "# comments"
+		static std::string	escape_spaces(const std::string & str);										//	Escape spaces in the string passed by reference and return a new string
+		static void 		toLower(std::string & str);													//	Convert a string passed by reference to lower case
+		static void			toUpper(std::string & str);													//	Convert a string passed by reference to upper case
+		static bool			stol(const std::string & str, long & number, bool ignore_eof = false);		//	Convert a string passed by reference to a number (return 0 if success)
+		static std::string	ltos(long number);															//	Convert a long number to a string
+		static std::string	dtos(double number);														//	Convert a double number to a string
+		static std::string	formatSize(size_t bytes, bool just_suffix = false);							//	Format a size as a string (byte, KB, MB, GB, TB)
+		static void			formatSize(size_t bytes, std::string & data1, std::string & data2);			//	Format a size as a string (byte, KB, MB, GB, TB) and set it to data1 and data2
+		static double		formatSizeDbl(size_t bytes);												//	Format a size as a double (byte, KB, MB, GB, TB)
+		static int			str_nocolor_length(const std::string & str);								//	Get the length of a string without color characters
+		static std::string	str_nocolor_trunc(const std::string & str, int length);						//	Get a string truncated to the length without counting color characters
+		static std::string	str_nocolor(const std::string & str);										//	Get a string without color characters
+		static std::string	replace_tabs(const std::string & str, int tabSize = 8);						//	Replace tabs with spaces
 
 		//	Network
-		static bool			isValidIP(const std::string & IP);											//	Validate an IP
+		static bool			isValidIP(const std::string & IP);											//	Validate an IP address
 		static bool			isValidMask(const std::string & mask);										//	Validate a mask
-		static bool			isIPInRange(const std::string & IP, const std::string & range);				//	Check if an IP is in a given range
-		static void			add_address(const std::string & IP, long port, VServer & VServ);			//	
-		static bool			isValidPort(std::string port);												//	Validate a Port in string format
-		static bool			isValidPort(int port);														//	Validate a Port in numeric format
-		static bool 		valid_url(const std::string & url);											//	Validate a url or resource path
+		static bool			isIPInRange(const std::string & IP, const std::string & range);				//	Check if an IP address is within a given range
+		static void			add_address(const std::string & IP, long port, VServer & VServ);			//	Add an IP address to the list of IP addresses of a VServer
+		static bool			isValidPort(std::string port);												//	Validate a port in string format
+		static bool			isValidPort(int port);														//	Validate a port in numeric format
+		static bool 		valid_url(const std::string & url);											//	Validate a URL or resource path
 
 		//	Files
 		static std::string	programPath();																//	Get the path of the executable (return '/' if fails)
-		static int 			createPath(const std::string & path);										//	Create the indicated path (return 0 if success)
-		static int 			file_exists(const std::string & File);										//	Check if a file exists (0 = Exists, 1 = Don't Exists, 2 = No read permissions)
-		static bool			isFile(const std::string & path);											//	Check if a Path is a file
-		static bool			isDirectory(const std::string & path);										//	Check if a Path is a directory
-		static std::string	fullpath(const std::string & path);											//	Return the full path of path (process ./ and ../ and must be absolute)
-		static bool 		is_subpath(const std::string & path1, const std::string & path2);			//	Check if path1 is inside of path2
+		static int 			createPath(const std::string & path);										//	Create the indicated path (return 0 if successful)
+		static int 			file_exists(const std::string & File);										//	Check if a file exists (0 = Exists, 1 = Does Not Exist, 2 = No read permissions)
+		static bool			isFile(const std::string & path);											//	Check if a path is a file
+		static bool			isDirectory(const std::string & path);										//	Check if a path is a directory
+		static std::string	fullpath(const std::string & path);											//	Return the full path of a path (process './' and '../' and must be absolute)
+		static bool 		is_subpath(const std::string & path1, const std::string & path2);			//	Check if path1 is inside path2
 		static size_t 		filesize(const std::string & path);											//	Get the size of a file from a path
-		static size_t 		filesize(const int fd);														//	Get the size of a file from a FD
+		static size_t 		filesize(const int fd);														//	Get the size of a file from a file descriptor (FD)
 		static std::string	expand_tilde(const std::string & path);										//	Expand '~' to the user home directory
 
 };
