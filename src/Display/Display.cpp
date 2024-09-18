@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/14 14:37:32 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/18 15:34:16 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/18 15:42:07 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,7 +56,7 @@
 		static void stopHandler(int signum)		{ Display::signal = 128 + signum; }
 		static void resumeHandler(int signum)	{ Display::signal = 128 + signum; }
 
-		static void resizeHandler(int signum)	{ Thread::set_bool(Display::mutex, Display::Resized, (signum)); }
+		static void resizeHandler(int signum)	{  Display::signal = 128 + signum; Thread::set_bool(Display::mutex, Display::Resized, (signum)); }
 
 	#pragma endregion
 
@@ -83,14 +83,14 @@
 
 				return (1);
 			}
-			if (signal == 148) { signal = 0;
+			if (signal == 148) {
 				if (Settings::check_only || !isRawMode() || ForceRawModeDisabled) std::cout << NC CL CL "  ";
 
 				Thread::mutex_set(mutex, Thread::MTX_LOCK);
 					disableRawMode();
 				Thread::mutex_set(mutex, Thread::MTX_UNLOCK);
 			}
-			if (signal == 146) { signal = 0;
+			if (signal == 146) {
 
 				Thread::mutex_set(mutex, Thread::MTX_LOCK);
 					enableRawMode();
@@ -98,6 +98,7 @@
 
 				if (!background && (Settings::check_only || !isRawMode() || ForceRawModeDisabled)) logo();
 			}
+			signal = 0;
 
 			return (0);
 		}
