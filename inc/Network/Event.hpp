@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/18 11:20:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/18 19:07:18 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/19 20:29:03 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,6 +40,7 @@
 		std::string 										file_path;									//	Path of a file
 		size_t												file_read;									//	Total bytes read from a file
 		size_t												file_size;									//	The file size
+		int													file_info;									//	Info on the file size (0 = known, 1 = unknow, 2 = no more data)
 
 		bool												no_cache;									//	Do not keep in cache
 		bool												close;										//	Close the conection... please

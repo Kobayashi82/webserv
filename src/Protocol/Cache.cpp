@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/24 19:40:07 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/18 20:50:31 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/19 20:44:36 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,7 @@
 
 	#pragma region Constructors
 
-		CacheInfo::CacheInfo(const std::string & _path, const std::string & _content, time_t _expire) : path(_path), content(_content), expire(time(NULL) + _expire) {}
+		CacheInfo::CacheInfo(const std::string & _path, const std::string & _content, time_t _expire) : path(_path), content(_content), size(_content.size()), expire(time(NULL) + _expire) {}
 		CacheInfo::CacheInfo(const CacheInfo & src) { *this = src; }
 
 	#pragma endregion

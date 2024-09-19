@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/18 12:44:04 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/18 21:28:01 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/20 00:31:07 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,6 +40,8 @@
 			//	Methods
 			static int	read_data(EventInfo * event);
 			static int	read_client(EventInfo * event);
+
+			static int	read_cgi(EventInfo * event);
 
 			static void	write_client(EventInfo * event);
 

@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/18 11:21:01 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/18 19:07:05 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/20 00:31:16 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,11 +25,11 @@
 	#pragma region Constructors
 
 		EventInfo::EventInfo() : fd(-1), type(NOTHING), socket(NULL), client(NULL) {
-			pipe[0] = -1; pipe[1] = -1; file_read = 0; file_size = 0; file_path = ""; no_cache = false; close = false; vserver_data = NULL;
+			pipe[0] = -1; pipe[1] = -1; file_read = 0; file_size = 0; file_path = ""; no_cache = false; close = false; vserver_data = NULL; file_info = 0;
 		}
 
 		EventInfo::EventInfo(int _fd, int _type, SocketInfo * _socket, Client * _client) : fd(_fd), type(_type), socket(_socket), client(_client) {
-			pipe[0] = -1; pipe[1] = -1; file_read = 0; file_size = 0; file_path = ""; no_cache = false; close = false; vserver_data = NULL;
+			pipe[0] = -1; pipe[1] = -1; file_read = 0; file_size = 0; file_path = ""; no_cache = false; close = false; vserver_data = NULL; file_info = 0;
 		}
 
 		EventInfo::EventInfo(const EventInfo & src) { *this = src; }
@@ -41,7 +41,7 @@
 		EventInfo & EventInfo::operator=(const EventInfo & rhs) {
 			if (this != &rhs) {
 				fd = rhs.fd; type = rhs.type; socket = rhs.socket; client = rhs.client; file_path = rhs.file_path; no_cache = rhs.no_cache; close = rhs.close; request = rhs.request; vserver_data = rhs.vserver_data;
-				pipe[0] = rhs.pipe[0]; pipe[1] = rhs.pipe[1]; file_read = rhs.file_read; file_size = rhs.file_size; read_buffer = rhs.read_buffer; write_buffer = rhs.write_buffer;
+				pipe[0] = rhs.pipe[0]; pipe[1] = rhs.pipe[1]; file_read = rhs.file_read; file_size = rhs.file_size; read_buffer = rhs.read_buffer; write_buffer = rhs.write_buffer; file_info = rhs.file_info;
 			}
 			return (*this);
 		}
@@ -116,9 +116,9 @@
 				EventInfo * event = get(fd);
 				if (!event) return (1);
 
+				Epoll::remove(event->fd);
+				if (event->fd != -1) close(event->fd);
 				if (event->type == DATA) {
-					Epoll::remove(event->fd);
-					if (event->fd != -1) close(event->fd);
 					if (event->pipe[0] != -1) close(event->pipe[0]);
 					if (event->pipe[1] != -1) close(event->pipe[1]);
 				}

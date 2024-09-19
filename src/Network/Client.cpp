@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/18 11:28:40 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/19 13:47:55 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/20 00:31:22 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,9 +55,8 @@
 #pragma region Remove
 
 	void	Client::remove(bool from_socket) {
-		if (fd != -1) { Epoll::remove(fd); close(fd); }
-		Event::events.erase(fd);
-
+		if (fd != -1) { Event::remove(fd); }
+		
 		if (Comunication::clients.size() == 0) return;
 		std::list <Client>::iterator c_it = Comunication::clients.begin();
 		while (c_it != Comunication::clients.end()) {
