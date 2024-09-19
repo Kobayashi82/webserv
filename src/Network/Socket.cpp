@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/18 10:59:39 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/18 18:54:53 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/19 13:52:12 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -84,6 +84,7 @@
 					//	Create socket
 					int fd = socket(AF_INET, SOCK_STREAM, 0);
 					if (fd == -1) { error_msg(addr_it->first, addr_it->second, VServ, SK_CREATE); continue; }
+					Utils::NonBlocking_FD(fd);
 
 					//	Configure socket
 					int options = 1;
@@ -193,7 +194,9 @@
 
 		void Socket::accept(EventInfo * event) {
 			sockaddr_in Addr; socklen_t AddrLen = sizeof(Addr);
-			int fd = ::accept(event->fd, (sockaddr *)&Addr, &AddrLen); if (fd == -1) return;
+			int fd = ::accept(event->fd, (sockaddr *)&Addr, &AddrLen);
+			if (fd == -1) { error_msg(event->socket->ip, event->socket->port, event->socket->VServ, SK_ACCEPT); return; }
+			Utils::NonBlocking_FD(fd);
 
 			std::string	ip		= inet_ntoa(Addr.sin_addr);
 			int			port	= ntohs(Addr.sin_port);
@@ -303,6 +306,8 @@
 					Log::log("Socket " + ip + ":" + Utils::ltos(port) + " cannot listen", Log::MEM_ERROR, VServ); break;
 				case SK_EPOLL:
 					Log::log("Socket " + ip + ":" + Utils::ltos(port) + " cannot be added to EPOLL", Log::MEM_ERROR, VServ); break;
+				case SK_ACCEPT:
+					Log::log("Socket " + ip + ":" + Utils::ltos(port) + " cannot accept a client", Log::MEM_ERROR, VServ); break;
 			}
 		}
 

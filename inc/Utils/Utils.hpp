@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:37:20 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/18 20:47:08 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/19 13:47:05 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,6 +58,7 @@ class Utils {
 		static size_t 		filesize(const std::string & path);											//	Get the size of a file from a path
 		static size_t 		filesize(const int fd);														//	Get the size of a file from a file descriptor (FD)
 		static std::string	expand_tilde(const std::string & path);										//	Expand '~' to the user home directory
+		static void			NonBlocking_FD(int fd);														//	Set a file descriptor (FD) as Non-Blocking
 
 };
 

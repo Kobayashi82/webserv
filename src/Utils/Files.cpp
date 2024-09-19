@@ -6,17 +6,18 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 22:23:52 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/18 19:56:36 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/19 13:47:24 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Utils.hpp"
 
-#include <errno.h>																						//	For errno
-#include <unistd.h>																						//	For readlink() and access()
-#include <limits.h>																						//	For PATH_MAX
-#include <sys/stat.h>																					//	For mkdir() and get the size of a file
-#include <pwd.h>																						//	For getpwuid() to get the user home directory
+#include <errno.h>																						//	For errno to check if a directory exists in 'createPath'
+#include <fcntl.h>																						//	For fcntl() to set an FD as non-blocking
+#include <unistd.h>																						//	For readlink() and access() to read symbolic links and check file accessibility
+#include <limits.h>																						//	For PATH_MAX (define the maximum path length)
+#include <sys/stat.h>																					//	For mkdir() to get the size of a file
+#include <pwd.h>																						//	For getpwuid() to retrieve the user home directory
 
 #pragma region Program Path
 
@@ -142,6 +143,17 @@
 		const char * home = getenv("HOME");
 		if (!home) home = getpwuid(getuid())->pw_dir;
 		return (std::string(home) + path.substr(1));
+	}
+
+#pragma endregion
+
+#pragma region Non-Blocking FD
+
+	void Utils::NonBlocking_FD(int fd) {
+		int flags = fcntl(fd, F_GETFL, 0);																	//	Get the current flags
+		if (flags == -1) return;
+
+		fcntl(fd, F_SETFL, flags | O_NONBLOCK);																//	Set the 'NONBLOCK' flag
 	}
 
 #pragma endregion

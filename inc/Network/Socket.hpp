@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/18 10:58:42 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/18 21:30:58 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/19 13:51:55 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,7 +52,7 @@
 
 			//	Enumerators
 			enum e_action { CREATE = 101, CLOSE = 102 };
-			enum e_error { SK_CREATE = 140, SK_CONFIGURE = 141, SK_BIND = 142, SK_LISTEN = 143, SK_EPOLL = 144 };
+			enum e_error { SK_CREATE = 140, SK_CONFIGURE = 141, SK_BIND = 142, SK_LISTEN = 143, SK_EPOLL = 144, SK_ACCEPT = 145 };
 
 			//	Variables
 			static std::list <SocketInfo>					sockets;									//	List of all SocketInfo objects

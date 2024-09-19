@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/27 09:32:08 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/18 21:39:17 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/19 13:55:40 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -192,7 +192,9 @@
 				}
 
 				int fd = open("index.html", O_RDONLY);
-				if (fd == -1) { return; }
+				if (fd == -1) return;
+				Utils::NonBlocking_FD(fd);
+
 				size_t filesize = Utils::filesize(fd);
 				if (filesize == std::string::npos) { close(fd); return; }
 
@@ -201,6 +203,8 @@
 				event_data.file_path = "index.html";
 				event_data.no_cache = true;
 				if (pipe(event_data.pipe) == -1) { Event::remove(event_data.fd); return; }					//	Create pipe
+				Utils::NonBlocking_FD(event_data.pipe[0]);
+				Utils::NonBlocking_FD(event_data.pipe[1]);
 				event_data.file_read = 0;
 				event_data.file_size = filesize;
 				size_t chunk = std::min(event_data.file_size, CHUNK_SIZE);

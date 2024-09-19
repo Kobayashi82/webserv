@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 14:30:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/18 21:32:23 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/19 13:56:22 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,20 +21,18 @@
 //	*		nc 127.0.0.1 8081	-	telnet 127.0.0.1 8081	-	curl -v http://127.0.0.1:8081/
 //	*		siege -b -c 255 -t 10S 127.0.0.1:8081
 
-//	?		Non-bloquing fd
-
 //			DISPLAY
 //	TODO	./webserv -i with siege overloaded with logs
+
+//			COMUNICATIONS
+//	TODO	Transfer big files
+//	TODO	Comunications time-out
 
 //			INTERMEDIARY
 //	TODO	Intermediario
 //	TODO	data of vserver/location in event
 //	TODO	Index usa index.html por defecto
 //	TODO	Update resource path with alias or any modified path before cgi
-
-//			COMUNICATIONS
-//	TODO	Transfer big files
-//	TODO	Comunications time-out
 
 //			I MA NOT DOING THESE
 //	*		Process request
