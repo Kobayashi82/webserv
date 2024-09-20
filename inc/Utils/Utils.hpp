@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:37:20 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/19 13:47:05 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/20 12:19:41 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,8 @@ class Utils {
 		static std::string	escape_spaces(const std::string & str);										//	Escape spaces in the string passed by reference and return a new string
 		static void 		toLower(std::string & str);													//	Convert a string passed by reference to lower case
 		static void			toUpper(std::string & str);													//	Convert a string passed by reference to upper case
-		static bool			stol(const std::string & str, long & number, bool ignore_eof = false);		//	Convert a string passed by reference to a number (return 0 if success)
+		static bool			stol(const std::string & str, long & number, bool ignore_eof = false);		//	Convert a string passed by reference to a long number 	(return 0 if success)
+		static bool			stol(const std::string & str, size_t & number, bool ignore_eof = false);	//	Convert a string passed by reference to a size_t number	(return 0 if success)
 		static std::string	ltos(long number);															//	Convert a long number to a string
 		static std::string	dtos(double number);														//	Convert a double number to a string
 		static std::string	formatSize(size_t bytes, bool just_suffix = false);							//	Format a size as a string (byte, KB, MB, GB, TB)

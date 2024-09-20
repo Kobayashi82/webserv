@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/27 09:32:08 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/20 00:31:34 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/20 14:23:43 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,12 +66,43 @@
 	Cache				Comunication::cache(600, 100, 10);												//	Used to store cached data, such as files or HTML responses.	(arguments: expiration in seconds, max entries, max content size in MB)
 
 	int					Comunication::total_clients;													//	Total number of clients conected
-	long				Comunication::read_bytes;														//	Total number of bytes downloaded by the server
-	long				Comunication::write_bytes;														//	Total number of bytes uploaded by the server
+	size_t				Comunication::read_bytes;														//	Total number of bytes downloaded by the server
+	size_t				Comunication::write_bytes;														//	Total number of bytes uploaded by the server
 
 	const size_t		Comunication::CHUNK_SIZE = 4096;												//	Size of the buffer for read and write operations
 
 #pragma endregion
+
+int parse_header(EventInfo * event) {
+	std::string header = std::string(event->read_buffer.begin(), event->read_buffer.end());
+	size_t pos = header.find("\r\n\r\n");
+
+    if (pos == std::string::npos)	return (1);													// Encabezado incompleto, devuelve el mapa vacío
+	else							event->header = header.substr(0, pos);
+
+    std::istringstream stream(header);
+    std::string line;
+
+    // Lee la primera línea (Request line: Method Path HTTP-Version)
+    if (std::getline(stream, line)) {
+        std::istringstream request_line(line);
+        std::string method, path, http_version;
+
+        if (request_line >> method >> path >> http_version) {
+            event->header_map["Method"] = method;
+            event->header_map["Path"] = path;
+            event->header_map["Protocol"] = http_version;
+        } else return (2);
+    }
+
+    // Lee el resto de las líneas (encabezados clave: valor)
+    while (std::getline(stream, line) && line != "\r") {
+        pos = line.find(':');
+        if (pos != std::string::npos) event->header_map[line.substr(0, pos)] = line.substr(pos + 2);
+    }
+
+    return (0);
+}
 
 #pragma region Comunications
 
@@ -86,25 +117,35 @@
 				char peek_buffer[CHUNK_SIZE + 1];	memset(peek_buffer, 0, sizeof(peek_buffer));
 
 				ssize_t bytes_peek = recv(event->fd, peek_buffer, CHUNK_SIZE + 1, MSG_PEEK);
-				//if (bytes_peek <= 0) {event->client->remove(); return (1); }							//	Recv error or empty (empty = close client)
-				
-				event->client->update_last_activity();
-
 				ssize_t bytes_read = recv(event->fd, buffer, CHUNK_SIZE, 0);
+
 				if (bytes_read > 0) {
+
+					event->client->update_last_activity();
+					Event::update_last_activity(event->fd);
+
 					event->read_buffer.insert(event->read_buffer.end(), buffer, buffer + bytes_read);
 
-					Thread::mutex_set(Display::mutex, Thread::MTX_LOCK);
-						read_bytes+= bytes_read;
-					Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK);
+					Thread::inc_size_t(Display::mutex, read_bytes, bytes_read);
 
-					if (static_cast<size_t>(bytes_peek) <= CHUNK_SIZE) {
-						event->request = std::string(event->read_buffer.begin(), event->read_buffer.end());
-						event->read_buffer.clear();
-						event->client->total_requests++;
-
-						process_request(event); return (1);
+					if (event->header == "") {
+						int result = parse_header(event);
+						if (result == 0) {
+							process_request(event);
+						} else if (result == 2) {
+							event->client->remove(); return (1);
+						}
 					}
+
+					if (event->file_info == CGI) {
+						event->read_buffer.clear();
+						EventInfo * cgi_event = Event::get(event->cgi_fd);
+						if (!cgi_event) event->client->remove(); return (1);
+						cgi_event->write_buffer.insert(cgi_event->write_buffer.end(), buffer, buffer + bytes_read);
+					}
+
+					if (static_cast<size_t>(bytes_peek) <= CHUNK_SIZE) return (1);
+
 				} else if (bytes_read == 0) {															//	No more data
 					event->client->remove(); return (1);
 				} else if (bytes_read == -1) {															//	Error reading
@@ -123,7 +164,9 @@
 				if (!event) return;
 
 				if (!event->write_buffer.empty()) {
+
 					event->client->update_last_activity();
+					Event::update_last_activity(event->fd);
 
 					size_t buffer_size = event->write_buffer.size();
 					size_t chunk = CHUNK_SIZE;
@@ -136,20 +179,23 @@
 
 						event->file_read += bytes_written;
 
-						Thread::mutex_set(Display::mutex, Thread::MTX_LOCK);
-							write_bytes+= bytes_written;
-						Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK);
+						Thread::inc_size_t(Display::mutex, write_bytes, bytes_written);
 
 					} else { event->client->remove(); return; }					//	Error writing
 				}
 
 				if ((event->file_info == 0 && event->file_read >= event->file_size) || (event->file_info == 2 && event->write_buffer.empty())) {
-					Epoll::set(event->fd, true, false);
 					long MaxRequests = Settings::KEEP_ALIVE_TIMEOUT;
-
 					if (Settings::global.get("keepalive_requests") != "") Utils::stol(Settings::global.get("keepalive_requests"), MaxRequests);
+
 					Log::log("GET", "/", 200, write_bytes, "250", event->client->ip, event->socket->VServ, event->vserver_data);
-					if (event->close || event->client->total_requests >= MaxRequests) event->client->remove();
+
+					if (event->header_map["Connection"] == "close" || event->client->total_requests + 1 >= MaxRequests)
+						event->client->remove();
+					else {
+						Epoll::set(event->fd, true, false);
+						event->client->total_requests++;
+					}
 				}
 
 			}
@@ -170,6 +216,8 @@
 				ssize_t bytes_read = read(event->fd, buffer, CHUNK_SIZE);
 
 				if (bytes_read > 0) {
+
+					Event::update_last_activity(event->fd);
 
 					event->read_buffer.insert(event->read_buffer.end(), buffer, buffer + bytes_read);
 					event->file_read += bytes_read;
@@ -227,19 +275,28 @@
 				ssize_t bytes_read = read(event->fd, buffer, CHUNK_SIZE);
 
 				if (bytes_read > 0) {
+
+					Event::update_last_activity(event->fd);
+
 					EventInfo * c_event = Event::get(event->client->fd);
 
 					event->read_buffer.insert(event->read_buffer.end(), buffer, buffer + bytes_read);
 					event->file_read += bytes_read;
 
 					if (event->file_info == 0 && event->file_size == 0) {								//	Needs to get 'content_length'
-						size_t content_length = 0;
-						//	get content_length from header
-						//	needs to take header into account
-						if (content_length == 0) event->file_info = 1;									//	No 'content_length'
-						else {
-							c_event->file_info = event->file_info;
-							c_event->file_size = event->file_size;
+						if (event->header == "") {
+							size_t content_length = 0;
+							int result = parse_header(event);
+							if (result == 0) {
+								content_length = Utils::stol(event->header_map["Content_length"], content_length);
+								if (content_length == 0) event->file_info = 1;							//	No 'content_length'
+								else {
+									c_event->file_info = event->file_info;
+									c_event->file_size = event->file_size;
+								}
+							} else if (result == 2) {
+								Event::remove(event->fd); return (1);
+							}
 						}
 					}
 
@@ -259,6 +316,36 @@
 				}
 
 				return (0);
+			}
+
+		#pragma endregion
+
+		#pragma region Write
+
+			void Comunication::write_cgi(EventInfo * event) {
+				if (!event) return;
+
+				if (!event->write_buffer.empty()) {
+
+					Event::update_last_activity(event->fd);
+
+					size_t buffer_size = event->write_buffer.size();
+					size_t chunk = CHUNK_SIZE;
+					if (buffer_size > 0) chunk = std::min(buffer_size, static_cast<size_t>(CHUNK_SIZE));
+					
+					ssize_t bytes_written = write(event->fd, event->write_buffer.data(), chunk);
+
+					if (bytes_written > 0) {
+						event->write_buffer.erase(event->write_buffer.begin(), event->write_buffer.begin() + bytes_written);
+
+						event->file_read += bytes_written;
+
+					} else { Event::remove(event->fd); return; }										//	Error writing
+				}
+
+				if ((event->file_info == 0 && event->file_read >= event->file_size) || (event->file_info == 2 && event->write_buffer.empty())) {
+					Event::remove(event->fd);
+				}
 			}
 
 		#pragma endregion
@@ -295,7 +382,7 @@
 			void Comunication::process_response(EventInfo * event) {
 				if (!event) return;
 
-				if (event->no_cache == false) {
+				if (event->header_map["Cache-Control"].empty()) {
 					CacheInfo * fcache = cache.get("index.html");
 					if (fcache) {
 						std::string response = 
@@ -331,7 +418,7 @@
 
 				event_data.file_path = "index.html";
 				event_data.file_size = filesize;
-				event_data.no_cache = event->no_cache;
+				event_data.no_cache = !event->header_map["Cache-Control"].empty();
 
 				if (pipe(event_data.pipe) == -1) { close(event_data.fd); return; }						//	Create pipe
 				Utils::NonBlocking_FD(event_data.pipe[0]);

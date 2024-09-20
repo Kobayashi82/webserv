@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 11:01:21 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/18 19:56:08 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/20 12:55:21 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,13 +35,25 @@
 
 			static void 		set_string	(pthread_mutex_t & mutex, std::string & value1, const std::string value2);
 			static std::string	get_string	(pthread_mutex_t & mutex, const std::string & value1);
+			
 			static void			set_bool	(pthread_mutex_t & mutex, bool & value1, bool value2);
 			static bool			get_bool	(pthread_mutex_t & mutex, bool & value1);
+			
 			static void			set_size_t	(pthread_mutex_t & mutex, size_t & value1, size_t value2);
+			static void			inc_size_t	(pthread_mutex_t & mutex, size_t & value1);
+			static void			inc_size_t	(pthread_mutex_t & mutex, size_t & value1, size_t value2);
+			static void			dec_size_t	(pthread_mutex_t & mutex, size_t & value1);
+			static void			dec_size_t	(pthread_mutex_t & mutex, size_t & value1, size_t value2);
 			static size_t		get_size_t	(pthread_mutex_t & mutex, size_t & value1);
+
 			static void			set_int		(pthread_mutex_t & mutex, int & value1, int value2);
+			static void			inc_int		(pthread_mutex_t & mutex, int & value1);
+			static void			dec_int		(pthread_mutex_t & mutex, int & value1);
 			static int			get_int		(pthread_mutex_t & mutex, int & value1);
+
 			static void			set_long	(pthread_mutex_t & mutex, long & value1, long value2);
+			static void			inc_long	(pthread_mutex_t & mutex, long & value1);
+			static void			dec_long	(pthread_mutex_t & mutex, long & value1);
 			static long			get_long	(pthread_mutex_t & mutex, long & value1);
 	};
 

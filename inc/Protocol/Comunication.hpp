@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/18 12:44:04 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/20 00:31:07 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/20 14:22:28 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,18 +32,20 @@
 			static Cache									cache;										//	Used to store cached data, such as files or HTML responses
 
 			static int										total_clients;								//	Total number of clients conected
-			static long										read_bytes;									//	Total number of bytes downloaded by the server
-			static long										write_bytes;								//	Total number of bytes uploaded by the server
+			static size_t									read_bytes;									//	Total number of bytes downloaded by the server
+			static size_t									write_bytes;								//	Total number of bytes uploaded by the server
 
 			static const size_t								CHUNK_SIZE;									//	Size of the buffer for read and write operations
 
 			//	Methods
-			static int	read_data(EventInfo * event);
 			static int	read_client(EventInfo * event);
-
-			static int	read_cgi(EventInfo * event);
-
 			static void	write_client(EventInfo * event);
+
+			static int	read_data(EventInfo * event);
+			
+			static int	read_cgi(EventInfo * event);
+			static void	write_cgi(EventInfo * event);
+
 
 			static void	process_data(EventInfo * event, std::string data);
 			static void	process_data(EventInfo * event, size_t data_size);

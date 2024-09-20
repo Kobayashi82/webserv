@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/21 11:01:23 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/18 19:55:52 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/20 12:53:05 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,95 +58,143 @@
 
 	#pragma region String
 
-		void Thread::set_string(pthread_mutex_t & mutex, std::string & value1, const std::string value2) {	// Sets the value of a string protected by a mutex
-			mutex_set(mutex, MTX_LOCK);
-			value1 = value2;
-			mutex_set(mutex, MTX_UNLOCK);
-		}
-
 		std::string Thread::get_string(pthread_mutex_t & mutex, const std::string & value1) {				// Retrieves the value of a string protected by a mutex
 			std::string result;
 
 			mutex_set(mutex, MTX_LOCK);
-			result = value1;
+				result = value1;
 			mutex_set(mutex, MTX_UNLOCK);
 			return (result);
 		}
 
-	#pragma endregion
-
-	#pragma region bool
-
-		void	Thread::set_bool(pthread_mutex_t & mutex, bool & value1, bool value2) {						//	Sets the value of an integer protected by a mutex
+		void Thread::set_string(pthread_mutex_t & mutex, std::string & value1, const std::string value2) {	// Sets the value of a string protected by a mutex
 			mutex_set(mutex, MTX_LOCK);
-			value1 = value2;
+				value1 = value2;
 			mutex_set(mutex, MTX_UNLOCK);
 		}
+
+	#pragma endregion
+
+	#pragma region Bool
 
 		bool		Thread::get_bool(pthread_mutex_t & mutex, bool & value1) {								//	Retrieves the value of an integer protected by a mutex
 			bool result;
 
 			mutex_set(mutex, MTX_LOCK);
-			result = value1;
+				result = value1;
 			mutex_set(mutex, MTX_UNLOCK);
 			return (result);
+		}
+
+		void	Thread::set_bool(pthread_mutex_t & mutex, bool & value1, bool value2) {						//	Sets the value of an integer protected by a mutex
+			mutex_set(mutex, MTX_LOCK);
+				value1 = value2;
+			mutex_set(mutex, MTX_UNLOCK);
 		}
 
 	#pragma endregion
 
 	#pragma region Size_t
 
-		void	Thread::set_size_t(pthread_mutex_t & mutex, size_t & value1, size_t value2) {				//	Sets the value of an size_t protected by a mutex
-			mutex_set(mutex, MTX_LOCK);
-			value1 = value2;
-			mutex_set(mutex, MTX_UNLOCK);
-		}
-
 		size_t	Thread::get_size_t(pthread_mutex_t & mutex, size_t & value1) {								//	Retrieves the value of an size_t protected by a mutex
 			size_t result;
 
 			mutex_set(mutex, MTX_LOCK);
-			result = value1;
+				result = value1;
 			mutex_set(mutex, MTX_UNLOCK);
 			return (result);
+		}
+
+		void	Thread::set_size_t(pthread_mutex_t & mutex, size_t & value1, size_t value2) {				//	Sets the value of an size_t protected by a mutex
+			mutex_set(mutex, MTX_LOCK);
+				value1 = value2;
+			mutex_set(mutex, MTX_UNLOCK);
+		}
+
+		void	Thread::inc_size_t(pthread_mutex_t & mutex, size_t & value1) {								//	Increases the value of an size_t protected by a mutex
+			mutex_set(mutex, MTX_LOCK);
+				value1++;
+			mutex_set(mutex, MTX_UNLOCK);
+		}
+
+		void	Thread::inc_size_t(pthread_mutex_t & mutex, size_t & value1, size_t value2) {				//	Increases the value of an size_t protected by a mutex
+			mutex_set(mutex, MTX_LOCK);
+				value1 += value2;
+			mutex_set(mutex, MTX_UNLOCK);
+		}
+
+		void	Thread::dec_size_t(pthread_mutex_t & mutex, size_t & value1) {								//	Decreases the value of an size_t protected by a mutex
+			mutex_set(mutex, MTX_LOCK);
+				value1--;
+			mutex_set(mutex, MTX_UNLOCK);
+		}
+
+		void	Thread::dec_size_t(pthread_mutex_t & mutex, size_t & value1, size_t value2) {				//	Decreases the value of an size_t protected by a mutex
+			mutex_set(mutex, MTX_LOCK);
+				value1 -= value2;
+			mutex_set(mutex, MTX_UNLOCK);
 		}
 
 	#pragma endregion
 
 	#pragma region Integer
 
-		void	Thread::set_int(pthread_mutex_t & mutex, int & value1, int value2) {						//	Sets the value of an integer protected by a mutex
-			mutex_set(mutex, MTX_LOCK);
-			value1 = value2;
-			mutex_set(mutex, MTX_UNLOCK);
-		}
-
 		int		Thread::get_int(pthread_mutex_t & mutex, int & value1) {									//	Retrieves the value of an integer protected by a mutex
 			int result;
 
 			mutex_set(mutex, MTX_LOCK);
-			result = value1;
+				result = value1;
 			mutex_set(mutex, MTX_UNLOCK);
 			return (result);
+		}
+
+		void	Thread::set_int(pthread_mutex_t & mutex, int & value1, int value2) {						//	Sets the value of an integer protected by a mutex
+			mutex_set(mutex, MTX_LOCK);
+				value1 = value2;
+			mutex_set(mutex, MTX_UNLOCK);
+		}
+
+		void	Thread::inc_int(pthread_mutex_t & mutex, int & value1) {									//	Increases the value of an integer protected by a mutex
+			mutex_set(mutex, MTX_LOCK);
+				value1++;
+			mutex_set(mutex, MTX_UNLOCK);
+		}
+
+		void	Thread::dec_int(pthread_mutex_t & mutex, int & value1) {									//	Decreases the value of an integer protected by a mutex
+			mutex_set(mutex, MTX_LOCK);
+				value1--;
+			mutex_set(mutex, MTX_UNLOCK);
 		}
 
 	#pragma endregion
 
 	#pragma region Long
 
-		void	Thread::set_long(pthread_mutex_t & mutex, long & value1, long value2) {						//	Sets the value of a long integer protected by a mutex
-			mutex_set(mutex, MTX_LOCK);
-			value1 = value2;
-			mutex_set(mutex, MTX_UNLOCK);
-		}
-
 		long	Thread::get_long(pthread_mutex_t & mutex, long & value1) {									//	Retrieves the value of a long integer protected by a mutex
 			long result;
 
 			mutex_set(mutex, MTX_LOCK);
-			result = value1;
+				result = value1;
 			mutex_set(mutex, MTX_UNLOCK);
 			return (result);
+		}
+
+		void	Thread::set_long(pthread_mutex_t & mutex, long & value1, long value2) {						//	Sets the value of a long integer protected by a mutex
+			mutex_set(mutex, MTX_LOCK);
+				value1 = value2;
+			mutex_set(mutex, MTX_UNLOCK);
+		}
+
+		void	Thread::inc_long(pthread_mutex_t & mutex, long & value1) {									//	Increases the value of an long integer protected by a mutex
+			mutex_set(mutex, MTX_LOCK);
+				value1++;
+			mutex_set(mutex, MTX_UNLOCK);
+		}
+
+		void	Thread::dec_long(pthread_mutex_t & mutex, long & value1) {									//	Decreases the value of an long integer protected by a mutex
+			mutex_set(mutex, MTX_LOCK);
+				value1--;
+			mutex_set(mutex, MTX_UNLOCK);
 		}
 
 	#pragma endregion

@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/18 11:20:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/19 20:29:03 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/20 14:22:23 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,9 +41,14 @@
 		size_t												file_read;									//	Total bytes read from a file
 		size_t												file_size;									//	The file size
 		int													file_info;									//	Info on the file size (0 = known, 1 = unknow, 2 = no more data)
+		int													cgi_fd;
 
+		std::string											header;
+		std::map<std::string, std::string>					header_map;
 		bool												no_cache;									//	Do not keep in cache
 		bool												close;										//	Close the conection... please
+
+		time_t												last_activity;
 
 		std::vector<std::pair<std::string, std::string> > * vserver_data;								//	Data container from which the request is served (Global, VServer, Location)
 
@@ -74,6 +79,10 @@
 			static void			remove();																//	Removes all events
 			static void			remove(Client * Cli);													//	Removes all events associated with a client
 			static int			remove(int fd);															//	Removes an event associated with an FD
+
+			static void			check_timeout(int interval = 5);
+			static void			update_last_activity(int fd);
+
 
 	};
 

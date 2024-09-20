@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/18 11:54:41 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/18 19:21:01 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/20 13:57:40 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,7 +44,8 @@
 
 			//	Methods
 			static int	create_timeout();																//	Creates the file descriptor for timeout
-			static void check_timeout();																//	Checks for clients that have timed out
+			static void	clients_timeout();																//	Checks for clients that have timed out
+			static void check_timeout();																//	Checks for time outs (Clients, Events and Cache)
 
 	};
 

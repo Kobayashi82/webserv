@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/18 11:54:24 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/20 00:31:02 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/20 14:22:18 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,7 +54,7 @@
 
 		#pragma region Check
 
-			void Epoll::check_timeout() {
+			void Epoll::clients_timeout() {
 				uint64_t expirations;
 				read(timeout_fd, &expirations, sizeof(expirations));
 
@@ -68,6 +68,13 @@
 					std::list<Client>::iterator current = it; ++it;
 					current->check_timeout(TimeOut);
 				}
+			}
+
+			void Epoll::check_timeout() {
+				Display::update();
+				Event::check_timeout();
+				clients_timeout();
+				Comunication::cache.remove_expired();
 			}
 
 		#pragma endregion
@@ -158,7 +165,7 @@
 			}
 
 			for (int i = 0; i < eventCount; ++i) {
-				if (events[i].data.fd == timeout_fd) { Display::update(); check_timeout(); Comunication::cache.remove_expired(); continue; }
+				if (events[i].data.fd == timeout_fd) { check_timeout(); continue; }
 
 				EventInfo * event = Event::get(events[i].data.fd);
 				if (!event) continue;

@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:36:49 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/18 19:56:35 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/20 12:19:44 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,6 +67,12 @@
 #pragma region stol
 
 	bool Utils::stol(const std::string & str, long & number, bool ignore_eof) {
+		if (str.empty()) return (true);
+		std::stringstream ss(str); ss >> number;
+		return ((ss.fail() || (!ignore_eof && !ss.eof())));
+	}
+
+	bool Utils::stol(const std::string & str, size_t & number, bool ignore_eof) {
 		if (str.empty()) return (true);
 		std::stringstream ss(str); ss >> number;
 		return ((ss.fail() || (!ignore_eof && !ss.eof())));
