@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/18 10:59:39 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/20 23:10:04 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/21 00:13:18 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,7 @@
 #include "Socket.hpp"
 #include "Event.hpp"
 #include "Epoll.hpp"
-#include "Comunication.hpp"
+#include "Communication.hpp"
 
 #pragma region Variables
 
@@ -141,7 +141,7 @@
 					SocketInfo current = *s_it; ++s_it;
 					remove(current);
 				}
-				Thread::set_int(Display::mutex, Comunication::total_clients, 0);
+				Thread::set_int(Display::mutex, Communication::total_clients, 0);
 			}
 
 		#pragma endregion
@@ -201,14 +201,14 @@
 			std::string	ip		= inet_ntoa(Addr.sin_addr);
 			int			port	= ntohs(Addr.sin_port);
 
-			Comunication::clients.push_back(Client(fd, event->socket, ip, port));
+			Communication::clients.push_back(Client(fd, event->socket, ip, port));
 			Event::events[fd] = EventInfo(fd, CLIENT, event->socket, NULL);
-			Event::events[fd].client = &Comunication::clients.back();
+			Event::events[fd].client = &Communication::clients.back();
 
 			if (Epoll::add(fd, true, false) == -1) { Event::events[fd].client->remove(); return; }
 
 			Thread::mutex_set(Display::mutex, Thread::MTX_LOCK);
-				Comunication::total_clients++;
+				Communication::total_clients++;
 			Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK);
 		}
 
@@ -264,8 +264,8 @@
 			while (s_it != sockets.end()) {																//	Iterate over sockets
 				std::list<Client *>::iterator sc_it = s_it->clients.begin();
 				while (sc_it != s_it->clients.end()) { bool found = false;								//	Iterate over socket clients				
-					std::list<Client>::iterator c_it = Comunication::clients.begin();
-					while (c_it != Comunication::clients.end()) {										//	Iterate over clients
+					std::list<Client>::iterator c_it = Communication::clients.begin();
+					while (c_it != Communication::clients.end()) {										//	Iterate over clients
 						if (*c_it == **sc_it) { found = true; break; }									//	client = socket client
 						++c_it;
 					}

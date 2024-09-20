@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/14 14:37:32 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/19 19:41:59 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/21 00:10:25 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,7 @@
 #include "Monitor.hpp"
 #include "Settings.hpp"
 #include "Socket.hpp"
-#include "Comunication.hpp"
+#include "Communication.hpp"
 
 #pragma region Variables
 
@@ -568,17 +568,17 @@
 					std::string data1, data2, Downloaded, Uploaded, Conect;
 					int Downloaded_size, Uploaded_size; std::ostringstream ss;
 
-					Utils::formatSize(Comunication::read_bytes, data1, data2);
-					ss << std::left << std::fixed << std::setprecision(2) << Utils::formatSizeDbl(Comunication::read_bytes); data1 = ss.str();
+					Utils::formatSize(Communication::read_bytes, data1, data2);
+					ss << std::left << std::fixed << std::setprecision(2) << Utils::formatSizeDbl(Communication::read_bytes); data1 = ss.str();
 					Downloaded = Y + data1 + " " C + data2 + NC;
 					Downloaded_size = data1.size() + data2.size() + 1;
 
-					Utils::formatSize(Comunication::write_bytes, data1, data2);
-					ss.str(""); ss << std::left << std::fixed << std::setprecision(2) << Utils::formatSizeDbl(Comunication::write_bytes); data1 = ss.str();
+					Utils::formatSize(Communication::write_bytes, data1, data2);
+					ss.str(""); ss << std::left << std::fixed << std::setprecision(2) << Utils::formatSizeDbl(Communication::write_bytes); data1 = ss.str();
 					Uploaded = Y + data1 + " " C + data2 + NC;
 					Uploaded_size = data1.size() + data2.size() + 1;
 
-					ss.str(""); ss << std::left << std::setw(3) << Utils::ltos(Comunication::total_clients);
+					ss.str(""); ss << std::left << std::setw(3) << Utils::ltos(Communication::total_clients);
 					Conect = ss.str();
 						
 				Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK);

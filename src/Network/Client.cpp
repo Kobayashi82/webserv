@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/18 11:28:40 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/20 13:12:57 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/21 00:12:57 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,7 @@
 #include "Event.hpp"
 #include "Client.hpp"
 #include "Epoll.hpp"
-#include "Comunication.hpp"
+#include "Communication.hpp"
 
 #pragma region Constructors
 
@@ -57,16 +57,16 @@
 	void	Client::remove(bool from_socket) {
 		if (fd != -1) { Event::remove(fd); }
 		
-		if (Comunication::clients.size() == 0) return;
-		std::list <Client>::iterator c_it = Comunication::clients.begin();
-		while (c_it != Comunication::clients.end()) {
+		if (Communication::clients.size() == 0) return;
+		std::list <Client>::iterator c_it = Communication::clients.begin();
+		while (c_it != Communication::clients.end()) {
 			if (*this == *c_it) {
 				Event::remove(this);
-				Comunication::clients.erase(c_it);
+				Communication::clients.erase(c_it);
 
 				Thread::mutex_set(Display::mutex, Thread::MTX_LOCK);
 
-					Comunication::total_clients--;
+					Communication::total_clients--;
 
 				Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK);
 

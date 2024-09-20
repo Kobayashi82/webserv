@@ -1,16 +1,16 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Comunication.cpp                                   :+:      :+:    :+:   */
+/*   Communication.cpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/27 09:32:08 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/20 17:07:03 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/21 00:08:36 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Comunication.hpp"
+#include "Communication.hpp"
 #include "Display.hpp"
 #include "Thread.hpp"
 #include "Client.hpp"
@@ -31,14 +31,14 @@
 
 #pragma region Variables
 
-	std::list<Client>	Comunication::clients;															//	List of all Client objects
-	Cache				Comunication::cache(600, 100, 10);												//	Used to store cached data, such as files or HTML responses.	(arguments: expiration in seconds, max entries, max content size in MB)
+	std::list<Client>	Communication::clients;															//	List of all Client objects
+	Cache				Communication::cache(600, 100, 10);												//	Used to store cached data, such as files or HTML responses.	(arguments: expiration in seconds, max entries, max content size in MB)
 
-	int					Comunication::total_clients;													//	Total number of clients conected
-	size_t				Comunication::read_bytes;														//	Total number of bytes downloaded by the server
-	size_t				Comunication::write_bytes;														//	Total number of bytes uploaded by the server
+	int					Communication::total_clients;													//	Total number of clients conected
+	size_t				Communication::read_bytes;														//	Total number of bytes downloaded by the server
+	size_t				Communication::write_bytes;														//	Total number of bytes uploaded by the server
 
-	const size_t		Comunication::CHUNK_SIZE = 4096;												//	Size of the buffer for read and write operations
+	const size_t		Communication::CHUNK_SIZE = 4096;												//	Size of the buffer for read and write operations
 
 #pragma endregion
 
@@ -74,13 +74,13 @@
 
 #pragma endregion
 
-#pragma region Comunications
+#pragma region Communications
 
 	#pragma region CLIENT
 
 		#pragma region Read
 
-			int Comunication::read_client(EventInfo * event) {
+			int Communication::read_client(EventInfo * event) {
 				if (!event) return (0);
 
 				char buffer[CHUNK_SIZE];			memset(buffer, 0, sizeof(buffer));					//	Initialize buffer
@@ -137,7 +137,7 @@
 				} else if (bytes_read == 0) {															//	No data (usually means a client disconected)
 					event->client->remove(); return (1);
 				} else if (bytes_read == -1) {															//	Error reading
-					Log::log(RED500 "Comunication failed with " BLUE400 + event->client->ip + NC, Log::BOTH_ERROR, event->socket->VServ);
+					Log::log(RED500 "Communication failed with " BLUE400 + event->client->ip + NC, Log::BOTH_ERROR, event->socket->VServ);
 					event->client->remove(); return (1);
 				}		
 
@@ -148,7 +148,7 @@
 
 		#pragma region Write
 
-			void Comunication::write_client(EventInfo * event) {
+			void Communication::write_client(EventInfo * event) {
 				if (!event) return;
 
 				if (!event->write_buffer.empty()) {														//	There are data in the write_buffer
@@ -196,7 +196,7 @@
 
 		#pragma region Read
 
-			int Comunication::read_data(EventInfo * event) {
+			int Communication::read_data(EventInfo * event) {
 				if (!event) return (0);
 
 				char buffer[CHUNK_SIZE];			memset(buffer, 0, sizeof(buffer));					//	Initialize buffer
@@ -255,7 +255,7 @@
 
 		#pragma region Read
 
-			int Comunication::read_cgi(EventInfo * event) {
+			int Communication::read_cgi(EventInfo * event) {
 				if (!event) return (0);
 
 				char buffer[CHUNK_SIZE];			memset(buffer, 0, sizeof(buffer));					//	Initialize buffer
@@ -310,7 +310,7 @@
 
 		#pragma region Write
 
-			void Comunication::write_cgi(EventInfo * event) {
+			void Communication::write_cgi(EventInfo * event) {
 				if (!event) return;
 
 				if (!event->write_buffer.empty()) {																									//	There are data in the write_buffer
@@ -346,7 +346,7 @@
 
 			//	This temporary function process the request
 
-			void Comunication::process_request(EventInfo * event) {
+			void Communication::process_request(EventInfo * event) {
 				if (!event) return;
 
 				//	if (tipo = CGI) {
@@ -368,7 +368,7 @@
 			//	This temporary function process the response
 			//	It could be refactorized to use it as a function for serving a file
 
-			void Comunication::process_response(EventInfo * event) {
+			void Communication::process_response(EventInfo * event) {
 				if (!event) return;
 
 				if (event->header_map["Cache-Control"].empty()) {										//	If cache is allowed
@@ -451,7 +451,7 @@
 #pragma region Resolve Request																			//	Not valid really... is old
 
 	//	Return structure with info about the result
-	void Comunication::resolve_request(const std::string host, const std::string method, std::string path, EventInfo * event) {
+	void Communication::resolve_request(const std::string host, const std::string method, std::string path, EventInfo * event) {
 		(void) host;
 		(void) method;
 		(void) path;
@@ -479,11 +479,11 @@
 
 	}
 
-	//	void Comunication::process_request(EventInfo * event, std::string request)
+	//	void Communication::process_request(EventInfo * event, std::string request)
 	//
 	//	Esta es la funcion de entrada para el procesado de lo que pide el cliente
 	//	event es un puntero al EventInfo del cliente. 
-	//	El EventInfo se guarda en Comunication::events y es un map de FD - EventInfo
+	//	El EventInfo se guarda en Communication::events y es un map de FD - EventInfo
 	//	Para ver la implentacion de EventInfo, está en Net.hpp
 	//
 	//	request es un string con el contenido de la peticion.

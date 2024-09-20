@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Comunication.hpp                                   :+:      :+:    :+:   */
+/*   Communication.hpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/18 12:44:04 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/20 14:22:28 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/21 00:13:39 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,11 +19,11 @@
 #include <iostream>																						//	For standard input/output stream objects like std::cin, std::cout
 #include <list>																							//	For std::list container
 
-#pragma region Comunication
+#pragma region Communication
 
 	struct EventInfo;																					//	Forward declaration of EventInfo
 	class Client;																						//	Forward declaration of Client
-	class Comunication {
+	class Communication {
 
 		public:
 

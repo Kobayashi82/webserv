@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/18 11:54:24 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/20 14:22:18 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/21 00:13:00 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 #include "Socket.hpp"
 #include "Event.hpp"
 #include "Epoll.hpp"
-#include "Comunication.hpp"
+#include "Communication.hpp"
 
 #pragma region Variables
 
@@ -63,8 +63,8 @@
 				if (Settings::global.get("keepalive_timeout") != "") Utils::stol(Settings::global.get("keepalive_timeout"), TimeOut);
 				if (TimeOut == 0) return;
 
-				std::list<Client>::iterator it = Comunication::clients.begin();
-				while (it != Comunication::clients.end()) {
+				std::list<Client>::iterator it = Communication::clients.begin();
+				while (it != Communication::clients.end()) {
 					std::list<Client>::iterator current = it; ++it;
 					current->check_timeout(TimeOut);
 				}
@@ -74,7 +74,7 @@
 				Display::update();
 				Event::check_timeout();
 				clients_timeout();
-				Comunication::cache.remove_expired();
+				Communication::cache.remove_expired();
 			}
 
 		#pragma endregion
@@ -173,9 +173,9 @@
 				if (events[i].events & EPOLLIN) {
 					switch (event->type) {
 						case SOCKET: 	{ Socket::accept(event);				break; }
-						case CLIENT: 	{ Comunication::read_client(event);		break; }
-						case DATA: 		{ Comunication::read_data(event);		break; }
-						case CGI: 		{ Comunication::read_cgi(event);		break; }
+						case CLIENT: 	{ Communication::read_client(event);		break; }
+						case DATA: 		{ Communication::read_data(event);		break; }
+						case CGI: 		{ Communication::read_cgi(event);		break; }
 					}
 				}
 
@@ -184,7 +184,7 @@
 
 				if (events[i].events & EPOLLOUT) {
 					switch (event->type) {
-						case CLIENT: 	{ Comunication::write_client(event);	break; }
+						case CLIENT: 	{ Communication::write_client(event);	break; }
 						case DATA: 		{										break; }
 						case CGI: 		{										break; }
 					}
