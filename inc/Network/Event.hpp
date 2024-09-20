@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/18 11:20:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/20 14:22:23 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/20 17:03:19 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,6 +45,9 @@
 
 		std::string											header;
 		std::map<std::string, std::string>					header_map;
+		std::string											method;
+		size_t												body_size;
+		size_t												body_maxsize;
 		bool												no_cache;									//	Do not keep in cache
 		bool												close;										//	Close the conection... please
 
