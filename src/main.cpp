@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 14:30:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/19 22:16:02 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/20 17:12:15 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,10 +23,6 @@
 
 //			DISPLAY
 //	TODO	./webserv -i with siege overloaded with logs
-
-//			COMUNICATIONS
-//	TODO	Transfer big files
-//	TODO	Comunications time-out
 
 //			INTERMEDIARY
 //	TODO	Intermediario
@@ -60,10 +56,8 @@ int main(int argc, char **argv) {
 	usleep(10000); Display::update();
 
 	while (Display::isTerminate() == -1) {
-		if (Display::signal_check()) break;
-		if (Epoll::events()) {
-			break;
-		}
+		if (Display::signal_check())	break;
+		if (Epoll::events())			break;
 	}
 	
 	Epoll::close();
