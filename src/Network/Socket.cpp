@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/18 10:59:39 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/21 12:46:07 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/21 22:16:31 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -207,9 +207,7 @@
 
 			if (Epoll::add(fd, true, false) == -1) { Event::events[fd].client->remove(); return; }
 
-			Thread::mutex_set(Display::mutex, Thread::MTX_LOCK);
-				Communication::total_clients++;
-			Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK);
+			Thread::inc_int(Display::mutex, Communication::total_clients);
 		}
 
 	#pragma endregion

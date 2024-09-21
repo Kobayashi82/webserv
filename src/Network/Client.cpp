@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/18 11:28:40 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/21 00:12:57 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/21 22:16:50 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,13 +62,10 @@
 		while (c_it != Communication::clients.end()) {
 			if (*this == *c_it) {
 				Event::remove(this);
+
 				Communication::clients.erase(c_it);
 
-				Thread::mutex_set(Display::mutex, Thread::MTX_LOCK);
-
-					Communication::total_clients--;
-
-				Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK);
+				Thread::dec_int(Display::mutex, Communication::total_clients);
 
 				Display::update(); break;
 			} ++c_it;

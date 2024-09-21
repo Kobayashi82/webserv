@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/27 09:32:08 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/21 19:21:01 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/21 22:18:09 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -122,7 +122,7 @@
 					size_t chunk = CHUNK_SIZE;
 					if (buffer_size > 0) chunk = std::min(buffer_size, static_cast<size_t>(CHUNK_SIZE));
 					
-					ssize_t bytes_written = write(event->fd, event->write_buffer.data(), chunk);								//	Send the data
+					ssize_t bytes_written = send(event->fd, event->write_buffer.data(), chunk, MSG_DONTWAIT);					//	Send the data
 
 					if (bytes_written > 0) {																					//	Some data is sent
 						event->write_buffer.erase(event->write_buffer.begin(), event->write_buffer.begin() + bytes_written);	//	Remove the data sent from 'write_buffer'
@@ -146,8 +146,8 @@
 					if (event->header_map["Connection"] == "close" || event->client->total_requests + 1 >= MaxRequests)								//	Close the connection if client ask or max request reach
 						event->client->remove();
 					else {
-						Epoll::set(event->fd, true, false);																							//	Monitor read events only in EPOLL 
 						event->client->total_requests++;																							//	Increase total_requests
+						Epoll::set(event->fd, true, false);																							//	Monitor read events only in EPOLL 
 					}
 				}
 

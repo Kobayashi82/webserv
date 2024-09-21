@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 14:30:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/21 19:22:11 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/21 22:20:38 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,9 +24,6 @@
 //	TODO	./webserv -i with siege overloaded with logs
 //			Buffer con los últimos 100 logs y que se impriman cada x tiempo o cuando se llenen... probaré así.
 //			En el main the logs mantener un timer o algo. Puede ser de 200ms o algo asi
-
-//	TODO	Hay transacciones fantasmas. Pueden ser que se repitan?
-//	TODO	Si tiene que crear el archivo de log se producen transacciones fallidas. WTF!!
 
 //	*		Process request
 //	*		Generate response

@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/21 11:52:00 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/21 19:21:08 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/21 22:20:25 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -218,6 +218,7 @@
 		}
 
 		while (std::getline(stream, line) && line != "\r") {												//	Read the lines (ignoring '\r')
+			line.erase(line.size() - 1, 1);
 			pos = line.find(':');																			//	Find ':' to split Key - Value
 			if (pos != std::string::npos) event->header_map[line.substr(0, pos)] = line.substr(pos + 2);	//	Add the Key - Value to 'header_map'
 		}
