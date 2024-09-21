@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:32:38 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/18 19:38:47 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/21 17:12:20 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -109,13 +109,12 @@
 		#pragma region Log to Memory
 
 			void Log::log_to_memory(std::string msg, int type, VServer * VServ) {
-				if (msg.empty()) return ;
-				if (Settings::check_only || !Display::isRawMode() || Display::ForceRawModeDisabled) {
-					static bool separated = false;
-					if (!Display::background && !msg.empty()) {
-						if (msg == "---") {	if (separated == false) { std::cout << " " << Y "-----------------------------------------------------------------------------------------" << NC << std::endl; separated = true; }}
-						else			  {	std::cout << " " << msg << NC << std::endl; separated = false; }
-					}
+				if (msg.empty()) return;
+
+				if (!Display::background && (Settings::check_only || !Display::isRawMode() || Display::ForceRawModeDisabled)) {
+					if (msg == "---") std::cout << " " << Y "-----------------------------------------------------------------------------------------" << NC "\n";
+					else			  std::cout << " " << msg << NC "\n";
+					return;
 				}
 
 				Thread::mutex_set(mutex, Thread::MTX_LOCK);
@@ -175,16 +174,21 @@
 					Log::LogInfo log = logs.front(); logs.pop();
 					
 					Utils::trim(log.msg); if (log.msg.empty()) continue;
-					if (log.msg != "---" && !(Settings::check_only && Settings::loaded == false))
-						log.msg = BLUE600 "[" LIME600 + Settings::timer.current_date() + " " EMERALD400 + Settings::timer.current_time() + BLUE600 "]  " NC + log.msg;
+
+					bool isTRF = false;
+					if (log.msg.substr(0, 3) == "TRF") {
+						if (log.type < LOCAL_ACCESS) { isTRF = true; log_request(log.msg, log.VServ, false); }
+					} else {
+						if (log.msg != "---" && !(Settings::check_only && Settings::loaded == false))
+							log.msg = BLUE600 "[" LIME600 + Settings::timer.current_date() + " " EMERALD400 + Settings::timer.current_time() + BLUE600 "]  " NC + log.msg;
+					}
 
 					if (!log.path.empty() && log.path[0] != '/') log.path = Settings::program_path + log.path;
 
-					if (log.type < LOCAL_ACCESS)						log_to_memory(log.msg, log.type, log.VServ);
-					if (log.type > GLOBAL_ERROR && !log.path.empty())	{
-						if (log.msg.find("Transfered") != std::string::npos) log.msg = "\t " + Utils::str_nocolor(log.msg).substr(23);
-						logMap[log.path] += Utils::str_nocolor(log.msg);
-						if (log.msg.find("GET") == std::string::npos) logMap[log.path] += "\n";
+					if (log.type < LOCAL_ACCESS) { if (isTRF == false) log_to_memory(log.msg, log.type, log.VServ); }
+					if (log.type > GLOBAL_ERROR && !log.path.empty()) {
+						if (log.msg.substr(0, 3) == "TRF") log.msg = log_request(log.msg, log.VServ, true);
+						logMap[log.path] += Utils::str_nocolor(log.msg) + "\n";
 					}
 				}
 
@@ -201,7 +205,31 @@
 
 			#pragma region Log Request
 
-				void Log::log(std::string method, std::string re_path, int code, size_t bytes, std::string time, std::string ip, VServer * VServ, std::vector<std::pair<std::string, std::string> > * data) {
+				std::string Log::log_request(std::string log_msg, VServer * VServ, bool isLocal) {
+					if (log_msg.empty()) return ("");
+
+					long		code;
+					size_t		bytes;
+
+					std::string	method;
+					std::string	re_path;
+					std::string	scode;
+					std::string	sbytes;
+					std::string	time;
+					std::string	ip;
+					
+					std::istringstream iss(log_msg);
+					std::getline(iss, log_msg, '|');
+					std::getline(iss, method, '|');
+					std::getline(iss, re_path, '|');
+					std::getline(iss, scode, '|');
+					std::getline(iss, sbytes, '|');
+					std::getline(iss, time, '|');
+					std::getline(iss, ip, '|');
+
+					Utils::stol(scode, code);
+					Utils::stol(sbytes, bytes);
+
 					std::string method_color;
 					if (method == "GET") method_color = AMBER500;
 					if (method == "HEAD") method_color = GREEN600;
@@ -210,8 +238,7 @@
 					if (method == "PATCH") method_color = TEAL400;
 					if (method == "DELETE") method_color = RED400;
 
-					std::string msg = UN BLUE400 + ip + NC + std::string("                ").substr(ip.size()) + method_color + method + std::string("           ").substr(method.size()) + BR + re_path + NC;
-					log(msg, BOTH_ACCESS, VServ, data);
+					std::string msg1 = UN BLUE400 + ip + NC + std::string("                ").substr(ip.size()) + method_color + method + std::string("           ").substr(method.size()) + BR + re_path + NC;
 
 					std::string s_bytes = Utils::formatSize(bytes);
 					std::string code_color;
@@ -219,19 +246,41 @@
 					if (code >= 300 && code < 400) code_color = ORANGE400;
 					if (code >= 400 && code < 600) code_color = RED400;
 
-					msg = BLUE800 "Transfered:     " AMBER200 + s_bytes + std::string("          ").substr(s_bytes.size()) + C " in " SKY700 + time + " ms " C "with code " + code_color + Utils::ltos(code) + C " (" + code_color + Settings::error_codes[code] + C ")" NC;
-					log(msg, BOTH_ACCESS, VServ, data);
-					log("---", MEM_ACCESS, VServ, data);
+					std::string msg2 = BLUE800 "Transfered:     " AMBER200 + s_bytes + std::string("          ").substr(s_bytes.size()) + C " in " SKY700 + time + " ms " C "with code " + code_color + Utils::ltos(code) + C " (" + code_color + Settings::error_codes[code] + C ")" NC;
+
+					time = BLUE600 "[" LIME600 + Settings::timer.current_date() + " " EMERALD400 + Settings::timer.current_time() + BLUE600 "]  " NC;
+
+					if (isLocal) return (time + msg1 + "\t" + msg2);
+
+					msg1 = time + msg1;
+					msg2 = "                       " + msg2;
+					
+					if (!Display::background && (Settings::check_only || !Display::isRawMode() || Display::ForceRawModeDisabled)) {
+						std::cout << " " << msg1 << "\n " << msg2 << "\n " <<  Y "-----------------------------------------------------------------------------------------" << NC "\n";
+					} else {
+
+						Thread::mutex_set(mutex, Thread::MTX_LOCK);
+						
+							Settings::global.log.both_add(msg1); Settings::global.log.access_add(msg1);
+							if (VServ) { VServ->log.both_add(msg1); VServ->log.access_add(msg1); }
+							Settings::global.log.both_add(msg2); Settings::global.log.access_add(msg2);
+							if (VServ) { VServ->log.both_add(msg2); VServ->log.access_add(msg2); }
+							Settings::global.log.both_add("---"); Settings::global.log.access_add("---");
+							if (VServ) { VServ->log.both_add("---"); VServ->log.access_add("---"); }
+
+						Thread::mutex_set(mutex, Thread::MTX_UNLOCK);
+
+					}
+
+					return ("");
 				}
 
-			#pragma endregion
+		#pragma endregion
 
 			#pragma region Log
 
 				void Log::log(std::string msg, int type, VServer * VServ, std::vector<std::pair<std::string, std::string> > * data) {
 					std::string path;
-
-					if (Display::background) return;
 
 					if (VServ == &(Settings::global)) VServ = NULL;
 

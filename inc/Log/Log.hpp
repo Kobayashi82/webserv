@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:32:23 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/21 00:04:45 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/21 17:11:44 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,8 +63,8 @@
 
 			//	Local Log
 			static void process_logs();																	//	Saves logs to memory and/or to a file
+			static std::string log_request(std::string log_msg, VServer * VServ, bool isLocal);
 			static void	log(std::string msg, int type, VServer * VServ = NULL, std::vector<std::pair<std::string, std::string> > * data = NULL);	//	Adds a new message to logs queue
-			static void log(std::string method, std::string re_path, int code, size_t bytes, std::string time, std::string ip, VServer * VServ = NULL, std::vector<std::pair<std::string, std::string> > * data = NULL);
 
 			//	Log Rotate
 			static void exec_logrot(const std::string config_path);										//	Executes logrotate (external program to manage logs rotation)

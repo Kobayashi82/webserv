@@ -6,9 +6,8 @@
 !inc/**
 !doc
 !doc/**
-!bin
-!bin/conf
-!bin/conf/**
+!bin/default.cfg
+!bin/index.html
 !bin/www
 !bin/www/**
 !.gitignore

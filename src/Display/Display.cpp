@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/14 14:37:32 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/21 00:10:25 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/21 15:35:09 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -617,10 +617,10 @@
 
 			void Display::Output() {
 				if (drawing || Settings::check_only || !isRawMode() || ForceRawModeDisabled) return; else  drawing = true;
-				std::string CGREEN = GREEN700, CRED = RED700, CYELLOW = ORANGE400;
-				bool isUpdate = Thread::get_bool(mutex, _update);
 
 			//	VARIABLES
+				std::string CGREEN = GREEN700, CRED = RED700, CYELLOW = ORANGE400;
+				//bool isUpdate = Thread::get_bool(mutex, _update);
 				winsize w; ioctl(0, TIOCGWINSZ, &w); int cols = w.ws_col - 4, row = 0;
 				total_cols = cols; total_rows = w.ws_row; log_rows = total_rows - 9;
 
@@ -712,7 +712,8 @@
 				}
 				failCount = 0;
 				drawing = false;
-				if (isUpdate) Thread::set_bool(mutex, _update, false);
+				//if (isUpdate) Thread::set_bool(mutex, _update, false);
+				Thread::set_bool(mutex, _update, false);
 			}
 
 		#pragma endregion
@@ -745,7 +746,10 @@
 		void * Display::main(void * args) { (void) args;
 			while (Thread::get_bool(mutex, _terminate) == false) {
 				Input();
-				if (Thread::get_bool(mutex, Resized) && isRawMode()) { Thread::set_bool(mutex, Resized, false); if (drawing) redraw = true; else Output(); }
+				if (Thread::get_bool(mutex, Resized) && isRawMode()) {
+					Thread::set_bool(mutex, Resized, false);
+					if (drawing) redraw = true; else Output();
+				}
 				else if (Thread::get_bool(mutex, _update) && isRawMode()) Output();
 				else if (Thread::get_bool(mutex, _logo) && !isRawMode()) Logo();
 				usleep(UPDATE_INTERVAL * 1000);
