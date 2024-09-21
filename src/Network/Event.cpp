@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/18 11:21:01 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/21 13:25:30 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/21 19:01:03 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,12 +26,12 @@
 
 		EventInfo::EventInfo() : fd(-1), type(NOTHING), socket(NULL), client(NULL) {
 			pipe[0] = -1; pipe[1] = -1; file_read = 0; file_size = 0; file_path = ""; no_cache = false; close = false; vserver_data = NULL; file_info = 0; cgi_fd = -1;
-			body_size = 0; body_maxsize = 0; last_activity = std::time(NULL);
+			response_size = 0; body_size = 0; body_maxsize = 0; last_activity = std::time(NULL); gettimeofday(&response_time, NULL);
 		}
 
 		EventInfo::EventInfo(int _fd, int _type, SocketInfo * _socket, Client * _client) : fd(_fd), type(_type), socket(_socket), client(_client) {
 			pipe[0] = -1; pipe[1] = -1; file_read = 0; file_size = 0; file_path = ""; no_cache = false; close = false; vserver_data = NULL; file_info = 0; cgi_fd = -1;
-			body_size = 0; body_maxsize = 0; last_activity = std::time(NULL);
+			response_size = 0; body_size = 0; body_maxsize = 0; last_activity = std::time(NULL); gettimeofday(&response_time, NULL);
 		}
 
 		EventInfo::EventInfo(const EventInfo & src) { *this = src; }
@@ -44,7 +44,7 @@
 			if (this != &rhs) {
 				fd = rhs.fd; type = rhs.type; socket = rhs.socket; client = rhs.client; file_path = rhs.file_path; no_cache = rhs.no_cache; close = rhs.close; request = rhs.request; vserver_data = rhs.vserver_data;
 				pipe[0] = rhs.pipe[0]; pipe[1] = rhs.pipe[1]; file_read = rhs.file_read; file_size = rhs.file_size; read_buffer = rhs.read_buffer; write_buffer = rhs.write_buffer; file_info = rhs.file_info;  cgi_fd = rhs.cgi_fd;
-				header = rhs.header; header_map = rhs.header_map; response_map = rhs.response_map; method = rhs.method; body_size = rhs.body_size; body_maxsize = rhs.body_maxsize; last_activity = rhs.last_activity;
+				header = rhs.header; header_map = rhs.header_map; response_map = rhs.response_map; method = rhs.method; response_size = rhs.response_size; body_size = rhs.body_size; body_maxsize = rhs.body_maxsize; response_time = rhs.response_time; last_activity = rhs.last_activity;
 			}
 			return (*this);
 		}

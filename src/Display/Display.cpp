@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/14 14:37:32 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/21 15:35:09 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/21 17:13:46 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -620,7 +620,6 @@
 
 			//	VARIABLES
 				std::string CGREEN = GREEN700, CRED = RED700, CYELLOW = ORANGE400;
-				//bool isUpdate = Thread::get_bool(mutex, _update);
 				winsize w; ioctl(0, TIOCGWINSZ, &w); int cols = w.ws_col - 4, row = 0;
 				total_cols = cols; total_rows = w.ws_row; log_rows = total_rows - 9;
 
@@ -712,7 +711,6 @@
 				}
 				failCount = 0;
 				drawing = false;
-				//if (isUpdate) Thread::set_bool(mutex, _update, false);
 				Thread::set_bool(mutex, _update, false);
 			}
 

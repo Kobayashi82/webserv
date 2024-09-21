@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/21 11:52:00 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/21 13:59:08 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/21 19:21:08 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -232,14 +232,15 @@
 	void Protocol::process_request(EventInfo * event) {
 		if (!event) return;
 
-		parse_response(event);																//	Intermediary (must set 'body_maxsize' based on location)
+		gettimeofday(&event->response_time, NULL);														//	Reset response time
+		parse_response(event);																			//	Intermediary (must set 'body_maxsize' based on location)
 
 		size_t content_length;
-		Utils::stol(event->header_map["Content_length"], content_length);					//	Get 'content_length' in numeric format
-		if (event->body_maxsize > 0 && content_length > event->body_maxsize) {				//	If 'content_length' is greater than 'body_maxsize'
-			event->header_map["Connection"] = "close";										//	Set the conection to close
+		Utils::stol(event->header_map["Content_length"], content_length);								//	Get 'content_length' in numeric format
+		if (event->body_maxsize > 0 && content_length > event->body_maxsize) {							//	If 'content_length' is greater than 'body_maxsize'
+			event->header_map["Connection"] = "close";													//	Set the conection to close
 			//	413 Payload Too Large
-			//	return error;																//	Body too big, return error
+			//	return error;																			//	Body too big, return error
 			return;
 		}
 
@@ -247,7 +248,7 @@
 			//	return error;
 		//	}
 
-		//event->header_map["Cache-Control"] = "no_cache";
+		event->header_map["Cache-Control"] = "no_cache";
 		event->method = "File";
 		event->response_map["path"] = "index.html";
 		process_response(event);

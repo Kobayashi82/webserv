@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/18 11:20:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/21 13:25:34 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/21 19:02:00 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@
 #include <iostream>																						//	For standard input/output stream objects like std::cin, std::cout
 #include <vector>																						//	For std::vector container
 #include <map>																							//	For std::map container
+#include <ctime>
 
 #pragma region EventInfo
 
@@ -47,11 +48,13 @@
 		std::map<std::string, std::string>					header_map;
 		std::map<std::string, std::string>					response_map;
 		std::string											method;
+		size_t												response_size;
 		size_t												body_size;
 		size_t												body_maxsize;
 		bool												no_cache;									//	Do not keep in cache
 		bool												close;										//	Close the conection... please
 
+		struct timeval										response_time;
 		time_t												last_activity;
 
 		std::vector<std::pair<std::string, std::string> > * vserver_data;								//	Data container from which the request is served (Global, VServer, Location)

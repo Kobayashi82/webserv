@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/21 11:59:50 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/21 13:50:18 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/21 19:01:49 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,8 +61,10 @@
 						"Connection: close\r\n"
 						"\r\n";
 
+					event->response_map["code"] = "200";
 					event->file_info = 0;																					//	Set some flags
 					event->file_read = 0;																					//	Set some flags
+					event->response_size = fcache->content.size();
 					event->file_size = response.size() + fcache->content.size();											//	Set the total size of the data to be sent
 					event->write_buffer.clear();																			//	Clear write_buffer
 					event->write_buffer.insert(event->write_buffer.end(), response.begin(), response.end());				//	Copy the header to write_buffer
@@ -105,8 +107,10 @@
 				"Connection: close\r\n"
 				"\r\n";
 
+			event->response_map["code"] = "200";
 			event->file_info = 0;																		//	Set some flags
 			event->file_read = 0;																		//	Set some flags
+			event->response_size = event_data.file_size;
 			event->file_size = response.size() + event_data.file_size;									//	Set the total size of the data to be sent
 			event->write_buffer.clear();																//	Clear write_buffer
 			event->write_buffer.insert(event->write_buffer.end(), response.begin(), response.end());	//	Copy the header to write_buffer

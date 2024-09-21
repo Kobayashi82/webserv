@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:17:42 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/18 19:22:49 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/21 19:01:10 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,17 @@
     #pragma region Elapsed Seconds
 
         //	Get the elapsed time in seconds from the start of the program
-        double Timer::elapsed_seconds() const { return static_cast<double>(std::time(0) - start_time); }
+        long Timer::elapsed_seconds() const { return static_cast<long>(std::time(0) - start_time); }
+
+    #pragma endregion
+
+    #pragma region Elapsed Milliseconds
+
+        //	Get the elapsed time in seconds from the start of the program
+        long Timer::elapsed_milliseconds(struct timeval start) const {
+			struct timeval end_time; gettimeofday(&end_time, NULL);
+			return ((end_time.tv_sec - start.tv_sec) * 1000 + (end_time.tv_usec - start.tv_usec) / 1000);
+		}
 
     #pragma endregion
 

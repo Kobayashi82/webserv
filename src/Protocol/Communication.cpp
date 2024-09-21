@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/27 09:32:08 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/21 17:12:54 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/21 19:21:01 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -138,7 +138,10 @@
 					long MaxRequests = Settings::KEEP_ALIVE_TIMEOUT;
 					if (Settings::global.get("keepalive_requests") != "") Utils::stol(Settings::global.get("keepalive_requests"), MaxRequests);		//	Get the maximum request allowed
 
-					Log::log("TRF|GET|/|200|" + Utils::ltos(write_bytes) + "|250|" + event->client->ip, Log::BOTH_ACCESS, event->socket->VServ, event->vserver_data);	//	Log the client request
+					std::string time = Utils::ltos(Settings::timer.elapsed_milliseconds(event->response_time));										//	Get the time to process the request in milliseconds
+					gettimeofday(&event->response_time, NULL);																						//	Reset response time
+					
+					Log::log("TRF|GET|/|" + event->response_map["code"] + "|" + Utils::ltos(event->response_size) + "|" + time + "|" + event->client->ip, Log::BOTH_ACCESS, event->socket->VServ, event->vserver_data);	//	Log the client request
 
 					if (event->header_map["Connection"] == "close" || event->client->total_requests + 1 >= MaxRequests)								//	Close the connection if client ask or max request reach
 						event->client->remove();
