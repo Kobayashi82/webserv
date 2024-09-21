@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 14:30:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/20 17:12:15 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/21 13:57:11 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,16 +21,10 @@
 //	*		nc 127.0.0.1 8081	-	telnet 127.0.0.1 8081	-	curl -v http://127.0.0.1:8081/
 //	*		siege -b -c 255 -t 10S 127.0.0.1:8081
 
-//			DISPLAY
 //	TODO	./webserv -i with siege overloaded with logs
+//			Buffer con los últimos 100 logs y que se impriman cada x tiempo o cuando se llenen... probaré así.
+//			En el main the logs mantener un timer o algo. Puede ser de 200ms o algo asi
 
-//			INTERMEDIARY
-//	TODO	Intermediario
-//	TODO	data of vserver/location in event
-//	TODO	Index usa index.html por defecto
-//	TODO	Update resource path with alias or any modified path before cgi
-
-//			I MA NOT DOING THESE
 //	*		Process request
 //	*		Generate response
 //	*		CGI   (POST, PUT, PATCH, DELETE)

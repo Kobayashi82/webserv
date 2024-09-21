@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/18 12:44:04 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/21 00:13:39 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/21 12:26:31 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,23 +36,16 @@
 			static size_t									write_bytes;								//	Total number of bytes uploaded by the server
 
 			static const size_t								CHUNK_SIZE;									//	Size of the buffer for read and write operations
+			static const size_t								HEADER_MAXSIZE;								//	Maximum size allowed for the header (8 KB by default)
 
 			//	Methods
-			static int	read_client(EventInfo * event);
-			static void	write_client(EventInfo * event);
+			static int	read_client(EventInfo * event);													//	Read from data the client's socket
+			static void	write_client(EventInfo * event);												//	Write data to the client's socket
 
-			static int	read_data(EventInfo * event);
+			static int	read_data(EventInfo * event);													//	Read data from a file
 			
-			static int	read_cgi(EventInfo * event);
-			static void	write_cgi(EventInfo * event);
-
-
-			static void	process_data(EventInfo * event, std::string data);
-			static void	process_data(EventInfo * event, size_t data_size);
-			static void	process_request(EventInfo * event);
-			static void	process_response(EventInfo * event);
-
-			static void	resolve_request(const std::string host, const std::string method, std::string path, EventInfo * event);
+			static int	read_cgi(EventInfo * event);													//	Read data from a CGI
+			static void	write_cgi(EventInfo * event);													//	Write data to a CGI
 
 	};
 

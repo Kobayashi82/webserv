@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/18 11:21:01 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/21 00:13:59 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/21 13:25:30 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,7 +44,7 @@
 			if (this != &rhs) {
 				fd = rhs.fd; type = rhs.type; socket = rhs.socket; client = rhs.client; file_path = rhs.file_path; no_cache = rhs.no_cache; close = rhs.close; request = rhs.request; vserver_data = rhs.vserver_data;
 				pipe[0] = rhs.pipe[0]; pipe[1] = rhs.pipe[1]; file_read = rhs.file_read; file_size = rhs.file_size; read_buffer = rhs.read_buffer; write_buffer = rhs.write_buffer; file_info = rhs.file_info;  cgi_fd = rhs.cgi_fd;
-				header = rhs.header; header_map = rhs.header_map; method = rhs.method; body_size = rhs.body_size; body_maxsize = rhs.body_maxsize; last_activity = rhs.last_activity;
+				header = rhs.header; header_map = rhs.header_map; response_map = rhs.response_map; method = rhs.method; body_size = rhs.body_size; body_maxsize = rhs.body_maxsize; last_activity = rhs.last_activity;
 			}
 			return (*this);
 		}

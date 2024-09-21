@@ -6,7 +6,7 @@
 #    By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/02/20 17:51:39 by vzurera-          #+#    #+#              #
-#    Updated: 2024/09/21 00:07:36 by vzurera-         ###   ########.fr        #
+#    Updated: 2024/09/21 13:25:08 by vzurera-         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -63,7 +63,7 @@ SRCS	=	Thread/Thread.cpp																											\
 			Utils/String.cpp Utils/Network.cpp Utils/Files.cpp																			\
 			Settings/Settings.cpp Settings/VServer.cpp Settings/Location.cpp Settings/Method.cpp Settings/Parser.cpp Settings/Codes.cpp	\
 			Network/Socket.cpp Network/Event.cpp Network/Epoll.cpp Network/Client.cpp													\
-			Protocol/Cache.cpp Protocol/Communication.cpp Protocol/Security.cpp Protocol/Intermediary.cpp								\
+			Protocol/Cache.cpp Protocol/Communication.cpp Protocol/Request.cpp Protocol/Response.cpp Protocol/Security.cpp				\
 			main.cpp
 
 # ────────────────────────────────────────────────────────── #
