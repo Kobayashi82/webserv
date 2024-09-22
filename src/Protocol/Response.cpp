@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/21 11:59:50 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/22 19:28:15 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/23 01:31:48 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -283,264 +283,146 @@
 
 	#pragma region CGI
 
-		void Protocol::response_cgi(EventInfo * event) {
-			(void) event;
-
-			//	create fork and pipes
-			//	create cgi_event
-			//	if (content_length) {
-				//	cgi_event->file_size == content_length;
-			//	else
-				//	cgi_event->file_info == 1;
-		}
-
-
-		//	?	CGI VARIABLES
-
-		// Aquí tienes una lista de las variables de entorno más importantes que el servidor web configura y pasa al script CGI, junto con su explicación, en el contexto de una petición CGI típica.
-
-		// Variables de entorno CGI
-
-		// 1. REQUEST_METHOD:
-
-		// Indica el método HTTP usado en la solicitud (por ejemplo, GET, POST, PUT, DELETE, etc.).
-
-		// Ejemplo: REQUEST_METHOD=GET
-
-
-
-		// 2. SCRIPT_NAME:
-
-		// Contiene la ruta virtual del script CGI que está siendo ejecutado, tal como se solicitó en la URL.
-
-		// Representa lo que el cliente solicitó en el navegador (por ejemplo, /cgi-bin/script.cgi).
-
-		// Ejemplo: SCRIPT_NAME=/cgi-bin/script.cgi
-
-
-
-		// 3. QUERY_STRING:
-
-		// Contiene la parte de la URL después del ?, que incluye los parámetros enviados en la solicitud (GET).
-
-		// Si no hay query string, estará vacía.
-
-		// Ejemplo: QUERY_STRING=name=value&foo=bar
-
-
-
-		// 4. PATH_INFO:
-
-		// Contiene cualquier información adicional después del nombre del script en la URL.
-
-		// Esto es útil si el script CGI recibe parámetros adicionales en la propia ruta (por ejemplo, /cgi-bin/script.cgi/extra/path).
-
-		// Ejemplo: PATH_INFO=/extra/path
-
-
-
-		// 5. PATH_TRANSLATED:
-
-		// Contiene la ruta completa en el sistema de archivos del recurso solicitado. Se genera a partir de PATH_INFO y el directorio raíz del servidor.
-
-		// Ejemplo: PATH_TRANSLATED=/var/www/cgi-bin/extra/path
-
-
-
-		// 6. CONTENT_TYPE:
-
-		// Indica el tipo de contenido de los datos que se están enviando en la solicitud, especialmente en métodos como POST.
-
-		// Por ejemplo, si estás enviando datos de un formulario, el CONTENT_TYPE podría ser application/x-www-form-urlencoded.
-
-		// Ejemplo: CONTENT_TYPE=application/x-www-form-urlencoded
-
-
-
-		// 7. CONTENT_LENGTH:
-
-		// Indica la longitud del cuerpo de la solicitud en bytes. Esto es relevante en solicitudes como POST donde se envían datos en el cuerpo.
-
-		// Ejemplo: CONTENT_LENGTH=27
-
-
-
-		// 8. SERVER_NAME:
-
-		// Contiene el nombre del servidor o dominio donde se está ejecutando el CGI.
-
-		// Ejemplo: SERVER_NAME=example.com
-
-
-
-		// 9. SERVER_PORT:
-
-		// Indica el número de puerto en el que está escuchando el servidor.
-
-		// Ejemplo: SERVER_PORT=80
-
-
-
-		// 10. SERVER_PROTOCOL:
-
-		// Contiene la versión del protocolo HTTP que está utilizando el cliente.
-
-		// Ejemplo: SERVER_PROTOCOL=HTTP/1.1
-
-
-
-		// 11. REMOTE_ADDR:
-
-		// Contiene la dirección IP del cliente que realizó la solicitud.
-
-		// Ejemplo: REMOTE_ADDR=192.168.1.10
-
-
-
-		// 12. REMOTE_PORT:
-
-		// Indica el puerto desde el que el cliente ha hecho la solicitud.
-
-		// Ejemplo: REMOTE_PORT=54321
-
-
-
-		// 13. GATEWAY_INTERFACE:
-
-		// Especifica la versión de CGI que está usando el servidor web.
-
-		// Ejemplo: GATEWAY_INTERFACE=CGI/1.1
-
-
-
-		// 14. HTTP_HOST:
-
-		// Contiene el valor del encabezado Host enviado por el cliente. Es el nombre del host incluido en la solicitud.
-
-		// Ejemplo: HTTP_HOST=example.com
-
-
-
-		// 15. HTTP_USER_AGENT:
-
-		// Contiene el valor del encabezado User-Agent que el cliente envía, describiendo el navegador o dispositivo que está haciendo la solicitud.
-
-		// Ejemplo: HTTP_USER_AGENT=Mozilla/5.0 (Windows NT 10.0; Win64; x64)
-
-
-
-		// 16. HTTP_ACCEPT:
-
-		// Contiene los tipos de contenido que el cliente está dispuesto a aceptar, basado en la cabecera Accept.
-
-		// Ejemplo: HTTP_ACCEPT=text/html,application/xhtml+xml
-
-
-
-		// 17. HTTP_REFERER:
-
-		// Indica la URL desde la que el cliente fue redirigido (si existe) mediante el encabezado Referer.
-
-		// Ejemplo: HTTP_REFERER=http://example.com/previous_page.html
-
-
-
-		// 18. REQUEST_URI (opcional, dependiendo del servidor web):
-
-		// Contiene la ruta completa de la solicitud, tal como fue enviada por el cliente, incluyendo tanto el script como la query string.
-
-		// Ejemplo: REQUEST_URI=/cgi-bin/script.cgi?name=value&foo=bar
-
-
-
-
-		// Ejemplo completo de URL y cómo se reflejan las variables
-
-		// Si la URL solicitada es:
-
-		// http://example.com/cgi-bin/script.cgi/extra/path?name=value
-
-		// Las variables de entorno CGI serán algo así:
-
-		// REQUEST_METHOD=GET
-
-		// SCRIPT_NAME=/cgi-bin/script.cgi
-
-		// QUERY_STRING=name=value
-
-		// PATH_INFO=/extra/path
-
-		// PATH_TRANSLATED=/var/www/cgi-bin/extra/path
-
-		// CONTENT_TYPE (vacío, ya que no hay cuerpo en un GET)
-
-		// CONTENT_LENGTH (vacío, por la misma razón)
-
-		// SERVER_NAME=example.com
-
-		// SERVER_PORT=80
-
-		// SERVER_PROTOCOL=HTTP/1.1
-
-		// REMOTE_ADDR=192.168.1.10
-
-		// REMOTE_PORT=54321
-
-		// GATEWAY_INTERFACE=CGI/1.1
-
-
-		// HTTP_HOST=example.com
-
-		// HTTP_USER_AGENT=Mozilla/5.0 (Windows NT 10.0; Win64; x64)
-
-		// HTTP_ACCEPT=text/html,application/xhtml+xml
-
-		// HTTP_REFERER=http://example.com/previous_page.html
-
-		// REQUEST_URI=/cgi-bin/script.cgi/extra/path?name=value
-
-
-		// Resumen:
-
-		// Estas variables de entorno proporcionan al script CGI toda la información necesaria sobre la solicitud, como el método HTTP, la URL solicitada, la query string, el tipo de contenido, la longitud del contenido, y los encabezados HTTP enviados por el cliente. El servidor web configura estas variables automáticamente antes de ejecutar el CGI.
-
-
-		// Si hay un cuerpo en la solicitud (body):
-
-		// El cuerpo de la solicitud (como los datos de un formulario enviado con POST) se envía al script CGI a través de la entrada estándar (stdin). El script CGI lo leerá de stdin si necesita procesar los datos.
-
-
-		// Por ejemplo:
-
-		// Si envías un formulario con el método POST, los datos del formulario se pasarán al CGI a través de stdin.
-
-		// La variable de entorno CONTENT_LENGTH te dirá cuántos bytes están en el cuerpo para que el CGI sepa cuánto leer de stdin.
-
-		// La variable CONTENT_TYPE indicará el tipo de los datos enviados (como application/x-www-form-urlencoded o multipart/form-data).
-
-
-		// ¿Y el script CGI como argumento?
-
-		// Sí, cuando ejecutas un CGI que es un script (como un archivo Python o Perl), si usas un intérprete (como python o perl), el nombre del script se pasa como un argumento al binario del intérprete, como en este ejemplo:
-
-		// execve("/usr/bin/python", ["python", "/path/to/script.cgi"], envp);
-
-		// Resumen del flujo:
-
-		// 1. El cuerpo de la solicitud se pasa por stdin al CGI.
-
-
-		// 2. El nombre del script CGI se pasa como argumento si se está utilizando un intérprete.
+		
+		//										EJEMPLO DE UNA SOLICITUD DE UN CLIENTE
+
+		//			POST /cgi-bin/script.cgi/extra/path?item=123&color=red HTTP/1.1
+		//			Host: www.example.com
+		//			User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36
+		//			Referer: https://www.google.com/search?q=webserv
+		//			Cookie: sessionid=abcdef1234567890; theme=dark
+		//			Accept: text/html,application/xhtml+xml
+		//			Content-Type: text/html
+		//			Content-Length: 1234
+
+		//	REQUEST_METHOD		El método HTTP utilizado en la solicitud (GET, POST, PUT, DELETE, etc.)		  			            		POST
+		//	REQUEST_URI			Es la URI completa incluyendo la cadena de consulta (query string)		  									/products/details?item=123&color=red
+		//	QUERY_STRING		Es la cadena de consulta (query string), que contiene los parámetros enviados después de ?					item=123&color=red
+
+		//	GATEWAY_INTERFACE	La versión de CGI que está usando el servidor web															CGI/1.1
+		//	SCRIPT_NAME			La ruta virtual del script CGI que está siendo ejecutado, tal como se solicitó en la URL					/cgi-bin/script.cgi
+		//	PATH_INFO			Cualquier información adicional después del nombre del script en la URL										/extra/path
+		//	PATH_TRANSLATED		La ruta completa en el sistema de archivos del recurso solicitado											/var/www/cgi-bin/extra/path
+
+		//	CONTENT_TYPE		Indica el tipo de contenido de los datos. Puede estar vacío													text/html
+		//	CONTENT_LENGTH		Indica la longitud del cuerpo de la solicitud en bytes. Puede estar vacío									1234
+
+		//	SERVER_NAME			El valor del encabezado host, que es el nombre del dominio o la dirección IP solicitada		     	    	www.example.com
+		//	SERVER_PORT			El puerto del servidor que está manejando la solicitud					 	               					80
+		//	SERVER_PROTOCOL		El protocolo HTTP que está utilizando el cliente															HTTP/1.1
+		//	REMOTE_ADDR			La dirección IP del cliente que hizo la solicitud					             							203.0.113.45
+		//	REMOTE_PORT			El puerto del cliente que hizo la solicitud							        								54321 
+
+		//	HTTP_HOST			El nombre del servidor virtual que está manejando la solicitud				        						www.example.com
+		//	HTTP_ACCEPT			Los tipos de contenido que el cliente está dispuesto a aceptar												text/html,application/xhtml+xml
+		//	HTTP_REFERER		El valor de referer, que indica la página anterior a la que se hizo la solicitud        					https://www.google.com/search?q=webserv
+		//	HTTP_USER_AGENT		El contenido del encabezado user-agent, que identifica el navegador del cliente  							Mozilla/5.0 (Windows NT 10.0; Win64; x64)...
+
+		//	El cuerpo de la solicitud se envia al CGI a través del STDIN
 
 		// Ejemplo: execve("/usr/bin/python", ["python", "/path/to/script.cgi"], envp);
 
+		void Protocol::variables_cgi(EventInfo * event, std::vector<std::string> & cgi_vars) {
+			if (!event) return;
 
+			cgi_vars.push_back("REQUEST_METHOD=" + event->header_map["Method"]);
+			cgi_vars.push_back("REQUEST_URI=" + event->header_map["$request_uri"]);
+			cgi_vars.push_back("QUERY_STRING=" + event->header_map["$query_string"]);
+			cgi_vars.push_back("GATEWAY_INTERFACE=CGI/1.1");
 
-		// 3. Las variables de entorno (CONTENT_LENGTH, CONTENT_TYPE, etc.) indican la longitud y el tipo de los datos que el CGI debe leer de stdin.
+			std::string path = event->header_map["$uri"];
+			size_t dot_pos = path.find('.');
+			size_t slash_pos = path.find('/', dot_pos);
 
+			if (dot_pos != std::string::npos && slash_pos != std::string::npos) {
+				cgi_vars.push_back("SCRIPT_NAME=" + path.substr(0, slash_pos));
+				cgi_vars.push_back("PATH_INFO=" + path.substr(slash_pos));
+			} else {
+				cgi_vars.push_back("SCRIPT_NAME=" + path);
+				cgi_vars.push_back("PATH_INFO=");
+			}
+			cgi_vars.push_back("PATH_TRANSLATED=" + event->response_map["path"]);
 
+			cgi_vars.push_back("CONTENT_TYPE=" + event->header_map["Content-Type"]);
+			cgi_vars.push_back("CONTENT_LENGTH=" + event->header_map["Content-Length"]);
 
-		// De esta forma, los parámetros en la URL se pasan a través de variables de entorno como QUERY_STRING, mientras que los datos del cuerpo de la solicitud se pasan por stdin.
+			cgi_vars.push_back("SERVER_NAME=" + event->header_map["$host"]);
+			cgi_vars.push_back("SERVER_PORT=" + event->header_map["$server_port"]);
+			cgi_vars.push_back("SERVER_PROTOCOL=" + event->header_map["Protocol"]);
+			cgi_vars.push_back("REMOTE_ADDR=" + event->header_map["$remote_addr"]);
+			cgi_vars.push_back("REMOTE_PORT=" + event->header_map["$remote_port"]);
+
+			cgi_vars.push_back("HTTP_HOST=" + event->header_map["$server_name"]);
+			cgi_vars.push_back("HTTP_USER_AGENT=" + event->header_map["User-Agent"]);
+			cgi_vars.push_back("HTTP_REFERER=" + event->header_map["Referer"]);
+			cgi_vars.push_back("HTTP_ACCEPT=" + (event->header_map["Accept"].empty() ? "*/*" : event->header_map["Accept"]));
+		}
+
+		void Protocol::response_cgi(EventInfo * event) {
+			if (!event) return;
+
+			if (event->header_map["Content-Length"].empty() == false) {
+				int write_pipe[2];
+				if (pipe(write_pipe) == -1) { event->client->remove(); }								//	Create the pipe for CGI (read from it)
+				Utils::NonBlocking_FD(write_pipe[0]);													//	Set the read end of the pipe as non-blocking
+				Utils::NonBlocking_FD(write_pipe[1]);													//	Set the write end of the pipe as non-blocking
+
+				EventInfo event_write_cgi(write_pipe[1], DATA, NULL, event->client);					//	Create the event for the CGI
+				event_write_cgi.pipe[0] = write_pipe[0];
+				event_write_cgi.pipe[1] = -1;
+				event->cgi_fd = event_write_cgi.fd;
+				Event::events[event_write_cgi.fd] = event_write_cgi;									//	Add the CGI event to the event's list
+			}
+
+			int read_pipe[2];
+			if (pipe(read_pipe) == -1) { event->client->remove(); }										//	Create the pipe for CGI (read from it)
+			Utils::NonBlocking_FD(read_pipe[0]);														//	Set the read end of the pipe as non-blocking
+			Utils::NonBlocking_FD(read_pipe[1]);														//	Set the write end of the pipe as non-blocking
+
+			EventInfo event_read_cgi(read_pipe[0], DATA, NULL, event->client);							//	Create the event for the CGI
+			event_read_cgi.pipe[0] = -1;
+			event_read_cgi.pipe[1] = read_pipe[1];
+
+			Event::events[event_read_cgi.fd] = event_read_cgi;											//	Add the CGI event to the event's list
+
+			event->write_buffer.clear();																//	Clear write_buffer
+
+			if (Epoll::set(event->fd, !(event->header_map["Write_Only"] == "true"), true) == -1)		//	Set EPOLL to monitor write events for the client
+				event->client->remove();
+			else if (Epoll::add(event_read_cgi.fd, true, false) == -1) {								//	Set EPOLL to monitor read events for CGI
+				event->file_size = 0;																	//	If set EPOLL fails, reset the flag,
+				event->write_buffer.clear();															//	clear writte_buffer
+				event->client->remove();
+			}
+
+			int pid = fork();
+			if (pid == -1) {
+		
+			
+			} else if (pid == 0) {
+				Epoll::close();
+				for (std::map <int, EventInfo>::iterator it = Event::events.begin(); it != Event::events.end(); ++it)
+					if (it->first) close(it->first);
+
+				std::vector<char *> env_array;
+				std::vector<std::string> cgi_vars;
+				variables_cgi(event, cgi_vars);
+
+				char * args[3];
+				args[0] = const_cast<char *>(event->response_map["cgi_path"].c_str());
+				args[1] = const_cast<char *>(event->response_map["path"].c_str());
+				args[2] = NULL;
+				
+				for (size_t i = 0; i < cgi_vars.size(); ++i)
+					env_array.push_back(const_cast<char*>(cgi_vars[i].c_str()));
+				env_array.push_back(NULL);
+
+				if (event->cgi_fd != -1) dup2(event->cgi_fd, STDIN_FILENO);
+ 				dup2(event_read_cgi.fd, STDOUT_FILENO);
+
+				if (execve(args[0], args, &env_array[0]) == -1) exit(1);
+			}
+		}
 
 	#pragma endregion
 

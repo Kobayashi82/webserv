@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:36:49 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/22 19:29:06 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/22 23:09:14 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,6 +51,17 @@
 
 	void Utils::toLower(std::string & str) { for (size_t i = 0; i < str.size(); ++i) str[i] = std::tolower(static_cast<unsigned char>(str[i])); }
 	void Utils::toUpper(std::string & str) { for (size_t i = 0; i < str.size(); ++i) str[i] = std::toupper(static_cast<unsigned char>(str[i])); }
+
+	std::string Utils::strToLower(std::string & str) {
+		std::string result = str;
+		for (size_t i = 0; i < result.size(); ++i) result[i] = std::tolower(static_cast<unsigned char>(result[i]));
+		return (result);
+	}
+	std::string Utils::strToUpper(std::string & str) {
+		std::string result = str;
+		for (size_t i = 0; i < result.size(); ++i) result[i] = std::toupper(static_cast<unsigned char>(result[i]));
+		return (result);
+	}
 
 #pragma endregion
 

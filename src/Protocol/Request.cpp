@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/21 11:52:00 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/22 19:28:23 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/23 01:30:55 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -194,7 +194,7 @@
 		event->header_map["$server_port"] = Utils::ltos(event->socket->port);
 
 		event->header_map["$server_name"] = event->header_map["Host"];									//	El nombre del dominio que lo maneja o el nombre del primer dominio por defecto
-		if (event->header_map["$server_name"] == "") event->header_map["$server_name"] = event->header_map["$server_addr"];
+		if (event->header_map["$server_name"].empty()) event->header_map["$server_name"] = event->header_map["$server_addr"];
 
 		event->header_map["$http_referer"] = event->header_map["Referer"];
 		event->header_map["$http_cookie"] = event->header_map["Cookie"];
@@ -202,9 +202,34 @@
 		event->header_map["$http_host"] = event->header_map["Host"];
 
 		event->header_map["$host"] = event->header_map["Host"];
-		if (event->header_map["$host"] == "") event->header_map["$host"] = event->header_map["$server_name"];
-		if (event->header_map["$host"] == "") event->header_map["$host"] = event->header_map["$server_addr"];
+		if (event->header_map["$host"].empty()) event->header_map["$host"] = event->header_map["$server_name"];
+		if (event->header_map["$host"].empty()) event->header_map["$host"] = event->header_map["$server_addr"];
 	}
+
+
+	//										EJEMPLO DE UNA SOLICITUD DE UN CLIENTE
+
+	//			GET /products/details?item=123&color=red HTTP/1.1
+	//			Host: www.example.com
+	//			User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36
+	//			Referer: https://www.google.com/search?q=webserv
+	//			Cookie: sessionid=abcdef1234567890; theme=dark
+
+	//	$request				La solicitud completa.				               															GET/products/details?item=123&color=red HTTP/1.1
+	//	$request_method			El método HTTP utilizado en la solicitud (GET, POST, PUT, DELETE, etc.)	  			        	    		GET
+	//	$request_uri			Es la URI completa incluyendo la cadena de consulta (query string)		  									/products/details?item=123&color=red
+	//	$uri, $document_uri		Es la URI sin incluir la cadena de consulta (query string)				 	  								/products/details
+	//	$args, $query_string	Es la cadena de consulta (query string), que contiene los parámetros enviados después de ?					item=123&color=red
+	//	$host					El nombre del host solicitado. Si no se especifica, se usa server_name o la dirección IP del servidor		www.example.com
+	//	$remote_addr			La dirección IP del cliente que hizo la solicitud					             							203.0.113.45
+	//	$remote_port			El puerto del cliente que hizo la solicitud							        								54321 
+	//	$server_addr			La dirección IP del servidor que está manejando la solicitud				             					192.168.1.10
+	//	$server_port			El puerto del servidor que está manejando la solicitud					 	               					80
+	//	$server_name			El nombre del servidor virtual que está manejando la solicitud				        						www.example.com
+	//	$http_referer			El valor de referer, que indica la página anterior a la que se hizo la solicitud        					https://www.google.com/search?q=webserv
+	//	$http_cookie			El valor de la cookie enviada en la solicitud HTTP															sessionid=abcdef1234567890; theme=dark
+	//	$http_host				El valor del encabezado host, que es el nombre del dominio o la dirección IP solicitada		       		  	www.example.com
+	//	$http_user_agent		El contenido del encabezado user-agent, que identifica el navegador del cliente  							Mozilla/5.0 (Windows NT 10.0; Win64; x64)...
 
 #pragma endregion
 

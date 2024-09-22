@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/14 14:37:32 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/21 17:13:46 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/22 23:14:29 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -636,7 +636,7 @@
 			//	TITLE
 				oss << CHIDE CUU;
 				oss << C "┌─────────────────┬"; setLine(C, "─", (cols + 2) - 18, oss); oss << "┐" NC << "\n"; row++;
-				oss << C "│ V-Servers: " << Color << temp; setLine(C, " ", 5 - temp.size(), oss); oss << C "│  "; setPadding("WEBSERV 1.0", Status, " ", (cols + 2) - 22, 1, oss); oss << RD "X " C "│" NC << "\n"; row++;
+				oss << C "│ V-Servers: " << Color << temp; setLine(C, " ", 5 - temp.size(), oss); oss << C "│  "; setPadding(Utils::strToUpper(Settings::server_name) + " " + Settings::server_version, Status, " ", (cols + 2) - 22, 1, oss); oss << RD "X " C "│" NC << "\n"; row++;
 				oss << C "├─────────────────┤"; setLine(Status, "▄", (cols + 2) - 18, oss); oss << C "│" NC << "\n"; row++;
 
 			//	COLOR LINES
@@ -755,9 +755,9 @@
 
 			if (!background && !Settings::check_only && isRawMode() && !ForceRawModeDisabled) {
 				usleep(100000); std::cout.flush(); std::cout.clear(); maxFails = 10; failCount = 0; drawing = false;
-				Log::log(G "WebServ 1.0 closed successfully", Log::GLOBAL_ACCESS); Log::log("---", Log::GLOBAL_ACCESS); Log::process_logs(); Output();
+				Log::log(G + Settings::server_name + " " + Settings::server_version + " closed successfully", Log::GLOBAL_ACCESS); Log::log("---", Log::GLOBAL_ACCESS); Log::process_logs(); Output();
 			} else if (!background && !Settings::check_only)
-				std::cout << G "WebServ 1.0 closed successfully\n" << CSHOW << std::endl;
+				std::cout << G  + Settings::server_name + " " + Settings::server_version + " closed successfully\n" << CSHOW << std::endl;
 			else if (!background)
 				std::cout << CSHOW << std::endl;
 			return (NULL);

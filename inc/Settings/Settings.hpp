@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:14:05 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/21 00:05:43 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/22 23:14:37 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,6 +34,8 @@
 			static Timer								timer;											//	Class to obtain time and date related data
 			static std::string							program_path;									//	Path of the executable
 			static std::string							config_path;									//	Path of the default configuration file
+			static std::string							server_name;									//	Name of the server
+			static std::string							server_version;									//	Version of the server
 
 			static VServer								global;											//	Global settings
 			static std::deque <VServer>					vserver;										//	VServers in a deque

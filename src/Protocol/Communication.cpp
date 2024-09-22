@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/27 09:32:08 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/22 19:29:22 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/23 01:29:59 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,6 +65,7 @@
 						int result = Protocol::parse_header(event);										//	Parse the header
 						if (result == 0) {																//	There is a header
 							event->body_size = event->read_buffer.size() - event->header.size();		//	Set 'body_size' of the current request
+							event->write_buffer.erase(event->read_buffer.begin(), event->read_buffer.begin() + event->header.size());
 							Protocol::process_request(event);											//	Process the request
 						} else if (result == 2) {														//	There is a header, but something went wrong
 							event->client->remove(); return (1);										//	Error, connection close

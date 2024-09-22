@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:27:58 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/20 22:45:52 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/22 23:13:36 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,8 @@
 	Timer 								Settings::timer;												//	Class to obtain time and date related data
 	std::string							Settings::program_path = Utils::programPath();					//	Path of the executable
 	std::string							Settings::config_path = Utils::programPath();					//	Path of the default configuration file
+	std::string							Settings::server_name = "Webserv";								//	Name of the server
+	std::string							Settings::server_version = "1.0";								//	Version of the server
 	
 	VServer								Settings::global;												//	Global settings
 	std::deque <VServer> 				Settings::vserver;												//	VServers in a deque
@@ -216,7 +218,7 @@
 			if (argc == 3 && (!strcmp(argv[2], "-i") || !strcmp(argv[2], "-t"))) {	terminate = 1; check_only = true;
 				if (tcgetpgrp(STDIN_FILENO) != getpgrp()) return;
 				std::cout << RD "\n\t\t\tIncorrect arguments\n\n"
-						  << C "\tUsage: " Y "./webserv [" B "Opional " G "-t" C " or " G "-i" Y"] [" B "Opional " G "settings file" Y "]\n\n" NC
+						  << C "\tUsage: " Y "./" + Utils::strToLower(Settings::server_name) + " [" B "Opional " G "-t" C " or " G "-i" Y"] [" B "Opional " G "settings file" Y "]\n\n" NC
 						  << Y "   -t:  " C "Checks the configuration file for syntax and errors\n" NC
 						  << Y "   -i:  " C "Run the program in console mode, without a graphical interface\n" NC << std::endl;
 
@@ -258,7 +260,7 @@
 			} else if (argc > 2) {													terminate = 1;
 				if (tcgetpgrp(STDIN_FILENO) != getpgrp()) return;
 				std::cout << RD "\n\t\t     Incorrect number of arguments\n\n"
-						  << C "\tUsage: " Y "./webserv [" B "Opional " G "-t" C " or " G "-i" Y"] [" B "Opional " G "settings file" Y "]\n\n" NC
+						  << C "\tUsage: " Y "./" + Utils::strToLower(Settings::server_name) + " [" B "Opional " G "-t" C " or " G "-i" Y"] [" B "Opional " G "settings file" Y "]\n\n" NC
 						  << Y "   -t:  " C "Checks the configuration file for syntax and errors\n" NC
 						  << Y "   -i:  " C "Run the program in console mode, without a graphical interface\n" NC << std::endl;
 			}
