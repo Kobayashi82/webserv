@@ -6,11 +6,10 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/27 09:32:08 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/21 22:18:09 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/22 19:29:22 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Communication.hpp"
 #include "Display.hpp"
 #include "Thread.hpp"
 #include "Client.hpp"
@@ -18,6 +17,7 @@
 #include "Event.hpp"
 #include "Epoll.hpp"
 #include "Protocol.hpp"
+#include "Communication.hpp"
 
 #pragma region Variables
 
@@ -130,8 +130,11 @@
 						event->file_read += bytes_written;																		//	Increase file_read
 
 						Thread::inc_size_t(Display::mutex, write_bytes, bytes_written);											//	Increase total bytes written
-
-					} else { event->client->remove(); return; }																	//	Error writing
+					} else if (bytes_written == 0) {																			//	No data, wait for more data or timeout
+						return;
+					} else if (bytes_written == -1) {																			//	Error writing
+						event->client->remove(); return;
+					}
 				}
 
 				if ((event->file_info == 0 && event->file_read >= event->file_size) || (event->file_info == 2 && event->write_buffer.empty())) {	//	All data has been sent

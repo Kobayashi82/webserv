@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:36:49 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/20 12:19:44 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/22 19:29:06 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,6 +76,15 @@
 		if (str.empty()) return (true);
 		std::stringstream ss(str); ss >> number;
 		return ((ss.fail() || (!ignore_eof && !ss.eof())));
+	}
+
+	long Utils::sstol(const std::string & str) {
+		if (str.empty()) return (0);
+
+		long number;
+		std::stringstream ss(str); ss >> number;
+
+		return (number);
 	}
 
 #pragma endregion

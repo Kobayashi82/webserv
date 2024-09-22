@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 12:49:42 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/21 13:57:26 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/22 19:28:52 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 #include <map>																							//	For std::map container
 
 #include <fcntl.h>																						//	For open and splice
+#include <dirent.h>																						//	For opendir and closedir. Used to generate a list of the content of a directory
 
 #pragma region Protocol
 
@@ -25,9 +26,9 @@
 		public:
 
 			//	Request
-			static std::map<std::string, std::string>	parse_response(EventInfo * event);				//	Create a map container with the values necessary to generate a response
-			static void									parse_variables(EventInfo * event);				//	Add the header variables to 'header_map'
-			static int									parse_header(EventInfo * event);				//	Parse a header and create a map container with its Key-Value pairs
+			static void	parse_response(EventInfo * event);												//	Create a map container with the values necessary to generate a response
+			static void	parse_variables(EventInfo * event);												//	Add the header variables to 'header_map'
+			static int	parse_header(EventInfo * event);												//	Parse a header and create a map container with its Key-Value pairs
 
 			static void	process_request(EventInfo * event);												//	Process a request to determine the type of response to return
 

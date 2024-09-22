@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 14:30:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/21 22:20:38 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/22 17:38:53 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,17 +25,15 @@
 //			Buffer con los últimos 100 logs y que se impriman cada x tiempo o cuando se llenen... probaré así.
 //			En el main the logs mantener un timer o algo. Puede ser de 200ms o algo asi
 
-//	*		Process request
-//	*		Generate response
-//	*		CGI   (POST, PUT, PATCH, DELETE)
-//	*		CGI   (php, py)
-//	*		CGI   (directory)
-//	*		CGI   (uploads)
-//	*		Web (error pages)
-//	*		Web (session manager and cookies)
-//	*		Web (uploads)
-//	*		Web (CGI)
-//	*		Web (directory)
+//	*		CGI	(POST, PUT, PATCH, DELETE)
+//	*		CGI	(php, py)
+//	*		CGI	(directory)
+//	*		CGI	(uploads)
+//	*		Web	(error pages)
+//	*		Web	(session manager and cookies)
+//	*		Web	(uploads)
+//	*		Web	(CGI)
+//	*		Web	(directory)
 
 //  Entry point
 int main(int argc, char **argv) {
