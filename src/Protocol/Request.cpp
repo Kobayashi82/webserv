@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/21 11:52:00 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/23 14:23:07 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/23 17:46:47 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,11 +40,13 @@
 
 		//	--------------------------------------------------------------------------------------
 
-		//event->response_map["path"] = "index.html";
 		event->response_map["path"] = "index.html";
-		event->response_map["path"] = "index.html";
-		event->response_map["Protocol"] = "HTTP/1.1";
+		if (event->header_map["Path"] == "/favicon.ico") event->response_map["path"] = "favicon.ico";
 		event->response_map["Content-Type"] = "text/html";
+		size_t pos = event->response_map["path"].find_last_of('.');
+		if (pos != std::string::npos) event->response_map["Content-Type"] = Settings::mime_types[event->response_map["path"].substr(pos + 1)];
+
+		event->response_map["Protocol"] = "HTTP/1.1";
 		event->response_map["Connection"] = event->header_map["Connection"];
 		event->response_map["code"] = "200";
 		event->response_map["code_description"] = Settings::error_codes[Utils::sstol(event->response_map["code"])];

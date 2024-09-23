@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/27 09:32:08 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/23 15:45:56 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/23 17:42:11 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,7 +51,6 @@
 				if (bytes_read > 0) {																	//	Read some data
 
 					event->client->update_last_activity();												//	Reset client timeout
-					Event::update_last_activity(event->fd);												//	Reset event timeout
 
 					event->read_buffer.insert(event->read_buffer.end(), buffer, buffer + bytes_read);	//	Store the data read into 'read_buffer'
 
@@ -114,12 +113,11 @@
 			void Communication::write_client(EventInfo * event) {
 				if (!event) return;
 
-				if (!event->write_buffer.empty()) {														//	There are data in the 'write_buffer'
+				if (!event->write_buffer.empty()) {																				//	There are data in the 'write_buffer'
 
-					event->client->update_last_activity();												//	Reset client timeout
-					Event::update_last_activity(event->fd);												//	Reset event timeout
+					event->client->update_last_activity();																		//	Reset client timeout
 
-					size_t buffer_size = event->write_buffer.size();									//	Set the size of the chunk
+					size_t buffer_size = event->write_buffer.size();															//	Set the size of the chunk
 					size_t chunk = CHUNK_SIZE;
 					if (buffer_size > 0) chunk = std::min(buffer_size, static_cast<size_t>(CHUNK_SIZE));
 					
@@ -138,20 +136,23 @@
 					}
 				}
 
-				if ((event->write_info == 0 && event->write_size >= event->write_maxsize) || (event->write_info == 2 && event->write_buffer.empty())) {	//	All data has been sent
+				if ((event->write_info == 0 && event->write_size >= event->write_maxsize) || (event->write_info == 2 && event->write_buffer.empty())) {		//	All data has been sent
 					long MaxRequests = Settings::KEEP_ALIVE_TIMEOUT;
-					if (Settings::global.get("keepalive_requests") != "") Utils::stol(Settings::global.get("keepalive_requests"), MaxRequests);		//	Get the maximum request allowed
+					if (Settings::global.get("keepalive_requests") != "") Utils::stol(Settings::global.get("keepalive_requests"), MaxRequests);				//	Get the maximum request allowed
 
-					std::string time = Utils::ltos(Settings::timer.elapsed_milliseconds(event->response_time));										//	Get the time to process the request in milliseconds
-					gettimeofday(&event->response_time, NULL);																						//	Reset response time
+					std::string time = Utils::ltos(Settings::timer.elapsed_milliseconds(event->response_time));												//	Get the time to process the request in milliseconds
+					gettimeofday(&event->response_time, NULL);																								//	Reset response time
 					
-					Log::log("TRF|GET|/|" + event->response_map["code"] + "|" + Utils::ltos(event->response_size) + "|" + time + "|" + event->client->ip, Log::BOTH_ACCESS, event->socket->VServ, event->vserver_data);	//	Log the client request
+					Log::log("TRF|GET|" + event->header_map["Path"] + "|" + event->response_map["code"] + "|" + Utils::ltos(event->response_size) + "|" + time + "|" + event->client->ip, Log::BOTH_ACCESS, event->socket->VServ, event->vserver_data);		//	Log the client request
 
-					if (event->header_map["Connection"] == "close" || event->client->total_requests + 1 >= MaxRequests)								//	Close the connection if client ask or max request reach
+					if (event->header_map["Connection"] == "close" || event->client->total_requests + 1 >= MaxRequests)										//	Close the connection if client ask or max request reach
 						event->client->remove();
 					else {
-						event->client->total_requests++;																							//	Increase total_requests
-						Epoll::set(event->fd, true, false);																							//	Monitor read events only in EPOLL 
+						event->client->total_requests++;																									//	Increase total_requests
+						event->header = "";
+						event->header_map.clear();
+						event->response_map.clear();
+						Epoll::set(event->fd, true, false);																									//	Monitor read events only in EPOLL 
 					}
 				}
 

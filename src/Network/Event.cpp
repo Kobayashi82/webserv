@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/18 11:21:01 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/23 15:45:47 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/23 15:55:07 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -169,13 +169,10 @@
 
 			std::map<int, EventInfo>::iterator it = events.begin();
 			while (it != events.end()) {
-				if (it->second.type == SOCKET) { it++; continue; }
+				if (it->second.type == SOCKET ||it->second.type == CLIENT) { it++; continue; }
 				if (difftime(current_time, it->second.last_activity) > interval) {
-					if (it->second.type == CLIENT)	{ it->second.client->remove(); it = events.begin(); }
-					else							{
-						std::map<int, EventInfo>::iterator current = it++;
-						remove(current->first);
-					}
+					std::map<int, EventInfo>::iterator current = it++;
+					remove(current->first);
 				} else it++;
 			}
 		}

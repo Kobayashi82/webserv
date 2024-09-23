@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/21 11:59:50 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/23 15:45:21 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/23 17:42:15 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -260,9 +260,9 @@
 				"Content-Length: " + Utils::ltos(event_data.read_maxsize) + "\r\n"
 				"Connection: " + event->response_map["Connection"] + "\r\n\r\n";
 
-			event->read_info = 0;																		//	Set some flags
-			event->read_size = 0;																		//	Set some flags
-			event->read_maxsize = header.size() + event_data.read_maxsize;								//	Set the total size of the data to be sent
+			event->write_info = 0;																		//	Set some flags
+			event->write_size = 0;																		//	Set some flags
+			event->write_maxsize = header.size() + event_data.read_maxsize;								//	Set the total size of the data to be sent
 			event->response_size = event_data.read_maxsize;
 			event->write_buffer.clear();																//	Clear write_buffer
 			event->write_buffer.insert(event->write_buffer.end(), header.begin(), header.end());		//	Copy the header to write_buffer
