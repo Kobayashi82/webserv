@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/21 11:59:50 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/23 17:42:15 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/23 23:25:30 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -172,112 +172,125 @@
 
 	#pragma region File
 
-		void Protocol::response_file(EventInfo * event) {
-			if (!event) return;
+		#pragma region Cache
 
-			std::string path = event->response_map["path"];
-			if (path.empty()) { event->client->remove(); return; }
+			int Protocol::file_cache(EventInfo * event) {
+				if (event->header_map["Cache-Control"].empty()) {																	//	If cache is allowed
+					CacheInfo * fcache = Communication::cache.get(event->response_map["path"]);										//	Get the file from cache
+					if (fcache) {																									//	If the file exist in cache
+						std::string header =
+							event->response_map["Protocol"] + " " + event->response_map["code"] + " " + event->response_map["code_description"] + "\r\n"
+							"Content-Type: " + event->response_map["Content-Type"] + "\r\n"
+							"X-Content-Type-Options: nosniff\r\n"
+							"Content-Length: " + Utils::ltos(fcache->content.size()) + "\r\n"
+							"Connection: " + event->response_map["Connection"] + "\r\n\r\n";
 
-			if (event->header_map["Cache-Control"].empty()) {											//	If cache is allowed
-				CacheInfo * fcache = Communication::cache.get(path);									//	Get the file from cache
-				if (fcache) {																			//	If the file exist in cache
+						event->write_info = 0;																						//	Set some flags
+						event->write_size = 0;																						//	Set some flags
+						event->write_maxsize = 0;																					//	Set some flags
+						event->write_buffer.clear();																				//	Clear write_buffer
+						event->write_buffer.insert(event->write_buffer.end(), header.begin(), header.end());						//	Copy the header to write_buffer
+
+						if (event->response_map["method"] != "HEAD") {
+							event->response_size = fcache->content.size();
+							event->write_maxsize = header.size() + fcache->content.size();											//	Set the total size of the data to be sent
+							event->write_buffer.insert(event->write_buffer.end(), fcache->content.begin(), fcache->content.end());	//	Copy the body to write_buffer
+						}
+
+						if (Epoll::set(event->fd, true, true) == -1) event->client->remove();										//	Set EPOLL to monitor write events
+						return (1);
+					}
+				}
+
+				return (0);
+			}
+
+		#pragma endregion
+
+		#pragma region File
+
+			void Protocol::response_file(EventInfo * event) {
+				if (!event) return;
+
+				std::string path = event->response_map["path"];
+				if (path.empty()) { event->client->remove(); return; }
+
+				if (file_cache(event)) return;
+
+				int fd = open(path.c_str(), O_RDONLY);																	//	Open the file
+				if (fd == -1) return;																					//	If error opening, return
+				Utils::NonBlocking_FD(fd);																				//	Set the FD as non-blocking
+
+				size_t filesize = Utils::filesize(fd);																	//	Get the file size
+				if (filesize == std::string::npos) { close(fd); event->client->remove(); return; }
+
+
+				if (event->response_map["method"] == "HEAD") {
+					close(fd);
 					std::string header =
 						event->response_map["Protocol"] + " " + event->response_map["code"] + " " + event->response_map["code_description"] + "\r\n"
 						"Content-Type: " + event->response_map["Content-Type"] + "\r\n"
 						"X-Content-Type-Options: nosniff\r\n"
-						"Content-Length: " + Utils::ltos(fcache->content.size()) + "\r\n"
+						"Content-Length: " + Utils::ltos(filesize) + "\r\n"
 						"Connection: " + event->response_map["Connection"] + "\r\n\r\n";
 
-					event->write_info = 0;																					//	Set some flags
-					event->write_size = 0;																					//	Set some flags
-					event->write_maxsize = 0;																				//	Set some flags
-					event->write_buffer.clear();																			//	Clear write_buffer
-					event->write_buffer.insert(event->write_buffer.end(), header.begin(), header.end());					//	Copy the header to write_buffer
+					event->write_info = 0;																				//	Set some flags
+					event->write_size = 0;																				//	Set some flags
+					event->write_maxsize = 0;																			//	Set some flags
+					event->write_buffer.clear();																		//	Clear write_buffer
+					event->write_buffer.insert(event->write_buffer.end(), header.begin(), header.end());				//	Copy the header to write_buffer
 
-					if (event->response_map["method"] != "HEAD") {
-						event->response_size = fcache->content.size();
-						event->write_maxsize = header.size() + fcache->content.size();											//	Set the total size of the data to be sent
-						event->write_buffer.insert(event->write_buffer.end(), fcache->content.begin(), fcache->content.end());	//	Copy the body to write_buffer
-					}
-
-					if (Epoll::set(event->fd, true, true) == -1) event->client->remove();									//	Set EPOLL to monitor write events
+					if (Epoll::set(event->fd, true, true) == -1) event->client->remove();								//	Set EPOLL to monitor write events
 					return;
 				}
-			}
 
-			int fd = open(path.c_str(), O_RDONLY);														//	Open the file
-			if (fd == -1) return;																		//	If error opening, return
-			Utils::NonBlocking_FD(fd);																	//	Set the FD as non-blocking
+				EventInfo event_data(fd, DATA, NULL, event->client);													//	Create the event for the DATA
 
-			size_t filesize = Utils::filesize(fd);														//	Get the file size
-			if (filesize == std::string::npos) { close(fd); event->client->remove(); return; }
+				event_data.read_path = path;																			//	Set the name of the file
+				event_data.read_maxsize = filesize;																		//	Set the size of the file
+				event_data.no_cache = !event->header_map["Cache-Control"].empty();										//	Set if the file must be added to cache
 
+				if (pipe(event_data.pipe) == -1) { close(event_data.fd); return; event->client->remove(); }				//	Create the pipe for DATA (to be used with splice)
+				Utils::NonBlocking_FD(event_data.pipe[0]);																//	Set the read end of the pipe as non-blocking
+				Utils::NonBlocking_FD(event_data.pipe[1]);																//	Set the write end of the pipe as non-blocking
 
-			if (event->response_map["method"] == "HEAD") {
-				close(fd);
+				size_t chunk = Communication::CHUNK_SIZE;																
+				if (event_data.read_maxsize > 0) chunk = std::min(event_data.read_maxsize, Communication::CHUNK_SIZE);	//	Set the size of the chunk
+				if (splice(event_data.fd, NULL, event_data.pipe[1], NULL, chunk, SPLICE_F_MOVE) == -1) {				//	Send the first chunk of data from the file to the pipe
+					close(event_data.fd); close(event_data.pipe[0]); close(event_data.pipe[1]);							//	Splice failed, close FD's and return
+					event->client->remove(); return;
+				}
+				std::swap(event_data.fd, event_data.pipe[0]);															//	Swap the read end of the pipe with the fd (this is to be consistent with the FD that EPOLL is monitoring)
+
+				Event::events[event_data.fd] = event_data;																//	Add the DATA event to the event's list
+
 				std::string header =
 					event->response_map["Protocol"] + " " + event->response_map["code"] + " " + event->response_map["code_description"] + "\r\n"
 					"Content-Type: " + event->response_map["Content-Type"] + "\r\n"
 					"X-Content-Type-Options: nosniff\r\n"
-					"Content-Length: " + Utils::ltos(filesize) + "\r\n"
+					"Content-Length: " + Utils::ltos(event_data.read_maxsize) + "\r\n"
 					"Connection: " + event->response_map["Connection"] + "\r\n\r\n";
 
-				event->write_info = 0;																		//	Set some flags
-				event->write_size = 0;																		//	Set some flags
-				event->write_maxsize = 0;																	//	Set some flags
-				event->write_buffer.clear();																//	Clear write_buffer
-				event->write_buffer.insert(event->write_buffer.end(), header.begin(), header.end());		//	Copy the header to write_buffer
+				event->write_info = 0;																					//	Set some flags
+				event->write_size = 0;																					//	Set some flags
+				event->write_maxsize = header.size() + event_data.read_maxsize;											//	Set the total size of the data to be sent
+				event->response_size = event_data.read_maxsize;
+				event->write_buffer.clear();																			//	Clear write_buffer
+				event->write_buffer.insert(event->write_buffer.end(), header.begin(), header.end());					//	Copy the header to write_buffer
 
-				if (Epoll::set(event->fd, true, true) == -1) event->client->remove();						//	Set EPOLL to monitor write events
+				if (Epoll::set(event->fd, !(event->header_map["Write_Only"] == "true"), true) == -1)					//	Set EPOLL to monitor write events for the client
+					event->client->remove();
+				else if (Epoll::add(event_data.fd, true, false) == -1) {												//	Set EPOLL to monitor read events for DATA
+					event->read_maxsize = 0;																			//	If set EPOLL fails, reset the flag,
+					event->write_buffer.clear();																		//	clear writte_buffer
+					Event::remove(event_data.fd);																		//	and remove the DATA event
+					event->client->remove();
+				}
+
 				return;
 			}
 
-
-			EventInfo event_data(fd, DATA, NULL, event->client);										//	Create the event for the DATA
-
-			event_data.read_path = path;																//	Set the name of the file
-			event_data.read_maxsize = filesize;															//	Set the size of the file
-			event_data.no_cache = !event->header_map["Cache-Control"].empty();							//	Set if the file must be added to cache
-
-			if (pipe(event_data.pipe) == -1) { close(event_data.fd); return; event->client->remove(); }	//	Create the pipe for DATA (to be used with splice)
-			Utils::NonBlocking_FD(event_data.pipe[0]);													//	Set the read end of the pipe as non-blocking
-			Utils::NonBlocking_FD(event_data.pipe[1]);													//	Set the write end of the pipe as non-blocking
-
-			size_t chunk = Communication::CHUNK_SIZE;																
-			if (event_data.read_maxsize > 0) chunk = std::min(event_data.read_maxsize, Communication::CHUNK_SIZE);	//	Set the size of the chunk
-			if (splice(event_data.fd, NULL, event_data.pipe[1], NULL, chunk, SPLICE_F_MOVE) == -1) {				//	Send the first chunk of data from the file to the pipe
-				close(event_data.fd); close(event_data.pipe[0]); close(event_data.pipe[1]);							//	Splice failed, close FD's and return
-				event->client->remove(); return;
-			}
-			std::swap(event_data.fd, event_data.pipe[0]);												//	Swap the read end of the pipe with the fd (this is to be consistent with the FD that EPOLL is monitoring)
-
-			Event::events[event_data.fd] = event_data;													//	Add the DATA event to the event's list
-
-			std::string header =
-				event->response_map["Protocol"] + " " + event->response_map["code"] + " " + event->response_map["code_description"] + "\r\n"
-				"Content-Type: " + event->response_map["Content-Type"] + "\r\n"
-				"X-Content-Type-Options: nosniff\r\n"
-				"Content-Length: " + Utils::ltos(event_data.read_maxsize) + "\r\n"
-				"Connection: " + event->response_map["Connection"] + "\r\n\r\n";
-
-			event->write_info = 0;																		//	Set some flags
-			event->write_size = 0;																		//	Set some flags
-			event->write_maxsize = header.size() + event_data.read_maxsize;								//	Set the total size of the data to be sent
-			event->response_size = event_data.read_maxsize;
-			event->write_buffer.clear();																//	Clear write_buffer
-			event->write_buffer.insert(event->write_buffer.end(), header.begin(), header.end());		//	Copy the header to write_buffer
-
-			if (Epoll::set(event->fd, !(event->header_map["Write_Only"] == "true"), true) == -1)		//	Set EPOLL to monitor write events for the client
-				event->client->remove();
-			else if (Epoll::add(event_data.fd, true, false) == -1) {									//	Set EPOLL to monitor read events for DATA
-				event->read_maxsize = 0;																	//	If set EPOLL fails, reset the flag,
-				event->write_buffer.clear();															//	clear writte_buffer
-				Event::remove(event_data.fd);															//	and remove the DATA event
-				event->client->remove();
-			}
-
-			return;
-		}
+		#pragma endregion
 
 	#pragma endregion
 
@@ -370,14 +383,17 @@
 			void Protocol::response_cgi(EventInfo * event) {
 				if (!event) return;
 
+				event->cgi_fd = -1;
+				int write_fd = -1;
 			//	Create the event to write to the CGI
 				if (event->header_map["Content-Length"].empty() == false) {
 					int write_pipe[2];
-					if (pipe(write_pipe) == -1) { event->client->remove(); }								//	Create the pipe for CGI (read from it)
+					if (pipe(write_pipe) == -1) { event->client->remove(); return; }						//	Create the pipe for CGI (read from it)
 					Utils::NonBlocking_FD(write_pipe[0]);													//	Set the read end of the pipe as non-blocking
 					Utils::NonBlocking_FD(write_pipe[1]);													//	Set the write end of the pipe as non-blocking
 
-					EventInfo event_write_cgi(write_pipe[1], DATA, NULL, event->client);					//	Create the event for the CGI
+					EventInfo event_write_cgi(write_pipe[1], CGI, NULL, event->client);					//	Create the event for the CGI
+					//write_fd = write_pipe[0];
 					event_write_cgi.pipe[0] = write_pipe[0];
 					event_write_cgi.pipe[1] = -1;
 					event->cgi_fd = event_write_cgi.fd;
@@ -386,11 +402,11 @@
 
 			//	Create the event to read from the CGI
 				int read_pipe[2];
-				if (pipe(read_pipe) == -1) { event->client->remove(); }										//	Create the pipe for CGI (read from it)
+				if (pipe(read_pipe) == -1) { event->client->remove(); return; }								//	Create the pipe for CGI (read from it)
 				Utils::NonBlocking_FD(read_pipe[0]);														//	Set the read end of the pipe as non-blocking
 				Utils::NonBlocking_FD(read_pipe[1]);														//	Set the write end of the pipe as non-blocking
 
-				EventInfo event_read_cgi(read_pipe[0], DATA, NULL, event->client);							//	Create the event for the CGI
+				EventInfo event_read_cgi(read_pipe[0], CGI, NULL, event->client);							//	Create the event for the CGI
 				event_read_cgi.pipe[0] = -1;
 				event_read_cgi.pipe[1] = read_pipe[1];
 
@@ -402,25 +418,32 @@
 				if (Epoll::set(event->fd, !(event->header_map["Write_Only"] == "true"), true) == -1) {		//	Set EPOLL to monitor write events for the client
 					event->client->remove(); return;
 				} else {
+
 					if (event->cgi_fd != -1 && Epoll::add(event->cgi_fd, false, true) == -1) {				//	Set EPOLL to monitor write events for CGI
 						event->write_maxsize = 0;															//	If set EPOLL fails, reset the flag,
 						event->client->remove(); return;
 					}
+
 					if (Epoll::add(event_read_cgi.fd, true, false) == -1) {									//	Set EPOLL to monitor read events for CGI
 						event->read_maxsize = 0;															//	If set EPOLL fails, reset the flag,
 						event->client->remove(); return;
 					}
 				}
 
-			//	Fork the process
+				std::string respuesta =
+					"HTTP/1.1 200 OK\r\n"
+					"Content-Type: text/plain\r\n"
+					"Content-Length: 23\r\n"
+					"\r\n";
+
+				write(event_read_cgi.pipe[1], respuesta.c_str(), respuesta.size());
+
+				//Fork the process
 				int pid = fork();
 				if (pid == -1) {
-			
-				
+					event->client->remove(); return;
 				} else if (pid == 0) {
 					Epoll::close();
-					for (std::map <int, EventInfo>::iterator it = Event::events.begin(); it != Event::events.end(); ++it)
-						if (it->first) close(it->first);
 
 					std::vector<char *> env_array;
 					std::vector<std::string> cgi_vars;
@@ -435,8 +458,14 @@
 						env_array.push_back(const_cast<char*>(cgi_vars[i].c_str()));
 					env_array.push_back(NULL);
 
-					if (event->cgi_fd != -1) dup2(event->cgi_fd, STDIN_FILENO);
-					dup2(event_read_cgi.fd, STDOUT_FILENO);
+					if (write_fd != -1) dup2(write_fd, STDIN_FILENO);
+					dup2(event_read_cgi.pipe[1], STDOUT_FILENO);
+
+					for (std::map <int, EventInfo>::iterator it = Event::events.begin(); it != Event::events.end(); ++it) {
+						if (it->second.fd) close(it->second.fd);
+						if (it->second.pipe[0]) close(it->second.pipe[0]);
+						if (it->second.pipe[1]) close(it->second.pipe[1]);
+					}
 
 					if (execve(args[0], args, &env_array[0]) == -1) exit(1);
 				}
@@ -458,10 +487,6 @@
 		else if (event->method == "Directory")	response_directory(event);
 		else if (event->method == "File")		response_file(event);
 		else if (event->method == "CGI")		response_cgi(event);
-		else {
-			//	Set a diferent error
-			response_error(event);
-		}
 	}
 
 #pragma endregion

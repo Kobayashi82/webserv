@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/18 11:54:24 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/23 15:55:17 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/23 21:37:16 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -173,7 +173,7 @@
 				if (events[i].events & EPOLLIN) {
 					switch (event->type) {
 						case SOCKET: 	{ Socket::accept(event);				break; }
-						case CLIENT: 	{ Communication::read_client(event);		break; }
+						case CLIENT: 	{ Communication::read_client(event);	break; }
 						case DATA: 		{ Communication::read_data(event);		break; }
 						case CGI: 		{ Communication::read_cgi(event);		break; }
 					}
@@ -186,7 +186,7 @@
 					switch (event->type) {
 						case CLIENT: 	{ Communication::write_client(event);	break; }
 						case DATA: 		{										break; }
-						case CGI: 		{										break; }
+						case CGI: 		{ Communication::write_cgi(event);		break; }
 					}
 				}
 			}

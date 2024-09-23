@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/18 10:58:42 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/19 13:51:55 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/23 20:15:33 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,9 +15,11 @@
 #include "Client.hpp"
 
 #include <iostream>																						//	For standard input/output stream objects like std::cin, std::cout
+#include <vector>																						//	For std::vector container
 #include <list>																							//	For std::list container
 
 #include <arpa/inet.h>																					//	For sockets and address conversion
+#include <ifaddrs.h>																					//	For network interfaces
 
 #pragma region SocketInfo
 
@@ -61,7 +63,7 @@
 			static bool										do_cleanup;									//	Flag indicating that a cleanup of sockets is necessary
 
 			//	Methods
-			static int	create();																		//	Creates all sockets from all VServers
+			static int	create(bool create_network = false);											//	Creates all sockets from all VServers
 			static int	create(VServer * VServ);														//	Creates all sockets from a VServer
 
 			static void	close();																		//	Closes all sockets
@@ -75,9 +77,15 @@
 			static int	server_status();																//	Check if there are any pending changes to the server or virtual servers
 			static void	cleanup_socket();																//	Cleans up removed clients from each socket's own client list
 			
+			static void	NetworkInterfaces();
+
 		private:
 
+			//	Variables
+			static std::vector<std::string>					network_interfaces;							//	List of all network interfaces
+
 			//	Methods
+			static bool	isNetworkInterface(const std::string & ip);										//	Checks if an IP address is a valid network interface
 			static bool	exists(const std::string & ip, int port);										//	Checks if an IP address and port already exist in a socket
 			static void	error_msg(const std::string & ip, const int port, VServer * VServ, int type);	//	Logs socket error messages
 

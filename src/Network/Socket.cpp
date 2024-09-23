@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/18 10:59:39 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/21 22:16:31 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/23 19:55:58 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,8 @@
 	int										Socket::ask_socket = 0;										//	Flag indicating the request to create or close all sockets		(Used when Key_W is pressed)
 	std::list<std::pair <VServer *, int> >	Socket::socket_action_list;									//	List of VServers to enable or disable							(Used when Key_V is pressed)
 	bool									Socket::do_cleanup = false;									//	Flag indicating that a cleanup of sockets is necessary
+
+	std::vector<std::string>				Socket::network_interfaces;									//	List of all network interfaces
 
 #pragma endregion
 
@@ -57,7 +59,8 @@
 
 		#pragma region Create All
 
-			int Socket::create() {
+			int Socket::create(bool create_network) {
+				if (create_network) NetworkInterfaces();
 				bool nothing_created = true;
 
 				if (Thread::get_bool(Display::mutex, Settings::global.status) == false) return (1);
@@ -79,7 +82,7 @@
 
 				//	For every IP address in the virtual server create a socket
 				for (std::vector <std::pair<std::string, int> >::const_iterator addr_it = VServ->addresses.begin(); addr_it != VServ->addresses.end(); ++addr_it) {
-					if (exists(addr_it->first, addr_it->second)) continue;
+					if (!isNetworkInterface(addr_it->first)) continue;
 
 					//	Create socket
 					int fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -276,18 +279,39 @@
 
 	#pragma endregion
 
-	//	DISABLED FOR NOW
+	#pragma region Network Interfaces
 
-	#pragma region Exists
+		void Socket::NetworkInterfaces() {
+			struct ifaddrs *ifaddr, *ifa;
+			char addr[INET_ADDRSTRLEN];
 
-		bool Socket::exists(const std::string & ip, int port) {
-			return (false);																				//	Disabled for now
-			for (std::list <SocketInfo>::const_iterator it = sockets.begin(); it != sockets.end(); ++it)
-				if (it->ip == ip && it->port == port) return (true);
+			if (getifaddrs(&ifaddr) == -1) return;
+
+			for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
+				if (ifa->ifa_addr == NULL) continue;
+
+				if (ifa->ifa_addr->sa_family == AF_INET) {
+					struct sockaddr_in *sa = (struct sockaddr_in *)ifa->ifa_addr;
+					inet_ntop(AF_INET, &(sa->sin_addr), addr, INET_ADDRSTRLEN);
+					network_interfaces.push_back(std::string(addr));
+				}
+			}
+
+			freeifaddrs(ifaddr);
+		}
+
+		bool Socket::isNetworkInterface(const std::string & ip) {
+			if (ip == "0.0.0.0") return (true);
+
+			for (std::vector<std::string>::iterator it = network_interfaces.begin(); it != network_interfaces.end(); ++it)
+				if (*it == ip) return (true);
+
 			return (false);
 		}
 
 	#pragma endregion
+
+	//	DISABLED FOR NOW
 
 	#pragma region Error Messages
 

@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/21 11:52:00 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/23 17:46:47 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/23 23:25:34 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,9 +36,15 @@
 
 		//	If (MIME != response type) { }
 
-		event->method = event->response_map["method"];
+		// event->method = event->response_map["method"];
 
 		//	--------------------------------------------------------------------------------------
+
+		// event->response_map["method"] = "CGI";
+		// event->response_map["cgi_path"] = "/bin/ls";
+		// event->response_map["path"] = "logs";
+		// event->method = event->response_map["method"];
+
 
 		event->response_map["path"] = "index.html";
 		if (event->header_map["Path"] == "/favicon.ico") event->response_map["path"] = "favicon.ico";
@@ -51,6 +57,7 @@
 		event->response_map["code"] = "200";
 		event->response_map["code_description"] = Settings::error_codes[Utils::sstol(event->response_map["code"])];
 		event->response_map["method"] = "File";
+		event->method = event->response_map["method"];
 
 	}
 
@@ -194,8 +201,10 @@
 
 			event->header_map["$remote_addr"] = event->client->ip;
 			event->header_map["$remote_port"] = Utils::ltos(event->client->port);
-			event->header_map["$server_addr"] = event->socket->ip;
-			event->header_map["$server_port"] = Utils::ltos(event->socket->port);
+			if (event->type == CLIENT) {
+				event->header_map["$server_addr"] = event->socket->ip;
+				event->header_map["$server_port"] = Utils::ltos(event->socket->port);
+			}
 
 			event->header_map["$server_name"] = event->header_map["Host"];									//	El nombre del dominio que lo maneja o el nombre del primer dominio por defecto
 			if (event->header_map["$server_name"].empty()) event->header_map["$server_name"] = event->header_map["$server_addr"];
@@ -266,7 +275,7 @@
 				pos = line.find(':');																			//	Find ':' to split Key - Value
 				if (pos != std::string::npos) event->header_map[line.substr(0, pos)] = line.substr(pos + 2);	//	Add the Key - Value to 'header_map'
 
-				parse_variables(event);																			//	Create header variables
+				if (event->type == CLIENT) parse_variables(event);												//	Create header variables
 			}
 
 		return (0);

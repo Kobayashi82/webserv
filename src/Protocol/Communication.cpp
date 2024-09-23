@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/27 09:32:08 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/23 17:42:11 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/23 23:19:54 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,7 +71,7 @@
 						}
 					} else event->body_size += bytes_read;												//	Increase 'body_size'
 
-					if (event->body_maxsize > 0 && event->body_size > event->body_maxsize) {			//	If 'body_size' is greater than 'body_maxsize'
+					if (event->body_maxsize > 0 && event->body_size >= event->body_maxsize) {			//	If 'body_size' is greater than 'body_maxsize'
 						event->header_map["Connection"] = "close";										//	Set the conection to close
 						event->header_map["Write_Only"] = "true";										//	Don't read from the client anymore
 						Epoll::set(event->fd, false, false);											//	Close read and write monitor for EPOLL
@@ -81,8 +81,8 @@
 
 					if (event->method == "CGI") {																		//	Write to a cgi
 						EventInfo * cgi_event = Event::get(event->cgi_fd);												//	Get the event of the CGI
-						if (!cgi_event) event->client->remove(); return (1);											//	If no CGI event, error, close connection (this should not happen)
-						cgi_event->write_buffer.insert(cgi_event->write_buffer.end(), buffer, buffer + bytes_read);		//	Copy the data to the 'write_buffer' of the CGI
+						if (cgi_event)
+							cgi_event->write_buffer.insert(cgi_event->write_buffer.end(), buffer, buffer + bytes_read);		//	Copy the data to the 'write_buffer' of the CGI
 					}
 
 					if (!event->method.empty()) event->read_buffer.clear();								//	Clear 'read_buffer' (Not needed if not a CGI)
@@ -90,9 +90,9 @@
 					if (static_cast<size_t>(bytes_peek) <= CHUNK_SIZE) {								//	No more data coming
 						if (event->method == "CGI") {
 							EventInfo * cgi_event = Event::get(event->cgi_fd);							//	Get the event of the CGI
-							if (!cgi_event) cgi_event->write_info = 2;									//	Send a flag to the CGI that no more data is coming
+							if (cgi_event) cgi_event->write_info = 2;									//	Send a flag to the CGI that no more data is coming
 						}
-						Protocol::process_request(event);
+
 						return (1);
 					}
 
@@ -130,13 +130,13 @@
 
 						Thread::inc_size_t(Display::mutex, write_bytes, bytes_written);											//	Increase total bytes written
 					} else if (bytes_written == 0) {																			//	No data, wait for more data or timeout
-						return;
+						;
 					} else if (bytes_written == -1) {																			//	Error writing
 						event->client->remove(); return;
 					}
 				}
 
-				if ((event->write_info == 0 && event->write_size >= event->write_maxsize) || (event->write_info == 2 && event->write_buffer.empty())) {		//	All data has been sent
+				if ((event->write_info == 0 && event->write_maxsize > 0 && event->write_size >= event->write_maxsize) || (event->write_info == 2 && event->write_buffer.empty())) {		//	All data has been sent
 					long MaxRequests = Settings::KEEP_ALIVE_TIMEOUT;
 					if (Settings::global.get("keepalive_requests") != "") Utils::stol(Settings::global.get("keepalive_requests"), MaxRequests);				//	Get the maximum request allowed
 
@@ -230,7 +230,7 @@
 
 				char buffer[CHUNK_SIZE];			memset(buffer, 0, sizeof(buffer));					//	Initialize buffer
 
-				ssize_t bytes_read = read(event->fd, buffer, CHUNK_SIZE);								//	Read a chunk
+				ssize_t bytes_read = read(event->fd, buffer, CHUNK_SIZE);							//	Read a chunk
 
 				if (bytes_read > 0) {																	//	Read some data
 
@@ -249,11 +249,13 @@
 							}
 							int result = Protocol::parse_header(event);													//	Try to parse the header (maybe the header is not there yet)
 							if (result == 0) {																			//	There is a header
-								content_length = Utils::stol(event->header_map["Content_length"], content_length);		//	Get 'content_length'
-								if (content_length == 0) event->read_info = 1;											//	If no 'content_length' set a flag
+								if (Utils::stol(event->header_map["Content-Length"], content_length))					//	Get 'content_length'
+									event->read_info = 1;																//	If no 'content_length' set a flag
 								else {
+									event->read_maxsize = event->header.size() + content_length;
 									c_event->write_info = event->read_info;												//	If 'content_length' set the flag for the client
-									c_event->read_maxsize = event->read_maxsize;										//	If 'content_length' set the 'read_maxsize' for the client
+									c_event->write_maxsize = event->read_maxsize;										//	If 'content_length' set the 'read_maxsize' for the client
+									c_event->response_size = content_length;
 								}
 							} else if (result == 2) {																	//	There is a header, but something went wrong
 								Event::remove(event->fd); return (1);													//	Remove the event
@@ -263,8 +265,8 @@
 
 					c_event->write_buffer.insert(c_event->write_buffer.end(), buffer, buffer + bytes_read);				//	Copy the data to the 'write_buffer' of the client
 
-					if (event->read_info == 0 && event->read_size >= event->read_maxsize) {								//	All data has been read
-						c_event->write_info = 2;																			//	Send a flag to the client that no more data is coming
+					if (event->read_info == 0 && event->read_maxsize > 0 && event->read_size >= event->read_maxsize) {	//	All data has been read
+						c_event->write_info = 2;																		//	Send a flag to the client that no more data is coming
 						Event::remove(event->fd); return (1);															//	Remove the event
 					}
 

@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/18 11:21:01 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/23 15:55:07 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/23 23:19:00 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -108,7 +108,7 @@
 					std::map<int, EventInfo>::iterator current = it++;
 					Epoll::remove(current->second.fd);
 					if (current->second.fd != -1) close(current->second.fd);
-					if (current->second.type == DATA) {
+					if (current->second.type == DATA || current->second.type == CGI) {
 						if (current->second.pipe[0] != -1) close(current->second.pipe[0]);
 						if (current->second.pipe[1] != -1) close(current->second.pipe[1]);
 					}
@@ -128,7 +128,7 @@
 					if (current->second.client == Cli) {
 						Epoll::remove(current->second.fd);
 						if (current->second.fd != -1) close(current->second.fd);
-						if (current->second.type == DATA) {
+						if (current->second.type == DATA || current->second.type == CGI) {
 							if (current->second.pipe[0] != -1) close(current->second.pipe[0]);
 							if (current->second.pipe[1] != -1) close(current->second.pipe[1]);
 						}
@@ -147,7 +147,7 @@
 
 				Epoll::remove(event->fd);
 				if (event->fd != -1) close(event->fd);
-				if (event->type == DATA) {
+				if (event->type == DATA || event->type == CGI) {
 					if (event->pipe[0] != -1) close(event->pipe[0]);
 					if (event->pipe[1] != -1) close(event->pipe[1]);
 				}
