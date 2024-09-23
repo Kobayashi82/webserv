@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/18 11:20:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/21 19:02:00 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/23 15:26:14 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,10 +38,16 @@
 		std::string											request;									//	Request from the client
 
 		int													pipe[2];									//	Pipe used to redirect the file's FD using splice(), so it can be added to EPOLL
-		std::string 										file_path;									//	Path of a file
-		size_t												file_read;									//	Total bytes read from a file
-		size_t												file_size;									//	The file size
-		int													file_info;									//	Info on the file size (0 = known, 1 = unknow, 2 = no more data)
+
+		std::string 										read_path;									//	Path of a file
+		size_t												read_size;									//	Total bytes read from a file
+		size_t												read_maxsize;								//	The file size
+		int													read_info;									//	Info on the file size (0 = known, 1 = unknow, 2 = no more data)
+
+		std::string 										write_path;									//	Path of a file
+		size_t												write_size;									//	Total bytes read from a file
+		size_t												write_maxsize;								//	The file size
+		int													write_info;									//	Info on the file size (0 = known, 1 = unknow, 2 = no more data)
 		int													cgi_fd;
 
 		std::string											header;

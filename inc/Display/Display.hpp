@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 11:59:38 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/21 00:05:07 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/23 14:19:40 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,7 @@
 #include <fcntl.h>																						//	For file control options like fcntl to set non-blocking mode
 #include <termios.h>																					//	For terminal I/O interfaces to enable/disable raw mode
 #include <sys/ioctl.h>																					//	For terminal control functions like ioctl to get window size
+#include <sys/wait.h>																					//	For waitpid. Used when a child process finish
 
 #pragma region Display
 

@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/21 11:52:00 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/23 01:30:55 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/23 14:23:07 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -172,101 +172,105 @@
 
 #pragma endregion
 
-#pragma region Parse Variables
-
-	void Protocol::parse_variables(EventInfo * event) {
-		if (!event) return;
-
-		std::string path = event->header_map["Path"];
-		size_t pos = std::min(path.find_first_of('?'), path.size());
-
-		event->header_map["$request_uri"] = event->header_map["Method"] + " " + path + " " + event->header_map["Protocol"];
-
-		event->header_map["$uri"] = path.substr(0, pos);
-		event->header_map["$document_uri"] = event->header_map["$uri"];
-
-		if (pos != path.size()) event->header_map["$args"] = path.substr(pos + 1);
-		event->header_map["$query_string"] = event->header_map["$args"];
-
-		event->header_map["$remote_addr"] = event->client->ip;
-		event->header_map["$remote_port"] = Utils::ltos(event->client->port);
-		event->header_map["$server_addr"] = event->socket->ip;
-		event->header_map["$server_port"] = Utils::ltos(event->socket->port);
-
-		event->header_map["$server_name"] = event->header_map["Host"];									//	El nombre del dominio que lo maneja o el nombre del primer dominio por defecto
-		if (event->header_map["$server_name"].empty()) event->header_map["$server_name"] = event->header_map["$server_addr"];
-
-		event->header_map["$http_referer"] = event->header_map["Referer"];
-		event->header_map["$http_cookie"] = event->header_map["Cookie"];
-		event->header_map["$http_user_agent"] = event->header_map["User-Agent"];
-		event->header_map["$http_host"] = event->header_map["Host"];
-
-		event->header_map["$host"] = event->header_map["Host"];
-		if (event->header_map["$host"].empty()) event->header_map["$host"] = event->header_map["$server_name"];
-		if (event->header_map["$host"].empty()) event->header_map["$host"] = event->header_map["$server_addr"];
-	}
-
-
-	//										EJEMPLO DE UNA SOLICITUD DE UN CLIENTE
-
-	//			GET /products/details?item=123&color=red HTTP/1.1
-	//			Host: www.example.com
-	//			User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36
-	//			Referer: https://www.google.com/search?q=webserv
-	//			Cookie: sessionid=abcdef1234567890; theme=dark
-
-	//	$request				La solicitud completa.				               															GET/products/details?item=123&color=red HTTP/1.1
-	//	$request_method			El método HTTP utilizado en la solicitud (GET, POST, PUT, DELETE, etc.)	  			        	    		GET
-	//	$request_uri			Es la URI completa incluyendo la cadena de consulta (query string)		  									/products/details?item=123&color=red
-	//	$uri, $document_uri		Es la URI sin incluir la cadena de consulta (query string)				 	  								/products/details
-	//	$args, $query_string	Es la cadena de consulta (query string), que contiene los parámetros enviados después de ?					item=123&color=red
-	//	$host					El nombre del host solicitado. Si no se especifica, se usa server_name o la dirección IP del servidor		www.example.com
-	//	$remote_addr			La dirección IP del cliente que hizo la solicitud					             							203.0.113.45
-	//	$remote_port			El puerto del cliente que hizo la solicitud							        								54321 
-	//	$server_addr			La dirección IP del servidor que está manejando la solicitud				             					192.168.1.10
-	//	$server_port			El puerto del servidor que está manejando la solicitud					 	               					80
-	//	$server_name			El nombre del servidor virtual que está manejando la solicitud				        						www.example.com
-	//	$http_referer			El valor de referer, que indica la página anterior a la que se hizo la solicitud        					https://www.google.com/search?q=webserv
-	//	$http_cookie			El valor de la cookie enviada en la solicitud HTTP															sessionid=abcdef1234567890; theme=dark
-	//	$http_host				El valor del encabezado host, que es el nombre del dominio o la dirección IP solicitada		       		  	www.example.com
-	//	$http_user_agent		El contenido del encabezado user-agent, que identifica el navegador del cliente  							Mozilla/5.0 (Windows NT 10.0; Win64; x64)...
-
-#pragma endregion
-
 #pragma region Parse Header
 
-	int Protocol::parse_header(EventInfo * event) {
-		if (!event) return (2);
+	#pragma region Variables
 
-		std::string header = std::string(event->read_buffer.begin(), event->read_buffer.end());				//	Create a string with the data read
-		size_t pos = header.find("\r\n\r\n");																//	Find the end of the header
+		void Protocol::parse_variables(EventInfo * event) {
+			if (!event) return;
 
-		if (pos == std::string::npos)	return (1);															//	Incomplete header
-		else							event->header = header.substr(0, pos);								//	Get only the header content
+			std::string path = event->header_map["Path"];
+			size_t pos = std::min(path.find_first_of('?'), path.size());
 
-		std::istringstream stream(header); std::string line;												//	Create some variables
+			event->header_map["$request_uri"] = event->header_map["Method"] + " " + path + " " + event->header_map["Protocol"];
 
-		if (std::getline(stream, line)) {																	//	Read the first line
-			std::istringstream first_line(line);
-			std::string method, path, protocol;
+			event->header_map["$uri"] = path.substr(0, pos);
+			event->header_map["$document_uri"] = event->header_map["$uri"];
 
-			if (first_line >> method >> path >> protocol) {													//	Get the data from the first line (Method, Path and Protocol)
-				event->header_map["Method"] = method;
-				event->header_map["Path"] = path;
-				event->header_map["Protocol"] = protocol;
-			} else return (2);																				//	There are errors in the first line
+			if (pos != path.size()) event->header_map["$args"] = path.substr(pos + 1);
+			event->header_map["$query_string"] = event->header_map["$args"];
+
+			event->header_map["$remote_addr"] = event->client->ip;
+			event->header_map["$remote_port"] = Utils::ltos(event->client->port);
+			event->header_map["$server_addr"] = event->socket->ip;
+			event->header_map["$server_port"] = Utils::ltos(event->socket->port);
+
+			event->header_map["$server_name"] = event->header_map["Host"];									//	El nombre del dominio que lo maneja o el nombre del primer dominio por defecto
+			if (event->header_map["$server_name"].empty()) event->header_map["$server_name"] = event->header_map["$server_addr"];
+
+			event->header_map["$http_referer"] = event->header_map["Referer"];
+			event->header_map["$http_cookie"] = event->header_map["Cookie"];
+			event->header_map["$http_user_agent"] = event->header_map["User-Agent"];
+			event->header_map["$http_host"] = event->header_map["Host"];
+
+			event->header_map["$host"] = event->header_map["Host"];
+			if (event->header_map["$host"].empty()) event->header_map["$host"] = event->header_map["$server_name"];
+			if (event->header_map["$host"].empty()) event->header_map["$host"] = event->header_map["$server_addr"];
 		}
 
-		while (std::getline(stream, line) && line != "\r") {												//	Read the lines (ignoring '\r')
-			line.erase(line.size() - 1, 1);
-			pos = line.find(':');																			//	Find ':' to split Key - Value
-			if (pos != std::string::npos) event->header_map[line.substr(0, pos)] = line.substr(pos + 2);	//	Add the Key - Value to 'header_map'
 
-			parse_variables(event);																			//	Create header variables
-		}
+		//										EJEMPLO DE UNA SOLICITUD DE UN CLIENTE
+
+		//			GET /products/details?item=123&color=red HTTP/1.1
+		//			Host: www.example.com
+		//			User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36
+		//			Referer: https://www.google.com/search?q=webserv
+		//			Cookie: sessionid=abcdef1234567890; theme=dark
+
+		//	$request				La solicitud completa.				               															GET/products/details?item=123&color=red HTTP/1.1
+		//	$request_method			El método HTTP utilizado en la solicitud (GET, POST, PUT, DELETE, etc.)	  			        	    		GET
+		//	$request_uri			Es la URI completa incluyendo la cadena de consulta (query string)		  									/products/details?item=123&color=red
+		//	$uri, $document_uri		Es la URI sin incluir la cadena de consulta (query string)				 	  								/products/details
+		//	$args, $query_string	Es la cadena de consulta (query string), que contiene los parámetros enviados después de ?					item=123&color=red
+		//	$host					El nombre del host solicitado. Si no se especifica, se usa server_name o la dirección IP del servidor		www.example.com
+		//	$remote_addr			La dirección IP del cliente que hizo la solicitud					             							203.0.113.45
+		//	$remote_port			El puerto del cliente que hizo la solicitud							        								54321 
+		//	$server_addr			La dirección IP del servidor que está manejando la solicitud				             					192.168.1.10
+		//	$server_port			El puerto del servidor que está manejando la solicitud					 	               					80
+		//	$server_name			El nombre del servidor virtual que está manejando la solicitud				        						www.example.com
+		//	$http_referer			El valor de referer, que indica la página anterior a la que se hizo la solicitud        					https://www.google.com/search?q=webserv
+		//	$http_cookie			El valor de la cookie enviada en la solicitud HTTP															sessionid=abcdef1234567890; theme=dark
+		//	$http_host				El valor del encabezado host, que es el nombre del dominio o la dirección IP solicitada		       		  	www.example.com
+		//	$http_user_agent		El contenido del encabezado user-agent, que identifica el navegador del cliente  							Mozilla/5.0 (Windows NT 10.0; Win64; x64)...
+
+	#pragma endregion
+
+	#pragma region Header
+
+		int Protocol::parse_header(EventInfo * event) {
+			if (!event) return (2);
+
+			std::string header = std::string(event->read_buffer.begin(), event->read_buffer.end());				//	Create a string with the data read
+			size_t pos = header.find("\r\n\r\n");																//	Find the end of the header
+
+			if (pos == std::string::npos)	return (1);															//	Incomplete header
+			else							event->header = header.substr(0, pos);								//	Get only the header content
+
+			std::istringstream stream(header); std::string line;												//	Create some variables
+
+			if (std::getline(stream, line)) {																	//	Read the first line
+				std::istringstream first_line(line);
+				std::string method, path, protocol;
+
+				if (first_line >> method >> path >> protocol) {													//	Get the data from the first line (Method, Path and Protocol)
+					event->header_map["Method"] = method;
+					event->header_map["Path"] = path;
+					event->header_map["Protocol"] = protocol;
+				} else return (2);																				//	There are errors in the first line
+			}
+
+			while (std::getline(stream, line) && line != "\r") {												//	Read the lines (ignoring '\r')
+				line.erase(line.size() - 1, 1);
+				pos = line.find(':');																			//	Find ':' to split Key - Value
+				if (pos != std::string::npos) event->header_map[line.substr(0, pos)] = line.substr(pos + 2);	//	Add the Key - Value to 'header_map'
+
+				parse_variables(event);																			//	Create header variables
+			}
 
 		return (0);
 	}
+
+	#pragma endregion
 
 #pragma endregion
 
@@ -277,7 +281,8 @@
 
 		gettimeofday(&event->response_time, NULL);														//	Reset response time
 
-		event->header_map["Cache-Control"] = "no_cache";
+		event->header_map["Cache-Control"] = "no_cache";												//	Temporal
+
 		parse_response(event);
 		process_response(event);
 	}

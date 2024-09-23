@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/14 14:37:32 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/22 23:14:29 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/23 14:20:05 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,16 +58,19 @@
 
 		static void resizeHandler(int signum)	{  Display::signal = 128 + signum; Thread::set_bool(Display::mutex, Display::Resized, (signum)); }
 
+		static void childHandler(int signum)	{ Display::signal = 128 + signum; while (waitpid(-1, NULL, WNOHANG) > 0); }
+
 	#pragma endregion
 
 	#pragma region Handler
 
 		void Display::signal_handler() {
 			std::signal(SIGINT, killHandler);
-			std::signal(SIGWINCH, resizeHandler);
+			std::signal(SIGQUIT, quitHandler);
 			std::signal(SIGTSTP, stopHandler);
 			std::signal(SIGCONT, resumeHandler);
-			std::signal(SIGQUIT, quitHandler);
+			std::signal(SIGWINCH, resizeHandler);
+			std::signal(SIGCHLD, childHandler);
 		}
 
 	#pragma endregion
