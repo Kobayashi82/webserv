@@ -1,5 +1,7 @@
 *
 !Makefile
+!leaks
+!README.md
 !src
 !src/**
 !inc
