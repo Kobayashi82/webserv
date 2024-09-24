@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/27 09:32:08 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/24 23:33:12 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/25 00:15:45 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -193,6 +193,7 @@
 					if (event->no_cache == true) {
 						EventInfo * c_event = Event::get(event->client->fd);																//	Get the client's event
 						c_event->write_buffer.insert(c_event->write_buffer.end(), buffer, buffer + bytes_read);								//	Send the data to client's 'write_buffer'
+						event->read_buffer.clear();
 
 					//	All data has been read
 						if (event->read_size >= event->read_maxsize) {

@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/21 11:52:00 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/24 23:44:42 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/25 00:15:42 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,12 +41,13 @@
 		//	--------------------------------------------------------------------------------------
 
 		// event->response_map["method"] = "CGI";
-		//event->response_map["cgi_path"] = "cgi-bin/php-cgi";
-		event->response_map["cgi_path"] = "cgi-bin/python-cgi";
+		event->response_map["cgi_path"] = "cgi-bin/php-cgi";
+		//event->response_map["cgi_path"] = "cgi-bin/python-cgi";
 		//event->response_map["cgi_path"] = "/bin/cat";
 		//event->response_map["path"] = "file2.html";
-		//event->response_map["path"] = "index.php";
-		event->response_map["path"] = "test.py";
+		event->response_map["path"] = "index.php";
+		//event->response_map["path"] = "index.py";
+		//event->response_map["path"] = "big.mp4";
 		// event->method = event->response_map["method"];
 
 

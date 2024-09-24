@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 14:30:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/24 23:44:22 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/25 00:13:24 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,7 +41,6 @@
 	//	TODO	Log to file better line
 	//	TODO	Internal... is necessary?
 	//	TODO	CPU usage not real... I think
-	//	TODO	Check MEM is real
 	//	TODO	POST, PUT, PATCH, DELETE without CGI
 	//	TODO	Intermediary
 	//	TODO	Documentation
