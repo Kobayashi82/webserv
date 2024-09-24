@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 14:30:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/24 23:34:38 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/24 23:44:22 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,53 +18,73 @@
 #include "Epoll.hpp"
 #include "Thread.hpp"
 
-//	*		nc 127.0.0.1 8081	-	telnet 127.0.0.1 8081	-	curl -v http://127.0.0.1:8081/
-//	*		siege -b -c 255 -t 10S 127.0.0.1:8081
-//	*		ps --ppid $(pgrep webserv) -o pid,stat,cmd		(check zombie processes)
+#pragma region Information
 
-//	TODO	./webserv -i with siege overloaded with logs
-//			Buffer con los últimos 100 logs y que se impriman cada x tiempo o cuando se llenen... probaré así.
-//			En el main the logs mantener un timer o algo. Puede ser de 200ms o algo asi
+	//	*		nc 127.0.0.1 8081
+	//	*		telnet 127.0.0.1 8081
+	//	*		curl -v http://127.0.0.1:8081/
 
-//	TODO	CGI redirect error to null
-//	TODO	Check events timeout from another thread (non-blocking cant be done with cgi)
-//	TODO	Client read chunks and no content-length
-//	TODO	Test CGI writing
+	//	*		siege -b -c 255 -t 10S 127.0.0.1:8081			-	stress test
+	//	*		ps --ppid $(pgrep webserv) -o pid,stat,cmd		-	check zombie processes
 
-//	*		CGI	(POST, PUT, PATCH, DELETE)
-//	*		CGI	(php, py)
-//	*		CGI	(directory)
-//	*		CGI	(uploads)
-//	*		Web	(error pages)
-//	*		Web	(session manager and cookies)
-//	*		Web	(uploads)
-//	*		Web	(CGI)
-//	*		Web	(directory)
+	//	TODO	./webserv -i with siege overloaded with logs
+	//			Buffer con los últimos 100 logs y que se impriman cada x tiempo o cuando se llenen... probaré así.
+	//			En el main the logs mantener un timer o algo. Puede ser de 200ms o algo asi
 
-//  Entry point
-int main(int argc, char **argv) {
-	Settings::load_args(argc, argv);
+	//	TODO	CGI redirect error to null
+	//	TODO	Check events timeout from another thread (non-blocking cant be done with cgi)
+	//	TODO	Client read chunks and no content-length
+	//	TODO	Test CGI writing
+	//	TODO	Better error
+	//	TODO	Better directory
+	//	TODO	General errors overhaul
+	//	TODO	Log to file better line
+	//	TODO	Internal... is necessary?
+	//	TODO	CPU usage not real... I think
+	//	TODO	Check MEM is real
+	//	TODO	POST, PUT, PATCH, DELETE without CGI
+	//	TODO	Intermediary
+	//	TODO	Documentation
 
-	Display::signal_handler();
-	Log::start(); Display::start();
-	
-	Epoll::create();
-	Socket::create(true);
+	//	*		CGI	(POST, PUT, PATCH, DELETE)
+	//	*		CGI	(php, py)
+	//	*		CGI	(directory)
+	//	*		CGI	(uploads)
+	//	*		Web	(session manager and cookies)
+	//	*		Web	(error pages)
+	//	*		Web	(php, py)
+	//	*		Web	(directory)
+	//	*		Web	(uploads)
 
-	usleep(10000); Display::update();
+#pragma endregion
 
-	while (Display::isTerminate() == -1) {
-		if (Display::signal_check())	break;
-		if (Epoll::events())			break;
+#pragma region Main
+
+	int main(int argc, char **argv) {
+		Settings::load_args(argc, argv);
+
+		Display::signal_handler();
+		Log::start(); Display::start();
+		
+		Epoll::create();
+		Socket::create(true);
+
+		usleep(10000); Display::update();
+
+		while (Display::isTerminate() == -1) {
+			if (Display::signal_check())	break;
+			if (Epoll::events())			break;
+		}
+		
+		Epoll::close();
+		Socket::close();
+		Event::remove();
+
+		Log::stop(); Display::stop(); Log::release_mutex(); Display::disableRawMode();
+
+		Log::exec_logrot(Settings::program_path + ".logrotate.cfg");
+		
+		return (Settings::terminate);
 	}
-	
-	Epoll::close();
-	Socket::close();
-	Event::remove();
 
-	Log::stop(); Display::stop(); Log::release_mutex(); Display::disableRawMode();
-
-	Log::exec_logrot(Settings::program_path + ".logrotate.cfg");
-	
-	return (Settings::terminate);
-}
+#pragma endregion
