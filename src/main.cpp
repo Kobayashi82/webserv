@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 14:30:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/23 22:29:27 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/24 19:36:59 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,9 @@
 //	TODO	./webserv -i with siege overloaded with logs
 //			Buffer con los últimos 100 logs y que se impriman cada x tiempo o cuando se llenen... probaré así.
 //			En el main the logs mantener un timer o algo. Puede ser de 200ms o algo asi
+
+//	TODO	CGI redirect error to null
+//	TODO	Check events timeout from another thread (non-blocking cant be done with cgi)
 
 //	*		CGI	(POST, PUT, PATCH, DELETE)
 //	*		CGI	(php, py)

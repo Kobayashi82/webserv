@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 12:49:42 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/23 20:14:47 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/24 19:07:06 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,7 @@
 		public:
 
 			//	Request
-			static void	parse_response(EventInfo * event);												//	Create a map container with the values necessary to generate a response
+			static void	parse_request(EventInfo * event);												//	Create a map container with the values necessary to generate a response
 			static void	parse_variables(EventInfo * event);												//	Adds header variables to 'header_map'
 			static int	parse_header(EventInfo * event);												//	Parse a header and create a map container with its Key-Value pairs
 

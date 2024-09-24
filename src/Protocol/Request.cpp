@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/21 11:52:00 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/23 23:25:34 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/24 19:36:21 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,18 +16,18 @@
 #include "Epoll.hpp"
 #include "Protocol.hpp"
 
-#pragma region Parse Response
+#pragma region Parse Request
 
 	//	TODO	data of vserver/location in event
 	//	TODO	Index usa index.html por defecto
 	//	TODO	Update resource path with alias or any modified path before cgi
 
-	void Protocol::parse_response(EventInfo * event) {
+	void Protocol::parse_request(EventInfo * event) {
 		if (!event) return;
 
 		//								ESTO VA EN PARSE_RESPONSE
 		//	--------------------------------------------------------------------------------------
-		size_t content_length;
+		size_t content_length = 0;
 		Utils::stol(event->header_map["Content_length"], content_length);								//	Get 'content_length' in numeric format
 		if (event->body_maxsize > 0 && content_length > event->body_maxsize) {							//	If 'content_length' is greater than 'body_maxsize'
 			event->header_map["Connection"] = "close";													//	Set the conection to close
@@ -41,12 +41,14 @@
 		//	--------------------------------------------------------------------------------------
 
 		// event->response_map["method"] = "CGI";
-		// event->response_map["cgi_path"] = "/bin/ls";
-		// event->response_map["path"] = "logs";
+		event->response_map["cgi_path"] = "/usr/bin/php-cgi";
+		//event->response_map["cgi_path"] = "/bin/cat";
+		//event->response_map["path"] = "file2.html";
+		event->response_map["path"] = "index.php";
 		// event->method = event->response_map["method"];
 
 
-		event->response_map["path"] = "index.html";
+		//event->response_map["path"] = "index.php";
 		if (event->header_map["Path"] == "/favicon.ico") event->response_map["path"] = "favicon.ico";
 		event->response_map["Content-Type"] = "text/html";
 		size_t pos = event->response_map["path"].find_last_of('.');
@@ -56,7 +58,8 @@
 		event->response_map["Connection"] = event->header_map["Connection"];
 		event->response_map["code"] = "200";
 		event->response_map["code_description"] = Settings::error_codes[Utils::sstol(event->response_map["code"])];
-		event->response_map["method"] = "File";
+		event->response_map["method"] = "CGI";
+		if (event->header_map["Path"] == "/favicon.ico") event->response_map["method"] = "File";
 		event->method = event->response_map["method"];
 
 	}
@@ -294,7 +297,8 @@
 
 		event->header_map["Cache-Control"] = "no_cache";												//	Temporal
 
-		parse_response(event);
+		event->body_maxsize = 10 * 1024 * 1024;
+		parse_request(event);
 		process_response(event);
 	}
 

@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/21 11:59:50 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/23 23:25:30 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/24 19:36:30 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -332,6 +332,8 @@
 				cgi_vars.push_back("HTTP_USER_AGENT=" + event->header_map["User-Agent"]);
 				cgi_vars.push_back("HTTP_REFERER=" + event->header_map["Referer"]);
 				cgi_vars.push_back("HTTP_ACCEPT=" + (event->header_map["Accept"].empty() ? "*/*" : event->header_map["Accept"]));
+
+				cgi_vars.push_back("REDIRECT_STATUS=200");
 			}
 		
 			#pragma region Information
@@ -403,8 +405,8 @@
 			//	Create the event to read from the CGI
 				int read_pipe[2];
 				if (pipe(read_pipe) == -1) { event->client->remove(); return; }								//	Create the pipe for CGI (read from it)
-				Utils::NonBlocking_FD(read_pipe[0]);														//	Set the read end of the pipe as non-blocking
-				Utils::NonBlocking_FD(read_pipe[1]);														//	Set the write end of the pipe as non-blocking
+				//Utils::NonBlocking_FD(read_pipe[0]);														//	Set the read end of the pipe as non-blocking
+				//Utils::NonBlocking_FD(read_pipe[1]);														//	Set the write end of the pipe as non-blocking
 
 				EventInfo event_read_cgi(read_pipe[0], CGI, NULL, event->client);							//	Create the event for the CGI
 				event_read_cgi.pipe[0] = -1;
@@ -413,6 +415,9 @@
 				Event::events[event_read_cgi.fd] = event_read_cgi;											//	Add the CGI event to the event's list
 
 			//	Set EPOLL
+				event->write_info = 0;
+				event->write_size = 0;
+				event->write_maxsize = 0;
 				event->write_buffer.clear();																//	Clear write_buffer
 
 				if (Epoll::set(event->fd, !(event->header_map["Write_Only"] == "true"), true) == -1) {		//	Set EPOLL to monitor write events for the client
@@ -420,23 +425,30 @@
 				} else {
 
 					if (event->cgi_fd != -1 && Epoll::add(event->cgi_fd, false, true) == -1) {				//	Set EPOLL to monitor write events for CGI
-						event->write_maxsize = 0;															//	If set EPOLL fails, reset the flag,
 						event->client->remove(); return;
 					}
 
 					if (Epoll::add(event_read_cgi.fd, true, false) == -1) {									//	Set EPOLL to monitor read events for CGI
-						event->read_maxsize = 0;															//	If set EPOLL fails, reset the flag,
 						event->client->remove(); return;
 					}
 				}
 
-				std::string respuesta =
-					"HTTP/1.1 200 OK\r\n"
-					"Content-Type: text/plain\r\n"
-					"Content-Length: 23\r\n"
-					"\r\n";
+				// std::string respuesta =
+				// 	"HTTP/1.1 200 OK\r\n";
+					// "Content-type: text/html; charset=UTF-8\r\n"
+					// "\r\n";
 
-				write(event_read_cgi.pipe[1], respuesta.c_str(), respuesta.size());
+				// std::string respuesta =
+				// 	"HTTP/1.1 200 OK\r\n"
+				// 	"Content-Type: text/html; charset=UTF-8\r\n"
+				// 	"Transfer-Encoding: chunked\r\n"
+				// 	"Connection: keep-alive\r\n"
+				// 	"\r\n"
+				// 	"D\r\nHello, World!\r\n6\r\nChunks\r\n0\r\n\r\n";
+
+				//write(event_read_cgi.pipe[1], respuesta.c_str(), respuesta.size());
+
+				// return;
 
 				//Fork the process
 				int pid = fork();
@@ -469,6 +481,7 @@
 
 					if (execve(args[0], args, &env_array[0]) == -1) exit(1);
 				}
+				//usleep(30000);
 			}
 
 		#pragma endregion
