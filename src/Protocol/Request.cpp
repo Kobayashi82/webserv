@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/21 11:52:00 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/24 19:36:21 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/24 21:38:57 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,14 +41,16 @@
 		//	--------------------------------------------------------------------------------------
 
 		// event->response_map["method"] = "CGI";
-		event->response_map["cgi_path"] = "/usr/bin/php-cgi";
+		//event->response_map["cgi_path"] = "cgi-bin/php-cgi";
+		event->response_map["cgi_path"] = "cgi-bin/python-cgi";
 		//event->response_map["cgi_path"] = "/bin/cat";
 		//event->response_map["path"] = "file2.html";
-		event->response_map["path"] = "index.php";
+		//event->response_map["path"] = "index.php";
+		event->response_map["path"] = "test.py";
 		// event->method = event->response_map["method"];
 
 
-		//event->response_map["path"] = "index.php";
+		//event->response_map["path"] = "index.html";
 		if (event->header_map["Path"] == "/favicon.ico") event->response_map["path"] = "favicon.ico";
 		event->response_map["Content-Type"] = "text/html";
 		size_t pos = event->response_map["path"].find_last_of('.');
@@ -59,6 +61,7 @@
 		event->response_map["code"] = "200";
 		event->response_map["code_description"] = Settings::error_codes[Utils::sstol(event->response_map["code"])];
 		event->response_map["method"] = "CGI";
+		//event->response_map["method"] = "File";
 		if (event->header_map["Path"] == "/favicon.ico") event->response_map["method"] = "File";
 		event->method = event->response_map["method"];
 
@@ -253,6 +256,8 @@
 
 		int Protocol::parse_header(EventInfo * event) {
 			if (!event) return (2);
+
+			if (event->read_buffer.empty()) return (1);
 
 			std::string header = std::string(event->read_buffer.begin(), event->read_buffer.end());				//	Create a string with the data read
 			size_t pos = header.find("\r\n\r\n");																//	Find the end of the header

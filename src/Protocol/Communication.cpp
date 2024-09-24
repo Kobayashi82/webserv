@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/27 09:32:08 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/24 19:36:16 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/24 23:33:12 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,65 +42,71 @@
 			int Communication::read_client(EventInfo * event) {
 				if (!event) return (0);
 
-				char buffer[CHUNK_SIZE];			memset(buffer, 0, sizeof(buffer));					//	Initialize buffer
-				char peek_buffer[CHUNK_SIZE + 1];	memset(peek_buffer, 0, sizeof(peek_buffer));		//	Initialize peek buffer
+				char buffer[CHUNK_SIZE];			memset(buffer, 0, sizeof(buffer));															//	Initialize buffer
+				char peek_buffer[CHUNK_SIZE + 1];	memset(peek_buffer, 0, sizeof(peek_buffer));												//	Initialize peek buffer
 
-				ssize_t bytes_peek = recv(event->fd, peek_buffer, CHUNK_SIZE + 1, MSG_PEEK);			//	Peek chunk + 1 byte to check if there are more data
-				ssize_t bytes_read = recv(event->fd, buffer, CHUNK_SIZE, 0);							//	Read a chunk
+				ssize_t bytes_peek = recv(event->fd, peek_buffer, CHUNK_SIZE + 1, MSG_PEEK);													//	Peek chunk + 1 byte to check if there are more data
+				ssize_t bytes_read = recv(event->fd, buffer, CHUNK_SIZE, 0);																	//	Read a chunk
 
-				if (bytes_read > 0) {																	//	Read some data
+			//	Read some data
+				if (bytes_read > 0) {
 
-					event->client->update_last_activity();												//	Reset client timeout
+					event->client->update_last_activity();																						//	Reset client timeout
 
-					event->read_buffer.insert(event->read_buffer.end(), buffer, buffer + bytes_read);	//	Store the data read into 'read_buffer'
+					event->read_buffer.insert(event->read_buffer.end(), buffer, buffer + bytes_read);											//	Store the data read into 'read_buffer'
 
-					Thread::inc_size_t(Display::mutex, read_bytes, bytes_read);							//	Increase total bytes read
+					Thread::inc_size_t(Display::mutex, read_bytes, bytes_read);																	//	Increase total bytes read
 
-					if (event->header == "") {															//	If no header yet, try to get one
-						if (event->read_buffer.size() > HEADER_MAXSIZE)	{								//	If header is too big
-							//	return error;
-							return (1);																	//	Header too big, return error
-						}
-						int result = Protocol::parse_header(event);										//	Parse the header
-						if (result == 0) {																//	There is a header
-							event->body_size = event->read_buffer.size() - event->header.size();		//	Set 'body_size' of the current request
-							event->read_buffer.erase(event->read_buffer.begin(), event->read_buffer.begin() + event->header.size());
-							Protocol::process_request(event);											//	Process the request
-						} else if (result == 2) {														//	There is a header, but something went wrong
-							event->client->remove(); return (1);										//	Error, connection close
-						}
-					} else event->body_size += bytes_read;												//	Increase 'body_size'
+				//	Needs to get the header
+					if (event->header == "") {
+						if (event->read_buffer.size() > HEADER_MAXSIZE)	{ event->client->remove(); return (1); }								//	Header too big, return error
 
-					if (event->body_maxsize > 0 && event->body_size >= event->body_maxsize) {			//	If 'body_size' is greater than 'body_maxsize'
-						event->header_map["Connection"] = "close";										//	Set the conection to close
-						event->header_map["Write_Only"] = "true";										//	Don't read from the client anymore
-						Epoll::set(event->fd, false, false);											//	Close read and write monitor for EPOLL
-						//	return error;																//	Body too big, return error
+						int result = Protocol::parse_header(event);																				//	Try to parse the header (maybe the header is not there yet)
+						if (result == 0) {																										//	There is a header
+
+							event->read_size = event->read_buffer.size() - event->header.size();												//	Set 'read_size'
+							event->read_buffer.erase(event->read_buffer.begin(), event->read_buffer.begin() + event->header.size());			//	Remove the header from 'read_buffer'
+							Protocol::process_request(event);																					//	Process the request
+
+						} else if (result == 2) { event->client->remove(); return (1); }														//	There is a header, but something went wrong
+
+					} else event->read_size += bytes_read;																						//	Increase 'read_size'
+
+				//	If 'read_size' is greater than 'body_maxsize'
+					if (event->body_maxsize > 0 && event->read_size >= event->body_maxsize) {
+						event->header_map["Connection"] = "close";																				//	Set 'Connection' to close
+						event->header_map["Write_Only"] = "true";																				//	Don't read from the client anymore
+						Epoll::set(event->fd, false, false);																					//	Close read and write monitor for EPOLL
+						//	return error;																										//	Body too big, return error
 						return (1);
 					}
 
-					if (event->method == "CGI") {																		//	Write to a cgi
-						EventInfo * cgi_event = Event::get(event->cgi_fd);												//	Get the event of the CGI
+				//	Write to a CGI
+					if (event->method == "CGI") {
+						EventInfo * cgi_event = Event::get(event->cgi_fd);																		//	Get the CGI's event
 						if (cgi_event)
-							cgi_event->write_buffer.insert(cgi_event->write_buffer.end(), buffer, buffer + bytes_read);		//	Copy the data to the 'write_buffer' of the CGI
+							cgi_event->write_buffer.insert(cgi_event->write_buffer.end(), buffer, buffer + bytes_read);							//	Copy the data to the 'write_buffer' of the CGI
 					}
 
-					if (!event->method.empty()) event->read_buffer.clear();								//	Clear 'read_buffer' (Not needed if not a CGI)
+				//	Clear 'read_buffer' (Not needed if not a CGI)
+					if (!event->method.empty()) event->read_buffer.clear();
 
-					if (static_cast<size_t>(bytes_peek) <= CHUNK_SIZE) {								//	No more data coming
+				//	No more data coming
+					if (static_cast<size_t>(bytes_peek) <= CHUNK_SIZE) {
 						if (event->method == "CGI") {
-							EventInfo * cgi_event = Event::get(event->cgi_fd);							//	Get the event of the CGI
-							if (cgi_event) cgi_event->write_info = 3;									//	Send a flag to the CGI that no more data is coming
-						}
-
-						return (1);
+							EventInfo * cgi_event = Event::get(event->cgi_fd);																	//	Get the CGI's event
+							if (cgi_event) cgi_event->write_info = 3;																			//	Set a flag (no more data)
+						} return (1);
 					}
 
-				} else if (bytes_read == 0) {															//	No data (usually means a client disconected)
-					event->client->remove(); return (1);
-				} else if (bytes_read == -1) {															//	Error reading
-					Log::log(RED500 "Communication failed with " BLUE400 + event->client->ip + NC, Log::BOTH_ERROR, event->socket->VServ);
-					event->client->remove(); return (1);
+			//	No data (usually means a client disconected)
+				} else if (bytes_read == 0) {
+					event->client->remove(); return (1);																						//	Remove the client
+
+			//	Error reading
+				} else if (bytes_read == -1) {
+					Log::log(RED500 "Communication failed with " BLUE400 + event->client->ip + NC, Log::BOTH_ERROR, event->socket->VServ);		//	Log message
+					event->client->remove(); return (1);																						//	Remove the client
 				}		
 
 				return (0);
@@ -113,53 +119,50 @@
 			void Communication::write_client(EventInfo * event) {
 				if (!event) return;
 
-				if (!event->write_buffer.empty()) {																				//	There are data in the 'write_buffer'
-
-					event->client->update_last_activity();																		//	Reset client timeout
+			//	There are data, send it
+				if (!event->write_buffer.empty()) {
+					event->client->update_last_activity();																										//	Reset client timeout
 
 					size_t buffer_size = event->write_buffer.size();
-					size_t chunk = std::min(buffer_size, static_cast<size_t>(CHUNK_SIZE));										//	Set the size of the chunk		
+					size_t chunk = std::min(buffer_size, static_cast<size_t>(CHUNK_SIZE));																		//	Set the size of the chunk
 
-					//std::string valor = std::string(event->write_buffer.begin(), event->write_buffer.end());
-					//std::cout << valor << std::endl;
-					//Log::log(std::string(event->write_buffer.begin(), event->write_buffer.end()), Log::MEM_ACCESS);
-					ssize_t bytes_written = send(event->fd, event->write_buffer.data(), chunk, MSG_DONTWAIT);					//	Send the data
+					ssize_t bytes_written = send(event->fd, event->write_buffer.data(), chunk, MSG_DONTWAIT);													//	Send the data
 
-					if (bytes_written > 0) {																					//	Some data is sent
-						event->write_size += bytes_written;																		//	Increase 'write_size'
+				//	Sent some data
+					if (bytes_written > 0) {
 
-						Thread::inc_size_t(Display::mutex, write_bytes, bytes_written);											//	Increase total bytes written
+						event->write_size += bytes_written;																										//	Increase 'write_size'
+						Thread::inc_size_t(Display::mutex, write_bytes, bytes_written);																			//	Increase total bytes written
+						event->write_buffer.erase(event->write_buffer.begin(), event->write_buffer.begin() + bytes_written);									//	Remove the data sent from 'write_buffer'
 
-						event->write_buffer.erase(event->write_buffer.begin(), event->write_buffer.begin() + bytes_written);	//	Remove the data sent from 'write_buffer'
-					} else if (bytes_written == 0) {																			//	Error writing ?
-						event->client->remove(); return;
-					} else if (bytes_written == -1) {																			//	Error writing
-						event->client->remove(); return;
-					}
+				//	No writing if 'write_buffer' is empty, so this must be an error
+					} else if (bytes_written == 0) { event->client->remove(); return;																			//	Remove the client
+
+				//	Error writing
+					} else if (bytes_written == -1) { event->client->remove(); return; }																		//	Remove the client
 				}
 
-				if ((event->write_info == 0 && event->write_maxsize > 0 && event->write_size >= event->write_maxsize)										//	All data has been sent
+			//	All data has been sent
+				if ((event->write_info == 0 && event->write_maxsize > 0 && event->write_size >= event->write_maxsize)
 					|| (event->write_info == 3 && event->write_buffer.empty())) {
 
-					long MaxRequests = Settings::KEEP_ALIVE_TIMEOUT;
-					if (Settings::global.get("keepalive_requests") != "") Utils::stol(Settings::global.get("keepalive_requests"), MaxRequests);				//	Get the maximum request allowed
-
-					std::string time = Utils::ltos(Settings::timer.elapsed_milliseconds(event->response_time));												//	Get the time to process the request in milliseconds
-					gettimeofday(&event->response_time, NULL);																								//	Reset response time
+				//	Log connection
+					std::string time = Utils::ltos(Settings::timer.elapsed_milliseconds(event->response_time));													//	Get the time to process the request in milliseconds
+					gettimeofday(&event->response_time, NULL);																									//	Reset response time
 					
-					Log::log("TRF|GET|" + event->header_map["Path"] + "|" + event->response_map["code"] + "|" + Utils::ltos(event->response_size) + "|" + time + "|" + event->client->ip, Log::BOTH_ACCESS, event->socket->VServ, event->vserver_data);		//	Log the client request
+					Log::log(	"TRF|GET|" + event->header_map["Path"] + "|" + event->response_map["code"] + "|" + Utils::ltos(event->response_size) +			//	Log the client request
+								"|" + time + "|" + event->client->ip, Log::BOTH_ACCESS, event->socket->VServ, event->vserver_data);
 
-					if (event->header_map["Connection"] == "close" || event->client->total_requests + 1 >= MaxRequests)										//	Close the connection if client ask or max request reach
-						event->client->remove();
-					else {
-						event->client->total_requests++;																									//	Increase total_requests
-						event->header = "";
-						event->header_map.clear();
-						event->response_map.clear();
-						Epoll::set(event->fd, true, false);																									//	Monitor read events only in EPOLL 
-					}
+				//	Check close connection
+					long MaxRequests = Settings::KEEP_ALIVE_TIMEOUT;
+					if (Settings::global.get("keepalive_requests") != "") Utils::stol(Settings::global.get("keepalive_requests"), MaxRequests);					//	Get the maximum request allowed
+					if (event->header_map["Connection"] == "close" || event->client->total_requests + 1 >= MaxRequests) { event->client->remove(); return; }	//	Close the connection if client ask or max request reach
+
+				//	Clear connection info					
+					event->client->total_requests++;																											//	Increase total_requests
+					event->header = ""; event->header_map.clear(); event->response_map.clear();																	//	Clear header and maps
+					Epoll::set(event->fd, true, false);																											//	Monitor read events only in EPOLL 
 				}
-
 			}
 
 		#pragma endregion
@@ -173,50 +176,65 @@
 			int Communication::read_data(EventInfo * event) {
 				if (!event) return (0);
 
-				char buffer[CHUNK_SIZE];			memset(buffer, 0, sizeof(buffer));					//	Initialize buffer
+				char buffer[CHUNK_SIZE];			memset(buffer, 0, sizeof(buffer));														//	Initialize buffer
 
-				ssize_t bytes_read = read(event->fd, buffer, CHUNK_SIZE);								//	Read a chunk
+			//	Read a chunk from the FD
+				ssize_t bytes_read = read(event->fd, buffer, CHUNK_SIZE);
 
-				if (bytes_read > 0) {																	//	Read some data
+			//	Read some data
+				if (bytes_read > 0) {
 
-					Event::update_last_activity(event->fd);												//	Reset event timeout
+					Event::update_last_activity(event->fd);																					//	Reset event timeout
 
-					event->read_buffer.insert(event->read_buffer.end(), buffer, buffer + bytes_read);	//	Store the data read into 'read_buffer'
-					event->read_size += bytes_read;														//	Increase 'read_size'
+					event->read_buffer.insert(event->read_buffer.end(), buffer, buffer + bytes_read);										//	Store the data read into 'read_buffer'
+					event->read_size += bytes_read;																							//	Increase 'read_size'
 
-					if (event->no_cache == true) {																							//	No cache allowed
-						EventInfo * c_event = Event::get(event->client->fd);																//	Get the event of the client
-						c_event->write_buffer.insert(c_event->write_buffer.end(), buffer, buffer + bytes_read);								//	Copy the data to the 'write_buffer' of the client
-						if (event->read_size >= event->read_maxsize) {																		//	All data has been read
-							c_event->write_info = 3;																						//	Send a flag to the client that no more data is coming
+				//	No cache allowed
+					if (event->no_cache == true) {
+						EventInfo * c_event = Event::get(event->client->fd);																//	Get the client's event
+						c_event->write_buffer.insert(c_event->write_buffer.end(), buffer, buffer + bytes_read);								//	Send the data to client's 'write_buffer'
+
+					//	All data has been read
+						if (event->read_size >= event->read_maxsize) {
+							c_event->write_info = 3;																						//	Set a flag (no more data)
 							Event::remove(event->fd); return (1);																			//	Remove the event
 						}
 
-					} else if (event->read_size >= event->read_maxsize) {																	//	Cache allowed and all data has been read
+				//	Cache allowed and all data has been read
+					} else if (event->read_size >= event->read_maxsize) {
 						std::string data(event->read_buffer.begin(), event->read_buffer.end());												//	Create a string with the data
 						cache.add(event->read_path, data);																					//	Add the data to the cache
 
-						EventInfo * c_event = Event::get(event->client->fd);																//	Get the event of the client
-						c_event->write_info = 3;																							//	Send a flag to the client that no more data is coming
-						c_event->write_buffer.insert(c_event->write_buffer.end(), event->read_buffer.begin(), event->read_buffer.end());	//	Copy the data to the 'write_buffer' of the client
+						EventInfo * c_event = Event::get(event->client->fd);																//	Get the client's event
+						c_event->write_info = 3;																							//	Set a flag (no more data)
+						c_event->write_buffer.insert(c_event->write_buffer.end(), event->read_buffer.begin(), event->read_buffer.end());	//	Send the data to client's 'write_buffer'
 						Event::remove(event->fd); return (1);																				//	Remove the event
 					}
 
-				} else if (bytes_read == 0) {																														//	No data
-					EventInfo * c_event = Event::get(event->client->fd);																							//	Get the event of the client
-					c_event->read_info = 3;																															//	Send a flag to the client that no more data is coming
-					if (event->no_cache == false) c_event->write_buffer.insert(c_event->write_buffer.end(), event->read_buffer.begin(), event->read_buffer.end());	//	Copy the data to the 'write_buffer' of the client
-					Event::remove(event->fd); return (1);																											//	Remove the event
-				} else if (bytes_read == -1) {																														//	Error reading
-					EventInfo * c_event = Event::get(event->client->fd);																							//	Get the event of the client
-					c_event->read_info = 3;																															//	Send a flag to the client that no more data is coming
-					if (event->no_cache == false) c_event->write_buffer.insert(c_event->write_buffer.end(), event->read_buffer.begin(), event->read_buffer.end());	//	Copy the data to the 'write_buffer' of the client
-					Event::remove(event->fd); return (1);																											//	Remove the event
+			//	No data
+				} else if (bytes_read == 0) {
+					EventInfo * c_event = Event::get(event->client->fd);																	//	Get the client's event
+					c_event->read_info = 3;																									//	Set a flag (no more data)
+					if (event->no_cache == false)
+						c_event->write_buffer.insert(c_event->write_buffer.end(), event->read_buffer.begin(), event->read_buffer.end());	//	Send the data to client's 'write_buffer'
+					Event::remove(event->fd); return (1);																					//	Remove the event
+
+			//	Error reading
+				} else if (bytes_read == -1) {
+					EventInfo * c_event = Event::get(event->client->fd);																	//	Get the client's event
+					c_event->read_info = 3;																									//	Set a flag (no more data)
+					if (event->no_cache == false)
+						c_event->write_buffer.insert(c_event->write_buffer.end(), event->read_buffer.begin(), event->read_buffer.end());	//	Send the data to client's 'write_buffer'
+					Event::remove(event->fd); return (1);																					//	Remove the event
 				}
 
-				size_t chunk = CHUNK_SIZE;																															//	Set the size of the chunk
-				if (event->read_maxsize > 0) chunk = std::min(event->read_maxsize - event->read_size, CHUNK_SIZE);
-				if (splice(event->pipe[0], NULL, event->pipe[1], NULL, chunk, SPLICE_F_MOVE) == -1) { Event::remove(event->fd); return (1); }						//	Send more data from the file to the pipe (EPOLL is monitoring the pipe)
+			//	Send more data from the file to the pipe (EPOLL is monitoring the pipe)
+				size_t chunk = CHUNK_SIZE;
+				if (event->read_maxsize > 0) chunk = std::min(event->read_maxsize - event->read_size, CHUNK_SIZE);							//	Set the size of the chunk
+
+				if (splice(event->pipe[0], NULL, event->pipe[1], NULL, chunk, SPLICE_F_MOVE) == -1) {										//	Move data with splice from the file FD to the pipe
+					Event::remove(event->fd); return (1);																					//	Remove the event
+				}
 
 				return (0);
 			}
@@ -232,92 +250,108 @@
 			int Communication::read_cgi(EventInfo * event) {
 				if (!event) return (0);
 
-				char buffer[CHUNK_SIZE];			memset(buffer, 0, sizeof(buffer));									//	Initialize buffer
+				char buffer[CHUNK_SIZE];			memset(buffer, 0, sizeof(buffer));											//	Initialize buffer
 
-				ssize_t bytes_read = read(event->fd, buffer, CHUNK_SIZE);												//	Read a chunk
+			//	Read a chunk from the FD
+				ssize_t bytes_read = read(event->fd, buffer, CHUNK_SIZE);
 
-				if (bytes_read > 0) {																					//	Read some data
+			//	Read some data
+				if (bytes_read > 0) {
 
-					Event::update_last_activity(event->fd);																//	Reset event timeout
-					EventInfo * c_event = Event::get(event->client->fd);												//	Get the event of the client
+					Event::update_last_activity(event->fd);																		//	Reset event timeout
 
+					EventInfo * c_event = Event::get(event->client->fd);														//	Get the client's event
+					if (!c_event) { Event::remove(event->fd); return (1); }														//	Client's event is missing
+
+				//	If first data in the pipe
 					if (event->read_size == 0) {
-						std::string respuesta = "HTTP/1.1 200 OK\r\n";
-						event->read_buffer.insert(event->read_buffer.end(), respuesta.begin(), respuesta.end());
-						c_event->write_buffer.insert(c_event->write_buffer.end(), respuesta.begin(), respuesta.end());
-						event->read_size += respuesta.size();
+						std::string respuesta = "HTTP/1.1 200 OK\r\n";															//	Create header
+						event->read_buffer.insert(event->read_buffer.end(), respuesta.begin(), respuesta.end());				//	Add it to 'read_buffer'
+						c_event->write_buffer.insert(c_event->write_buffer.end(), respuesta.begin(), respuesta.end());			//	Add it to client's 'write_buffer'
+						event->read_size += respuesta.size();																	//	Increase 'read_size' with the size of the added header
 					}
 
-				 	//Log::log(std::string(buffer, bytes_read), Log::MEM_ACCESS);
+					event->read_buffer.insert(event->read_buffer.end(), buffer, buffer + bytes_read);							//	Store the data read into 'read_buffer'
+					event->read_size += bytes_read;																				//	Increase 'read_size'
 
-					event->read_buffer.insert(event->read_buffer.end(), buffer, buffer + bytes_read);					//	Store the data read into 'read_buffer'
-					event->read_size += bytes_read;																		//	Increase 'read_size'
+					if (event->read_info == 1 || event->read_info == 2)
+						c_event->response_size += event->read_size - event->header.size();										//	Increase 'read_size' only if 'read_info' equal to 1 or 2
 
-					// std::string respuesta = std::string(event->read_buffer.begin(), event->read_buffer.end());
-					// Log::log(respuesta, Log::MEM_ACCESS);
-
-
-					if (event->read_info == 1 || event->read_info == 2) c_event->response_size += event->read_size - event->header.size();
-
-					if (event->read_info == 0 && event->read_maxsize == 0) {											//	Needs to get 'Content-Length'
-						if (event->header == "") {																		//	If no header yet, try to get one
-							size_t content_length = 0;
-							if (event->read_buffer.size() > HEADER_MAXSIZE) { Event::remove(event->fd); return (1); }	//	Header too big, return error	
+				//	Needs to get the header
+					if (event->read_info == 0 && event->read_maxsize == 0 && event->header == "") {
+						size_t content_length = 0;
+						if (event->read_buffer.size() > HEADER_MAXSIZE) { Event::remove(event->fd); return (1); }				//	Header too big, return error	
 	
-							int result = Protocol::parse_header(event);													//	Try to parse the header (maybe the header is not there yet)
-							if (result == 0) {																			//	There is a header
-								if (event->header_map["Transfer-Encoding"] == "chunked") {								//	Get 'Transfer-Encoding'
-									event->read_info = 2;																//	If no 'content_length' set a flag
-									c_event->response_size = event->read_size - event->header.size();
-								} else if (Utils::stol(event->header_map["Content-Length"], content_length)) {			//	Get 'Content-Length'
-									c_event->header_map["Connection"] = "close";
-									event->read_info = 1;																//	If no 'Content-Length' set a flag
-									c_event->response_size = event->read_size - event->header.size();
-								} else {
-									event->read_maxsize = event->header.size() + content_length;
-									c_event->response_size = content_length;
-								}
-								c_event->write_info = event->read_info;													//	If 'content_length' set the flag for the client
-								c_event->write_maxsize = event->read_maxsize;											//	If 'content_length' set the 'read_maxsize' for the client
+						int result = Protocol::parse_header(event);																//	Try to parse the header (maybe the header is not there yet)
+						if (result == 0) {																						//	There is a header
 
-							} else if (result == 2) { Event::remove(event->fd); return (1); }							//	There is a header, but something went wrong
-						}
+							if (event->header_map["Transfer-Encoding"] == "chunked") {											//	Get 'Transfer-Encoding'
+								c_event->response_size = event->read_size - event->header.size();								//	Set 'response_size'
+								event->read_info = 2;																			//	Set a flag (content is chunked)
+
+							} else if (Utils::stol(event->header_map["Content-Length"], content_length)) {						//	There is no 'Content-Length'
+								c_event->header_map["Connection"] = "close";													//	Set 'Connection' to close
+								c_event->response_size = event->read_size - event->header.size();								//	Set 'response_size'
+								event->read_info = 1;																			//	Set a flag (unkown content length)
+
+							} else {																							//	There is 'Content-Length'
+								event->read_maxsize = event->header.size() + content_length;									//	Set 'response_size'
+								c_event->response_size = content_length;														//	Set 'response_size'
+							}
+
+							c_event->write_info = event->read_info;																//	Set client's 'write_info'
+							c_event->write_maxsize = event->read_maxsize;														//	Set client's 'write_maxsize'
+
+						} else if (result == 2) { Event::remove(event->fd); return (1); }										//	There is a header, but something went wrong
 					}
 
-					c_event->write_buffer.insert(c_event->write_buffer.end(), buffer, buffer + bytes_read);				//	Copy the data to the 'write_buffer' of the client
+				//	Send the data to client's 'write_buffer'
+					c_event->write_buffer.insert(c_event->write_buffer.end(), buffer, buffer + bytes_read);
 
-					if (event->read_info == 0 && event->read_maxsize > 0 && event->read_size >= event->read_maxsize) {	//	All data has been read
-						c_event->write_info = 3;																		//	Send a flag to the client that no more data is coming
-						Event::remove(event->fd); return (1);															//	Remove the event
+				//	All data has been read (content length)
+					if (event->read_info == 0 && event->read_maxsize > 0 && event->read_size >= event->read_maxsize) {
+						c_event->write_info = 3;																				//	Set a flag (no more data)
+						Event::remove(event->fd); return (1);																	//	Remove the event
 					}
 
-					if (event->read_info == 2) {																		//	All data has been read
+				//	All data has been read (chunked)
+					if (event->read_info == 2) {
 						static std::string last_data;
 						if (last_data.size() > 7) last_data = last_data.substr(last_data.size() - 7);
-						last_data += std::string(event->read_buffer.begin(), event->read_buffer.end());
+						last_data += std::string(event->read_buffer.begin(), event->read_buffer.end());							//	Keep the last 7 bytes of data
 						
-						//Log::log(last_data.substr(std::min(last_data.size() - 5, last_data.size())), Log::MEM_ACCESS);
-						if (last_data.substr(std::min(last_data.size() - 7, last_data.size())) == "\r\n0\r\n\r\n") {
-							c_event->write_info = 3;																		//	Send a flag to the client that no more data is coming
-							Event::remove(event->fd); return (1);															//	Remove the event
+						if (last_data.substr(std::min(last_data.size() - 7, last_data.size())) == "\r\n0\r\n\r\n") {			//	If last 7 bytes are the end of the chunks
+							c_event->write_info = 3;																			//	Set a flag (no more data)
+							Event::remove(event->fd); return (1);																//	Remove the event
 						}
 					}
 
-					if (static_cast<size_t>(bytes_read) < CHUNK_SIZE && (event->read_info == 1 || event->header == "")) {						//	No more data
-						//if ( event->header == "") c_event->response_size = event->read_size;
-						//Log::log(std::string(event->read_buffer.begin(), event->read_buffer.end()), Log::LOCAL_ACCESS);
-						c_event->write_info = 3;																		//	Send a flag to the client that no more data is coming
-						Event::remove(event->fd); return (1);															//	Remove the event
+				//	All data has been read (unkown content length)
+					if (static_cast<size_t>(bytes_read) < CHUNK_SIZE && (event->read_info == 1 || event->header == "")) {
+						c_event->header_map["Connection"] = "close";															//	Set 'Connection' to close
+						c_event->write_info = 3;																				//	Set a flag (no more data)
+						Event::remove(event->fd); return (1);																	//	Remove the event
 					}
 
 					if (event->header != "" || event->read_info > 0) event->read_buffer.clear();
 
-				} else if (bytes_read == 0 && event->read_info == 1) {													//	No data
-					Event::get(event->client->fd)->write_info = 3;														//	Send a flag to the client that no more data is coming
-					Event::remove(event->fd); return (1);																//	Remove the event
-				} else if (bytes_read == -1) {																			//	Error reading
-					Event::get(event->client->fd)->write_info = 3;														//	Send a flag to the client that no more data is coming
-					Event::remove(event->fd); return (1);																//	Remove the event
+			//	No data
+				} else if (bytes_read == 0 && event->read_info == 1) {
+					EventInfo * c_event = Event::get(event->client->fd);														//	Get the client's event
+					if (c_event) {
+						c_event->header_map["Connection"] = "close";															//	Set 'Connection' to close
+						c_event->write_info = 3;																				//	Set a flag (no more data)
+					}
+					Event::remove(event->fd); return (1);																		//	Remove the event
+
+			//	Error reading
+				} else if (bytes_read == -1) {
+					EventInfo * c_event = Event::get(event->client->fd);														//	Get the client's event
+					if (c_event) {
+						c_event->header_map["Connection"] = "close";															//	Set 'Connection' to close
+						c_event->write_info = 3;																				//	Set a flag (no more data)
+					}
+					Event::remove(event->fd); return (1);																		//	Remove the event
 				}
 
 				return (0);
@@ -330,26 +364,34 @@
 			void Communication::write_cgi(EventInfo * event) {
 				if (!event) return;
 
-				if (!event->write_buffer.empty()) {																										//	There are data in the 'write_buffer'
+			//	There are data in the 'write_buffer'
+				if (!event->write_buffer.empty()) {
 
-					Event::update_last_activity(event->fd);																								//	Reset event timeout
+					Event::update_last_activity(event->fd);																		//	Reset event timeout
 
-					size_t buffer_size = event->write_buffer.size();																					//	Set the size of the chunk
+					size_t buffer_size = event->write_buffer.size();
 					size_t chunk = CHUNK_SIZE;
-					if (buffer_size > 0) chunk = std::min(buffer_size, static_cast<size_t>(CHUNK_SIZE));
+					if (buffer_size > 0) chunk = std::min(buffer_size, static_cast<size_t>(CHUNK_SIZE));						//	Set the size of the chunk
 					
-					ssize_t bytes_written = write(event->fd, event->write_buffer.data(), chunk);														//	Send the data
+					ssize_t bytes_written = write(event->fd, event->write_buffer.data(), chunk);								//	Send the data
 
-					if (bytes_written > 0) {																											//	Some data is sent
-						event->write_buffer.erase(event->write_buffer.begin(), event->write_buffer.begin() + bytes_written);							//	Remove the data sent from 'write_buffer'
+				//	Sent some data
+					if (bytes_written > 0) {
+						event->write_buffer.erase(event->write_buffer.begin(), event->write_buffer.begin() + bytes_written);	//	Remove the data sent from 'write_buffer'
 
-						event->write_size += bytes_written;																								//	Increase 'write_size'
+						event->write_size += bytes_written;																		//	Increase 'write_size'
 
-					} else { Event::remove(event->fd); return; }																						//	Error writing, remove the event
+				//	No writing if 'write_buffer' is empty, so this must be an error
+					} else if (bytes_written == 0) { Event::remove(event->fd); return;											//	Remove the event
+
+				//	Error writing
+					} else if (bytes_written == -1) { Event::remove(event->fd); return; }										//	Remove the event
 				}
 
-				if ((event->write_info == 0 && event->write_size >= event->write_maxsize) || (event->write_info == 3 && event->write_buffer.empty())) {	//	All data has been sent
-					Event::remove(event->fd);																											//	Remove the event
+				//	All data has been sent
+				if ((event->write_info == 0 && event->write_size >= event->write_maxsize)
+					|| (event->write_info == 3 && event->write_buffer.empty())) {
+					Event::remove(event->fd);																					//	Remove the event
 				}
 			}
 

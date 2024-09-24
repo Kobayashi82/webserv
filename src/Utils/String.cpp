@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:36:49 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/22 23:09:14 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/24 21:44:19 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -116,14 +116,14 @@
 
 #pragma region Format Size
 
-	std::string Utils::formatSize(size_t bytes, bool just_suffix) {
+	std::string Utils::formatSize(size_t bytes, bool just_suffix, int decimals) {
 		const char * suffixes[] = {"KB", "MB", "GB", "TB"};;
 		size_t suffix = 0; double size = static_cast<double>(bytes) / 1024.0;
 
 		while (size >= 1024 && suffix < 3) { size /= 1024; ++suffix; }
 		if (just_suffix)		return (suffixes[suffix]);
 		
-		std::ostringstream oss; oss << std::fixed << std::setprecision(2) << size;
+		std::ostringstream oss; oss << std::fixed << std::setprecision(decimals) << size;
 		return (oss.str() + " " + suffixes[suffix]);
 	}
 

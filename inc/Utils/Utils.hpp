@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:37:20 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/22 23:09:40 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/24 21:47:52 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,7 @@ class Utils {
 		static long			sstol(const std::string & str);												//	Convert a string passed by reference to a long number
 		static std::string	ltos(long number);															//	Convert a long number to a string
 		static std::string	dtos(double number);														//	Convert a double number to a string
-		static std::string	formatSize(size_t bytes, bool just_suffix = false);							//	Format a size as a string (byte, KB, MB, GB, TB)
+		static std::string	formatSize(size_t bytes, bool just_suffix = false, int decimals = 2);		//	Format a size as a string (byte, KB, MB, GB, TB)
 		static void			formatSize(size_t bytes, std::string & data1, std::string & data2);			//	Format a size as a string (byte, KB, MB, GB, TB) and set it to data1 and data2
 		static double		formatSizeDbl(size_t bytes);												//	Format a size as a double (byte, KB, MB, GB, TB)
 		static int			str_nocolor_length(const std::string & str);								//	Get the length of a string without color characters

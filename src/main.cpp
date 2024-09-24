@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 14:30:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/24 19:36:59 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/24 23:34:38 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,6 +28,8 @@
 
 //	TODO	CGI redirect error to null
 //	TODO	Check events timeout from another thread (non-blocking cant be done with cgi)
+//	TODO	Client read chunks and no content-length
+//	TODO	Test CGI writing
 
 //	*		CGI	(POST, PUT, PATCH, DELETE)
 //	*		CGI	(php, py)
