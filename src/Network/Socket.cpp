@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/18 10:59:39 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/24 19:07:00 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/25 13:31:18 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -87,7 +87,7 @@
 					//	Create socket
 					int fd = socket(AF_INET, SOCK_STREAM, 0);
 					if (fd == -1) { error_msg(addr_it->first, addr_it->second, VServ, SK_CREATE); continue; }
-					Utils::NonBlocking_FD(fd);
+					//Utils::NonBlocking_FD(fd);
 
 					//	Configure socket
 					int options = 1;
@@ -199,7 +199,7 @@
 			sockaddr_in Addr; socklen_t AddrLen = sizeof(Addr);
 			int fd = ::accept(event->fd, (sockaddr *)&Addr, &AddrLen);
 			if (fd == -1) { error_msg(event->socket->ip, event->socket->port, event->socket->VServ, SK_ACCEPT); return; }
-			Utils::NonBlocking_FD(fd);
+			//Utils::NonBlocking_FD(fd);
 
 			std::string	ip		= inet_ntoa(Addr.sin_addr);
 			int			port	= ntohs(Addr.sin_port);

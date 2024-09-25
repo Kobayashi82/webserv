@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 14:30:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/25 00:13:24 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/25 19:52:01 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,17 +31,12 @@
 	//			Buffer con los últimos 100 logs y que se impriman cada x tiempo o cuando se llenen... probaré así.
 	//			En el main the logs mantener un timer o algo. Puede ser de 200ms o algo asi
 
-	//	TODO	CGI redirect error to null
 	//	TODO	Check events timeout from another thread (non-blocking cant be done with cgi)
-	//	TODO	Client read chunks and no content-length
-	//	TODO	Test CGI writing
 	//	TODO	Better error
 	//	TODO	Better directory
 	//	TODO	General errors overhaul
 	//	TODO	Log to file better line
-	//	TODO	Internal... is necessary?
-	//	TODO	CPU usage not real... I think
-	//	TODO	POST, PUT, PATCH, DELETE without CGI
+
 	//	TODO	Intermediary
 	//	TODO	Documentation
 

@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/03 14:10:10 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/18 19:40:53 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/25 13:31:13 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,7 +51,7 @@
 
 		if (wall_time == 0) return (_CPUinStr);
 
-		oss << std::fixed << std::setprecision(2) << (cpu_time / wall_time) * 100 << " %";
+		oss << std::fixed << std::setprecision(2) << std::max(static_cast<double>(std::min((cpu_time / wall_time) * 100, static_cast<double>(100))), static_cast<double>(0)) << " %";
 		_CPUinStr = oss.str();
 		return (_CPUinStr);
 	}

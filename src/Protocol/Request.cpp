@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/21 11:52:00 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/25 00:15:42 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/25 19:51:52 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,9 @@
 	//	TODO	data of vserver/location in event
 	//	TODO	Index usa index.html por defecto
 	//	TODO	Update resource path with alias or any modified path before cgi
+	//	TODO	POST, PUT, PATCH, DELETE without CGI (404 Not Found)
+	//	TODO	Internal... is necessary?
+	//	TODO	No olvidar establecer no_cache aqui
 
 	void Protocol::parse_request(EventInfo * event) {
 		if (!event) return;
@@ -40,18 +43,17 @@
 
 		//	--------------------------------------------------------------------------------------
 
-		// event->response_map["method"] = "CGI";
-		event->response_map["cgi_path"] = "cgi-bin/php-cgi";
+		//event->response_map["cgi_path"] = "cgi-bin/php-cgi";
 		//event->response_map["cgi_path"] = "cgi-bin/python-cgi";
 		//event->response_map["cgi_path"] = "/bin/cat";
 		//event->response_map["path"] = "file2.html";
-		event->response_map["path"] = "index.php";
+		//event->response_map["path"] = "index.php";
 		//event->response_map["path"] = "index.py";
 		//event->response_map["path"] = "big.mp4";
 		// event->method = event->response_map["method"];
 
 
-		//event->response_map["path"] = "index.html";
+		event->response_map["path"] = "index.html";
 		if (event->header_map["Path"] == "/favicon.ico") event->response_map["path"] = "favicon.ico";
 		event->response_map["Content-Type"] = "text/html";
 		size_t pos = event->response_map["path"].find_last_of('.');
@@ -59,10 +61,11 @@
 
 		event->response_map["Protocol"] = "HTTP/1.1";
 		event->response_map["Connection"] = event->header_map["Connection"];
+		if (event->response_map["Connection"].empty()) event->response_map["Connection"] = "keep-alive";
 		event->response_map["code"] = "200";
 		event->response_map["code_description"] = Settings::error_codes[Utils::sstol(event->response_map["code"])];
-		event->response_map["method"] = "CGI";
-		//event->response_map["method"] = "File";
+		//event->response_map["method"] = "CGI";
+		event->response_map["method"] = "File";
 		if (event->header_map["Path"] == "/favicon.ico") event->response_map["method"] = "File";
 		event->method = event->response_map["method"];
 

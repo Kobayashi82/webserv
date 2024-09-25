@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/21 11:59:50 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/24 19:36:30 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/25 19:51:44 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,11 +43,13 @@
 				"</body>\n"
 				"</html>";
 
+			std::string content_length = "0";
+			if (event->header_map["Method"] != "HEAD") content_length = Utils::ltos(body.size());
 			std::string header =
 				event->response_map["Protocol"] + " " + code + " " + description + "\r\n"
 				"Content-Type: " + event->response_map["Content-Type"] + "\r\n"
 				"X-Content-Type-Options: nosniff\r\n"
-				"Content-Length: " + Utils::ltos(body.size()) + "\r\n"
+				"Content-Length: " + content_length + "\r\n"
 				"Connection: " + event->response_map["Connection"] + "\r\n\r\n";
 
 			event->write_info = 0;																	//	Set some flags
@@ -57,7 +59,7 @@
 			event->write_buffer.clear();															//	Clear write_buffer
 			event->write_buffer.insert(event->write_buffer.end(), header.begin(), header.end());	//	Copy the header to write_buffer
 
-			if (event->response_map["method"] != "HEAD") {
+			if (event->header_map["Method"] != "HEAD") {
 				event->response_map["body"] = body;
 				event->response_size = body.size();
 				event->write_maxsize = header.size() + body.size();										//	Set the total size of the data to be sent
@@ -77,8 +79,8 @@
 			std::string header =
 				event->response_map["Protocol"] + " " + event->response_map["code"] + " " + event->response_map["code_description"] + "\r\n"
 				"Location: " + event->response_map["path"] + "\r\n"
-				"X-Content-Type-Options: nosniff\r\n"
-				"Content-Length: 0\r\n"
+				"X-Content-Type-Options: nosniff" + "\r\n"
+				"Content-Length: 0" + "\r\n"
 				"Connection: " + event->response_map["Connection"] + "\r\n\r\n";
 
 			event->response_map["header"] = header;
@@ -143,11 +145,13 @@
 
 			body += "</ul>\n</body>\n</html>\n";
 
+			std::string content_length = "0";
+			if (event->header_map["Method"] != "HEAD") content_length = Utils::ltos(body.size());
 			std::string header =
 				event->response_map["Protocol"] + " " + event->response_map["code"] + " " + event->response_map["code_description"] + "\r\n"
 				"Content-Type: " + event->response_map["Content-Type"] + "\r\n"
-				"X-Content-Type-Options: nosniff\r\n"
-				"Content-Length: " + Utils::ltos(body.size()) + "\r\n"
+				"X-Content-Type-Options: nosniff" + "\r\n"
+				"Content-Length: " + content_length + "\r\n"
 				"Connection: " + event->response_map["Connection"] + "\r\n\r\n";
 
 			event->response_map["header"] = header;
@@ -158,7 +162,7 @@
 			event->write_buffer.clear();															//	Clear write_buffer
 			event->write_buffer.insert(event->write_buffer.end(), header.begin(), header.end());	//	Copy the header to write_buffer
 	
-			if (event->response_map["method"] != "HEAD") {
+			if (event->header_map["Method"] != "HEAD") {
 				event->response_size = body.size();
 				event->write_maxsize = header.size() + body.size();											//	Set the total size of the data to be sent
 				event->write_buffer.insert(event->write_buffer.end(), body.begin(), body.end());		//	Copy the body to write_buffer
@@ -178,12 +182,44 @@
 				if (event->header_map["Cache-Control"].empty()) {																	//	If cache is allowed
 					CacheInfo * fcache = Communication::cache.get(event->response_map["path"]);										//	Get the file from cache
 					if (fcache) {																									//	If the file exist in cache
-						std::string header =
-							event->response_map["Protocol"] + " " + event->response_map["code"] + " " + event->response_map["code_description"] + "\r\n"
-							"Content-Type: " + event->response_map["Content-Type"] + "\r\n"
-							"X-Content-Type-Options: nosniff\r\n"
-							"Content-Length: " + Utils::ltos(fcache->content.size()) + "\r\n"
-							"Connection: " + event->response_map["Connection"] + "\r\n\r\n";
+
+						std::string header; std::string content_length = "0";
+						size_t filesize = fcache->content.size(), start = 0, end = filesize;
+
+						if (event->response_map["Range"].size() > 7) {																//	Send a fragment of the file
+							size_t temp = 0;
+							std::string value = event->response_map["Range"].substr(6);
+							if (value[0] == '-') {																					//	bytes=-1024		The client asks for the last 1024 bytes of the file
+								if (Utils::stol(value.substr(1), temp) || filesize > temp) { return (0); } // error
+								start = filesize - temp;
+							} else if (value[value.size() - 1] == '-') {															//	bytes=1024-		The client asks for all bytes starting from byte 1024 to the end of the file
+								if (Utils::stol(value.substr(0, value.size() - 1), temp) || filesize > temp) { return (0); } // error
+								start = temp;
+							} else {																								//	bytes=0-1023	The client asks for bytes from 0 to 1023 (inclusive)
+								size_t pos = value.find_first_of('-');
+								if (pos == std::string::npos) { return (0); } // error
+								if (Utils::stol(value.substr(0, pos), temp) || filesize > temp) { return (0); } // error
+								start = temp;
+								if (Utils::stol(value.substr(pos + 1), temp) || filesize > temp) { return (0); } // error
+								end = temp;
+							}
+							if (event->header_map["Method"] != "HEAD") content_length = Utils::ltos(end - start);
+							header =
+								event->response_map["Protocol"] + " " + event->response_map["code"] + " " + event->response_map["code_description"] + "\r\n"
+								"Content-Type: " + event->response_map["Content-Type"] + "\r\n"
+								"X-Content-Type-Options: nosniff" + "\r\n"
+								"Content-Range: bytes " + Utils::ltos(start) + "-" + Utils::ltos(end) + "/" + Utils::ltos(filesize) + "\r\n"
+								"Content-Length: " + content_length + "\r\n"
+								"Connection: " + event->response_map["Connection"] + "\r\n\r\n";
+						} else {
+							if (event->header_map["Method"] != "HEAD") content_length = Utils::ltos(filesize);
+							header =
+								event->response_map["Protocol"] + " " + event->response_map["code"] + " " + event->response_map["code_description"] + "\r\n"
+								"Content-Type: " + event->response_map["Content-Type"] + "\r\n"
+								"X-Content-Type-Options: nosniff" + "\r\n"
+								"Content-Length: " + content_length + "\r\n"
+								"Connection: " + event->response_map["Connection"] + "\r\n\r\n";
+						}
 
 						event->write_info = 0;																						//	Set some flags
 						event->write_size = 0;																						//	Set some flags
@@ -191,9 +227,9 @@
 						event->write_buffer.clear();																				//	Clear write_buffer
 						event->write_buffer.insert(event->write_buffer.end(), header.begin(), header.end());						//	Copy the header to write_buffer
 
-						if (event->response_map["method"] != "HEAD") {
-							event->response_size = fcache->content.size();
-							event->write_maxsize = header.size() + fcache->content.size();											//	Set the total size of the data to be sent
+						if (event->header_map["Method"] != "HEAD") {
+							event->response_size = start - end;
+							event->write_maxsize = header.size() + (start - end);													//	Set the total size of the data to be sent
 							event->write_buffer.insert(event->write_buffer.end(), fcache->content.begin(), fcache->content.end());	//	Copy the body to write_buffer
 						}
 
@@ -224,37 +260,75 @@
 				size_t filesize = Utils::filesize(fd);																	//	Get the file size
 				if (filesize == std::string::npos) { close(fd); event->client->remove(); return; }
 
+				std::string header; std::string content_length = "0";
+				size_t start = 0, end = filesize;
 
-				if (event->response_map["method"] == "HEAD") {
-					close(fd);
-					std::string header =
-						event->response_map["Protocol"] + " " + event->response_map["code"] + " " + event->response_map["code_description"] + "\r\n"
+				if (event->response_map["Range"].size() > 7) {															//	Send a fragment of the file
+					size_t temp = 0;
+					std::string value = event->response_map["Range"].substr(6);
+					if (value[0] == '-') {																				//	bytes=-1024		The client asks for the last 1024 bytes of the file
+						if (Utils::stol(value.substr(1), temp) || filesize > temp) { return; } // error
+						start = filesize - temp;
+					} else if (value[value.size() - 1] == '-') {														//	bytes=1024-		The client asks for all bytes starting from byte 1024 to the end of the file
+						if (Utils::stol(value.substr(0, value.size() - 1), temp) || filesize > temp) { return; } // error
+						start = temp;
+					} else {																							//	bytes=0-1023	The client asks for bytes from 0 to 1023 (inclusive)
+						size_t pos = value.find_first_of('-');
+						if (pos == std::string::npos) { return; } // error
+						if (Utils::stol(value.substr(0, pos), temp) || filesize > temp) { return; } // error
+						start = temp;
+						if (Utils::stol(value.substr(pos + 1), temp) || filesize > temp) { return; } // error
+						end = temp;
+					}
+					if (event->header_map["Method"] != "HEAD") content_length = Utils::ltos(end - start);
+					header =
+						event->response_map["Protocol"] + " " + "206" + " " + "Partial Content" + "\r\n"
+						"Accept-Ranges: bytes" + "\r\n"
 						"Content-Type: " + event->response_map["Content-Type"] + "\r\n"
-						"X-Content-Type-Options: nosniff\r\n"
-						"Content-Length: " + Utils::ltos(filesize) + "\r\n"
+						"Cache-Control: public, max-age=3600" + "\r\n"
+						"X-Content-Type-Options: nosniff" + "\r\n"
+						"Content-Range: bytes " + Utils::ltos(start) + "-" + Utils::ltos(end) + "/" + Utils::ltos(filesize) + "\r\n"
+						"Content-Length: " + content_length + "\r\n"
 						"Connection: " + event->response_map["Connection"] + "\r\n\r\n";
+				} else {
+					if (event->header_map["Method"] != "HEAD") content_length = Utils::ltos(filesize);
+					header =
+						event->response_map["Protocol"] + " " + event->response_map["code"] + " " + event->response_map["code_description"] + "\r\n"
+						"Accept-Ranges: bytes" + "\r\n"
+						"Content-Type: " + event->response_map["Content-Type"] + "\r\n"
+						"X-Content-Type-Options: nosniff" + "\r\n"
+						"Content-Length: " + content_length + "\r\n"
+						"Connection: " + event->response_map["Connection"] + "\r\n\r\n";
+				}
+
+				if (event->header_map["Method"] == "HEAD") {
+					close(fd);
 
 					event->write_info = 0;																				//	Set some flags
 					event->write_size = 0;																				//	Set some flags
-					event->write_maxsize = 0;																			//	Set some flags
+					event->write_maxsize = header.size();																//	Set some flags
 					event->write_buffer.clear();																		//	Clear write_buffer
 					event->write_buffer.insert(event->write_buffer.end(), header.begin(), header.end());				//	Copy the header to write_buffer
 
-					if (Epoll::set(event->fd, true, true) == -1) event->client->remove();								//	Set EPOLL to monitor write events
+					if (Epoll::set(event->fd, !(event->header_map["Write_Only"] == "true"), true) == -1)				//	Set EPOLL to monitor write events
+						event->client->remove();
+
 					return;
 				}
+
+				if (start != 0 && lseek(fd, start, SEEK_SET) == -1) { close(fd); return; }								//	Move the pointer in the file to the start position
 
 				EventInfo event_data(fd, DATA, NULL, event->client);													//	Create the event for the DATA
 
 				event_data.read_path = path;																			//	Set the name of the file
-				event_data.read_maxsize = filesize;																		//	Set the size of the file
+				event_data.read_maxsize = end - start;																	//	Set the size of the file
 				event_data.no_cache = !event->header_map["Cache-Control"].empty();										//	Set if the file must be added to cache
 
 				if (pipe(event_data.pipe) == -1) { close(event_data.fd); return; event->client->remove(); }				//	Create the pipe for DATA (to be used with splice)
 				Utils::NonBlocking_FD(event_data.pipe[0]);																//	Set the read end of the pipe as non-blocking
 				Utils::NonBlocking_FD(event_data.pipe[1]);																//	Set the write end of the pipe as non-blocking
 
-				size_t chunk = Communication::CHUNK_SIZE;																
+				size_t chunk = Communication::CHUNK_SIZE;
 				if (event_data.read_maxsize > 0) chunk = std::min(event_data.read_maxsize, Communication::CHUNK_SIZE);	//	Set the size of the chunk
 				if (splice(event_data.fd, NULL, event_data.pipe[1], NULL, chunk, SPLICE_F_MOVE) == -1) {				//	Send the first chunk of data from the file to the pipe
 					close(event_data.fd); close(event_data.pipe[0]); close(event_data.pipe[1]);							//	Splice failed, close FD's and return
@@ -263,13 +337,6 @@
 				std::swap(event_data.fd, event_data.pipe[0]);															//	Swap the read end of the pipe with the fd (this is to be consistent with the FD that EPOLL is monitoring)
 
 				Event::events[event_data.fd] = event_data;																//	Add the DATA event to the event's list
-
-				std::string header =
-					event->response_map["Protocol"] + " " + event->response_map["code"] + " " + event->response_map["code_description"] + "\r\n"
-					"Content-Type: " + event->response_map["Content-Type"] + "\r\n"
-					"X-Content-Type-Options: nosniff\r\n"
-					"Content-Length: " + Utils::ltos(event_data.read_maxsize) + "\r\n"
-					"Connection: " + event->response_map["Connection"] + "\r\n\r\n";
 
 				event->write_info = 0;																					//	Set some flags
 				event->write_size = 0;																					//	Set some flags
@@ -394,8 +461,8 @@
 					Utils::NonBlocking_FD(write_pipe[0]);													//	Set the read end of the pipe as non-blocking
 					Utils::NonBlocking_FD(write_pipe[1]);													//	Set the write end of the pipe as non-blocking
 
-					EventInfo event_write_cgi(write_pipe[1], CGI, NULL, event->client);					//	Create the event for the CGI
-					//write_fd = write_pipe[0];
+					EventInfo event_write_cgi(write_pipe[1], CGI, NULL, event->client);						//	Create the event for the CGI
+					write_fd = write_pipe[0];
 					event_write_cgi.pipe[0] = write_pipe[0];
 					event_write_cgi.pipe[1] = -1;
 					event->cgi_fd = event_write_cgi.fd;
@@ -405,8 +472,8 @@
 			//	Create the event to read from the CGI
 				int read_pipe[2];
 				if (pipe(read_pipe) == -1) { event->client->remove(); return; }								//	Create the pipe for CGI (read from it)
-				//Utils::NonBlocking_FD(read_pipe[0]);														//	Set the read end of the pipe as non-blocking
-				//Utils::NonBlocking_FD(read_pipe[1]);														//	Set the write end of the pipe as non-blocking
+				Utils::NonBlocking_FD(read_pipe[0]);														//	Set the read end of the pipe as non-blocking
+				Utils::NonBlocking_FD(read_pipe[1]);														//	Set the write end of the pipe as non-blocking
 
 				EventInfo event_read_cgi(read_pipe[0], CGI, NULL, event->client);							//	Create the event for the CGI
 				event_read_cgi.pipe[0] = -1;
@@ -433,55 +500,49 @@
 					}
 				}
 
-				// std::string respuesta =
-				// 	"HTTP/1.1 200 OK\r\n";
-					// "Content-type: text/html; charset=UTF-8\r\n"
-					// "\r\n";
-
-				// std::string respuesta =
-				// 	"HTTP/1.1 200 OK\r\n"
-				// 	"Content-Type: text/html; charset=UTF-8\r\n"
-				// 	"Transfer-Encoding: chunked\r\n"
-				// 	"Connection: keep-alive\r\n"
-				// 	"\r\n"
-				// 	"D\r\nHello, World!\r\n6\r\nChunks\r\n0\r\n\r\n";
-
-				//write(event_read_cgi.pipe[1], respuesta.c_str(), respuesta.size());
-
-				// return;
-
 				//Fork the process
 				int pid = fork();
 				if (pid == -1) {
 					event->client->remove(); return;
 				} else if (pid == 0) {
-					Epoll::close();
+					{
+						Epoll::close();
 
-					std::vector<char *> env_array;
-					std::vector<std::string> cgi_vars;
-					variables_cgi(event, cgi_vars);
+						std::vector<char *> env_array;
+						std::vector<std::string> cgi_vars;
+						variables_cgi(event, cgi_vars);
 
-					char * args[3];
-					args[0] = const_cast<char *>(event->response_map["cgi_path"].c_str());
-					args[1] = const_cast<char *>(event->response_map["path"].c_str());
-					args[2] = NULL;
-					
-					for (size_t i = 0; i < cgi_vars.size(); ++i)
-						env_array.push_back(const_cast<char*>(cgi_vars[i].c_str()));
-					env_array.push_back(NULL);
+						char * args[3];
+						if (event->response_map["self-cgi"] == "true") {
+							args[0] = const_cast<char *>(event->response_map["path"].c_str());
+							args[1] = NULL;
+							args[2] = NULL;
+						} else {
+							args[0] = const_cast<char *>(event->response_map["cgi_path"].c_str());
+							args[1] = const_cast<char *>(event->response_map["path"].c_str());
+							args[2] = NULL;
+						}
 
-					if (write_fd != -1) dup2(write_fd, STDIN_FILENO);
-					dup2(event_read_cgi.pipe[1], STDOUT_FILENO);
+						for (size_t i = 0; i < cgi_vars.size(); ++i)
+							env_array.push_back(const_cast<char*>(cgi_vars[i].c_str()));
+						env_array.push_back(NULL);
 
-					for (std::map <int, EventInfo>::iterator it = Event::events.begin(); it != Event::events.end(); ++it) {
-						if (it->second.fd) close(it->second.fd);
-						if (it->second.pipe[0]) close(it->second.pipe[0]);
-						if (it->second.pipe[1]) close(it->second.pipe[1]);
+						if (write_fd != -1) dup2(write_fd, STDIN_FILENO);
+						dup2(event_read_cgi.pipe[1], STDOUT_FILENO);
+
+						int dev_null = open("/dev/null", O_WRONLY);
+						if (dev_null != -1) { dup2(dev_null, STDERR_FILENO); close(dev_null); }
+
+						for (std::map <int, EventInfo>::iterator it = Event::events.begin(); it != Event::events.end(); ++it) {
+							if (it->second.fd) close(it->second.fd);
+							if (it->second.pipe[0]) close(it->second.pipe[0]);
+							if (it->second.pipe[1]) close(it->second.pipe[1]);
+						}
+
+						execve(args[0], args, &env_array[0]);
 					}
-
-					if (execve(args[0], args, &env_array[0]) == -1) exit(1);
+					exit(1);
 				}
-				//usleep(30000);
 			}
 
 		#pragma endregion

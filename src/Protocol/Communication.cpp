@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/27 09:32:08 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/25 00:15:45 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/25 19:54:38 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,7 +54,6 @@
 					event->client->update_last_activity();																						//	Reset client timeout
 
 					event->read_buffer.insert(event->read_buffer.end(), buffer, buffer + bytes_read);											//	Store the data read into 'read_buffer'
-
 					Thread::inc_size_t(Display::mutex, read_bytes, bytes_read);																	//	Increase total bytes read
 
 				//	Needs to get the header
@@ -150,7 +149,7 @@
 					std::string time = Utils::ltos(Settings::timer.elapsed_milliseconds(event->response_time));													//	Get the time to process the request in milliseconds
 					gettimeofday(&event->response_time, NULL);																									//	Reset response time
 					
-					Log::log(	"TRF|GET|" + event->header_map["Path"] + "|" + event->response_map["code"] + "|" + Utils::ltos(event->response_size) +			//	Log the client request
+					Log::log(	"TRF|" + event->header_map["Method"] + "|" + event->header_map["Path"] + "|" + event->response_map["code"] + "|" + Utils::ltos(event->response_size) +			//	Log the client request
 								"|" + time + "|" + event->client->ip, Log::BOTH_ACCESS, event->socket->VServ, event->vserver_data);
 
 				//	Check close connection
@@ -317,6 +316,7 @@
 
 				//	All data has been read (chunked)
 					if (event->read_info == 2) {
+						Log::log("here", Log::MEM_ACCESS);
 						static std::string last_data;
 						if (last_data.size() > 7) last_data = last_data.substr(last_data.size() - 7);
 						last_data += std::string(event->read_buffer.begin(), event->read_buffer.end());							//	Keep the last 7 bytes of data
