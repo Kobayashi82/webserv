@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/21 11:52:00 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/26 22:59:58 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/27 00:41:19 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,8 +23,8 @@
 		//	TODO	data of vserver/location in event
 		//	TODO	Index usa index.html por defecto
 		//	TODO	Update resource path with alias or any modified path before cgi
-		//	TODO	Internal... is necessary?
 
+		//	?		Internal... is necessary?
 		//	?		Server:			nginx/1.18.0 (Ubuntu)
 		//	?		Date:			Thu, 26 Sep 2024 14:51:34 GMT
 		//	?		Last-Modified:	Fri, 26 Jul 2024 11:13:53 GMT	
@@ -65,7 +65,9 @@
 		if (event->header_map["Path"] == "/favicon.ico") {
 			event->response_map["Path"] = "favicon.ico";
 			event->response_map["Method"] = "File";
-		} else event->response_map["Method"] = "File";
+		} else if (event->response_map["Method"] != "Error") {
+			event->response_map["Method"] = "File";
+		}
 
 		//	If Method is Directory
 			if (event->response_map["Method"] == "Directory") {

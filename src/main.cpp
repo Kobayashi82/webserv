@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 14:30:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/26 22:00:03 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/27 00:40:50 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,9 +32,7 @@
 	//			En el main the logs mantener un timer o algo. Puede ser de 200ms o algo asi
 
 	//	TODO	Check events timeout from another thread (non-blocking cant be done with cgi)
-	//	TODO	Better error
 	//	TODO	General errors overhaul
-	//	TODO	Log to file better line
 
 	//	TODO	Intermediary
 	//	TODO	Documentation

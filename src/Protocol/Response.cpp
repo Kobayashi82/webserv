@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/21 11:59:50 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/26 22:53:25 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/27 00:14:46 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,51 +21,110 @@
 
 	#pragma region Error
 
-		void Protocol::response_error(EventInfo * event) {
-			if (!event) return;
+		#pragma region Error Body
 
-			std::string code = event->response_map["Code"];
-			std::string description = event->response_map["Code-Description"];
-
-			std::string body =
-				"<html>\n"
-				"<head>\n"
-				"    <title>" + code + " (" + description + ")</title>\n"
-				"    <style>\n"
-				"        body { text-align: center; font-family: Arial, sans-serif; }\n"
-				"        h1 { font-size: 100px; margin: 20px; }\n"
-				"        h2 { font-size: 50px; margin: 10px; }\n"
-				"    </style>\n"
-				"</head>\n"
-				"<body>\n"
-				"    <h1>" + code + "</h1>\n"
-				"    <h2>" + description + "</h2>\n"
-				"</body>\n"
-				"</html>";
-
-			std::string header =
-				event->response_map["Protocol"] + " " + code + " " + description + "\r\n"
-				"Content-Type: " + Settings::mime_types["html"] + "\r\n"
-				"X-Content-Type-Options: nosniff\r\n"
-				"Content-Length: " + Utils::ltos(body.size()) + "\r\n"
-				"Connection: " + event->response_map["Connection"] + "\r\n\r\n";
-
-			event->write_info = 0;																	//	Set some flags
-			event->write_size = 0;																	//	Set some flags
-			event->write_maxsize = 0;																//	Set some flags
-			event->response_map["Header"] = header;
-			event->write_buffer.clear();															//	Clear write_buffer
-			event->write_buffer.insert(event->write_buffer.end(), header.begin(), header.end());	//	Copy the header to write_buffer
-
-			if (event->header_map["Method"] != "HEAD") {
-				event->response_map["Body"] = body;
-				event->response_size = body.size();
-				event->write_maxsize = header.size() + body.size();										//	Set the total size of the data to be sent
-				event->write_buffer.insert(event->write_buffer.end(), body.begin(), body.end());		//	Copy the body to write_buffer
+			static void error_body(std::string & body, std::string & code, std::string & description) {
+				body +=
+					"			<!DOCTYPE html>\n"
+					"<html lang=\"es\">\n"
+					"<head>\n"
+					"    <meta charset=\"UTF-8\">\n"
+					"    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n"
+					"    <title>Error " + code + " - " + description + "</title>\n"
+					"    <style>\n"
+					"        body {\n"
+					"            margin: 0;\n"
+					"            font-family: 'Arial', sans-serif;\n"
+					"            background: linear-gradient(135deg, #f06, #ffcc33);\n"
+					"            display: flex;\n"
+					"            justify-content: center;\n"
+					"            align-items: center;\n"
+					"            height: 100vh;\n"
+					"            color: #fff;\n"
+					"        }\n"
+					"        .error-container {\n"
+					"            text-align: center;\n"
+					"            background-color: rgba(0, 0, 0, 0.6);\n"
+					"            padding: 40px;\n"
+					"            border-radius: 15px;\n"
+					"            box-shadow: 0 15px 25px rgba(0, 0, 0, 0.5);\n"
+					"        }\n"
+					"        .error-code {\n"
+					"            font-size: 6rem;\n"
+					"            font-weight: bold;\n"
+					"            margin: 0;\n"
+					"        }\n"
+					"        .error-message {\n"
+					"            font-size: 1.5rem;\n"
+					"            margin-top: 10px;\n"
+					"            color: #ddd;\n"
+					"        }\n"
+					"        .back-link {\n"
+					"            margin-top: 20px;\n"
+					"            display: inline-block;\n"
+					"            padding: 10px 20px;\n"
+					"            background-color: #fff;\n"
+					"            color: #333;\n"
+					"            border-radius: 25px;\n"
+					"            text-decoration: none;\n"
+					"            font-weight: bold;\n"
+					"            transition: background-color 0.3s ease;\n"
+					"        }\n"
+					"        .back-link:hover {\n"
+					"            background-color: #f06;\n"
+					"            color: #fff;\n"
+					"        }\n"
+					"    </style>\n"
+					"</head>\n"
+					"<body>\n"
+					"    <div class=\"error-container\">\n"
+					"        <div class=\"error-code\">" + code + "</div>\n"
+					"        <div class=\"error-message\">" + description + "</div>\n"
+					"        <a href=\"/\" class=\"back-link\">Volver al inicio</a>\n"
+					"    </div>\n"
+					"</body>\n"
+					"</html>";
 			}
 
-			if (Epoll::set(event->fd, true, true) == -1) event->client->remove();					//	Set EPOLL to monitor write events
-		}
+		#pragma endregion
+
+		#pragma region Error
+
+			void Protocol::response_error(EventInfo * event) {
+				if (!event) return;
+
+				std::string code = event->response_map["Code"];
+				std::string description = event->response_map["Code-Description"];
+
+				std::string body;
+
+				error_body(body, code, description);
+
+				std::string header =
+					event->response_map["Protocol"] + " " + code + " " + description + "\r\n"
+					"Content-Type: " + Settings::mime_types["html"] + "\r\n"
+					"X-Content-Type-Options: nosniff\r\n"
+					"Content-Length: " + Utils::ltos(body.size()) + "\r\n"
+					"Connection: " + event->response_map["Connection"] + "\r\n\r\n";
+
+				event->write_info = 0;																	//	Set some flags
+				event->write_size = 0;																	//	Set some flags
+				event->write_maxsize = 0;																//	Set some flags
+				event->response_map["Header"] = header;
+				event->write_buffer.clear();															//	Clear write_buffer
+				event->write_buffer.insert(event->write_buffer.end(), header.begin(), header.end());	//	Copy the header to write_buffer
+
+				if (event->header_map["Method"] != "HEAD") {
+					event->response_map["Body"] = body;
+					event->response_size = body.size();
+					event->write_maxsize = header.size() + body.size();										//	Set the total size of the data to be sent
+					event->write_buffer.insert(event->write_buffer.end(), body.begin(), body.end());		//	Copy the body to write_buffer
+				}
+
+				if (Epoll::set(event->fd, true, true) == -1) event->client->remove();					//	Set EPOLL to monitor write events
+			}
+
+		#pragma endregion
 
 	#pragma endregion
 
@@ -97,7 +156,7 @@
 
 		#pragma region Add Style
 
-			void add_style(std::string & body, const std::string & dir_path, const std::string root) {
+			static void add_style(std::string & body, const std::string & dir_path, const std::string root) {
 				body +=
 					"<!DOCTYPE html>\n"
 					"<html lang=\"en\">\n"
@@ -167,7 +226,7 @@
 
 		#pragma region Add Directory
 
-			void add_dir(std::string & body, const std::string & dir_path) {
+			static void add_dir(std::string & body, const std::string & dir_path) {
 				body +=
 				"<tr>\n"
 				"    <td><strong><a class=\"directory\" href=" + Security::encode_url(dir_path) + ">" + dir_path + "</a></strong></td>\n"
@@ -180,7 +239,7 @@
 
 		#pragma region Add File
 
-			void add_file(std::string & body, const std::string & dir_path, const std::string & file) {
+			static void add_file(std::string & body, const std::string & dir_path, const std::string & file) {
 				size_t filesize = Utils::filesize(Settings::program_path + dir_path + file);
 				std::string mod_time = Utils::file_modification_time(Settings::program_path + dir_path + file);
 				body +=

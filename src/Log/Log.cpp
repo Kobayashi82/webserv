@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:32:38 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/26 16:26:31 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/27 00:40:30 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -239,7 +239,7 @@
 					else if (method == "DELETE") method_color = RED400;
 					else  method_color = RED800;
 
-					std::string msg1 = UN BLUE400 + ip + NC + std::string("                ").substr(ip.size()) + method_color + method + std::string("           ").substr(method.size()) + BR + re_path + NC;
+					std::string msg1 = UN BLUE400 + ip + NC + std::string("                ").substr(ip.size()) + method_color + method + std::string("            ").substr(method.size()) + BR + re_path + NC;
 
 					std::string s_bytes = Utils::formatSize(bytes);
 					std::string code_color;
@@ -247,13 +247,18 @@
 					if (code >= 300 && code < 400) code_color = ORANGE400;
 					if (code >= 400 && code < 600) code_color = RED400;
 
-					std::string msg2 = BLUE800 "Transfered:     " AMBER200 + s_bytes + std::string("          ").substr(s_bytes.size()) + C " in " SKY700 + time + " ms " C "with code " + code_color + Utils::ltos(code) + C " (" + code_color + Settings::error_codes[code] + C ")" NC;
+					std::string msg2 = BLUE800 "Transfered:     " AMBER200 + s_bytes + std::string("           ").substr(s_bytes.size()) + C " in " SKY700 + time + " ms " C "with code " + code_color + Utils::ltos(code) + C " (" + code_color + Settings::error_codes[code] + C ")" NC;
 
-					time = BLUE600 "[" LIME600 + Settings::timer.current_date() + " " EMERALD400 + Settings::timer.current_time() + BLUE600 "]  " NC;
+					std::string logtime = BLUE600 "[" LIME600 + Settings::timer.current_date() + " " EMERALD400 + Settings::timer.current_time() + BLUE600 "]  " NC;
 
-					if (isLocal) return (time + msg1 + "\t" + msg2);
+					if (isLocal) {
+						std::string msg3 = ip + std::string("                ").substr(ip.size()) + method_color + method + std::string("          ").substr(method.size());
+						std::string msg4 = scode + "    " + s_bytes + std::string("           ").substr(s_bytes.size()) + time + " ms" + std::string("         ").substr(time.size()) + re_path;
 
-					msg1 = time + msg1;
+						return (logtime + msg3 + msg4);
+					}
+
+					msg1 = logtime + msg1;
 					msg2 = "                       " + msg2;
 					
 					if (!Display::background && (Settings::check_only || !Display::isRawMode() || Display::ForceRawModeDisabled)) {
