@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/21 11:52:00 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/26 21:58:50 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/26 22:59:58 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,10 +60,12 @@
 
 		//	If (MIME != response type) { }
 
+		event->response_map["Content-Type"] = "text/plain";
+
 		if (event->header_map["Path"] == "/favicon.ico") {
 			event->response_map["Path"] = "favicon.ico";
 			event->response_map["Method"] = "File";
-		} else event->response_map["Method"] = "Directory";
+		} else event->response_map["Method"] = "File";
 
 		//	If Method is Directory
 			if (event->response_map["Method"] == "Directory") {
@@ -83,9 +85,10 @@
 				size_t pos2 = event->header_map["Cache-Control"].find("no-store");
 				event->no_cache = !(pos1 != std::string::npos || pos2 != std::string::npos);							//	BEWARE the ! - MUST BE REMOVED
 
-				//event->response_map["Path"] = "index.html";
+				event->response_map["Path"] = "index.html";
 				//event->response_map["Path"] = "foto.jpg";
-				//event->response_map["Path"] = "big.mp4";
+				//event->response_map["Path"] = "big2.mp4";
+				//event->response_map["Path"] = "big.mkv";
 
 				size_t pos = event->response_map["Path"].find_last_of('.');
 				if (pos != std::string::npos) event->response_map["Content-Type"] = Settings::mime_types[event->response_map["Path"].substr(pos + 1)];
