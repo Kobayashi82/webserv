@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/21 11:59:50 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/26 22:14:00 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/26 22:22:33 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -97,7 +97,7 @@
 
 		#pragma region Add Style
 
-			void add_style(std::string & body, const std::string & dir_path) {
+			void add_style(std::string & body, const std::string & dir_path, const std::string root) {
 				body +=
 					"<!DOCTYPE html>\n"
 					"<html lang=\"en\">\n"
@@ -155,7 +155,7 @@
 					"        </thead>\n"
 					"        <tbody>\n";
 
-				if (dir_path != "/") body +=
+				if (dir_path != "/" && dir_path != root) body +=
 					"            <tr>\n"
 					"                <td><strong><a class=\"directory\" href=\"../\">Parent Directory</a></strong></td>\n"
 					"                <td></td>\n"
@@ -195,72 +195,72 @@
 
 		#pragma region Directory
 
-		void Protocol::response_directory(EventInfo * event) {
-			std::vector<std::string> files, directories;
-			
-			std::string dir_path = event->response_map["Path"];
+			void Protocol::response_directory(EventInfo * event) {
+				std::vector<std::string> files, directories;
+				
+				std::string dir_path = event->response_map["Path"];
 
-			DIR *dir = opendir((Settings::program_path + dir_path).c_str());									//	Open the directory
-			if (!dir) {																							//	If error, return error... duh
-				event->response_map["Method"] ="Error";
-				event->response_map["Code"] = "404";
-				event->response_map["Code-Description"] = Settings::error_codes[Utils::sstol(event->response_map["Code"])];
-				response_error(event);
-				return;
+				DIR *dir = opendir((Settings::program_path + dir_path).c_str());									//	Open the directory
+				if (!dir) {																							//	If error, return error... duh
+					event->response_map["Method"] ="Error";
+					event->response_map["Code"] = "404";
+					event->response_map["Code-Description"] = Settings::error_codes[Utils::sstol(event->response_map["Code"])];
+					response_error(event);
+					return;
+				}
+
+				struct dirent *entry;
+				while ((entry = readdir(dir)) != NULL) {															//	Read the content of the directory
+					std::string name = entry->d_name;
+
+					if (name == "." || name == "..") continue;														//	ignore . and ..
+
+					std::string full_path = Settings::program_path + dir_path + "/" + name;
+					if (Utils::isDirectory(full_path))	directories.push_back(name + "/");								//	Add the directory to a list of directories
+					else							files.push_back(name);											//	Add the file to a list of files
+				}
+
+				closedir(dir);																						//	Close the directory
+
+				std::string body;																					//	Create the body of the response
+				add_style(body, dir_path, event->response_map["Root"]);												//	Add the column and style to the body
+
+				for (std::vector<std::string>::iterator it = directories.begin(); it != directories.end(); ++it)	//	Add directories to the body
+					add_dir(body, *it);
+
+				for (std::vector<std::string>::iterator it = files.begin(); it != files.end(); ++it)				//	Add files to the body
+					add_file(body, dir_path, *it);
+
+				body +=																								//	Finish the body of the response
+					"       </tbody>\n"
+					"    </table>\n"
+					"</body>\n"
+					"</html>";
+
+				std::string header =																				//	Create the header of the response
+					event->response_map["Protocol"] + " " + event->response_map["Code"] + " " + event->response_map["Code-Description"] + "\r\n"
+					"Content-Type: " + Settings::mime_types["html"] + "\r\n"
+					"X-Content-Type-Options: nosniff" + "\r\n"
+					"Content-Length: " + Utils::ltos(body.size()) + "\r\n"
+					"Connection: " + event->response_map["Connection"] + "\r\n\r\n";
+
+				event->response_map["Header"] = header;
+				event->response_map["Body"] = body;
+				event->write_info = 0;																				//	Set some flags
+				event->write_size = 0;																				//	Set some flags
+				event->write_maxsize = 0;																			//	Set some flags
+				event->write_buffer.clear();																		//	Clear write_buffer
+				event->write_buffer.insert(event->write_buffer.end(), header.begin(), header.end());				//	Copy the header to write_buffer
+		
+				if (event->header_map["Method"] != "HEAD") {														//	If method is not HEAD
+					event->response_size = body.size();																//	Set the size of the response
+					event->write_maxsize = header.size() + body.size();												//	Set the total size of the data to be sent
+					event->write_buffer.insert(event->write_buffer.end(), body.begin(), body.end());				//	Copy the body to write_buffer
+				}
+
+				if (Epoll::set(event->fd, true, true) == -1) event->client->remove();								//	Set EPOLL to monitor write events
+
 			}
-
-			struct dirent *entry;
-			while ((entry = readdir(dir)) != NULL) {															//	Read the content of the directory
-				std::string name = entry->d_name;
-
-				if (name == "." || name == "..") continue;														//	ignore . and ..
-
-				std::string full_path = Settings::program_path + dir_path + "/" + name;
-				if (Utils::isDirectory(full_path))	directories.push_back(name + "/");								//	Add the directory to a list of directories
-				else							files.push_back(name);											//	Add the file to a list of files
-			}
-
-			closedir(dir);																						//	Close the directory
-
-			std::string body;																					//	Create the body of the response
-			add_style(body, dir_path);																			//	Add the column and style to the body
-
-			for (std::vector<std::string>::iterator it = directories.begin(); it != directories.end(); ++it)	//	Add directories to the body
-				add_dir(body, *it);
-
-			for (std::vector<std::string>::iterator it = files.begin(); it != files.end(); ++it)				//	Add files to the body
-				add_file(body, dir_path, *it);
-
-			body +=																								//	Finish the body of the response
-				"       </tbody>\n"
-				"    </table>\n"
-				"</body>\n"
-				"</html>";
-
-			std::string header =																				//	Create the header of the response
-				event->response_map["Protocol"] + " " + event->response_map["Code"] + " " + event->response_map["Code-Description"] + "\r\n"
-				"Content-Type: " + Settings::mime_types["html"] + "\r\n"
-				"X-Content-Type-Options: nosniff" + "\r\n"
-				"Content-Length: " + Utils::ltos(body.size()) + "\r\n"
-				"Connection: " + event->response_map["Connection"] + "\r\n\r\n";
-
-			event->response_map["Header"] = header;
-			event->response_map["Body"] = body;
-			event->write_info = 0;																				//	Set some flags
-			event->write_size = 0;																				//	Set some flags
-			event->write_maxsize = 0;																			//	Set some flags
-			event->write_buffer.clear();																		//	Clear write_buffer
-			event->write_buffer.insert(event->write_buffer.end(), header.begin(), header.end());				//	Copy the header to write_buffer
-	
-			if (event->header_map["Method"] != "HEAD") {														//	If method is not HEAD
-				event->response_size = body.size();																//	Set the size of the response
-				event->write_maxsize = header.size() + body.size();												//	Set the total size of the data to be sent
-				event->write_buffer.insert(event->write_buffer.end(), body.begin(), body.end());				//	Copy the body to write_buffer
-			}
-
-			if (Epoll::set(event->fd, true, true) == -1) event->client->remove();								//	Set EPOLL to monitor write events
-
-		}
 
 		#pragma endregion
 
