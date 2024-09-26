@@ -6,11 +6,13 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 22:23:52 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/26 21:55:38 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/26 22:13:54 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Utils.hpp"
+
+#include <cstdio>																						//	For snprintf to get the modification time of a file
 
 #include <errno.h>																						//	For errno to check if a directory exists in 'createPath'
 #include <fcntl.h>																						//	For fcntl() to set an FD as non-blocking
@@ -135,6 +137,25 @@
 
 		if (fstat(fd, &path_stat) == -1) { return (std::string::npos); }
 		return (path_stat.st_size);
+	}
+
+#pragma endregion
+
+#pragma region Modification Time
+
+	std::string Utils::file_modification_time(const std::string path) {
+		struct stat fileInfo;
+
+		if (stat(path.c_str(), &fileInfo) != 0) return ("");
+
+		time_t modTime = fileInfo.st_mtime;
+		struct tm * timeInfo = localtime(&modTime);														//	Convert to local time
+
+				
+		char date[11];																			//	Format the date (dd/mm/yyyy)
+		snprintf(date, sizeof(date), "%02d/%02d/%04d", timeInfo->tm_mday, timeInfo->tm_mon + 1, timeInfo->tm_year + 1900);
+
+		return (date);
 	}
 
 #pragma endregion

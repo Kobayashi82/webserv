@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 14:30:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/25 19:52:01 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/26 22:00:03 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,7 +33,6 @@
 
 	//	TODO	Check events timeout from another thread (non-blocking cant be done with cgi)
 	//	TODO	Better error
-	//	TODO	Better directory
 	//	TODO	General errors overhaul
 	//	TODO	Log to file better line
 

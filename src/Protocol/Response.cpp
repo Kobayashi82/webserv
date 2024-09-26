@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/21 11:59:50 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/26 21:59:00 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/26 22:14:00 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -182,11 +182,12 @@
 
 			void add_file(std::string & body, const std::string & dir_path, const std::string & file) {
 				size_t filesize = Utils::filesize(Settings::program_path + dir_path + file);
+				std::string mod_time = Utils::file_modification_time(Settings::program_path + dir_path + file);
 				body +=
 				"<tr>\n"
 					"<td><a class=\"file\" href=" + Security::encode_url(file) + ">" + file + "</a></td>\n"
 					"<td class=\"size\">" + Utils::formatSize(filesize) + "</td>\n"
-					"<td class=\"date\">" + "2024-09-01" + "</td>\n"
+					"<td class=\"date\">" + mod_time + "</td>\n"
 				"</tr>\n";
 			}
 
