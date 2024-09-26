@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/27 09:32:08 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/25 19:54:38 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/26 17:30:31 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@
 #pragma region Variables
 
 	std::list<Client>	Communication::clients;															//	List of all Client objects
-	Cache				Communication::cache(600, 100, 10);												//	Used to store cached data, such as files or HTML responses.	(arguments: expiration in seconds, max entries, max content size in MB)
+	Cache				Communication::cache(600, 100, 5);												//	Used to store cached data, such as files or HTML responses.	(arguments: expiration in seconds, max entries, max content size in MB)
 
 	int					Communication::total_clients;													//	Total number of clients conected
 	size_t				Communication::read_bytes;														//	Total number of bytes downloaded by the server
@@ -81,18 +81,18 @@
 					}
 
 				//	Write to a CGI
-					if (event->method == "CGI") {
+					if (event->response_method == "CGI") {
 						EventInfo * cgi_event = Event::get(event->cgi_fd);																		//	Get the CGI's event
 						if (cgi_event)
 							cgi_event->write_buffer.insert(cgi_event->write_buffer.end(), buffer, buffer + bytes_read);							//	Copy the data to the 'write_buffer' of the CGI
 					}
 
 				//	Clear 'read_buffer' (Not needed if not a CGI)
-					if (!event->method.empty()) event->read_buffer.clear();
+					if (!event->response_method.empty()) event->read_buffer.clear();
 
 				//	No more data coming
 					if (static_cast<size_t>(bytes_peek) <= CHUNK_SIZE) {
-						if (event->method == "CGI") {
+						if (event->response_method == "CGI") {
 							EventInfo * cgi_event = Event::get(event->cgi_fd);																	//	Get the CGI's event
 							if (cgi_event) cgi_event->write_info = 3;																			//	Set a flag (no more data)
 						} return (1);
@@ -149,7 +149,7 @@
 					std::string time = Utils::ltos(Settings::timer.elapsed_milliseconds(event->response_time));													//	Get the time to process the request in milliseconds
 					gettimeofday(&event->response_time, NULL);																									//	Reset response time
 					
-					Log::log(	"TRF|" + event->header_map["Method"] + "|" + event->header_map["Path"] + "|" + event->response_map["code"] + "|" + Utils::ltos(event->response_size) +			//	Log the client request
+					Log::log(	"TRF|" + event->header_map["Method"] + "|" + event->header_map["Path"] + "|" + event->response_map["Code"] + "|" + Utils::ltos(event->response_size) +			//	Log the client request
 								"|" + time + "|" + event->client->ip, Log::BOTH_ACCESS, event->socket->VServ, event->vserver_data);
 
 				//	Check close connection
@@ -263,14 +263,6 @@
 					EventInfo * c_event = Event::get(event->client->fd);														//	Get the client's event
 					if (!c_event) { Event::remove(event->fd); return (1); }														//	Client's event is missing
 
-				//	If first data in the pipe
-					if (event->read_size == 0) {
-						std::string respuesta = "HTTP/1.1 200 OK\r\n";															//	Create header
-						event->read_buffer.insert(event->read_buffer.end(), respuesta.begin(), respuesta.end());				//	Add it to 'read_buffer'
-						c_event->write_buffer.insert(c_event->write_buffer.end(), respuesta.begin(), respuesta.end());			//	Add it to client's 'write_buffer'
-						event->read_size += respuesta.size();																	//	Increase 'read_size' with the size of the added header
-					}
-
 					event->read_buffer.insert(event->read_buffer.end(), buffer, buffer + bytes_read);							//	Store the data read into 'read_buffer'
 					event->read_size += bytes_read;																				//	Increase 'read_size'
 
@@ -301,8 +293,8 @@
 
 							c_event->write_info = event->read_info;																//	Set client's 'write_info'
 							c_event->write_maxsize = event->read_maxsize;														//	Set client's 'write_maxsize'
-
-						} else if (result == 2) { Event::remove(event->fd); return (1); }										//	There is a header, but something went wrong
+						} else if (result == 2) { Event::remove(event->fd); return (1);											//	There is a header, but something went wrong
+						} else if (result == 3) {  Event::remove(event->fd); return (1); }										//	There is a header, but the response is determined by the server, ignore the CGI
 					}
 
 				//	Send the data to client's 'write_buffer'
@@ -316,7 +308,6 @@
 
 				//	All data has been read (chunked)
 					if (event->read_info == 2) {
-						Log::log("here", Log::MEM_ACCESS);
 						static std::string last_data;
 						if (last_data.size() > 7) last_data = last_data.substr(last_data.size() - 7);
 						last_data += std::string(event->read_buffer.begin(), event->read_buffer.end());							//	Keep the last 7 bytes of data

@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/25 11:19:15 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/18 20:50:21 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/26 20:27:57 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,8 +45,11 @@
 
 				for (size_t i = 0; i < url.size(); ++i) {
 					char ch = url[i];
-					if (isalnum(ch) || ch == '-' || ch == '_' || ch == '.' || ch == '~') encode << ch;
-					else encode << '%' << std::setw(2) << int((unsigned char)ch);
+					if (isalnum(ch) || ch == '-' || ch == '_' || ch == '.' || ch == '~' || ch == '/' || ch == ':' || ch == '?' || ch == '&' || ch == '=' || ch == '#' || ch == '%' || ch == '+') {
+						encode << ch;
+					} else {
+						encode << '%' << std::setfill('0') << std::setw(2) << int((unsigned char)ch);
+					}
 				}
 
 				return (encode.str());

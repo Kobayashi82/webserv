@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 22:23:52 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/25 13:32:21 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/26 21:55:38 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,7 +77,9 @@
 #pragma region IsDirectory
 
 	bool Utils::isDirectory(const std::string & path) {
-		struct stat path_stat; stat(path.c_str(), &path_stat);
+		struct stat path_stat;
+
+		if (stat(path.c_str(), &path_stat) != 0) return (false);
 		return (S_ISDIR(path_stat.st_mode));
 	}
 

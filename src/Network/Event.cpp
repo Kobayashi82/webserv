@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/18 11:21:01 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/23 23:19:00 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/26 13:40:35 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,12 +61,11 @@
 				write_path = rhs.write_path; write_size = rhs.write_size; write_maxsize = rhs.write_maxsize; write_info = rhs.write_info; cgi_fd = rhs.cgi_fd;
 
 				no_cache = rhs.no_cache; close = rhs.close; vserver_data = rhs.vserver_data;
-				request = rhs.request;
 
 				read_buffer = rhs.read_buffer; write_buffer = rhs.write_buffer;
 
-				header = rhs.header; header_map = rhs.header_map; method = rhs.method;
-				response_map = rhs.response_map; response_size = rhs.response_size;
+				header = rhs.header; header_map = rhs.header_map;
+				response_map = rhs.response_map; response_size = rhs.response_size; response_method = rhs.response_method;
 				
 				body_size = rhs.body_size; body_maxsize = rhs.body_maxsize;
 

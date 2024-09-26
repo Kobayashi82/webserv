@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/24 19:40:07 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/19 20:44:36 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/26 14:05:16 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,9 +46,9 @@
 
 	#pragma region Constructors
 
-		Cache::Cache() : _expire_time(600), _max_size(100), _max_content_size(1 * 1024 * 1024) {}
-		Cache::Cache(int expire_time, size_t max_size, size_t max_content_size) : _expire_time(expire_time), _max_size(max_size), _max_content_size(max_content_size * 1024 * 1024) {}
-		Cache::Cache(int expire_time, size_t max_size) : _expire_time(expire_time), _max_size(max_size), _max_content_size(1 * 1024 * 1024) {}
+		Cache::Cache() : max_content_size(1 * 1024 * 1024), _expire_time(600), _max_size(100) {}
+		Cache::Cache(int expire_time, size_t max_size, size_t _max_content_size) : max_content_size(_max_content_size * 1024 * 1024), _expire_time(expire_time), _max_size(max_size) {}
+		Cache::Cache(int expire_time, size_t max_size) : max_content_size(1 * 1024 * 1024), _expire_time(expire_time), _max_size(max_size) {}
 		Cache::Cache(const Cache & src) { *this = src; }
 		Cache::~Cache() { clear(); }
 
@@ -58,12 +58,12 @@
 
 		Cache &	Cache::operator=(const Cache & rhs) {
 			if (this != &rhs) {
-				_cache = rhs._cache; _order = rhs._order; _cache_size = rhs._cache_size; _expire_time = rhs._expire_time; _max_size = rhs._max_size; _max_content_size = rhs._max_content_size;
+				_cache = rhs._cache; _order = rhs._order; _cache_size = rhs._cache_size; _expire_time = rhs._expire_time; _max_size = rhs._max_size; max_content_size = rhs.max_content_size;
 			} return (*this);
 		}
 
 		bool	Cache::operator==(const Cache & rhs) const {
-			return (_cache == rhs._cache && _order == rhs._order && _cache_size == rhs._cache_size && _expire_time == rhs._expire_time && _max_size == rhs._max_size && _max_content_size == rhs._max_content_size);
+			return (_cache == rhs._cache && _order == rhs._order && _cache_size == rhs._cache_size && _expire_time == rhs._expire_time && _max_size == rhs._max_size && max_content_size == rhs.max_content_size);
 		}
 
 	#pragma endregion
@@ -98,7 +98,7 @@
 		#pragma region Add
 
 			void Cache::add(const std::string & path, const std::string & content) {
-				if (path.empty() || content.empty() || content.size() > _max_content_size) return;
+				if (path.empty() || content.empty() || content.size() > max_content_size) return;
 
 				std::map <std::string, CacheInfo>::iterator it = _cache.find(path);
 

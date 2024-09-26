@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/18 11:20:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/23 17:43:44 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/26 13:46:51 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,6 @@
 
 		std::vector <char>									read_buffer;								//	Buffer for reading data
    		std::vector <char>									write_buffer;								//	Buffer for writing data
-		std::string											request;									//	Request from the client
 
 		int													pipe[2];									//	Pipe used to redirect the file's FD using splice(), so it can be added to EPOLL
 
@@ -53,8 +52,9 @@
 		std::string											header;
 		std::map<std::string, std::string>					header_map;
 		std::map<std::string, std::string>					response_map;
-		std::string											method;
 		size_t												response_size;
+		std::string											response_method;
+		
 		size_t												body_size;
 		size_t												body_maxsize;
 		bool												no_cache;									//	Do not keep in cache

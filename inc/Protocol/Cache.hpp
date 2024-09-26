@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/24 19:39:57 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/18 20:54:51 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/26 14:02:03 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,6 +48,9 @@ class Cache {
 
 	public:
 
+		//	Variables
+		size_t														max_content_size;					//	Maximum size of the content allowed
+
 		//	Constructors
 		Cache();																						//	Default constructor
 		Cache(int expire_time, size_t max_size, size_t max_content_size);								//	Parameterized constructor
@@ -76,7 +79,6 @@ class Cache {
 
 		int															_expire_time;						//	Time in seconds after which a CacheInfo entry is considered expired
 		size_t														_max_size;							//	Maximum number of files to keep in cache
-		size_t														_max_content_size;					//	Maximum size of the content allowed
 
 };
 

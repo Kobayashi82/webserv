@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/21 11:59:50 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/25 19:51:44 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/26 21:59:00 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,8 +24,8 @@
 		void Protocol::response_error(EventInfo * event) {
 			if (!event) return;
 
-			std::string code = event->response_map["code"];
-			std::string description = event->response_map["code_description"];
+			std::string code = event->response_map["Code"];
+			std::string description = event->response_map["Code-Description"];
 
 			std::string body =
 				"<html>\n"
@@ -43,24 +43,22 @@
 				"</body>\n"
 				"</html>";
 
-			std::string content_length = "0";
-			if (event->header_map["Method"] != "HEAD") content_length = Utils::ltos(body.size());
 			std::string header =
 				event->response_map["Protocol"] + " " + code + " " + description + "\r\n"
-				"Content-Type: " + event->response_map["Content-Type"] + "\r\n"
+				"Content-Type: " + Settings::mime_types["html"] + "\r\n"
 				"X-Content-Type-Options: nosniff\r\n"
-				"Content-Length: " + content_length + "\r\n"
+				"Content-Length: " + Utils::ltos(body.size()) + "\r\n"
 				"Connection: " + event->response_map["Connection"] + "\r\n\r\n";
 
 			event->write_info = 0;																	//	Set some flags
 			event->write_size = 0;																	//	Set some flags
 			event->write_maxsize = 0;																//	Set some flags
-			event->response_map["header"] = header;
+			event->response_map["Header"] = header;
 			event->write_buffer.clear();															//	Clear write_buffer
 			event->write_buffer.insert(event->write_buffer.end(), header.begin(), header.end());	//	Copy the header to write_buffer
 
 			if (event->header_map["Method"] != "HEAD") {
-				event->response_map["body"] = body;
+				event->response_map["Body"] = body;
 				event->response_size = body.size();
 				event->write_maxsize = header.size() + body.size();										//	Set the total size of the data to be sent
 				event->write_buffer.insert(event->write_buffer.end(), body.begin(), body.end());		//	Copy the body to write_buffer
@@ -77,13 +75,13 @@
 			if (!event) return;
 
 			std::string header =
-				event->response_map["Protocol"] + " " + event->response_map["code"] + " " + event->response_map["code_description"] + "\r\n"
-				"Location: " + event->response_map["path"] + "\r\n"
+				event->response_map["Protocol"] + " " + event->response_map["Code"] + " " + event->response_map["Code-Description"] + "\r\n"
+				"Location: " + Security::encode_url(event->response_map["Path"]) + "\r\n"
 				"X-Content-Type-Options: nosniff" + "\r\n"
 				"Content-Length: 0" + "\r\n"
 				"Connection: " + event->response_map["Connection"] + "\r\n\r\n";
 
-			event->response_map["header"] = header;
+			event->response_map["Header"] = header;
 			event->write_info = 0;																	//	Set some flags
 			event->write_size = 0;																	//	Set some flags
 			event->response_size = 0;
@@ -97,80 +95,173 @@
 
 	#pragma region Directory
 
-		bool is_directory(const std::string & path) {
-			struct stat statbuf;
+		#pragma region Add Style
 
-			if (stat(path.c_str(), &statbuf) != 0) return (false);
-			return (S_ISDIR(statbuf.st_mode));
-		}
+			void add_style(std::string & body, const std::string & dir_path) {
+				body +=
+					"<!DOCTYPE html>\n"
+					"<html lang=\"en\">\n"
+					"<head>\n"
+					"    <meta charset=\"UTF-8\">\n"
+					"    <title>Index of " + dir_path + "</title>\n"
+					"    <style>\n"
+					"        body {\n"
+					"            font-family: Arial, sans-serif;\n"
+					"            background-color: #f4f4f4;\n"
+					"            margin: 0;\n"
+					"            padding: 20px;\n"
+					"        }\n"
+					"        h1 {\n"
+					"            color: #333;\n"
+					"        }\n"
+					"        table {\n"
+					"            width: 100%;\n"
+					"            border-collapse: collapse;\n"
+					"            margin-top: 20px;\n"
+					"        }\n"
+					"        th, td {\n"
+					"            padding: 10px;\n"
+					"            text-align: left;\n"
+					"            border-bottom: 1px solid #ccc;\n"
+					"        }\n"
+					"        th {\n"
+					"            background-color: #4CAF50;\n"
+					"            color: white;\n"
+					"        }\n"
+					"        .directory {\n"
+					"            font-weight: bold;\n"
+					"            color: #007BFF;\n"
+					"        }\n"
+					"        .file {\n"
+					"            color: #333;\n"
+					"        }\n"
+					"        .size {\n"
+					"            text-align: right;\n"
+					"        }\n"
+					"        .date {\n"
+					"            text-align: center;\n"
+					"        }\n"
+					"    </style>\n"
+					"</head>\n"
+					"<body>\n"
+					"    <h1>Index of " + dir_path + "</h1>\n"
+					"    <table>\n"
+					"        <thead>\n"
+					"            <tr>\n"
+					"                <th>Name</th>\n"
+					"                <th class=\"size\">Size</th>\n"
+					"                <th class=\"date\">Last Modified</th>\n"
+					"            </tr>\n"
+					"        </thead>\n"
+					"        <tbody>\n";
+
+				if (dir_path != "/") body +=
+					"            <tr>\n"
+					"                <td><strong><a class=\"directory\" href=\"../\">Parent Directory</a></strong></td>\n"
+					"                <td></td>\n"
+					"                <td></td>\n"
+					"            </tr>\n";
+			}
+
+		#pragma endregion
+
+		#pragma region Add Directory
+
+			void add_dir(std::string & body, const std::string & dir_path) {
+				body +=
+				"<tr>\n"
+				"    <td><strong><a class=\"directory\" href=" + Security::encode_url(dir_path) + ">" + dir_path + "</a></strong></td>\n"
+				"    <td></td>\n"
+				"    <td></td>\n"
+				"</tr>\n";
+			}
+
+		#pragma endregion
+
+		#pragma region Add File
+
+			void add_file(std::string & body, const std::string & dir_path, const std::string & file) {
+				size_t filesize = Utils::filesize(Settings::program_path + dir_path + file);
+				body +=
+				"<tr>\n"
+					"<td><a class=\"file\" href=" + Security::encode_url(file) + ">" + file + "</a></td>\n"
+					"<td class=\"size\">" + Utils::formatSize(filesize) + "</td>\n"
+					"<td class=\"date\">" + "2024-09-01" + "</td>\n"
+				"</tr>\n";
+			}
+
+		#pragma endregion
+
+		#pragma region Directory
 
 		void Protocol::response_directory(EventInfo * event) {
-			std::vector<std::string> files;
-			std::vector<std::string> directories;
+			std::vector<std::string> files, directories;
 			
-			std::string dir_path = event->response_map["path"];
+			std::string dir_path = event->response_map["Path"];
 
-			DIR *dir = opendir(dir_path.c_str());											// Abrir el directorio
-			if (!dir) return; // return error?
-			
+			DIR *dir = opendir((Settings::program_path + dir_path).c_str());									//	Open the directory
+			if (!dir) {																							//	If error, return error... duh
+				event->response_map["Method"] ="Error";
+				event->response_map["Code"] = "404";
+				event->response_map["Code-Description"] = Settings::error_codes[Utils::sstol(event->response_map["Code"])];
+				response_error(event);
+				return;
+			}
+
 			struct dirent *entry;
-			while ((entry = readdir(dir)) != NULL) {										// Leer los contenidos del directorio
+			while ((entry = readdir(dir)) != NULL) {															//	Read the content of the directory
 				std::string name = entry->d_name;
 
-				if (name == "." || name == "..") continue;									// Ignorar . y ..
+				if (name == "." || name == "..") continue;														//	ignore . and ..
 
-				std::string full_path = dir_path + "/" + name;
-				if (is_directory(full_path))	directories.push_back(name + "/");
-				else							files.push_back(name);
+				std::string full_path = Settings::program_path + dir_path + "/" + name;
+				if (Utils::isDirectory(full_path))	directories.push_back(name + "/");								//	Add the directory to a list of directories
+				else							files.push_back(name);											//	Add the file to a list of files
 			}
 
-			closedir(dir);
+			closedir(dir);																						//	Close the directory
 
-			std::string body =
-				"<!DOCTYPE html>\n"
-				"<html lang=\"en\">\n<head>\n"
-				"<meta charset=\"UTF-8\">\n"
-				"<title>Index of " + dir_path + "</title>\n"
-				"</head>\n<body>\n"
-				"<h1>Index of " + dir_path + "</h1>\n"
-				"<ul>\n";
+			std::string body;																					//	Create the body of the response
+			add_style(body, dir_path);																			//	Add the column and style to the body
 
-			if (dir_path != "/") body += "<li><a href=\"../\">Parent Directory</a></li>\n";						// Enlace al directorio padre si no estamos en la raíz
+			for (std::vector<std::string>::iterator it = directories.begin(); it != directories.end(); ++it)	//	Add directories to the body
+				add_dir(body, *it);
 
-			for (std::vector<std::string>::iterator it = directories.begin(); it != directories.end(); ++it)	// Añadir directorios
-				body += "<li><a href=\"" + *it + "\">" + *it + "</a></li>\n";
+			for (std::vector<std::string>::iterator it = files.begin(); it != files.end(); ++it)				//	Add files to the body
+				add_file(body, dir_path, *it);
 
-			for (std::vector<std::string>::iterator it = files.begin(); it != files.end(); ++it)				// Añadir archivos
-				body += "<li><a href=\"" + *it + "\">" + *it + "</a></li>\n";
+			body +=																								//	Finish the body of the response
+				"       </tbody>\n"
+				"    </table>\n"
+				"</body>\n"
+				"</html>";
 
-			body += "</ul>\n</body>\n</html>\n";
-
-			std::string content_length = "0";
-			if (event->header_map["Method"] != "HEAD") content_length = Utils::ltos(body.size());
-			std::string header =
-				event->response_map["Protocol"] + " " + event->response_map["code"] + " " + event->response_map["code_description"] + "\r\n"
-				"Content-Type: " + event->response_map["Content-Type"] + "\r\n"
+			std::string header =																				//	Create the header of the response
+				event->response_map["Protocol"] + " " + event->response_map["Code"] + " " + event->response_map["Code-Description"] + "\r\n"
+				"Content-Type: " + Settings::mime_types["html"] + "\r\n"
 				"X-Content-Type-Options: nosniff" + "\r\n"
-				"Content-Length: " + content_length + "\r\n"
+				"Content-Length: " + Utils::ltos(body.size()) + "\r\n"
 				"Connection: " + event->response_map["Connection"] + "\r\n\r\n";
 
-			event->response_map["header"] = header;
-			event->response_map["body"] = body;
-			event->write_info = 0;																	//	Set some flags
-			event->write_size = 0;																	//	Set some flags
-			event->write_maxsize = 0;																	//	Set some flags
-			event->write_buffer.clear();															//	Clear write_buffer
-			event->write_buffer.insert(event->write_buffer.end(), header.begin(), header.end());	//	Copy the header to write_buffer
+			event->response_map["Header"] = header;
+			event->response_map["Body"] = body;
+			event->write_info = 0;																				//	Set some flags
+			event->write_size = 0;																				//	Set some flags
+			event->write_maxsize = 0;																			//	Set some flags
+			event->write_buffer.clear();																		//	Clear write_buffer
+			event->write_buffer.insert(event->write_buffer.end(), header.begin(), header.end());				//	Copy the header to write_buffer
 	
-			if (event->header_map["Method"] != "HEAD") {
-				event->response_size = body.size();
-				event->write_maxsize = header.size() + body.size();											//	Set the total size of the data to be sent
-				event->write_buffer.insert(event->write_buffer.end(), body.begin(), body.end());		//	Copy the body to write_buffer
+			if (event->header_map["Method"] != "HEAD") {														//	If method is not HEAD
+				event->response_size = body.size();																//	Set the size of the response
+				event->write_maxsize = header.size() + body.size();												//	Set the total size of the data to be sent
+				event->write_buffer.insert(event->write_buffer.end(), body.begin(), body.end());				//	Copy the body to write_buffer
 			}
 
-			if (Epoll::set(event->fd, true, true) == -1) event->client->remove();					//	Set EPOLL to monitor write events
+			if (Epoll::set(event->fd, true, true) == -1) event->client->remove();								//	Set EPOLL to monitor write events
 
 		}
+
+		#pragma endregion
 
 	#pragma endregion
 
@@ -179,8 +270,8 @@
 		#pragma region Cache
 
 			int Protocol::file_cache(EventInfo * event) {
-				if (event->header_map["Cache-Control"].empty()) {																	//	If cache is allowed
-					CacheInfo * fcache = Communication::cache.get(event->response_map["path"]);										//	Get the file from cache
+				if (!event->no_cache) {																								//	If cache is allowed
+					CacheInfo * fcache = Communication::cache.get(event->response_map["Path"]);										//	Get the file from cache
 					if (fcache) {																									//	If the file exist in cache
 
 						std::string header; std::string content_length = "0";
@@ -203,33 +294,32 @@
 								if (Utils::stol(value.substr(pos + 1), temp) || filesize > temp) { return (0); } // error
 								end = temp;
 							}
-							if (event->header_map["Method"] != "HEAD") content_length = Utils::ltos(end - start);
 							header =
-								event->response_map["Protocol"] + " " + event->response_map["code"] + " " + event->response_map["code_description"] + "\r\n"
+								event->response_map["Protocol"] + " " + event->response_map["Code"] + " " + event->response_map["Code-Description"] + "\r\n"
 								"Content-Type: " + event->response_map["Content-Type"] + "\r\n"
 								"X-Content-Type-Options: nosniff" + "\r\n"
 								"Content-Range: bytes " + Utils::ltos(start) + "-" + Utils::ltos(end) + "/" + Utils::ltos(filesize) + "\r\n"
-								"Content-Length: " + content_length + "\r\n"
+								"Content-Length: " + Utils::ltos(end - start) + "\r\n"
 								"Connection: " + event->response_map["Connection"] + "\r\n\r\n";
 						} else {
-							if (event->header_map["Method"] != "HEAD") content_length = Utils::ltos(filesize);
 							header =
-								event->response_map["Protocol"] + " " + event->response_map["code"] + " " + event->response_map["code_description"] + "\r\n"
+								event->response_map["Protocol"] + " " + event->response_map["Code"] + " " + event->response_map["Code-Description"] + "\r\n"
 								"Content-Type: " + event->response_map["Content-Type"] + "\r\n"
 								"X-Content-Type-Options: nosniff" + "\r\n"
-								"Content-Length: " + content_length + "\r\n"
+								"Content-Length: " + Utils::ltos(end - start) + "\r\n"
 								"Connection: " + event->response_map["Connection"] + "\r\n\r\n";
 						}
 
 						event->write_info = 0;																						//	Set some flags
 						event->write_size = 0;																						//	Set some flags
-						event->write_maxsize = 0;																					//	Set some flags
+						event->write_maxsize = header.size();
+						event->response_size = 0;
 						event->write_buffer.clear();																				//	Clear write_buffer
 						event->write_buffer.insert(event->write_buffer.end(), header.begin(), header.end());						//	Copy the header to write_buffer
 
 						if (event->header_map["Method"] != "HEAD") {
-							event->response_size = start - end;
-							event->write_maxsize = header.size() + (start - end);													//	Set the total size of the data to be sent
+							event->write_maxsize = header.size() + (end - start);														//	Set some flags
+							event->response_size = end - start;
 							event->write_buffer.insert(event->write_buffer.end(), fcache->content.begin(), fcache->content.end());	//	Copy the body to write_buffer
 						}
 
@@ -248,7 +338,7 @@
 			void Protocol::response_file(EventInfo * event) {
 				if (!event) return;
 
-				std::string path = event->response_map["path"];
+				std::string path = event->response_map["Path"];
 				if (path.empty()) { event->client->remove(); return; }
 
 				if (file_cache(event)) return;
@@ -267,20 +357,19 @@
 					size_t temp = 0;
 					std::string value = event->response_map["Range"].substr(6);
 					if (value[0] == '-') {																				//	bytes=-1024		The client asks for the last 1024 bytes of the file
-						if (Utils::stol(value.substr(1), temp) || filesize > temp) { return; } // error
+						if (Utils::stol(value.substr(1), temp) || filesize > temp) { return; }							// error
 						start = filesize - temp;
 					} else if (value[value.size() - 1] == '-') {														//	bytes=1024-		The client asks for all bytes starting from byte 1024 to the end of the file
-						if (Utils::stol(value.substr(0, value.size() - 1), temp) || filesize > temp) { return; } // error
+						if (Utils::stol(value.substr(0, value.size() - 1), temp) || filesize > temp) { return; }		// error
 						start = temp;
 					} else {																							//	bytes=0-1023	The client asks for bytes from 0 to 1023 (inclusive)
 						size_t pos = value.find_first_of('-');
-						if (pos == std::string::npos) { return; } // error
-						if (Utils::stol(value.substr(0, pos), temp) || filesize > temp) { return; } // error
+						if (pos == std::string::npos) { return; }														// error
+						if (Utils::stol(value.substr(0, pos), temp) || filesize > temp) { return; }						// error
 						start = temp;
-						if (Utils::stol(value.substr(pos + 1), temp) || filesize > temp) { return; } // error
+						if (Utils::stol(value.substr(pos + 1), temp) || filesize > temp) { return; }					// error
 						end = temp;
 					}
-					if (event->header_map["Method"] != "HEAD") content_length = Utils::ltos(end - start);
 					header =
 						event->response_map["Protocol"] + " " + "206" + " " + "Partial Content" + "\r\n"
 						"Accept-Ranges: bytes" + "\r\n"
@@ -288,16 +377,15 @@
 						"Cache-Control: public, max-age=3600" + "\r\n"
 						"X-Content-Type-Options: nosniff" + "\r\n"
 						"Content-Range: bytes " + Utils::ltos(start) + "-" + Utils::ltos(end) + "/" + Utils::ltos(filesize) + "\r\n"
-						"Content-Length: " + content_length + "\r\n"
+						"Content-Length: " + Utils::ltos(end - start) + "\r\n"
 						"Connection: " + event->response_map["Connection"] + "\r\n\r\n";
 				} else {
-					if (event->header_map["Method"] != "HEAD") content_length = Utils::ltos(filesize);
 					header =
-						event->response_map["Protocol"] + " " + event->response_map["code"] + " " + event->response_map["code_description"] + "\r\n"
+						event->response_map["Protocol"] + " " + event->response_map["Code"] + " " + event->response_map["Code-Description"] + "\r\n"
 						"Accept-Ranges: bytes" + "\r\n"
 						"Content-Type: " + event->response_map["Content-Type"] + "\r\n"
 						"X-Content-Type-Options: nosniff" + "\r\n"
-						"Content-Length: " + content_length + "\r\n"
+						"Content-Length: " + Utils::ltos(end - start) + "\r\n"
 						"Connection: " + event->response_map["Connection"] + "\r\n\r\n";
 				}
 
@@ -322,7 +410,9 @@
 
 				event_data.read_path = path;																			//	Set the name of the file
 				event_data.read_maxsize = end - start;																	//	Set the size of the file
-				event_data.no_cache = !event->header_map["Cache-Control"].empty();										//	Set if the file must be added to cache
+
+				if (filesize > Communication::cache.max_content_size) event->no_cache = true;							//	No cache if file is greater than maximum allowed
+				event_data.no_cache = event->no_cache;																	//	Set if the file must be added to cache
 
 				if (pipe(event_data.pipe) == -1) { close(event_data.fd); return; event->client->remove(); }				//	Create the pipe for DATA (to be used with splice)
 				Utils::NonBlocking_FD(event_data.pipe[0]);																//	Set the read end of the pipe as non-blocking
@@ -384,7 +474,7 @@
 					cgi_vars.push_back("SCRIPT_NAME=" + path);
 					cgi_vars.push_back("PATH_INFO=");
 				}
-				cgi_vars.push_back("PATH_TRANSLATED=" + event->response_map["path"]);
+				cgi_vars.push_back("PATH_TRANSLATED=" + event->response_map["Path"]);
 
 				cgi_vars.push_back("CONTENT_TYPE=" + event->header_map["Content-Type"]);
 				cgi_vars.push_back("CONTENT_LENGTH=" + event->header_map["Content-Length"]);
@@ -514,12 +604,12 @@
 
 						char * args[3];
 						if (event->response_map["self-cgi"] == "true") {
-							args[0] = const_cast<char *>(event->response_map["path"].c_str());
+							args[0] = const_cast<char *>(event->response_map["Path"].c_str());
 							args[1] = NULL;
 							args[2] = NULL;
 						} else {
 							args[0] = const_cast<char *>(event->response_map["cgi_path"].c_str());
-							args[1] = const_cast<char *>(event->response_map["path"].c_str());
+							args[1] = const_cast<char *>(event->response_map["Path"].c_str());
 							args[2] = NULL;
 						}
 
@@ -556,11 +646,11 @@
 	void Protocol::process_response(EventInfo * event) {
 		if (!event) return;
 
-		if 		(event->method == "Error")		response_error(event);
-		else if (event->method == "Redirect")	response_redirect(event);
-		else if (event->method == "Directory")	response_directory(event);
-		else if (event->method == "File")		response_file(event);
-		else if (event->method == "CGI")		response_cgi(event);
+		if 		(event->response_method == "Error")		response_error(event);
+		else if (event->response_method == "Redirect")	response_redirect(event);
+		else if (event->response_method == "Directory")	response_directory(event);
+		else if (event->response_method == "File")		response_file(event);
+		else if (event->response_method == "CGI")		response_cgi(event);
 	}
 
 #pragma endregion
