@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/27 09:32:08 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/26 17:30:31 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/27 13:16:23 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,7 +74,7 @@
 				//	If 'read_size' is greater than 'body_maxsize'
 					if (event->body_maxsize > 0 && event->read_size >= event->body_maxsize) {
 						event->header_map["Connection"] = "close";																				//	Set 'Connection' to close
-						event->header_map["Write_Only"] = "true";																				//	Don't read from the client anymore
+						event->header_map["Write-Only"] = "true";																				//	Don't read from the client anymore
 						Epoll::set(event->fd, false, false);																					//	Close read and write monitor for EPOLL
 						//	return error;																										//	Body too big, return error
 						return (1);

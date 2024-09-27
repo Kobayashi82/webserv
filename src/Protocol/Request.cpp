@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/21 11:52:00 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/27 00:41:19 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/27 13:17:54 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,7 +66,7 @@
 			event->response_map["Path"] = "favicon.ico";
 			event->response_map["Method"] = "File";
 		} else if (event->response_map["Method"] != "Error") {
-			event->response_map["Method"] = "File";
+			event->response_map["Method"] = "CGI";
 		}
 
 		//	If Method is Directory
@@ -98,11 +98,11 @@
 
 		//	If Method is CGI
 			if (event->response_map["Method"] == "CGI") {
-				//event->response_map["cgi_path"] = "cgi-bin/php-cgi";
-				//event->response_map["cgi_path"] = "cgi-bin/python-cgi";
-				//event->response_map["cgi_path"] = "/bin/cat";
+				event->response_map["CGI-Path"] = "cgi-bin/php-cgi";
+				//event->response_map["CGI-Path"] = "cgi-bin/python-cgi";
+				//event->response_map["CGI-Path"] = "/bin/cat";
 
-				//event->response_map["Path"] = "index.php";
+				event->response_map["Path"] = "index.php";
 				//event->response_map["Path"] = "index.py";
 			}
 

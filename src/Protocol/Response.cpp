@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/21 11:59:50 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/27 00:14:46 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/27 13:17:17 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -458,7 +458,7 @@
 					event->write_buffer.clear();																		//	Clear write_buffer
 					event->write_buffer.insert(event->write_buffer.end(), header.begin(), header.end());				//	Copy the header to write_buffer
 
-					if (Epoll::set(event->fd, !(event->header_map["Write_Only"] == "true"), true) == -1)				//	Set EPOLL to monitor write events
+					if (Epoll::set(event->fd, !(event->header_map["Write-Only"] == "true"), true) == -1)				//	Set EPOLL to monitor write events
 						event->client->remove();
 
 					return;
@@ -495,7 +495,7 @@
 				event->write_buffer.clear();																			//	Clear write_buffer
 				event->write_buffer.insert(event->write_buffer.end(), header.begin(), header.end());					//	Copy the header to write_buffer
 
-				if (Epoll::set(event->fd, !(event->header_map["Write_Only"] == "true"), true) == -1)					//	Set EPOLL to monitor write events for the client
+				if (Epoll::set(event->fd, !(event->header_map["Write-Only"] == "true"), true) == -1)					//	Set EPOLL to monitor write events for the client
 					event->client->remove();
 				else if (Epoll::add(event_data.fd, true, false) == -1) {												//	Set EPOLL to monitor read events for DATA
 					event->read_maxsize = 0;																			//	If set EPOLL fails, reset the flag,
@@ -518,6 +518,7 @@
 			void Protocol::variables_cgi(EventInfo * event, std::vector<std::string> & cgi_vars) {
 				if (!event) return;
 
+				cgi_vars.push_back("SERVER_SOFTWARE=" + Settings::server_name + "/" + Settings::server_version);
 				cgi_vars.push_back("REQUEST_METHOD=" + event->header_map["Method"]);
 				cgi_vars.push_back("REQUEST_URI=" + event->header_map["$request_uri"]);
 				cgi_vars.push_back("QUERY_STRING=" + event->header_map["$query_string"]);
@@ -529,11 +530,14 @@
 
 				if (dot_pos != std::string::npos && slash_pos != std::string::npos) {
 					cgi_vars.push_back("SCRIPT_NAME=" + path.substr(0, slash_pos));
+					cgi_vars.push_back("REQUEST_FILENAME=" + Settings::program_path + path.substr(0, slash_pos));
 					cgi_vars.push_back("PATH_INFO=" + path.substr(slash_pos));
 				} else {
 					cgi_vars.push_back("SCRIPT_NAME=" + path);
+					cgi_vars.push_back("REQUEST_FILENAME=" + Settings::program_path + path);
 					cgi_vars.push_back("PATH_INFO=");
 				}
+
 				cgi_vars.push_back("PATH_TRANSLATED=" + event->response_map["Path"]);
 
 				cgi_vars.push_back("CONTENT_TYPE=" + event->header_map["Content-Type"]);
@@ -551,6 +555,8 @@
 				cgi_vars.push_back("HTTP_ACCEPT=" + (event->header_map["Accept"].empty() ? "*/*" : event->header_map["Accept"]));
 
 				cgi_vars.push_back("REDIRECT_STATUS=200");
+				cgi_vars.push_back("REQUEST_SCHEME=http");
+				cgi_vars.push_back("HTTPS=off");
 			}
 		
 			#pragma region Information
@@ -637,7 +643,7 @@
 				event->write_maxsize = 0;
 				event->write_buffer.clear();																//	Clear write_buffer
 
-				if (Epoll::set(event->fd, !(event->header_map["Write_Only"] == "true"), true) == -1) {		//	Set EPOLL to monitor write events for the client
+				if (Epoll::set(event->fd, !(event->header_map["Write-Only"] == "true"), true) == -1) {		//	Set EPOLL to monitor write events for the client
 					event->client->remove(); return;
 				} else {
 
@@ -663,14 +669,14 @@
 						variables_cgi(event, cgi_vars);
 
 						char * args[3];
-						if (event->response_map["self-cgi"] == "true") {
+						if (event->response_map["Self-CGI"] == "true") {
 							args[0] = const_cast<char *>(event->response_map["Path"].c_str());
 							args[1] = NULL;
 							args[2] = NULL;
 						} else {
-							args[0] = const_cast<char *>(event->response_map["cgi_path"].c_str());
-							args[1] = const_cast<char *>(event->response_map["Path"].c_str());
-							args[2] = NULL;
+							args[0] = const_cast<char *>(event->response_map["CGI-Path"].c_str());
+							//args[1] = const_cast<char *>(event->response_map["Path"].c_str());
+							args[1] = NULL;
 						}
 
 						for (size_t i = 0; i < cgi_vars.size(); ++i)

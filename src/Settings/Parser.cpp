@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:30:57 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/21 00:06:27 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/27 13:14:39 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -372,7 +372,7 @@
 
 			if (Utils::isFile(str)) return (parse_path(firstPart, str, true, true));
 			else if (Utils::isDirectory(str)) return (parse_path(firstPart, str));
-			else if (str[0] == '/') {	log_servers(RD + n_line + "The " Y "alias" RD " path " Y + str + RD " does not exist" NC, VServ); return (1); }
+			else if (str[0] == '/' || str[0] == '~') {	log_servers(RD + n_line + "The " Y "alias" RD " path " Y + str + RD " does not exist" NC, VServ); return (1); }
 			else {						log_servers(RD + n_line + "Invalid value for " Y "alias" NC, VServ); return (1); }
 
 			return (0);
@@ -408,18 +408,20 @@
 			std::istringstream stream(secondPart); std::vector<std::string> values; std::string value;
 
 			while (stream >> value) values.push_back(value);
-			if (values.size() < 1) { log_servers(RD + n_line + "Empty value for " Y "cgi" NC, VServ); global.bad_config = true; return (1); }
+			if (values.size() == 0) { log_servers(RD + n_line + "Empty value for " Y "CGI" NC, VServ); global.bad_config = true; return (1); }
 			std::string filePath = values.back(); values.pop_back();
-			if (filePath.empty() || filePath[0] != '/') { log_servers(RD + n_line + "Invalid path for " Y "cgi" NC, VServ); global.bad_config = true; }
-			if (parse_path("CGI", filePath, true, true)) { global.bad_config = true; }
+			if (values.size() == 0) { log_servers(RD + n_line + "Missing value or path for " Y "CGI" NC, VServ); global.bad_config = true; return (1); }
+			if (filePath.empty() || (filePath[0] != '/' && filePath[0] != '~' && Utils::strToLower(filePath) != "self-cgi")) { log_servers(RD + n_line + "Invalid path for " Y "CGI" NC, VServ); global.bad_config = true; return (1); }
+			if (Utils::strToLower(filePath) != "self-cgi" && parse_path("CGI", filePath, true, true)) { global.bad_config = true; }
 
 			for (std::vector<std::string>::iterator it = values.begin(); it != values.end(); ++it) { value = *it;
 				std::string lvalue = value; Utils::toLower(lvalue);
 				if (!value.empty() && value[0] != '.' && lvalue != "dir" && lvalue != "head" && lvalue != "get" && lvalue != "post" && lvalue != "put" && lvalue != "patch" && lvalue != "delete") {
-					if (value[0] == '.')	log_servers(RD + n_line + "Invalid extension " Y + value + RD " for " Y "cgi" NC, VServ);
-					else					log_servers(RD + n_line + "Invalid method " Y + value + RD " for " Y "cgi" NC, VServ);
+					if (value[0] == '.')	log_servers(RD + n_line + "Invalid extension " Y + value + RD " for " Y "CGI" NC, VServ);
+					else					log_servers(RD + n_line + "Invalid method " Y + Utils::strToUpper(value) + RD " for " Y "CGI" NC, VServ);
 					global.bad_config = true;
-				} else global.add(firstPart + " " + *it, filePath);
+				} else if (value[0] != '.' && Utils::strToLower(filePath) == "self-cgi") { log_servers(RD + n_line + "Cannot use " Y "self-CGI" RD " for the method " Y + Utils::strToUpper(value) + NC, VServ); global.bad_config = true; }
+				else global.add(firstPart + " " + *it, filePath);
 			}
 
 			return (0);
@@ -431,18 +433,20 @@
 			std::istringstream stream(secondPart); std::vector<std::string> values; std::string value;
 
 			while (stream >> value) values.push_back(value);
-			if (values.size() < 1) { log_servers(RD + n_line + "Empty value for " Y "cgi" NC, &VServ); VServ.bad_config = true; return (1); }
+			if (values.size() == 0) { log_servers(RD + n_line + "Empty value for " Y "CGI" NC, &VServ); VServ.bad_config = true; return (1); }
 			std::string filePath = values.back(); values.pop_back();
-			if (filePath.empty() || filePath[0] != '/') { log_servers(RD + n_line + "Invalid path for " Y "cgi" NC, &VServ); VServ.bad_config = true; }
-			if (parse_path("CGI", filePath, true, true)) { VServ.bad_config = true; }
+			if (values.size() == 0) { log_servers(RD + n_line + "Missing value or path for " Y "CGI" NC, &VServ); VServ.bad_config = true; return (1); }
+			if (filePath.empty() || (filePath[0] != '/' && filePath[0] != '~' && Utils::strToLower(filePath) != "self-cgi")) { log_servers(RD + n_line + "Invalid path for " Y "CGI" NC, &VServ); VServ.bad_config = true; return (1); }
+			if (Utils::strToLower(filePath) != "self-cgi" && parse_path("CGI", filePath, true, true)) { VServ.bad_config = true; }
 
 			for (std::vector<std::string>::iterator it = values.begin(); it != values.end(); ++it) { value = *it;
 				std::string lvalue = value; Utils::toLower(lvalue);
 				if (!value.empty() && value[0] != '.' && lvalue != "dir" && lvalue != "head" && lvalue != "get" && lvalue != "post" && lvalue != "put" && lvalue != "patch" && lvalue != "delete") {
-					if (value[0] == '.')	log_servers(RD + n_line + "Invalid extension " Y + value + RD " for " Y "cgi" NC, &VServ);
-					else					log_servers(RD + n_line + "Invalid method " Y + value + RD " for " Y "cgi" NC, &VServ);
+					if (value[0] == '.')	log_servers(RD + n_line + "Invalid extension " Y + value + RD " for " Y "CGI" NC, &VServ);
+					else					log_servers(RD + n_line + "Invalid method " Y + Utils::strToUpper(value) + RD " for " Y "CGI" NC, &VServ);
 					VServ.bad_config = true;
-				} else VServ.add(firstPart + " " + *it, filePath);
+				} else if (value[0] != '.' && Utils::strToLower(filePath) == "self-cgi") { log_servers(RD + n_line + "Cannot use " Y "self-CGI" RD " for the method " Y + Utils::strToUpper(value) + NC, &VServ); VServ.bad_config = true;}
+				else VServ.add(firstPart + " " + *it, filePath);
 			}
 
 			return (0);
@@ -454,18 +458,20 @@
 			std::istringstream stream(secondPart); std::vector<std::string> values; std::string value;
 
 			while (stream >> value) values.push_back(value);
-			if (values.size() < 1) { log_servers(RD + n_line + "Empty value for " Y "cgi" NC, Loc.VServ); Loc.VServ->bad_config = true; return (1); }
+			if (values.size() == 0) { log_servers(RD + n_line + "Empty value for " Y "CGI" NC, Loc.VServ); Loc.VServ->bad_config = true; return (1); }
 			std::string filePath = values.back(); values.pop_back();
-			if (filePath.empty() || filePath[0] != '/') { log_servers(RD + n_line + "Invalid path for " Y "cgi" NC, Loc.VServ); Loc.VServ->bad_config = true; }
-			if (parse_path("CGI", filePath, true, true)) { Loc.VServ->bad_config = true; }
+			if (values.size() == 0) { log_servers(RD + n_line + "Missing value or path for " Y "CGI" NC, Loc.VServ); Loc.VServ->bad_config = true; return (1); }
+			if (filePath.empty() || (filePath[0] != '/' && filePath[0] != '~' && Utils::strToLower(filePath) != "self-cgi")) { log_servers(RD + n_line + "Invalid path for " Y "CGI" NC, Loc.VServ); Loc.VServ->bad_config = true; return (1); }
+			if (Utils::strToLower(filePath) != "self-cgi" && parse_path("CGI", filePath, true, true)) { Loc.VServ->bad_config = true; }
 
 			for (std::vector<std::string>::iterator it = values.begin(); it != values.end(); ++it) { value = *it;
 				std::string lvalue = value; Utils::toLower(lvalue);
 				if (!value.empty() && value[0] != '.' && lvalue != "dir" && lvalue != "head" && lvalue != "get" && lvalue != "post" && lvalue != "put" && lvalue != "patch" && lvalue != "delete") {
-					if (value[0] == '.')	log_servers(RD + n_line + "Invalid extension " Y + value + RD " for " Y "cgi" NC, Loc.VServ);
-					else					log_servers(RD + n_line + "Invalid method " Y + value + RD " for " Y "cgi" NC, Loc.VServ);
+					if (value[0] == '.')	log_servers(RD + n_line + "Invalid extension " Y + value + RD " for " Y "CGI" NC, Loc.VServ);
+					else					log_servers(RD + n_line + "Invalid method " Y + Utils::strToUpper(value) + RD " for " Y "CGI" NC, Loc.VServ);
 					Loc.VServ->bad_config = true;
-				} else Loc.add(firstPart + " " + *it, filePath);
+				} else if (value[0] != '.' && Utils::strToLower(filePath) == "self-cgi") { log_servers(RD + n_line + "Cannot use " Y "self-CGI" RD " for the method " Y + Utils::strToUpper(value) + NC, Loc.VServ); Loc.VServ->bad_config = true; }
+				else Loc.add(firstPart + " " + *it, filePath);
 			}
 
 			return (0);
@@ -577,7 +583,7 @@
 			std::string space = ""; if (line_count - 1 < 10) space = " ";
 			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] " + space;
 
-			if (str.empty() || data.size() == 0 || str == "listen" || str == "allow" || str == "deny") return (0);
+			if (str.empty() || data.size() == 0 || str == "listen" || str == "allow" || str == "deny" || Utils::strToLower(str) == "cgi") return (0);
 
 			for (std::vector <std::pair<std::string, std::string> >::const_iterator it = data.begin(); it != data.end(); ++it)
 				if (it->first == str) { log_servers(RD + n_line + "Directive " Y + str + RD " repeated" NC, VServ); return (1); }
@@ -607,7 +613,7 @@
 				if (firstPart == "allow") return (0);
 				if (firstPart == "deny") return (0);
 				if (firstPart == "error_page") return (0);
-				if (firstPart == "cgi") return (0);
+				if (Utils::strToLower(firstPart) == "cgi") return (0);
 				if (firstPart == "return") return (0);
 			}
 			if (section == GLOBAL) {
@@ -739,19 +745,21 @@
 					if (!NoAdd && firstPart == "keepalive_timeout" && parse_keepalive_timeout(secondPart, PVServ))							{ firstPart = ""; global.bad_config = true; }
 					if (!NoAdd && firstPart == "keepalive_requests" && parse_keepalive_requests(secondPart, PVServ))						{ firstPart = ""; global.bad_config = true; }
 					if (!NoAdd && firstPart == "error_page") parse_errors(firstPart, secondPart, PVServ);
-					if (!NoAdd && firstPart == "cgi") parse_cgi(firstPart, secondPart, PVServ);
+					if (!NoAdd && Utils::strToLower(firstPart) == "cgi") parse_cgi(firstPart, secondPart, PVServ);
 
 					if (!NoAdd && (firstPart == "allow" || firstPart == "deny"))															global.add(firstPart, secondPart, true);
-					else if (!NoAdd && !firstPart.empty() && firstPart != "http" && firstPart != "error_page" && firstPart != "cgi")		global.add(firstPart, secondPart);
+					else if (!NoAdd && !firstPart.empty() && firstPart != "http" && firstPart != "error_page"
+						&& Utils::strToLower(firstPart) != "cgi")																			global.add(firstPart, secondPart);
 				}
 
 				if (section == SERVER && !firstPart.empty()) {
 					if (!NoAdd && firstPart == "listen" && parse_listen(secondPart, VServ))													{ firstPart = ""; VServ.bad_config = true; }
 					if (!NoAdd && firstPart == "error_page") parse_errors(firstPart, secondPart, VServ);
-					if (!NoAdd && firstPart == "cgi") parse_cgi(firstPart, secondPart, VServ);
+					if (!NoAdd && Utils::strToLower(firstPart) == "cgi") parse_cgi(firstPart, secondPart, VServ);
 
 					if (!NoAdd && (firstPart == "listen" || firstPart == "allow" || firstPart == "deny"))									VServ.add(firstPart, secondPart, true);
-					else if (!NoAdd && !firstPart.empty() && firstPart != "server" && firstPart != "error_page" && firstPart != "cgi")		VServ.add(firstPart, secondPart);
+					else if (!NoAdd && !firstPart.empty() && firstPart != "server" && firstPart != "error_page"
+						&& Utils::strToLower(firstPart) != "cgi")																			VServ.add(firstPart, secondPart);
 				}
 
 				if (section == LOCATION && !firstPart.empty()) {
@@ -759,10 +767,10 @@
 					if (!NoAdd && firstPart == "alias" && parse_alias(firstPart, secondPart, PVServ))										{ firstPart = ""; VServ.bad_config = true; }
 					if (!NoAdd && firstPart == "try_files" && parse_try_files(secondPart, PVServ))											{ firstPart = ""; VServ.bad_config = true; }
 					if (!NoAdd && firstPart == "error_page") parse_errors(firstPart, secondPart, Loc);
-					if (!NoAdd && firstPart == "cgi") parse_cgi(firstPart, secondPart, VServ);
+					if (!NoAdd && Utils::strToLower(firstPart) == "cgi") parse_cgi(firstPart, secondPart, VServ);
 
 					if (!NoAdd && (firstPart == "allow" || firstPart == "deny"))															Loc.add(firstPart, secondPart, true);
-					else if (!NoAdd && !firstPart.empty() && firstPart != "error_page" && firstPart != "cgi")								Loc.add(firstPart, secondPart);
+					else if (!NoAdd && !firstPart.empty() && firstPart != "error_page" && Utils::strToLower(firstPart) != "cgi")			Loc.add(firstPart, secondPart);
 				}
 
 				if (section == METHOD && !firstPart.empty()) {
