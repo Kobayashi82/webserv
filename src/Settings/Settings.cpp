@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:27:58 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/22 23:13:36 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/27 17:00:46 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,8 @@
 	std::string							Settings::config_path = Utils::programPath();					//	Path of the default configuration file
 	std::string							Settings::server_name = "Webserv";								//	Name of the server
 	std::string							Settings::server_version = "1.0";								//	Version of the server
-	
+	std::string							Settings::os_name = Utils::get_OSname();						//	Name of the operating system
+
 	VServer								Settings::global;												//	Global settings
 	std::deque <VServer> 				Settings::vserver;												//	VServers in a deque
 	

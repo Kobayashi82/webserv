@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 14:30:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/27 13:19:58 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/27 17:13:57 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,6 +36,7 @@
 	//	TODO	Cache not working as it should
 	//	TODO	MKV not sending as it should
 	//	TODO	PHP CGI not sending header
+	//	TODO	Optimized stat calls 
 	
 	//	TODO	Intermediary
 	//	TODO	Documentation

@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:36:49 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/27 15:57:13 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/27 17:12:56 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -249,6 +249,7 @@
 
 	std::string Utils::str_time(time_t time) {
 		char buffer[20];
+
 		sprintf(buffer, "%ld", (long)time);
 
 		return (std::string(buffer));

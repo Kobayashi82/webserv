@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/21 11:52:00 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/27 16:39:18 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/27 17:13:30 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,7 @@
 			event->response_map["Connection"] = event->header_map["Connection"];
 			if (event->response_map["Connection"].empty()) event->response_map["Connection"] = "keep-alive";
 
-			event->response_map["Server"] = Settings::server_name + "/" + Settings::server_version;
+			event->response_map["Server"] = Settings::server_name + "/" + Settings::server_version + Settings::os_name;
 			event->response_map["Date"] = Settings::timer.current_time_header();
 
 		//	Method

@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:37:20 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/27 15:57:23 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/27 17:00:30 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,6 +66,7 @@ class Utils {
 		static time_t		file_modification_time_data(const std::string & path);						//	Get the modification time of a file as number of seconds
 		static std::string	expand_tilde(const std::string & path);										//	Expand '~' to the user home directory
 		static void			NonBlocking_FD(int fd);														//	Set a file descriptor (FD) as Non-Blocking
+		static std::string	get_OSname();																//	Get the name of the operating system
 
 };
 

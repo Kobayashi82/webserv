@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:14:05 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/22 23:14:37 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/27 17:00:36 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,6 +36,7 @@
 			static std::string							config_path;									//	Path of the default configuration file
 			static std::string							server_name;									//	Name of the server
 			static std::string							server_version;									//	Version of the server
+			static std::string							os_name;										//	Name of the operating system
 
 			static VServer								global;											//	Global settings
 			static std::deque <VServer>					vserver;										//	VServers in a deque

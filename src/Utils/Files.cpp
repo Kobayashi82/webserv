@@ -6,13 +6,14 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 22:23:52 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/27 15:57:18 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/27 17:12:59 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Utils.hpp"
 
 #include <cstdio>																						//	For snprintf to get the modification time of a file
+#include <fstream>
 
 #include <errno.h>																						//	For errno to check if a directory exists in 'createPath'
 #include <fcntl.h>																						//	For fcntl() to set an FD as non-blocking
@@ -190,6 +191,31 @@
 		if (flags == -1) return;
 
 		fcntl(fd, F_SETFL, flags | O_NONBLOCK);																//	Set the 'NONBLOCK' flag
+	}
+
+#pragma endregion
+
+#pragma region OS Name
+
+	std::string Utils::get_OSname() {
+		std::ifstream osReleaseFile("/etc/os-release");
+		if (!osReleaseFile.is_open()) return "";
+
+		std::string line, osName;
+
+		while (std::getline(osReleaseFile, line)) {
+			if (line.find("PRETTY_NAME") != std::string::npos) {
+				size_t pos = line.find('=');
+				if (pos != std::string::npos) {
+					osName = line.substr(pos + 2);
+					if (!osName.empty()) osName = osName.substr(0, osName.size() - 1);
+					break;
+				}
+			}
+		}
+		osReleaseFile.close();
+		if (!osName.empty()) osName = " (" + osName + ")";
+		return (osName);
 	}
 
 #pragma endregion
