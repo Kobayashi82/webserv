@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:37:20 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/27 12:58:17 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/27 15:57:23 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,6 +41,7 @@ class Utils {
 		static std::string	str_nocolor_trunc(const std::string & str, int length);						//	Get a string truncated to the length without counting color characters
 		static std::string	str_nocolor(const std::string & str);										//	Get a string without color characters
 		static std::string	replace_tabs(const std::string & str, int tabSize = 8);						//	Replace tabs with spaces
+		static std::string	str_time(time_t time);														//	Get the time in seconds as a string
 
 		//	Network
 		static bool			isValidIP(const std::string & IP);											//	Validate an IP address
@@ -61,7 +62,8 @@ class Utils {
 		static bool 		is_subpath(const std::string & path1, const std::string & path2);			//	Check if path1 is inside path2
 		static size_t 		filesize(const std::string & path);											//	Get the size of a file from a path
 		static size_t 		filesize(const int fd);														//	Get the size of a file from a file descriptor (FD)
-		static std::string	file_modification_time(const std::string path);								//	Get the modification time of a file
+		static std::string	file_modification_time(const std::string path, bool is_header = false);		//	Get the modification time of a file
+		static time_t		file_modification_time_data(const std::string & path);						//	Get the modification time of a file as number of seconds
 		static std::string	expand_tilde(const std::string & path);										//	Expand '~' to the user home directory
 		static void			NonBlocking_FD(int fd);														//	Set a file descriptor (FD) as Non-Blocking
 

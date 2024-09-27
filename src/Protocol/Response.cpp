@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/21 11:59:50 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/27 13:17:17 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/27 16:02:25 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -102,6 +102,9 @@
 
 				std::string header =
 					event->response_map["Protocol"] + " " + code + " " + description + "\r\n"
+					"Server: " + event->response_map["Server"] + "\r\n"
+					"Date: " + event->response_map["Date"] + "\r\n"
+					"Cache-Status: MISS" + "\r\n"
 					"Content-Type: " + Settings::mime_types["html"] + "\r\n"
 					"X-Content-Type-Options: nosniff\r\n"
 					"Content-Length: " + Utils::ltos(body.size()) + "\r\n"
@@ -135,6 +138,9 @@
 
 			std::string header =
 				event->response_map["Protocol"] + " " + event->response_map["Code"] + " " + event->response_map["Code-Description"] + "\r\n"
+				"Server: " + event->response_map["Server"] + "\r\n"
+				"Date: " + event->response_map["Date"] + "\r\n"
+				"Cache-Status: MISS" + "\r\n"
 				"Location: " + Security::encode_url(event->response_map["Path"]) + "\r\n"
 				"X-Content-Type-Options: nosniff" + "\r\n"
 				"Content-Length: 0" + "\r\n"
@@ -298,6 +304,9 @@
 
 				std::string header =																				//	Create the header of the response
 					event->response_map["Protocol"] + " " + event->response_map["Code"] + " " + event->response_map["Code-Description"] + "\r\n"
+					"Server: " + event->response_map["Server"] + "\r\n"
+					"Date: " + event->response_map["Date"] + "\r\n"
+					"Cache-Status: MISS" + "\r\n"
 					"Content-Type: " + Settings::mime_types["html"] + "\r\n"
 					"X-Content-Type-Options: nosniff" + "\r\n"
 					"Content-Length: " + Utils::ltos(body.size()) + "\r\n"
@@ -329,63 +338,76 @@
 
 		#pragma region Cache
 
-			int Protocol::file_cache(EventInfo * event) {
+			int Protocol::file_cache(EventInfo * event, time_t current_mod_time) {
 				if (!event->no_cache) {																								//	If cache is allowed
-					CacheInfo * fcache = Communication::cache.get(event->response_map["Path"]);										//	Get the file from cache
-					if (fcache) {																									//	If the file exist in cache
+					try {
+						CacheInfo & fcache = Communication::cache.get(event->response_map["Path"]);										//	Get the file from cache
 
-						std::string header; std::string content_length = "0";
-						size_t filesize = fcache->content.size(), start = 0, end = filesize;
+						if (fcache.mod_time >= current_mod_time) {																		//	If the file exist in cache
 
-						if (event->response_map["Range"].size() > 7) {																//	Send a fragment of the file
-							size_t temp = 0;
-							std::string value = event->response_map["Range"].substr(6);
-							if (value[0] == '-') {																					//	bytes=-1024		The client asks for the last 1024 bytes of the file
-								if (Utils::stol(value.substr(1), temp) || filesize > temp) { return (0); } // error
-								start = filesize - temp;
-							} else if (value[value.size() - 1] == '-') {															//	bytes=1024-		The client asks for all bytes starting from byte 1024 to the end of the file
-								if (Utils::stol(value.substr(0, value.size() - 1), temp) || filesize > temp) { return (0); } // error
-								start = temp;
-							} else {																								//	bytes=0-1023	The client asks for bytes from 0 to 1023 (inclusive)
-								size_t pos = value.find_first_of('-');
-								if (pos == std::string::npos) { return (0); } // error
-								if (Utils::stol(value.substr(0, pos), temp) || filesize > temp) { return (0); } // error
-								start = temp;
-								if (Utils::stol(value.substr(pos + 1), temp) || filesize > temp) { return (0); } // error
-								end = temp;
+							std::string header; std::string content_length = "0";
+							size_t filesize = fcache.content.size(), start = 0, end = filesize;
+
+							if (event->response_map["Range"].size() > 7) {																//	Send a fragment of the file
+								size_t temp = 0;
+								std::string value = event->response_map["Range"].substr(6);
+								if (value[0] == '-') {																					//	bytes=-1024		The client asks for the last 1024 bytes of the file
+									if (Utils::stol(value.substr(1), temp) || filesize > temp) { return (0); } // error
+									start = filesize - temp;
+								} else if (value[value.size() - 1] == '-') {															//	bytes=1024-		The client asks for all bytes starting from byte 1024 to the end of the file
+									if (Utils::stol(value.substr(0, value.size() - 1), temp) || filesize > temp) { return (0); } // error
+									start = temp;
+								} else {																								//	bytes=0-1023	The client asks for bytes from 0 to 1023 (inclusive)
+									size_t pos = value.find_first_of('-');
+									if (pos == std::string::npos) { return (0); } // error
+									if (Utils::stol(value.substr(0, pos), temp) || filesize > temp) { return (0); } // error
+									start = temp;
+									if (Utils::stol(value.substr(pos + 1), temp) || filesize > temp) { return (0); } // error
+									end = temp;
+								}
+								header =
+									event->response_map["Protocol"] + " " + event->response_map["Code"] + " " + event->response_map["Code-Description"] + "\r\n"
+									"Server: " + event->response_map["Server"] + "\r\n"
+									"Date: " + event->response_map["Date"] + "\r\n"
+									"Cache-Status: HIT" + "\r\n"
+									"Age: " + Utils::str_time(time(NULL) - fcache.added_time) + "\r\n"
+									"Last-Modified: " + fcache.mod_stime + "\r\n"
+									"Content-Type: " + event->response_map["Content-Type"] + "\r\n"
+									"X-Content-Type-Options: nosniff" + "\r\n"
+									"Content-Range: bytes " + Utils::ltos(start) + "-" + Utils::ltos(end) + "/" + Utils::ltos(filesize) + "\r\n"
+									"Content-Length: " + Utils::ltos(end - start) + "\r\n"
+									"Connection: " + event->response_map["Connection"] + "\r\n\r\n";
+							} else {
+								header =
+									event->response_map["Protocol"] + " " + event->response_map["Code"] + " " + event->response_map["Code-Description"] + "\r\n"
+									"Server: " + event->response_map["Server"] + "\r\n"
+									"Date: " + event->response_map["Date"] + "\r\n"
+									"Cache-Status: HIT" + "\r\n"
+									"Age: " + Utils::str_time(time(NULL) - fcache.added_time) + "\r\n"
+									"Last-Modified: " + fcache.mod_stime + "\r\n"
+									"Content-Type: " + event->response_map["Content-Type"] + "\r\n"
+									"X-Content-Type-Options: nosniff" + "\r\n"
+									"Content-Length: " + Utils::ltos(end - start) + "\r\n"
+									"Connection: " + event->response_map["Connection"] + "\r\n\r\n";
 							}
-							header =
-								event->response_map["Protocol"] + " " + event->response_map["Code"] + " " + event->response_map["Code-Description"] + "\r\n"
-								"Content-Type: " + event->response_map["Content-Type"] + "\r\n"
-								"X-Content-Type-Options: nosniff" + "\r\n"
-								"Content-Range: bytes " + Utils::ltos(start) + "-" + Utils::ltos(end) + "/" + Utils::ltos(filesize) + "\r\n"
-								"Content-Length: " + Utils::ltos(end - start) + "\r\n"
-								"Connection: " + event->response_map["Connection"] + "\r\n\r\n";
-						} else {
-							header =
-								event->response_map["Protocol"] + " " + event->response_map["Code"] + " " + event->response_map["Code-Description"] + "\r\n"
-								"Content-Type: " + event->response_map["Content-Type"] + "\r\n"
-								"X-Content-Type-Options: nosniff" + "\r\n"
-								"Content-Length: " + Utils::ltos(end - start) + "\r\n"
-								"Connection: " + event->response_map["Connection"] + "\r\n\r\n";
+
+							event->write_info = 0;																						//	Set some flags
+							event->write_size = 0;																						//	Set some flags
+							event->write_maxsize = header.size();
+							event->response_size = 0;
+							event->write_buffer.clear();																				//	Clear write_buffer
+							event->write_buffer.insert(event->write_buffer.end(), header.begin(), header.end());						//	Copy the header to write_buffer
+
+							if (event->header_map["Method"] != "HEAD") {
+								event->write_maxsize = header.size() + (end - start);													//	Set some flags
+								event->response_size = end - start;
+								event->write_buffer.insert(event->write_buffer.end(), fcache.content.begin(), fcache.content.end());	//	Copy the body to write_buffer
+							}
+
+							if (Epoll::set(event->fd, true, true) == -1) event->client->remove();										//	Set EPOLL to monitor write events
+							return (1);
 						}
-
-						event->write_info = 0;																						//	Set some flags
-						event->write_size = 0;																						//	Set some flags
-						event->write_maxsize = header.size();
-						event->response_size = 0;
-						event->write_buffer.clear();																				//	Clear write_buffer
-						event->write_buffer.insert(event->write_buffer.end(), header.begin(), header.end());						//	Copy the header to write_buffer
-
-						if (event->header_map["Method"] != "HEAD") {
-							event->write_maxsize = header.size() + (end - start);														//	Set some flags
-							event->response_size = end - start;
-							event->write_buffer.insert(event->write_buffer.end(), fcache->content.begin(), fcache->content.end());	//	Copy the body to write_buffer
-						}
-
-						if (Epoll::set(event->fd, true, true) == -1) event->client->remove();										//	Set EPOLL to monitor write events
-						return (1);
-					}
+					} catch(...) { return (0); }
 				}
 
 				return (0);
@@ -401,7 +423,8 @@
 				std::string path = event->response_map["Path"];
 				if (path.empty()) { event->client->remove(); return; }
 
-				if (file_cache(event)) return;
+				event->response_map["Last-Modified"] = Utils::file_modification_time(path.c_str(), true);
+				if (file_cache(event, Utils::file_modification_time_data(path.c_str()))) return;
 
 				int fd = open(path.c_str(), O_RDONLY);																	//	Open the file
 				if (fd == -1) return;																					//	If error opening, return
@@ -432,6 +455,10 @@
 					}
 					header =
 						event->response_map["Protocol"] + " " + "206" + " " + "Partial Content" + "\r\n"
+						"Server: " + event->response_map["Server"] + "\r\n"
+						"Date: " + event->response_map["Date"] + "\r\n"
+						"Cache-Status: MISS" + "\r\n"
+						"Last-Modified: " + event->response_map["Last-Modified"] + "\r\n"
 						"Accept-Ranges: bytes" + "\r\n"
 						"Content-Type: " + event->response_map["Content-Type"] + "\r\n"
 						"Cache-Control: public, max-age=3600" + "\r\n"
@@ -442,6 +469,10 @@
 				} else {
 					header =
 						event->response_map["Protocol"] + " " + event->response_map["Code"] + " " + event->response_map["Code-Description"] + "\r\n"
+						"Server: " + event->response_map["Server"] + "\r\n"
+						"Date: " + event->response_map["Date"] + "\r\n"
+						"Cache-Status: MISS" + "\r\n"
+						"Last-Modified: " + event->response_map["Last-Modified"] + "\r\n"
 						"Accept-Ranges: bytes" + "\r\n"
 						"Content-Type: " + event->response_map["Content-Type"] + "\r\n"
 						"X-Content-Type-Options: nosniff" + "\r\n"
@@ -518,7 +549,7 @@
 			void Protocol::variables_cgi(EventInfo * event, std::vector<std::string> & cgi_vars) {
 				if (!event) return;
 
-				cgi_vars.push_back("SERVER_SOFTWARE=" + Settings::server_name + "/" + Settings::server_version);
+				cgi_vars.push_back("SERVER_SOFTWARE=" + event->response_map["Server"]);
 				cgi_vars.push_back("REQUEST_METHOD=" + event->header_map["Method"]);
 				cgi_vars.push_back("REQUEST_URI=" + event->header_map["$request_uri"]);
 				cgi_vars.push_back("QUERY_STRING=" + event->header_map["$query_string"]);

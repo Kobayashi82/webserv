@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 18:57:42 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/21 19:01:18 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/27 14:06:29 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,6 +42,7 @@
 			long		elapsed_milliseconds(struct timeval start) const;								//	Gets the elapsed time in milliseconds
 			std::string	elapsed_time() const;															//	Gets the elapsed time in HH:MM:SS format
 			std::string	current_time() const;															//	Gets the current time in HH:MM:SS format
+			std::string current_time_header() const;													//	Gets the current time in HTTP header format
 			std::string	current_date() const;															//	Gets the current date in DD:MM:YYYY format
 
 	};

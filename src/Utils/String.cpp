@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:36:49 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/27 12:58:12 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/27 15:57:13 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 
 #include <sstream>																						//	For std::stringstream to format strings
 #include <iomanip>																						//	For stream manipulators like std::setw and std::setfill
+#include <cstdio>																						//	For sprintf() to get a time_t in seconds
 #include <algorithm>																					//	For std::find()
 
 #pragma region Trim
@@ -240,6 +241,17 @@
 			else				result += *it;
 		}
 		return (result);
+	}
+
+#pragma endregion
+
+#pragma region STR Time
+
+	std::string Utils::str_time(time_t time) {
+		char buffer[20];
+		sprintf(buffer, "%ld", (long)time);
+
+		return (std::string(buffer));
 	}
 
 #pragma endregion

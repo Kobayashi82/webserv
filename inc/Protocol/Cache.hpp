@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/24 19:39:57 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/26 14:02:03 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/27 15:57:27 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,11 +25,15 @@
 		std::string	path;																				//	The file path or key associated with the cache entry
 		std::string	content;																			//	The content stored in the cache for the given path
 		size_t		size;																				//	The size of the cached content, typically in bytes
+
+		std::string	mod_stime;																			//	The modification time of the file as string
+		time_t		mod_time;																			//	The modification time of the file as seconds
+		time_t		added_time;																			//	The time the file was added as seconds
 		time_t		expire;																				//	The expiration time of the cache entry
 
 		//	Constructors
-		CacheInfo(const std::string & _path, const std::string & _content, time_t _expire);				//	Parameterized constructor
-		CacheInfo(const CacheInfo & src);																//	Copy constructor
+		CacheInfo(const std::string & _path, const std::string & _content, std::string _mod_stime, time_t _mod_time, time_t _expire);	//	Parameterized constructor
+		CacheInfo(const CacheInfo & src);																								//	Copy constructor
 
 		//	Overloads
 		CacheInfo & 	operator=(const CacheInfo & rhs);												//	Overload for assignation
@@ -63,12 +67,12 @@ class Cache {
 		bool	operator==(const Cache & rhs) const;													//	Overload for comparison
 
 		//	Methods
-		CacheInfo *	get(const std::string & path);														//	Gets a pointer to the cache entry if it exists and updates the last usage order
-		void		add(const std::string & path, const std::string & content);							//	Adds a new entry. If the cache exceeds the maximum size, removes the least used entry
-		void		remove(const std::string & path);													//	Removes the cache entry associated with the given path
-		void		remove_expired();																	//	Removes all expired cache entries
-		void		remove_least_used();																//	Removes the least recently used cache entry
-		void		clear();																			//	Clears all cache entries
+		CacheInfo &	get(const std::string & path);																					//	Gets a pointer to the cache entry if it exists and updates the last usage order
+		void		add(const std::string & path, const std::string & content, const std::string & mod_stime, time_t mod_time);		//	Adds a new entry. If the cache exceeds the maximum size, removes the least used entry
+		void		remove(const std::string & path);																				//	Removes the cache entry associated with the given path
+		void		remove_expired();																								//	Removes all expired cache entries
+		void		remove_least_used();																							//	Removes the least recently used cache entry
+		void		clear();																										//	Clears all cache entries
 
 	private:
 	

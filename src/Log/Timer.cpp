@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:17:42 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/21 19:01:10 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/27 14:07:53 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,6 +81,16 @@
                 << std::setw(2) << std::setfill('0') << seconds;
             return (oss.str());
         }
+
+		std::string Timer::current_time_header() const {
+			time_t now = time(0);
+			struct tm* timeInfo = gmtime(&now);
+
+			char date[30];
+			strftime(date, sizeof(date), "%a, %d %b %Y %H:%M:%S GMT", timeInfo);
+
+			return (std::string(date));
+		}
 
     #pragma endregion
 

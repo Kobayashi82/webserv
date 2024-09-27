@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 12:49:42 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/26 20:08:30 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/27 13:46:38 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,7 +46,7 @@
 			//	Methods
 			static void process_response(EventInfo * event);											//	Process the response type and return the appropriate response
 
-			static int	file_cache(EventInfo * event);													//	Gets a file from cache (if exists)
+			static int	file_cache(EventInfo * event, time_t current_mod_time);							//	Gets a file from cache (if exists)
 			static void variables_cgi(EventInfo * event, std::vector<std::string> & cgi_vars);			//	Creates variables for a CGI
 
 	};

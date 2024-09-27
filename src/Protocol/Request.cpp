@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/21 11:52:00 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/27 13:17:54 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/27 16:39:18 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,7 +28,6 @@
 		//	?		Server:			nginx/1.18.0 (Ubuntu)
 		//	?		Date:			Thu, 26 Sep 2024 14:51:34 GMT
 		//	?		Last-Modified:	Fri, 26 Jul 2024 11:13:53 GMT	
-		//	?		HEAD not sending Content-Length
 
 		void Protocol::parse_request(EventInfo * event) {
 			if (!event) return;
@@ -38,6 +37,9 @@
 			event->response_map["Protocol"] = "HTTP/1.1";
 			event->response_map["Connection"] = event->header_map["Connection"];
 			if (event->response_map["Connection"].empty()) event->response_map["Connection"] = "keep-alive";
+
+			event->response_map["Server"] = Settings::server_name + "/" + Settings::server_version;
+			event->response_map["Date"] = Settings::timer.current_time_header();
 
 		//	Method
 			size_t content_length = 0;
@@ -61,13 +63,9 @@
 		//	If (MIME != response type) { }
 
 		event->response_map["Content-Type"] = "text/plain";
+		event->response_map["Path"] = event->header_map["Path"].substr(1);
 
-		if (event->header_map["Path"] == "/favicon.ico") {
-			event->response_map["Path"] = "favicon.ico";
-			event->response_map["Method"] = "File";
-		} else if (event->response_map["Method"] != "Error") {
-			event->response_map["Method"] = "CGI";
-		}
+		if (event->response_map["Method"] != "Error") event->response_map["Method"] = "File";
 
 		//	If Method is Directory
 			if (event->response_map["Method"] == "Directory") {
@@ -85,9 +83,10 @@
 
 				size_t pos1 = event->header_map["Cache-Control"].find("no-cache");
 				size_t pos2 = event->header_map["Cache-Control"].find("no-store");
-				event->no_cache = !(pos1 != std::string::npos || pos2 != std::string::npos);							//	BEWARE the ! - MUST BE REMOVED
+				event->no_cache = (pos1 != std::string::npos || pos2 != std::string::npos);
 
-				event->response_map["Path"] = "index.html";
+				if (event->response_map["Path"].empty()) event->response_map["Path"] = "index.html";
+
 				//event->response_map["Path"] = "foto.jpg";
 				//event->response_map["Path"] = "big2.mp4";
 				//event->response_map["Path"] = "big.mkv";

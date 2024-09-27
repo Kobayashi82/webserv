@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/27 09:32:08 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/27 13:16:23 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/27 16:39:22 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,7 +62,6 @@
 
 						int result = Protocol::parse_header(event);																				//	Try to parse the header (maybe the header is not there yet)
 						if (result == 0) {																										//	There is a header
-
 							event->read_size = event->read_buffer.size() - event->header.size();												//	Set 'read_size'
 							event->read_buffer.erase(event->read_buffer.begin(), event->read_buffer.begin() + event->header.size());			//	Remove the header from 'read_buffer'
 							Protocol::process_request(event);																					//	Process the request
@@ -203,12 +202,12 @@
 				//	Cache allowed and all data has been read
 					} else if (event->read_size >= event->read_maxsize) {
 						std::string data(event->read_buffer.begin(), event->read_buffer.end());												//	Create a string with the data
-						cache.add(event->read_path, data);																					//	Add the data to the cache
 
-						EventInfo * c_event = Event::get(event->client->fd);																//	Get the client's event
-						c_event->write_info = 3;																							//	Set a flag (no more data)
-						c_event->write_buffer.insert(c_event->write_buffer.end(), event->read_buffer.begin(), event->read_buffer.end());	//	Send the data to client's 'write_buffer'
-						Event::remove(event->fd); return (1);																				//	Remove the event
+						EventInfo * c_event = Event::get(event->client->fd);																										//	Get the client's event
+						cache.add(event->read_path, data, c_event->response_map["Last-Modified"], Utils::file_modification_time_data(c_event->response_map["Path"].c_str()));		//	Add the data to the cache
+						c_event->write_info = 3;																																	//	Set a flag (no more data)
+						c_event->write_buffer.insert(c_event->write_buffer.end(), event->read_buffer.begin(), event->read_buffer.end());											//	Send the data to client's 'write_buffer'
+						Event::remove(event->fd); return (1);																														//	Remove the event
 					}
 
 			//	No data

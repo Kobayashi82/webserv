@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 22:23:52 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/26 22:13:54 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/27 15:57:18 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -143,19 +143,31 @@
 
 #pragma region Modification Time
 
-	std::string Utils::file_modification_time(const std::string path) {
+	std::string Utils::file_modification_time(const std::string path, bool is_header) {
 		struct stat fileInfo;
 
 		if (stat(path.c_str(), &fileInfo) != 0) return ("");
 
 		time_t modTime = fileInfo.st_mtime;
-		struct tm * timeInfo = localtime(&modTime);														//	Convert to local time
 
-				
-		char date[11];																			//	Format the date (dd/mm/yyyy)
-		snprintf(date, sizeof(date), "%02d/%02d/%04d", timeInfo->tm_mday, timeInfo->tm_mon + 1, timeInfo->tm_year + 1900);
+		char date[30];
+		if (is_header) {																				//	Format for a HTTP header
+			struct tm* timeInfo = gmtime(&modTime);
+			strftime(date, sizeof(date), "%a, %d %b %Y %H:%M:%S GMT", timeInfo);						//	Convert to GMT time
+		} else {
+			struct tm * timeInfo = localtime(&modTime);													//	Convert to local time
+			strftime(date, sizeof(date), "%d/%m/%Y", timeInfo);
+		}
 
 		return (date);
+	}
+
+	time_t Utils::file_modification_time_data(const std::string & path) {
+		struct stat fileInfo;
+
+		if (stat(path.c_str(), &fileInfo) != 0) return ((time_t)(-1));
+		
+		return (fileInfo.st_mtime);
 	}
 
 #pragma endregion
