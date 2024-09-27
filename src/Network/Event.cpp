@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/18 11:21:01 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/26 13:40:35 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/27 20:41:52 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,7 +29,8 @@
 			read_path = ""; read_size = 0; read_maxsize = 0; read_info = 0;
 			write_path = ""; write_size = 0; write_maxsize = 0; write_info = 0; cgi_fd = -1;
 			
-			no_cache = false; close = false; vserver_data = NULL;
+			no_cache = false; close = false;
+			VServ = NULL; Loc = NULL; vserver_data = NULL;
 
 			response_size = 0; body_size = 0; body_maxsize = 0;
 			last_activity = std::time(NULL); gettimeofday(&response_time, NULL);
@@ -40,7 +41,8 @@
 			read_path = ""; read_size = 0; read_maxsize = 0; read_info = 0;
 			write_path = ""; write_size = 0; write_maxsize = 0; write_info = 0; cgi_fd = -1;
 			
-			no_cache = false; close = false; vserver_data = NULL;
+			no_cache = false; close = false;
+			VServ = NULL; Loc = NULL; vserver_data = NULL;
 
 			response_size = 0; body_size = 0; body_maxsize = 0;
 			last_activity = std::time(NULL); gettimeofday(&response_time, NULL);
@@ -60,7 +62,8 @@
 				read_path = rhs.read_path; read_size = rhs.read_size; read_maxsize = rhs.read_maxsize; read_info = rhs.read_info;
 				write_path = rhs.write_path; write_size = rhs.write_size; write_maxsize = rhs.write_maxsize; write_info = rhs.write_info; cgi_fd = rhs.cgi_fd;
 
-				no_cache = rhs.no_cache; close = rhs.close; vserver_data = rhs.vserver_data;
+				no_cache = rhs.no_cache; close = rhs.close;
+				VServ = rhs.VServ; Loc = rhs.Loc; vserver_data = rhs.vserver_data;
 
 				read_buffer = rhs.read_buffer; write_buffer = rhs.write_buffer;
 

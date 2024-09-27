@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/26 12:27:58 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/27 17:00:46 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/27 20:23:02 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,7 +66,26 @@
 
     #pragma region Clear
 
-		void Settings::clear(bool reset) { vserver_clear(); global.data.clear(); if (reset) { bracket_lvl = 0; loaded = false; }}
+		void Settings::clear(bool reset) {
+			vserver_clear(); global.data.clear(); global.method.clear();
+			if (reset) {
+				terminate = -1;
+				loaded = false;
+				bracket_lvl = 0;
+				config_created = false;
+				line_count = 0;
+				current_vserver = -1;
+				global.bad_config = false;
+				global.status = false;
+				global.addresses.clear();
+				global.config_displayed = false;
+				global.config.clear();
+				global.config_index = 0;
+				global.log.clear();
+				global.log_index = 0;
+				global.autolog = true;
+			}
+		}
 
 	#pragma endregion
 
@@ -188,7 +207,7 @@
 					else									{	log_error_add(RD "Could not load the configuration file '" Y + file + RD "'" NC);				log_access_add("---"); }
 				}
 			}
-			Log::process_logs();
+			//Log::process_logs();
 		}
 
 	#pragma endregion

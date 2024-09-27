@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/14 14:37:32 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/25 15:56:36 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/27 20:18:13 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -374,6 +374,14 @@
 			#pragma region Key_R
 
 				static void Key_R() {
+					Thread::set_int(Display::mutex, Settings::terminate, 4);
+				}
+
+			#pragma endregion
+
+			#pragma region Key_T
+
+				static void Key_T() {
 					std::cout << CB CHIDE CS CUU; std::cout.clear();
 					Display::drawing = false; Display::failCount = 0; Display::Output();
 				}
@@ -404,7 +412,8 @@
 				if (c == 'l' || c == 'L')	Key_L();																									//	(L)og
 				if (c == 's' || c == 'S')	Key_S();																									//	(S)ettings
 				if (c == 'e' || c == 'E')	Key_E();																									//	(E)xit
-				if (c == 'r' || c == 'R')	Key_R();																									//	(R)eset terminal
+				if (c == 'r' || c == 'R')	Key_R();																									//	(R)eload configuration
+				if (c == 't' || c == 'T')	Key_T();																									//	Reset (T)erminal
 			}
 
 		#pragma endregion
@@ -760,6 +769,7 @@
 				usleep(UPDATE_INTERVAL * 1000);
 			}
 
+			if (Thread::get_int(mutex, Settings::terminate) == 4) return (NULL);
 			if (!background && !Settings::check_only && isRawMode() && !ForceRawModeDisabled) {
 				usleep(100000); std::cout.flush(); std::cout.clear(); maxFails = 10; failCount = 0; drawing = false;
 				Log::log(G + Settings::server_name + " " + Settings::server_version + " closed successfully", Log::GLOBAL_ACCESS); Log::log("---", Log::GLOBAL_ACCESS); Log::process_logs(); Output();
@@ -775,7 +785,7 @@
 	#pragma region Start
 
 		void Display::start() {
-			Thread::set_bool(mutex, _terminate, false);
+			_terminate = false;
 			Thread::mutex_set(mutex, Thread::MTX_INIT);
 			Thread::thread_set(_thread, Thread::THRD_CREATE, main);
 		}

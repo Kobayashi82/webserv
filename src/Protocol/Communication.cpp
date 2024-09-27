@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/27 09:32:08 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/27 17:13:25 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/28 00:23:54 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -149,7 +149,7 @@
 					gettimeofday(&event->response_time, NULL);																									//	Reset response time
 					
 					Log::log(	"TRF|" + event->header_map["Method"] + "|" + event->header_map["Path"] + "|" + event->response_map["Code"] + "|" + Utils::ltos(event->response_size) +			//	Log the client request
-								"|" + time + "|" + event->client->ip, Log::BOTH_ACCESS, event->socket->VServ, event->vserver_data);
+								"|" + time + "|" + event->client->ip, Log::BOTH_ACCESS, event->VServ, event->vserver_data);
 
 				//	Check close connection
 					long MaxRequests = Settings::KEEP_ALIVE_TIMEOUT;

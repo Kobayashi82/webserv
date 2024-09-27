@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:36:49 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/27 17:12:56 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/28 00:17:47 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,22 @@
 
 		while (end != start && std::isspace(static_cast<unsigned char>(*(end - 1)))) --end;
 		str = std::string(start, end);
+	}
+
+	std::string Utils::strim(std::string str) {
+		if (str.empty()) return (str);
+		std::string::iterator start = str.begin();
+		std::string::iterator end = str.end();
+
+		while (start != str.end() && std::isspace(static_cast<unsigned char>(*start))) start++;
+
+		std::string::iterator hashPos = std::find(start, str.end(), '#');
+		if (hashPos != str.end()) end = hashPos;
+
+		while (end != start && std::isspace(static_cast<unsigned char>(*(end - 1)))) --end;
+		str = std::string(start, end);
+
+		return (str);
 	}
 
 #pragma endregion

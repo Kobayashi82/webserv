@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/18 11:20:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/26 13:46:51 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/27 20:44:12 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,8 @@
 	enum e_type { NOTHING, SOCKET, CLIENT, DATA, CGI };
 
 	struct SocketInfo;																					//	Forward declaration of SocketInfo
+	class VServer;																						//	Forward declaration of VServer
+	class Location;																						//	Forward declaration of Location
 	struct EventInfo {
 
 		//	Variables
@@ -63,6 +65,8 @@
 		struct timeval										response_time;
 		time_t												last_activity;
 
+		VServer *											VServ;
+		Location *											Loc;
 		std::vector<std::pair<std::string, std::string> > * vserver_data;								//	Data container from which the request is served (Global, VServer, Location)
 
 		//	Constructors

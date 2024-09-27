@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:37:20 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/27 17:00:30 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/28 00:17:52 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,7 @@ class Utils {
 
 		//	String
 		static void 		trim(std::string & str);													//	Trim a string passed by reference from spaces on both sides and also trim any "# comments"
+		static std::string	strim(std::string str);														//	Trim a string passed by reference from spaces on both sides and also trim any "# comments"
 		static std::string	escape_spaces(const std::string & str);										//	Escape spaces in the string passed by reference and return a new string
 		static void 		toLower(std::string & str);													//	Convert a string passed by reference to lower case
 		static void			toUpper(std::string & str);													//	Convert a string passed by reference to upper case

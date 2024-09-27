@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/21 11:59:50 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/27 17:13:16 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/28 01:24:46 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -424,8 +424,7 @@
 				if (path.empty()) { event->client->remove(); return; }
 
 				event->response_map["Last-Modified"] = Utils::file_modification_time(path.c_str(), true);
-				if (file_cache(event, Utils::file_modification_time_data(path.c_str()))) return;
-
+				if (file_cache(event, 0)) return;
 				int fd = open(path.c_str(), O_RDONLY);																	//	Open the file
 				if (fd == -1) return;																					//	If error opening, return
 				Utils::NonBlocking_FD(fd);																				//	Set the FD as non-blocking
