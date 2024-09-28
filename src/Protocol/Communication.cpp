@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/27 09:32:08 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/28 14:12:33 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/28 20:42:26 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -276,7 +276,10 @@
 	
 						int result = Protocol::parse_header(event);																//	Try to parse the header (maybe the header is not there yet)
 						if (result == 0) {																						//	There is a header
-
+							c_event->response_map["Protocol"] = event->header_map["Protocol"];
+							c_event->response_map["Code"] = event->header_map["Code"];
+							c_event->response_map["Code-Description"] = event->header_map["Code-Description"];
+							 c_event->response_map["Connection"] = event->header_map["Connection"];
 							if (event->header_map["Transfer-Encoding"] == "chunked") {											//	Get 'Transfer-Encoding'
 								c_event->response_size = event->read_size - event->header.size();								//	Set 'response_size'
 								event->read_info = 2;																			//	Set a flag (content is chunked)

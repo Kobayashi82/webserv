@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:37:20 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/28 00:17:52 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/28 22:31:59 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,7 +56,8 @@ class Utils {
 		//	Files
 		static std::string	programPath();																//	Get the path of the executable (return '/' if fails)
 		static int 			createPath(const std::string & path);										//	Create the indicated path (return 0 if successful)
-		static int 			file_exists(const std::string & File);										//	Check if a file exists (0 = Exists, 1 = Does Not Exist, 2 = No read permissions)
+		static int 			file_exists(const std::string & path, bool is_exec = false);				//	Check if a file exists (0 = Exists, 1 = Does Not Exist, 2 = No read/execution permissions, 3 = Not a file)
+		static int 			directory_exists(const std::string & path);									//	Check if a directory exists (0 = Exists, 1 = Does Not Exist, 2 = No read permissions, 3 = Not a directory)
 		static bool			isFile(const std::string & path);											//	Check if a path is a file
 		static bool			isDirectory(const std::string & path);										//	Check if a path is a directory
 		static std::string	fullpath(const std::string & path);											//	Return the full path of a path (process './' and '../' and must be absolute)

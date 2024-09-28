@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 14:02:09 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/26 22:49:04 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/29 00:18:19 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -92,6 +92,8 @@
 		mime_types["rss"]		= "application/rss+xml";
 		mime_types["mml"]		= "text/mathml";
 		mime_types["txt"]		= "text/plain";
+		mime_types["ini"]		= "text/plain";
+		mime_types["cfg"]		= "text/plain";
 		mime_types["jad"]		= "text/vnd.sun.j2me.app-descriptor";
 		mime_types["wml"]		= "text/vnd.wap.wml";
 		mime_types["htc"]		= "text/x-component";

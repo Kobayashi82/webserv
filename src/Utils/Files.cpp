@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 22:23:52 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/28 13:13:01 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/29 00:26:02 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,9 +60,28 @@
 
 #pragma region File Exists
 
-	int Utils::file_exists(const std::string & File) {
-		if (access(File.c_str(), F_OK) < 0) return (1);
-		if (access(File.c_str(), R_OK) < 0) return (2);
+	int Utils::file_exists(const std::string & path, bool is_exec) {
+		struct stat path_stat;
+
+		if (stat(path.c_str(), &path_stat) != 0)		return (1);										//	Check if the file exists
+		if (!S_ISREG(path_stat.st_mode))				return (3);										//	Is not a file
+		if (!is_exec && !(path_stat.st_mode & S_IRUSR))	return (2);										//	Check if the file has read permissions
+		if (is_exec && !(path_stat.st_mode & S_IXUSR))	return (2);										//	Check if the file has execution permissions
+
+		return (0);
+	}
+
+#pragma endregion
+
+#pragma region Directory Exists
+
+	int Utils::directory_exists(const std::string & path) {
+		struct stat path_stat;
+
+		if (stat(path.c_str(), &path_stat) != 0)		return (1);										//	Check if the file exists
+		if (!S_ISDIR(path_stat.st_mode))				return (3);										//	Is not a directory
+		if (!(path_stat.st_mode & S_IRUSR))	return (2);													//	Check if the file has read permissions
+
 		return (0);
 	}
 
@@ -71,7 +90,9 @@
 #pragma region IsFile
 
 	bool Utils::isFile(const std::string & path) {
-		struct stat path_stat; stat(path.c_str(), &path_stat);
+		struct stat path_stat;
+
+		if (stat(path.c_str(), &path_stat) != 0) return (false);
 		return (S_ISREG(path_stat.st_mode));
 	}
 

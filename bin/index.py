@@ -1,5 +1,8 @@
+#!/usr/bin/python3
 
-print("Content-Type: text/html\r\n\r\n")
+print("HTTP/1.1 200 OK\r")
+print("Content-Type: text/html\r")
+print("Content-Length:131\r\n\r")
 
 print("<html><body>")
 print("<h1>Hola, mundo desde Python CGI!</h1>")

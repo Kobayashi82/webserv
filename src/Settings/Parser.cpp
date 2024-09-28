@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:30:57 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/27 23:18:10 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/28 20:42:41 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -411,7 +411,7 @@
 			if (values.size() == 0) { log_servers(RD + n_line + "Empty value for " Y "CGI" NC, VServ); global.bad_config = true; return (1); }
 			std::string filePath = values.back(); values.pop_back();
 			if (values.size() == 0) { log_servers(RD + n_line + "Missing value or path for " Y "CGI" NC, VServ); global.bad_config = true; return (1); }
-			if (filePath.empty() || (filePath[0] != '/' && filePath[0] != '~' && Utils::strToLower(filePath) != "self-cgi")) { log_servers(RD + n_line + "Invalid path for " Y "CGI" NC, VServ); global.bad_config = true; return (1); }
+			//if (filePath.empty() || (filePath[0] != '/' && filePath[0] != '~' && Utils::strToLower(filePath) != "self-cgi")) { log_servers(RD + n_line + "Invalid path for " Y "CGI" NC, VServ); global.bad_config = true; return (1); }
 			if (Utils::strToLower(filePath) != "self-cgi" && parse_path("CGI", filePath, true, true)) { global.bad_config = true; }
 
 			for (std::vector<std::string>::iterator it = values.begin(); it != values.end(); ++it) { value = *it;
@@ -436,7 +436,7 @@
 			if (values.size() == 0) { log_servers(RD + n_line + "Empty value for " Y "CGI" NC, &VServ); VServ.bad_config = true; return (1); }
 			std::string filePath = values.back(); values.pop_back();
 			if (values.size() == 0) { log_servers(RD + n_line + "Missing value or path for " Y "CGI" NC, &VServ); VServ.bad_config = true; return (1); }
-			if (filePath.empty() || (filePath[0] != '/' && filePath[0] != '~' && Utils::strToLower(filePath) != "self-cgi")) { log_servers(RD + n_line + "Invalid path for " Y "CGI" NC, &VServ); VServ.bad_config = true; return (1); }
+			//if (filePath.empty() || (filePath[0] != '/' && filePath[0] != '~' && Utils::strToLower(filePath) != "self-cgi")) { log_servers(RD + n_line + "Invalid path for " Y "CGI" NC, &VServ); VServ.bad_config = true; return (1); }
 			if (Utils::strToLower(filePath) != "self-cgi" && parse_path("CGI", filePath, true, true)) { VServ.bad_config = true; }
 
 			for (std::vector<std::string>::iterator it = values.begin(); it != values.end(); ++it) { value = *it;
@@ -461,7 +461,7 @@
 			if (values.size() == 0) { log_servers(RD + n_line + "Empty value for " Y "CGI" NC, Loc.VServ); Loc.VServ->bad_config = true; return (1); }
 			std::string filePath = values.back(); values.pop_back();
 			if (values.size() == 0) { log_servers(RD + n_line + "Missing value or path for " Y "CGI" NC, Loc.VServ); Loc.VServ->bad_config = true; return (1); }
-			if (filePath.empty() || (filePath[0] != '/' && filePath[0] != '~' && Utils::strToLower(filePath) != "self-cgi")) { log_servers(RD + n_line + "Invalid path for " Y "CGI" NC, Loc.VServ); Loc.VServ->bad_config = true; return (1); }
+			//if (filePath.empty() || (filePath[0] != '/' && filePath[0] != '~' && Utils::strToLower(filePath) != "self-cgi")) { log_servers(RD + n_line + "Invalid path for " Y "CGI" NC, Loc.VServ); Loc.VServ->bad_config = true; return (1); }
 			if (Utils::strToLower(filePath) != "self-cgi" && parse_path("CGI", filePath, true, true)) { Loc.VServ->bad_config = true; }
 
 			for (std::vector<std::string>::iterator it = values.begin(); it != values.end(); ++it) { value = *it;
@@ -805,7 +805,8 @@
 
 					if (section == SERVER && section_bracket_lvl[1] == bracket_lvl)   {
 						section = GLOBAL; section_bracket_lvl[1] = 0; missing_directive(VServ); if (VServ.bad_config) VServ.force_off = true;
-						add(VServ); VServ.bad_config = false; VServ.force_off = false; VServ.clear(); PVServ = NULL;
+						add(VServ); global.add("server", Utils::ltos(Settings::vserver.size() - 1), true);
+						VServ.bad_config = false; VServ.force_off = false; VServ.clear(); PVServ = NULL;
 
 						for (std::deque<Location>::iterator l_it = vserver[vserver.size() - 1].location.begin(); l_it != vserver[vserver.size() - 1].location.end(); ++l_it) {
 							for (std::deque<Method>::iterator m_it =  l_it->method.begin(); m_it != l_it->method.end(); ++m_it)  m_it->Loc = &(*l_it);

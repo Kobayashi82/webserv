@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/21 11:59:50 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/28 14:12:29 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/29 01:00:53 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -162,7 +162,8 @@
 
 		#pragma region Add Style
 
-			static void add_style(std::string & body, const std::string & dir_path, const std::string root) {
+			static void add_style(std::string & body, std::string dir_path, const std::string root) {
+				if (dir_path == ".") dir_path = "/";
 				body +=
 					"<!DOCTYPE html>\n"
 					"<html lang=\"en\">\n"
@@ -245,9 +246,9 @@
 
 		#pragma region Add File
 
-			static void add_file(std::string & body, const std::string & dir_path, const std::string & file) {
-				size_t filesize = Utils::filesize(Settings::program_path + dir_path + file);
-				std::string mod_time = Utils::file_modification_time(Settings::program_path + dir_path + file);
+			static void add_file(std::string & body, const std::string & file) {
+				size_t filesize = Utils::filesize(file);
+				std::string mod_time = Utils::file_modification_time(file);
 				body +=
 				"<tr>\n"
 					"<td><a class=\"file\" href=" + Security::encode_url(file) + ">" + file + "</a></td>\n"
@@ -264,9 +265,11 @@
 				std::vector<std::string> files, directories;
 				
 				std::string dir_path = event->response_map["Path-Full"];
+				if (dir_path == "/") dir_path = ".";
 
-				DIR *dir = opendir((Settings::program_path + dir_path).c_str());									//	Open the directory
+				DIR *dir = opendir(".");																			//	Open the directory
 				if (!dir) {																							//	If error, return error... duh
+					Log::log(dir_path, Log::MEM_ACCESS);
 					event->response_map["Method"] ="Error";
 					event->response_map["Code"] = "404";
 					event->response_map["Code-Description"] = Settings::error_codes[Utils::sstol(event->response_map["Code"])];
@@ -280,8 +283,7 @@
 
 					if (name == "." || name == "..") continue;														//	ignore . and ..
 
-					std::string full_path = Settings::program_path + dir_path + "/" + name;
-					if (Utils::isDirectory(full_path))	directories.push_back(name + "/");								//	Add the directory to a list of directories
+					if (Utils::isDirectory(name))	directories.push_back(name + "/");								//	Add the directory to a list of directories
 					else							files.push_back(name);											//	Add the file to a list of files
 				}
 
@@ -294,7 +296,7 @@
 					add_dir(body, *it);
 
 				for (std::vector<std::string>::iterator it = files.begin(); it != files.end(); ++it)				//	Add files to the body
-					add_file(body, dir_path, *it);
+					add_file(body, *it);
 
 				body +=																								//	Finish the body of the response
 					"       </tbody>\n"
@@ -697,7 +699,7 @@
 						variables_cgi(event, cgi_vars);
 
 						char * args[3];
-						if (event->response_map["Self-CGI"] == "true") {
+						if (event->response_map["CGI-Path"] == "Self-CGI") {
 							args[0] = const_cast<char *>(event->response_map["Path-Full"].c_str());
 							args[1] = NULL;
 							args[2] = NULL;
@@ -706,6 +708,7 @@
 							args[1] = const_cast<char *>(event->response_map["Path-Full"].c_str());
 							args[2] = NULL;
 						}
+
 
 						for (size_t i = 0; i < cgi_vars.size(); ++i)
 							env_array.push_back(const_cast<char*>(cgi_vars[i].c_str()));
