@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/18 11:20:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/27 20:44:12 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/28 12:21:22 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,6 +56,8 @@
 		std::map<std::string, std::string>					response_map;
 		size_t												response_size;
 		std::string											response_method;
+		time_t												mod_time;
+		size_t												filesize;
 		
 		size_t												body_size;
 		size_t												body_maxsize;

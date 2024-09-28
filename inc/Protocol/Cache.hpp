@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/24 19:39:57 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/27 15:57:27 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/28 13:12:55 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,11 +29,12 @@
 		std::string	mod_stime;																			//	The modification time of the file as string
 		time_t		mod_time;																			//	The modification time of the file as seconds
 		time_t		added_time;																			//	The time the file was added as seconds
-		time_t		expire;																				//	The expiration time of the cache entry
+		time_t		expire_time;																		//	The expiration time of the cache entry
+		time_t		check_time;
 
 		//	Constructors
-		CacheInfo(const std::string & _path, const std::string & _content, std::string _mod_stime, time_t _mod_time, time_t _expire);	//	Parameterized constructor
-		CacheInfo(const CacheInfo & src);																								//	Copy constructor
+		CacheInfo(const std::string & _path, const std::string & _content, std::string _mod_stime, time_t _mod_time, time_t _expire_time);	//	Parameterized constructor
+		CacheInfo(const CacheInfo & src);																									//	Copy constructor
 
 		//	Overloads
 		CacheInfo & 	operator=(const CacheInfo & rhs);												//	Overload for assignation
@@ -41,6 +42,7 @@
 
 		//	Methods
 		bool			isExpired() const;																//	Return true if the CacheInfo has expired
+		bool			check();																		//	Return true if the CacheInfo must be check for changes in disk (when 60 seconds older or more)
 
 	};
 
@@ -67,6 +69,7 @@ class Cache {
 		bool	operator==(const Cache & rhs) const;													//	Overload for comparison
 
 		//	Methods
+		bool		exists(const std::string & path);																				//	Checks if a file is in cache
 		CacheInfo &	get(const std::string & path);																					//	Gets a pointer to the cache entry if it exists and updates the last usage order
 		void		add(const std::string & path, const std::string & content, const std::string & mod_stime, time_t mod_time);		//	Adds a new entry. If the cache exceeds the maximum size, removes the least used entry
 		void		remove(const std::string & path);																				//	Removes the cache entry associated with the given path
@@ -74,12 +77,18 @@ class Cache {
 		void		remove_least_used();																							//	Removes the least recently used cache entry
 		void		clear();																										//	Clears all cache entries
 
+		void		add_caching(const std::string & path);
+		bool		get_caching(const std::string & path);
+		void		remove_caching(const std::string & path);
+		void		cleanup_caching();
+
 	private:
 	
 		//	Variables
 		std::map <std::string, CacheInfo>							_cache;								//	Map to store cache entries, accessible by their path
 		std::list <std::map <std::string, CacheInfo>::iterator>		_order;								//	List to maintain the order of cache entries based on usage
 		size_t														_cache_size;						//	Current size of the cache in terms of the number of entries
+		std::map <std::string, bool>								_caching;							//	Map storing cache entries that are currently being read before being added to the cache
 
 		int															_expire_time;						//	Time in seconds after which a CacheInfo entry is considered expired
 		size_t														_max_size;							//	Maximum number of files to keep in cache

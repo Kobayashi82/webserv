@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/27 09:32:08 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/28 00:23:54 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/28 14:12:33 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -203,11 +203,12 @@
 					} else if (event->read_size >= event->read_maxsize) {
 						std::string data(event->read_buffer.begin(), event->read_buffer.end());												//	Create a string with the data
 
-						EventInfo * c_event = Event::get(event->client->fd);																										//	Get the client's event
-						cache.add(event->read_path, data, c_event->response_map["Last-Modified"], Utils::file_modification_time_data(c_event->response_map["Path"].c_str()));		//	Add the data to the cache
-						c_event->write_info = 3;																																	//	Set a flag (no more data)
-						c_event->write_buffer.insert(c_event->write_buffer.end(), event->read_buffer.begin(), event->read_buffer.end());											//	Send the data to client's 'write_buffer'
-						Event::remove(event->fd); return (1);																														//	Remove the event
+						EventInfo * c_event = Event::get(event->client->fd);																//	Get the client's event
+						cache.add(event->read_path, data, c_event->response_map["Last-Modified"], c_event->mod_time);						//	Add the data to the cache
+						Communication::cache.remove_caching(event->read_path);																//	Remove the file from the caching list
+						c_event->write_info = 3;																							//	Set a flag (no more data)
+						c_event->write_buffer.insert(c_event->write_buffer.end(), event->read_buffer.begin(), event->read_buffer.end());	//	Send the data to client's 'write_buffer'
+						Event::remove(event->fd); return (1);																				//	Remove the event
 					}
 
 			//	No data

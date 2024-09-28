@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 22:23:52 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/28 00:55:20 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/28 13:13:01 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -146,7 +146,6 @@
 
 	std::string Utils::file_modification_time(const std::string path, bool is_header) {
 		struct stat fileInfo;
-		return ("");
 		if (stat(path.c_str(), &fileInfo) != 0) return ("");
 
 		time_t modTime = fileInfo.st_mtime;
@@ -165,7 +164,7 @@
 
 	time_t Utils::file_modification_time_data(const std::string & path) {
 		struct stat fileInfo;
-		return (0);
+
 		if (stat(path.c_str(), &fileInfo) != 0) return ((time_t)(-1));
 		
 		return (fileInfo.st_mtime);

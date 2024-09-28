@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/21 11:59:50 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/28 01:24:46 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/28 14:12:29 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -263,7 +263,7 @@
 			void Protocol::response_directory(EventInfo * event) {
 				std::vector<std::string> files, directories;
 				
-				std::string dir_path = event->response_map["Path"];
+				std::string dir_path = event->response_map["Path-Full"];
 
 				DIR *dir = opendir((Settings::program_path + dir_path).c_str());									//	Open the directory
 				if (!dir) {																							//	If error, return error... duh
@@ -338,78 +338,76 @@
 
 		#pragma region Cache
 
-			int Protocol::file_cache(EventInfo * event, time_t current_mod_time) {
-				if (!event->no_cache) {																								//	If cache is allowed
+			int Protocol::file_cache(EventInfo * event, std::string & path) {
+				if (!event->no_cache || !Communication::cache.get_caching(path)) {													//	If cache is allowed
 					try {
-						CacheInfo & fcache = Communication::cache.get(event->response_map["Path"]);										//	Get the file from cache
+						CacheInfo & fcache = Communication::cache.get(path);														//	Get the file from cache
 
-						if (fcache.mod_time >= current_mod_time) {																		//	If the file exist in cache
+						std::string header; std::string content_length = "0";
+						size_t filesize = fcache.content.size(), start = 0, end = filesize;
 
-							std::string header; std::string content_length = "0";
-							size_t filesize = fcache.content.size(), start = 0, end = filesize;
-
-							if (event->response_map["Range"].size() > 7) {																//	Send a fragment of the file
-								size_t temp = 0;
-								std::string value = event->response_map["Range"].substr(6);
-								if (value[0] == '-') {																					//	bytes=-1024		The client asks for the last 1024 bytes of the file
-									if (Utils::stol(value.substr(1), temp) || filesize > temp) { return (0); } // error
-									start = filesize - temp;
-								} else if (value[value.size() - 1] == '-') {															//	bytes=1024-		The client asks for all bytes starting from byte 1024 to the end of the file
-									if (Utils::stol(value.substr(0, value.size() - 1), temp) || filesize > temp) { return (0); } // error
-									start = temp;
-								} else {																								//	bytes=0-1023	The client asks for bytes from 0 to 1023 (inclusive)
-									size_t pos = value.find_first_of('-');
-									if (pos == std::string::npos) { return (0); } // error
-									if (Utils::stol(value.substr(0, pos), temp) || filesize > temp) { return (0); } // error
-									start = temp;
-									if (Utils::stol(value.substr(pos + 1), temp) || filesize > temp) { return (0); } // error
-									end = temp;
-								}
-								header =
-									event->response_map["Protocol"] + " " + event->response_map["Code"] + " " + event->response_map["Code-Description"] + "\r\n"
-									"Server: " + event->response_map["Server"] + "\r\n"
-									"Date: " + event->response_map["Date"] + "\r\n"
-									"Cache-Status: HIT" + "\r\n"
-									"Age: " + Utils::str_time(time(NULL) - fcache.added_time) + "\r\n"
-									"Last-Modified: " + fcache.mod_stime + "\r\n"
-									"Content-Type: " + event->response_map["Content-Type"] + "\r\n"
-									"X-Content-Type-Options: nosniff" + "\r\n"
-									"Content-Range: bytes " + Utils::ltos(start) + "-" + Utils::ltos(end) + "/" + Utils::ltos(filesize) + "\r\n"
-									"Content-Length: " + Utils::ltos(end - start) + "\r\n"
-									"Connection: " + event->response_map["Connection"] + "\r\n\r\n";
-							} else {
-								header =
-									event->response_map["Protocol"] + " " + event->response_map["Code"] + " " + event->response_map["Code-Description"] + "\r\n"
-									"Server: " + event->response_map["Server"] + "\r\n"
-									"Date: " + event->response_map["Date"] + "\r\n"
-									"Cache-Status: HIT" + "\r\n"
-									"Age: " + Utils::str_time(time(NULL) - fcache.added_time) + "\r\n"
-									"Last-Modified: " + fcache.mod_stime + "\r\n"
-									"Content-Type: " + event->response_map["Content-Type"] + "\r\n"
-									"X-Content-Type-Options: nosniff" + "\r\n"
-									"Content-Length: " + Utils::ltos(end - start) + "\r\n"
-									"Connection: " + event->response_map["Connection"] + "\r\n\r\n";
+						if (event->response_map["Range"].size() > 7) {																//	Send a fragment of the file
+							size_t temp = 0;
+							std::string value = event->response_map["Range"].substr(6);
+							if (value[0] == '-') {																					//	bytes=-1024		The client asks for the last 1024 bytes of the file
+								if (Utils::stol(value.substr(1), temp) || filesize > temp) { return (0); } // error
+								start = filesize - temp;
+							} else if (value[value.size() - 1] == '-') {															//	bytes=1024-		The client asks for all bytes starting from byte 1024 to the end of the file
+								if (Utils::stol(value.substr(0, value.size() - 1), temp) || filesize > temp) { return (0); } // error
+								start = temp;
+							} else {																								//	bytes=0-1023	The client asks for bytes from 0 to 1023 (inclusive)
+								size_t pos = value.find_first_of('-');
+								if (pos == std::string::npos) { return (0); } // error
+								if (Utils::stol(value.substr(0, pos), temp) || filesize > temp) { return (0); } // error
+								start = temp;
+								if (Utils::stol(value.substr(pos + 1), temp) || filesize > temp) { return (0); } // error
+								end = temp;
 							}
-
-							event->write_info = 0;																						//	Set some flags
-							event->write_size = 0;																						//	Set some flags
-							event->write_maxsize = header.size();
-							event->response_size = 0;
-							event->write_buffer.clear();																				//	Clear write_buffer
-							event->write_buffer.insert(event->write_buffer.end(), header.begin(), header.end());						//	Copy the header to write_buffer
-
-							if (event->header_map["Method"] != "HEAD") {
-								event->write_maxsize = header.size() + (end - start);													//	Set some flags
-								event->response_size = end - start;
-								event->write_buffer.insert(event->write_buffer.end(), fcache.content.begin(), fcache.content.end());	//	Copy the body to write_buffer
-							}
-
-							if (Epoll::set(event->fd, true, true) == -1) event->client->remove();										//	Set EPOLL to monitor write events
-							return (1);
+							header =
+								event->response_map["Protocol"] + " " + event->response_map["Code"] + " " + event->response_map["Code-Description"] + "\r\n"
+								"Server: " + event->response_map["Server"] + "\r\n"
+								"Date: " + event->response_map["Date"] + "\r\n"
+								"Cache-Status: HIT" + "\r\n"
+								"Age: " + Utils::str_time(time(NULL) - fcache.added_time) + "\r\n"
+								"Last-Modified: " + fcache.mod_stime + "\r\n"
+								"Content-Type: " + event->response_map["Content-Type"] + "\r\n"
+								"X-Content-Type-Options: nosniff" + "\r\n"
+								"Content-Range: bytes " + Utils::ltos(start) + "-" + Utils::ltos(end) + "/" + Utils::ltos(filesize) + "\r\n"
+								"Content-Length: " + Utils::ltos(end - start) + "\r\n"
+								"Connection: " + event->response_map["Connection"] + "\r\n\r\n";
+						} else {
+							header =
+								event->response_map["Protocol"] + " " + event->response_map["Code"] + " " + event->response_map["Code-Description"] + "\r\n"
+								"Server: " + event->response_map["Server"] + "\r\n"
+								"Date: " + event->response_map["Date"] + "\r\n"
+								"Cache-Status: HIT" + "\r\n"
+								"Age: " + Utils::str_time(time(NULL) - fcache.added_time) + "\r\n"
+								"Last-Modified: " + fcache.mod_stime + "\r\n"
+								"Content-Type: " + event->response_map["Content-Type"] + "\r\n"
+								"X-Content-Type-Options: nosniff" + "\r\n"
+								"Content-Length: " + Utils::ltos(end - start) + "\r\n"
+								"Connection: " + event->response_map["Connection"] + "\r\n\r\n";
 						}
+
+						event->write_info = 0;																						//	Set some flags
+						event->write_size = 0;																						//	Set some flags
+						event->write_maxsize = header.size();
+						event->response_size = 0;
+						event->write_buffer.clear();																				//	Clear write_buffer
+						event->write_buffer.insert(event->write_buffer.end(), header.begin(), header.end());						//	Copy the header to write_buffer
+
+						if (event->header_map["Method"] != "HEAD") {
+							event->write_maxsize = header.size() + (end - start);													//	Set some flags
+							event->response_size = end - start;
+							event->write_buffer.insert(event->write_buffer.end(), fcache.content.begin(), fcache.content.end());	//	Copy the body to write_buffer
+						}
+
+						if (Epoll::set(event->fd, true, true) == -1) event->client->remove();										//	Set EPOLL to monitor write events
+
+						return (1);
+
 					} catch(...) { return (0); }
 				}
-
 				return (0);
 			}
 
@@ -420,16 +418,16 @@
 			void Protocol::response_file(EventInfo * event) {
 				if (!event) return;
 
-				std::string path = event->response_map["Path"];
+				std::string path = event->response_map["Path-Full"];
 				if (path.empty()) { event->client->remove(); return; }
 
-				event->response_map["Last-Modified"] = Utils::file_modification_time(path.c_str(), true);
-				if (file_cache(event, 0)) return;
+				if (file_cache(event, path)) return;
+				Communication::cache.add_caching(path);
 				int fd = open(path.c_str(), O_RDONLY);																	//	Open the file
 				if (fd == -1) return;																					//	If error opening, return
 				Utils::NonBlocking_FD(fd);																				//	Set the FD as non-blocking
 
-				size_t filesize = Utils::filesize(fd);																	//	Get the file size
+				size_t filesize = event->filesize;																		//	Get the file size
 				if (filesize == std::string::npos) { close(fd); event->client->remove(); return; }
 
 				std::string header; std::string content_length = "0";
@@ -700,13 +698,13 @@
 
 						char * args[3];
 						if (event->response_map["Self-CGI"] == "true") {
-							args[0] = const_cast<char *>(event->response_map["Path"].c_str());
+							args[0] = const_cast<char *>(event->response_map["Path-Full"].c_str());
 							args[1] = NULL;
 							args[2] = NULL;
 						} else {
 							args[0] = const_cast<char *>(event->response_map["CGI-Path"].c_str());
-							//args[1] = const_cast<char *>(event->response_map["Path"].c_str());
-							args[1] = NULL;
+							args[1] = const_cast<char *>(event->response_map["Path-Full"].c_str());
+							args[2] = NULL;
 						}
 
 						for (size_t i = 0; i < cgi_vars.size(); ++i)

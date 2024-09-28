@@ -6,18 +6,21 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/24 19:40:07 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/27 15:57:31 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/28 14:07:46 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Cache.hpp"
+#include "Utils.hpp"
 
 #pragma region CacheInfo
 
 	#pragma region Constructors
 
-		CacheInfo::CacheInfo(const std::string & _path, const std::string & _content, std::string _mod_stime, time_t _mod_time, time_t _expire) :
-			path(_path), content(_content), size(_content.size()), mod_stime(_mod_stime), mod_time(_mod_time), added_time(time(NULL)), expire(time(NULL) + _expire) {}
+		CacheInfo::CacheInfo(const std::string & _path, const std::string & _content, std::string _mod_stime, time_t _mod_time, time_t _expire_time) :
+			path(_path), content(_content), size(_content.size()), mod_stime(_mod_stime), mod_time(_mod_time), expire_time(time(NULL) + _expire_time) {
+				added_time = time(NULL); check_time = time(NULL);
+			}
 
 		CacheInfo::CacheInfo(const CacheInfo & src) { *this = src; }
 
@@ -26,19 +29,30 @@
 	#pragma region Overloads
 
 		CacheInfo & CacheInfo::operator=(const CacheInfo & rhs) {
-			if (this != &rhs) { path = rhs.path; content = rhs.content; size = rhs.size; mod_stime = rhs.mod_stime; mod_time = rhs.mod_time; added_time = rhs.added_time; expire = rhs.expire; }
+			if (this != &rhs) { path = rhs.path; content = rhs.content; size = rhs.size; mod_stime = rhs.mod_stime; mod_time = rhs.mod_time; added_time = rhs.added_time; expire_time = rhs.expire_time; check_time = rhs.check_time; }
 			return (*this);
 		}
 
 		bool CacheInfo::operator==(const CacheInfo & rhs) const {
-			return (path == rhs.path && content == rhs.content && size == rhs.size && mod_stime == rhs.mod_stime && mod_time == rhs.mod_time && added_time == rhs.added_time && expire == rhs.expire);
+			return (path == rhs.path && content == rhs.content && size == rhs.size && mod_stime == rhs.mod_stime && mod_time == rhs.mod_time && added_time == rhs.added_time && expire_time == rhs.expire_time && check_time == rhs.check_time);
 		}
 
 	#pragma endregion
 
 	#pragma region isExpired
 
-		bool CacheInfo::isExpired() const { return time(NULL) > expire; }
+		bool CacheInfo::isExpired() const { return time(NULL) > expire_time; }
+
+	#pragma endregion
+
+	#pragma region Check
+
+		bool CacheInfo::check() {
+			if (time(NULL) > check_time + 60 && Utils::file_modification_time_data(path) > mod_time) return (true);
+
+			check_time = time(NULL);
+			return (false);
+		}
 
 	#pragma endregion
 
@@ -72,18 +86,43 @@
 
 	#pragma region Cache
 
+		#pragma region Exists
+
+			bool Cache::exists(const std::string & path) {
+				std::map <std::string, CacheInfo>::iterator it = _cache.find(path);
+				if (it != _cache.end()) {
+					CacheInfo & info = it->second;
+					if (info.isExpired() || info.check()) {
+						_order.remove(it);
+						_cache.erase(it);
+						--_cache_size;
+
+						return (false);
+					}
+
+					_order.remove(it);
+					_order.push_front(it);
+
+					return (true);
+				}
+
+				return (false);
+			}
+
+		#pragma endregion
+
 		#pragma region Get
 
 			CacheInfo & Cache::get(const std::string & path) {
 				std::map <std::string, CacheInfo>::iterator it = _cache.find(path);
 				if (it != _cache.end()) {
 					CacheInfo & info = it->second;
-					if (info.isExpired()) {
+					if (info.isExpired() || info.check()) {
 						_order.remove(it);
 						_cache.erase(it);
 						--_cache_size;
 
-						throw std::runtime_error("Se ha producido un error");
+						throw std::runtime_error("Expired or Check");
 					}
 
 					_order.remove(it);
@@ -92,7 +131,7 @@
 					return (info);
 				}
 
-				throw std::runtime_error("Se ha producido un error");
+				throw std::runtime_error("Not in cache");
 			}
 
 		#pragma endregion
@@ -180,5 +219,30 @@
 		#pragma endregion
 
 	#pragma endregion
+
+#pragma region Caching
+
+	void Cache::add_caching(const std::string & path) {
+		_caching[path] = "true";
+	}
+
+	bool Cache::get_caching(const std::string & path) {
+		return (_caching[path]);
+	}
+
+	void Cache::remove_caching(const std::string & path) {
+		_caching.erase(path);
+	}
+
+	void Cache::cleanup_caching() {
+ 		for (std::map<std::string, bool>::iterator it = _caching.begin(); it != _caching.end(); ) {
+			if (it->second == false) {
+				std::map<std::string, bool>::iterator curr_it = it++;
+				_caching.erase(curr_it);
+			} else ++it;
+		}
+	}
+
+#pragma endregion
 
 #pragma endregion

@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/21 11:52:00 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/28 01:25:08 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/28 14:12:38 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,16 +31,27 @@
 
 		//	?		Internal... is necessary?
 
-	#pragma region Error Page
+		bool file_stat(EventInfo * event, const std::string & path) {
+			struct stat path_stat;
 
-		bool file_exists(const std::string& path) {
-			struct stat fileStat;
+			event->filesize = 0;																		//	Reset 'filesize'
+			event->mod_time = time(NULL);																//	Reset 'mod_time'
 
-			if (stat(path.c_str(), &fileStat) != 0) return (false);
-			if (fileStat.st_mode & S_IRUSR) return (true);			// Verificar si tiene permisos de lectura para el usuario actual
+			if (stat(path.c_str(), &path_stat) != 0) return (false);									//	Check if the file exists
+			if (!(path_stat.st_mode & S_IRUSR)) return (false);											//	Check if the file has read permissions
 
-			return (false);
+			event->mod_time = path_stat.st_mtime;														//	Set the file's last modification time
+			event->filesize = path_stat.st_size;														//	Set the file size
+
+			char date[30];
+			struct tm* timeInfo = gmtime(&event->mod_time);
+			strftime(date, sizeof(date), "%a, %d %b %Y %H:%M:%S GMT", timeInfo);	
+			event->response_map["Last-Modified"] = date;
+
+			return (true);
 		}
+
+	#pragma region Error Page
 
 		int error_page(EventInfo * event, std::string code, VServer * VServ, Location * Loc = NULL) {
 			std::string temp;
@@ -56,19 +67,21 @@
 
 			if (!VServ) VServ = &Settings::global;
 
-			if (temp.empty() || !file_exists(root + "/" + temp)) {// Utils::file_exists(root + "/" + temp)) {
+			std::string path = Utils::fullpath(root + "/" + temp);
+			if (temp.empty() || (!Communication::cache.exists(path) && !file_stat(event, path))) {
 				event->response_map["Method"] = "Error";
 				event->response_map["Code"] = code;
 			} else {
 				event->response_map["Method"] = "File";
 				event->response_map["Code"] = code;
-				event->response_map["Path-Full"] = root + "/" + temp;
-				event->response_map["Path"] = root + "/" + temp;
+				event->response_map["Path-Full"] = path;
 			}
 
 			event->VServ = VServ; event->Loc = Loc;
 			if (Loc)		event->vserver_data = &Loc->data;
 			else if (VServ)	event->vserver_data = &VServ->data;
+
+			event->response_map["Content-Type"] = "text/html";
 
 			return (1);
 		}
@@ -251,7 +264,7 @@
 			event->response_map["Protocol"] = "HTTP/1.1";
 			event->response_map["Connection"] = event->header_map["Connection"];
 			if (event->response_map["Connection"].empty()) event->response_map["Connection"] = "keep-alive";
-
+			
 			event->response_map["Server"] = Settings::server_name + "/" + Settings::server_version + Settings::os_name;
 			event->response_map["Date"] = Settings::timer.current_time_header();
 
@@ -259,70 +272,39 @@
 				error_page(event, "405", event->VServ, event->Loc);
 			} else if (event->response_map["Method"] != "CGI" && event->header_map["Method"] != "HEAD" && event->header_map["Method"] != "GET") {
 				error_page(event, "403", event->VServ, event->Loc);
-			} else {
-				if (!global(event) && !vservers(event)) {
-					error_page(event, "500", event->VServ, event->Loc);
-						// index and root of global /
-				} else {
-					event->response_map["Method"] = "File";															//	Temporal
-					event->response_map["Code"] = "200";
-					event->response_map["Path"] = "index.html";														//	Temporal
-				}
+			} else if (!global(event) && !vservers(event)) {
+				error_page(event, "500", event->VServ, event->Loc);
+				// index and root of global /
 			}
 
-			// event->response_map["Method"] = "File";
-			// event->response_map["Code"] = "200";
-			// event->response_map["Path"] = "index.html";
-
-		//	Method
 			size_t content_length = 0;
 			Utils::stol(event->header_map["Content-Length"], content_length);								//	Get 'content_length' in numeric format
 			if (event->body_maxsize > 0 && content_length > event->body_maxsize) {							//	If 'content_length' is greater than 'body_maxsize'
 				error_page(event, "403", event->VServ, event->Loc);											//	Body too big, return error
 			}
 
-
-		//	If (MIME != response type) { }
-
-		event->response_map["Content-Type"] = "text/plain";
-
-		//if (event->response_map["Method"] != "Error") event->response_map["Method"] = "File";
-
-		//	If Method is Directory
-			// if (event->response_map["Method"] == "Directory") {
-			// 	event->response_map["Path"] = event->header_map["Path"];
-			// }
-
-		//	If Method is File
-			if (event->response_map["Method"] == "File") {
-
-				size_t pos1 = event->header_map["Cache-Control"].find("no-cache");
-				size_t pos2 = event->header_map["Cache-Control"].find("no-store");
-				event->no_cache = (pos1 != std::string::npos || pos2 != std::string::npos);
-
-				//event->response_map["Path"] = event->header_map["Path"].substr(1);
-				if (event->response_map["Path"].empty()) event->response_map["Path"] = "index.html";
-
-				//event->response_map["Path"] = "foto.jpg";
-				//event->response_map["Path"] = "big2.mp4";
-				//event->response_map["Path"] = "big.mkv";
-
-				size_t pos = event->response_map["Path"].find_last_of('.');
-				if (pos != std::string::npos) event->response_map["Content-Type"] = Settings::mime_types[event->response_map["Path"].substr(pos + 1)];
+			event->response_method = event->response_map["Method"];
+			if (event->response_method != "File" && event->response_method != "CGI" && event->response_method != "Directory"
+				&& event->response_method != "Redirect" && event->response_method != "Error") {
+					error_page(event, "403", event->VServ, event->Loc);
 			}
 
-		//	If Method is CGI
-			if (event->response_map["Method"] == "CGI") {
-				event->response_map["CGI-Path"] = "cgi-bin/php-cgi";
-				//event->response_map["CGI-Path"] = "cgi-bin/python-cgi";
-				//event->response_map["CGI-Path"] = "/bin/cat";
+			if (event->response_method == "File") {
+				if (!Communication::cache.exists(event->response_map["Path-Full"]) && !file_stat(event, event->response_map["Path-Full"])) {
+					error_page(event, "404", event->VServ, event->Loc);
+					event->response_map["Content-Type"] = "text/html";
+				} else {
+					size_t pos1 = event->header_map["Cache-Control"].find("no-cache");
+					size_t pos2 = event->header_map["Cache-Control"].find("no-store");
+					event->no_cache = (pos1 != std::string::npos || pos2 != std::string::npos);
 
-				event->response_map["Path"] = "index.php";
-				//event->response_map["Path"] = "index.py";
+					size_t pos = event->response_map["Path"].find_last_of('.');
+					if (pos != std::string::npos) event->response_map["Content-Type"] = Settings::mime_types[event->response_map["Path"].substr(pos + 1)];
+					if (event->response_map["Content-Type"].empty()) event->response_map["Content-Type"] = "application/octet-stream";
+				}
 			}
 
 			event->response_map["Code-Description"] = Settings::error_codes[Utils::sstol(event->response_map["Code"])];
-			event->response_method = event->response_map["Method"];
 		}
 
 		#pragma region Information

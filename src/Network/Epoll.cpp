@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/18 11:54:24 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/24 12:41:09 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/28 12:32:36 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,6 +75,7 @@
 				Event::check_timeout();
 				clients_timeout();
 				Communication::cache.remove_expired();
+				Communication::cache.cleanup_caching();
 			}
 
 		#pragma endregion
