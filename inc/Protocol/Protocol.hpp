@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 12:49:42 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/28 13:13:06 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/29 12:45:01 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,6 +48,12 @@
 
 			static int	file_cache(EventInfo * event, std::string & path);								//	Gets a file from cache (if exists)
 			static void variables_cgi(EventInfo * event, std::vector<std::string> & cgi_vars);			//	Creates variables for a CGI
+
+		private:
+
+			//	Variables
+			static bool			internal;
+			static std::string	internal_path;
 
 	};
 

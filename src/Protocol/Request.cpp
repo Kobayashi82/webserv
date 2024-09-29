@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/21 11:52:00 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/29 01:01:00 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/29 12:56:54 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,6 @@
 #include "Protocol.hpp"
 #include "Communication.hpp"
 
-	//	TODO	data of vserver/location in event
 	//	TODO	Index usa index.html por defecto
 	//	TODO	Update resource path with alias or any modified path before cgi
 
@@ -27,11 +26,12 @@
 	//	*	Return, error y try_files manejan variables
 	//	*	Location y try_files pueden llevar = (try_files para códigos =404)
 
-	//	*	Cambiar intermediario para que sea todo desde global, llamando a server como se llama a location, en orden.
-	//	*	Pero primero debe determinar que servidor deberia ser. Asi que va recorriendo hasta llegar al indice del servidor que debe ser.
-	//	*	Esto es porque puede haber directivas entre servidores.
+#pragma region Variables
 
-	//	?		Internal... is necessary?
+	bool		Protocol::internal = false;																//	
+	std::string	Protocol::internal_path;																//	
+
+#pragma endregion
 
 #pragma region Parsers
 
@@ -245,7 +245,8 @@
 
 		#pragma region Directory
 
-			int check_dir(EventInfo * event, std::string root, VServer * VServ, Location * Loc = NULL) {
+			int check_dir(EventInfo * event, VServer * VServ, Location * Loc = NULL) {
+				std::string root;
 
 				if (root.empty() && Loc)	root = Loc->get("root");
 				if (root.empty() && VServ)	root = VServ->get("root");
@@ -287,6 +288,7 @@
 
 				if (!cgi_dir(event, VServ, Loc)) {
 					event->response_map["Method"] = "Directory";
+					event->response_map["Code"] = "200";
 					event->response_map["Path-Full"] = path;
 				}
 
@@ -297,7 +299,9 @@
 
 		#pragma region File
 
-			int check_file(EventInfo * event, std::string root, VServer * VServ, Location * Loc = NULL) {
+			int check_file(EventInfo * event, VServer * VServ, Location * Loc = NULL) {
+				std::string root;
+
 				if (root.empty() && Loc)	root = Loc->get("root");
 				if (root.empty() && VServ)	root = VServ->get("root");
 				if (root.empty())			root = Settings::global.get("root");
@@ -347,20 +351,20 @@
 				if (VServ) Loc = &VServ->location[index];
 				if (!Loc) return (0);
 
-				bool allowed = false;
-
-				std::string temp, root = Settings::global.get("root");
-
 				event->VServ = VServ; event->Loc = Loc; event->vserver_data = &Loc->data;
+
+				bool allowed = false;
 
 				std::vector<std::pair<std::string, std::string> >::const_iterator it;
 				for (it = Loc->data.begin(); it != Loc->data.end(); ++it) {
-					if (it->first == "body_maxsize") event->body_maxsize = Utils::sstol(it->second);
 					if (it->first == "allow" && (it->second == "all" || Utils::isIPInRange(event->client->ip, it->second))) allowed = true;
 					if (it->first == "deny" && allowed == false && (it->second == "all" || Utils::isIPInRange(event->client->ip, it->second))) return (error_page(event, "403", NULL));
 					if (it->first == "return") return (redirect(event, it->second, NULL));
+					//if (it->first == "try_files") return (redirect(event, it->second, NULL));
 					if (it->first == "method" && method(event, Utils::sstol(it->second), NULL)) return (1);
 				}
+
+				event->VServ = VServ; event->Loc = NULL; event->vserver_data = &VServ->data;
 
 				return (0);
 			}
@@ -379,63 +383,39 @@
 				return (false);
 			}
 
-			int vservers(EventInfo * event) {
-				VServer * default_VServ = NULL;
-				VServer * VServ = NULL;
+			int server(EventInfo * event, VServer * VServ) {
+				Location * Loc = NULL;	int Loc_index = -1;
+										int counter = 0;
 
-				std::deque<VServer>::iterator v_it;
-				for (v_it = Settings::vserver.begin(); v_it != Settings::vserver.end(); ++v_it) {
-					VServer * tmp_serv = &(*v_it);
+				std::deque<Location>::iterator l_it;
+				for (l_it = VServ->location.begin(); l_it != VServ->location.end(); ++l_it) {
+					Location * tmp_loc = &(*l_it);
 
-					if (v_it->bad_config || v_it->force_off || isAddress(tmp_serv, event->socket->ip, event->socket->port) == false) continue;
-					if (!default_VServ) default_VServ = tmp_serv;
+					(void) Loc;
+					(void) Loc_index;
+					(void) tmp_loc;
+					// bool valid_name = false;
+					// std::string server_name; std::istringstream iss(Utils::strToLower(tmp_loc->get("server_name")));
+					// while (iss >> server_name)
+					// 	if (server_name == Utils::strToLower(event->header_map["Host"])) { Loc = tmp_loc; Loc_index = counter; valid_name = true; break; }
+					// if (valid_name) break;
 
-					bool valid_name = false;
-					std::string server_name; std::istringstream iss(Utils::strToLower(tmp_serv->get("server_name")));
-					while (iss >> server_name)
-						if (server_name == Utils::strToLower(event->header_map["Host"])) { VServ = tmp_serv; valid_name = true; break; }
-					if (valid_name) break;
+					counter++;
 				}
-
-				if (!VServ) VServ = default_VServ;
-				if (!VServ) { event->VServ = &Settings::global; event->Loc = NULL; event->vserver_data = &Settings::global.data; return (0); }
-
-				bool allowed = false;
 
 				event->VServ = VServ; event->Loc = NULL; event->vserver_data = &VServ->data;
 
-				std::vector<std::pair<std::string, std::string> >::const_iterator it;
-				for (it = VServ->data.begin(); it != VServ->data.end(); ++it) {
-					if (it->first == "body_maxsize") event->body_maxsize = Utils::sstol(it->second);
-					if (it->first == "allow" && (it->second == "all" || Utils::isIPInRange(event->client->ip, it->second))) allowed = true;
-					if (it->first == "deny" && allowed == false && (it->second == "all" || Utils::isIPInRange(event->client->ip, it->second))) return (error_page(event, "403", VServ));
-					if (it->first == "return") return (redirect(event, it->second, VServ));
-					if (it->first == "method" && method(event, Utils::sstol(it->second), VServ)) return (1);
-				}
-
-				//std::string temp, root = Settings::global.get("root");
-				//return (error_page(event, "404", VServ));
-				//bool allowed = false;
-
-				return (0);
-			}
-
-			int server(EventInfo * event, VServer * VServ) {
-				
 				bool allowed = false;
 
 				std::vector<std::pair<std::string, std::string> >::const_iterator it;
 				for (it = VServ->data.begin(); it != VServ->data.end(); ++it) {
-					if (it->first == "body_maxsize") event->body_maxsize = Utils::sstol(it->second);
 					if (it->first == "allow" && (it->second == "all" || Utils::isIPInRange(event->client->ip, it->second))) allowed = true;
 					if (it->first == "deny" && allowed == false && (it->second == "all" || Utils::isIPInRange(event->client->ip, it->second))) return (error_page(event, "403", VServ));
 					if (it->first == "return") return (redirect(event, it->second, VServ));
 					if (it->first == "method" && method(event, Utils::sstol(it->second), VServ)) return (1);
 				}
 
-				//std::string temp, root = Settings::global.get("root");
-				//return (error_page(event, "404", VServ));
-				//bool allowed = false;
+				event->VServ = &Settings::global; event->Loc = NULL; event->vserver_data = &Settings::global.data;
 
 				return (0);
 			}
@@ -465,13 +445,13 @@
 				}
 
 				if (!VServ) { VServ = default_VServ; VServ_index = default_index; }
+
 				event->VServ = &Settings::global; event->Loc = NULL; event->vserver_data = &Settings::global.data;
 				
 				bool allowed = false;
 
 				std::vector<std::pair<std::string, std::string> >::const_iterator it;
 				for (it = Settings::global.data.begin(); it != Settings::global.data.end(); ++it) {
-					if (it->first == "body_maxsize") event->body_maxsize = Utils::sstol(it->second);
 					if (it->first == "allow" && (it->second == "all" || Utils::isIPInRange(event->client->ip, it->second))) allowed = true;
 					if (it->first == "deny" && allowed == false && (it->second == "all" || Utils::isIPInRange(event->client->ip, it->second))) return (error_page(event, "403", NULL));
 					if (it->first == "return") return (redirect(event, it->second, NULL));
@@ -480,9 +460,10 @@
 					if (it->first == "server" && Utils::sstol(it->second) == VServ_index && server(event, VServ)) return (1);
 				}
 
-				if (check_file(event, "", NULL)) return (1);
-				if (check_dir(event, "", NULL)) return (1);
-				return (error_page(event, "500", NULL));
+				if (check_file(event, NULL)) return (1);
+				if (check_dir(event, NULL)) return (1);
+
+				return (0);
 			}
 
 		#pragma endregion
@@ -494,12 +475,13 @@
 		void Protocol::parse_request(EventInfo * event) {
 			if (!event) return;
 
-			std::string path = event->header_map["$uri"];
+		//	Retrieve the request path without the query string
+			std::string path = event->header_map["$uri"];																					//	Request path without the query string
 			size_t dot_pos = path.find('.');
 			size_t slash_pos = path.find('/', dot_pos);
 
 			event->response_map["Path-Full"] = "";
-			if (dot_pos != std::string::npos && slash_pos != std::string::npos) {
+			if (dot_pos != std::string::npos && slash_pos != std::string::npos) {															//	THIS MUST BE CHECKED
 				event->response_map["Path"] = path.substr(1, slash_pos);
 				event->response_map["Path-Info"] = path.substr(slash_pos);
 			} else {
@@ -507,43 +489,55 @@
 				event->response_map["Path-Info"] = "";
 			}
 
-			event->response_map["Protocol"] = "HTTP/1.1";
+		//	General header information
+			event->response_map["Protocol"] = "HTTP/1.1";																					//	Protocol of the connection (by default HTTP/1.1)
 			event->response_map["Connection"] = event->header_map["Connection"];
-			if (event->response_map["Connection"].empty()) event->response_map["Connection"] = "keep-alive";
+			if (event->response_map["Connection"].empty()) event->response_map["Connection"] = "keep-alive";								//	Respect the client's request if indicated
 			
-			event->response_map["Server"] = Settings::server_name + "/" + Settings::server_version + Settings::os_name;
-			event->response_map["Date"] = Settings::timer.current_time_header();
+			event->response_map["Server"] = Settings::server_name + "/" + Settings::server_version + Settings::os_name;						//	Name and version of the server
+			event->response_map["Date"] = Settings::timer.current_time_header();															//	Current date in GMT format
 
+
+		//	Unknown request methods return an error
 			if (std::string("HEAD|GET|POST|PUT|PATCH|DELETE").find(event->header_map["Method"]) == std::string::npos)
-				error_page(event, "405", event->VServ, event->Loc);
-			else if (!global(event))
-				error_page(event, "500", event->VServ, event->Loc);
+				error_page(event, "405", event->VServ, event->Loc);																			//	Return "405 (Method Not Allowed)"
+			else if (!global(event) || event->response_map["Code"].empty())																	//	If it is not a valid response...
+				error_page(event, "500", event->VServ, event->Loc);																			//	Return "500 (Internal Server Error)"
 
+		//	Only HEAD and GET are valid without a CGI
 			if (event->response_map["Method"] != "CGI" && event->header_map["Method"] != "HEAD" && event->header_map["Method"] != "GET")
-				error_page(event, "403", event->VServ, event->Loc);
+				error_page(event, "403", event->VServ, event->Loc);																			//	Return "403 (Forbidden)"
 
-			size_t content_length = 0;
-			Utils::stol(event->header_map["Content-Length"], content_length);								//	Get 'content_length' in numeric format
-			if (event->body_maxsize > 0 && content_length > event->body_maxsize) {							//	If 'content_length' is greater than 'body_maxsize'
-				error_page(event, "403", event->VServ, event->Loc);											//	Body too big, return error
-			}
-
+		//	Check if response method is unknown (not really a case, but whatever...)
 			event->response_method = event->response_map["Method"];
 			if (event->response_method != "File" && event->response_method != "CGI" && event->response_method != "Directory"
 				&& event->response_method != "Redirect" && event->response_method != "Error") {
-					error_page(event, "403", event->VServ, event->Loc);
+					error_page(event, "403", event->VServ, event->Loc);																		//	Return "403 (Forbidden)"
 			}
 
+		//	Check the maximum body size against the request's 'Content-Length'
+			std::string									body_maxsize;
+			if (event->Loc)								body_maxsize = event->Loc->get("body_maxsize");
+			if (body_maxsize.empty() && event->VServ)	body_maxsize = event->VServ->get("body_maxsize");									//	Get 'body_maxsize'
+			if (!body_maxsize.empty()) {
+				event->body_maxsize   =	Utils::sstol(body_maxsize);																			//	Get 'body_maxsize' in numeric format
+				size_t content_length =	Utils::sstol(event->header_map["Content-Length"]);													//	Get 'Content-Length' in numeric format
+				if (event->body_maxsize > 0 && content_length > event->body_maxsize)														//	If 'Content-Length' is greater than 'body_maxsize'...
+					error_page(event, "403", event->VServ, event->Loc);																		//	Return "403 (Forbidden)"
+			}
+
+		//	Response method is a file, check if must be cached
 			if (event->response_method == "File") {
-				if (!Communication::cache.exists(event->response_map["Path-Full"]) && !file_stat(event, event->response_map["Path-Full"]))
-					error_page(event, "404", event->VServ, event->Loc);
+				if (!Communication::cache.exists(event->response_map["Path-Full"]) && !file_stat(event, event->response_map["Path-Full"]))	//	If not in cache and the file doesn't exist or can't be read...
+					error_page(event, "404", event->VServ, event->Loc);																		//	Return "404 (Not Found)"
 				else {
 					size_t pos1 = event->header_map["Cache-Control"].find("no-cache");
 					size_t pos2 = event->header_map["Cache-Control"].find("no-store");
-					event->no_cache = (pos1 != std::string::npos || pos2 != std::string::npos);
+					event->no_cache = (pos1 != std::string::npos || pos2 != std::string::npos);												//	Determine whether the file should be added to the cache
 				}
 			}
 
+		//	Add the 'Code-Description' to the response
 			event->response_map["Code-Description"] = Settings::error_codes[Utils::sstol(event->response_map["Code"])];
 		}
 

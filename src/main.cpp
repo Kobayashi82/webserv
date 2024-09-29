@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 14:30:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/28 20:42:32 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/29 12:03:38 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,6 @@
 	//	TODO	Check events timeout from another thread (non-blocking cant be done with cgi)
 	//	TODO	General errors overhaul
 	//	TODO	Cache not working as it should
-	//	TODO	MKV not sending as it should
 	//	TODO	PHP CGI not sending header
 	//	TODO	Optimized stat calls 
 	

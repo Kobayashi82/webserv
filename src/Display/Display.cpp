@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/14 14:37:32 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/27 20:18:13 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/29 11:00:22 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -679,7 +679,6 @@
 				if (Settings::vserver.size() > 0 && Settings::current_vserver != -1) {
 					ss << Settings::current_vserver + 1; temp = "(" + ss.str() + ") ";
 					if (Settings::vserver[Settings::current_vserver].get("server_name").empty())											temp += "Unnamed V-Server";
-					else if (Settings::vserver[Settings::current_vserver].get("server_name") == "_")										temp += "Unnamed V-Server";
 					else																													temp += Settings::vserver[Settings::current_vserver].get("server_name");
 				} else if (Status == CRED && Settings::vserver.size() > 0)																	temp = "Virtual servers offline";
 				else if (Settings::vserver.size() > 0 && Settings::current_vserver == -1)
