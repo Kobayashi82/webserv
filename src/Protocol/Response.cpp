@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/21 11:59:50 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/29 12:55:47 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/29 21:56:57 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -147,9 +147,9 @@
 				"Connection: " + event->response_map["Connection"] + "\r\n\r\n";
 
 			event->response_map["Header"] = header;
-			event->write_info = 0;																	//	Set some flags
-			event->write_size = 0;																	//	Set some flags
-			event->response_size = 0;
+			event->write_info = 0;																	//	Set some variables
+			event->write_size = 0;																	//	Set some variables
+			event->response_size = 0;																//	Set some variables
 			event->write_maxsize = header.size();													//	Set the total size of the data to be sent
 			event->write_buffer.clear();															//	Clear write_buffer
 			event->write_buffer.insert(event->write_buffer.end(), header.begin(), header.end());	//	Copy the header to write_buffer
@@ -163,7 +163,9 @@
 		#pragma region Add Style
 
 			static void add_style(std::string & body, std::string dir_path, const std::string root) {
-				if (dir_path == ".") dir_path = "/";
+				if (dir_path == ".") dir_path = "";
+				if (dir_path[0] != '/') dir_path = "/" + dir_path;
+				if (dir_path[dir_path.size() - 1] != '/') dir_path += "/";
 				body +=
 					"<!DOCTYPE html>\n"
 					"<html lang=\"en\">\n"
@@ -246,12 +248,15 @@
 
 		#pragma region Add File
 
-			static void add_file(std::string & body, const std::string & file) {
+			static void add_file(std::string & body, std::string dir_path, const std::string & file) {
+				if (dir_path == ".") dir_path = "";
+				dir_path = "/" + dir_path;
+				if (dir_path[dir_path.size() - 1] != '/') dir_path += "/";
 				size_t filesize = Utils::filesize(file);
 				std::string mod_time = Utils::file_modification_time(file);
 				body +=
 				"<tr>\n"
-					"<td><a class=\"file\" href=" + Security::encode_url(file) + ">" + file + "</a></td>\n"
+					"<td><a class=\"file\" href=" + Security::encode_url(dir_path + file) + ">" + file + "</a></td>\n"
 					"<td class=\"size\">" + Utils::formatSize(filesize) + "</td>\n"
 					"<td class=\"date\">" + mod_time + "</td>\n"
 				"</tr>\n";
@@ -269,7 +274,6 @@
 
 				DIR *dir = opendir(".");																			//	Open the directory
 				if (!dir) {																							//	If error, return error... duh
-					Log::log(dir_path, Log::MEM_ACCESS);
 					event->response_map["Method"] ="Error";
 					event->response_map["Code"] = "404";
 					event->response_map["Code-Description"] = Settings::error_codes[Utils::sstol(event->response_map["Code"])];
@@ -296,7 +300,7 @@
 					add_dir(body, *it);
 
 				for (std::vector<std::string>::iterator it = files.begin(); it != files.end(); ++it)				//	Add files to the body
-					add_file(body, *it);
+					add_file(body, dir_path, *it);
 
 				body +=																								//	Finish the body of the response
 					"       </tbody>\n"
@@ -548,45 +552,39 @@
 			void Protocol::variables_cgi(EventInfo * event, std::vector<std::string> & cgi_vars) {
 				if (!event) return;
 
-				cgi_vars.push_back("SERVER_SOFTWARE=" + event->response_map["Server"]);
-				cgi_vars.push_back("REQUEST_METHOD=" + event->header_map["Method"]);
-				cgi_vars.push_back("REQUEST_URI=" + event->header_map["$request_uri"]);
-				cgi_vars.push_back("QUERY_STRING=" + event->header_map["$query_string"]);
+				cgi_vars.push_back("CONTENT_LENGTH=" + event->header_map["Content-Length"]);
+				cgi_vars.push_back("CONTENT_TYPE=" + event->header_map["Content-Type"]);
+
 				cgi_vars.push_back("GATEWAY_INTERFACE=CGI/1.1");
 
-				std::string path = event->header_map["$uri"];
-				size_t dot_pos = path.find('.');
-				size_t slash_pos = path.find('/', dot_pos);
+				cgi_vars.push_back("HTTPS=off");
+				cgi_vars.push_back("HTTP_ACCEPT=" + (event->header_map["Accept"].empty() ? "*/*" : event->header_map["Accept"]));
+				cgi_vars.push_back("HTTP_HOST=" + event->header_map["$server_name"]);
+				cgi_vars.push_back("HTTP_REFERER=" + event->header_map["Referer"]);
+				cgi_vars.push_back("HTTP_USER_AGENT=" + event->header_map["User-Agent"]);
 
-				if (dot_pos != std::string::npos && slash_pos != std::string::npos) {
-					cgi_vars.push_back("SCRIPT_NAME=" + path.substr(0, slash_pos));
-					cgi_vars.push_back("REQUEST_FILENAME=" + Settings::program_path + path.substr(0, slash_pos));
-					cgi_vars.push_back("PATH_INFO=" + path.substr(slash_pos));
-				} else {
-					cgi_vars.push_back("SCRIPT_NAME=" + path);
-					cgi_vars.push_back("REQUEST_FILENAME=" + Settings::program_path + path);
-					cgi_vars.push_back("PATH_INFO=");
-				}
+				cgi_vars.push_back("PATH_INFO=" + event->response_map["Path-Info"]);
+				size_t pos = event->response_map["Path"].find_last_of('/');
+				if (pos != std::string::npos)	cgi_vars.push_back("PATH_TRANSLATED=/" + event->response_map["Path"].substr(0, pos + 1) + event->response_map["Path-Info"]);
+				else							cgi_vars.push_back("PATH_TRANSLATED=/" + event->response_map["Path"]);
 
-				cgi_vars.push_back("PATH_TRANSLATED=" + event->response_map["Path"]);
+				cgi_vars.push_back("QUERY_STRING=" + event->header_map["$query_string"]);
 
-				cgi_vars.push_back("CONTENT_TYPE=" + event->header_map["Content-Type"]);
-				cgi_vars.push_back("CONTENT_LENGTH=" + event->header_map["Content-Length"]);
+				if (event->redirect_status != 0) cgi_vars.push_back("REDIRECT_STATUS=" + Utils::ltos(event->redirect_status));
+				cgi_vars.push_back("REMOTE_ADDR=" + event->header_map["$remote_addr"]);
+				cgi_vars.push_back("REMOTE_PORT=" + event->header_map["$remote_port"]);
+
+				cgi_vars.push_back("REQUEST_FILENAME=" + event->response_map["Path-Full"]);
+				cgi_vars.push_back("REQUEST_METHOD=" + event->header_map["Method"]);
+				cgi_vars.push_back("REQUEST_SCHEME=http");
+				cgi_vars.push_back("REQUEST_URI=" + event->header_map["$request_uri"]);
+
+				cgi_vars.push_back("SCRIPT_NAME=/" + event->response_map["Path"]);
 
 				cgi_vars.push_back("SERVER_NAME=" + event->header_map["$host"]);
 				cgi_vars.push_back("SERVER_PORT=" + event->header_map["$server_port"]);
 				cgi_vars.push_back("SERVER_PROTOCOL=" + event->header_map["Protocol"]);
-				cgi_vars.push_back("REMOTE_ADDR=" + event->header_map["$remote_addr"]);
-				cgi_vars.push_back("REMOTE_PORT=" + event->header_map["$remote_port"]);
-
-				cgi_vars.push_back("HTTP_HOST=" + event->header_map["$server_name"]);
-				cgi_vars.push_back("HTTP_USER_AGENT=" + event->header_map["User-Agent"]);
-				cgi_vars.push_back("HTTP_REFERER=" + event->header_map["Referer"]);
-				cgi_vars.push_back("HTTP_ACCEPT=" + (event->header_map["Accept"].empty() ? "*/*" : event->header_map["Accept"]));
-
-				cgi_vars.push_back("REDIRECT_STATUS=200");
-				cgi_vars.push_back("REQUEST_SCHEME=http");
-				cgi_vars.push_back("HTTPS=off");
+				cgi_vars.push_back("SERVER_SOFTWARE=" + event->response_map["Server"]);
 			}
 		
 			#pragma region Information
@@ -602,28 +600,37 @@
 				//			Content-Type: text/html
 				//			Content-Length: 1234
 
-				//	REQUEST_METHOD		El método HTTP utilizado en la solicitud (GET, POST, PUT, DELETE, etc.)		  			            		POST
-				//	REQUEST_URI			Es la URI completa incluyendo la cadena de consulta (query string)		  									/products/details?item=123&color=red
-				//	QUERY_STRING		Es la cadena de consulta (query string), que contiene los parámetros enviados después de ?					item=123&color=red
+				//	CONTENT_LENGTH		Indica la longitud del cuerpo de la solicitud en bytes. Puede estar vacío									1234
+				//	CONTENT_TYPE		Indica el tipo de contenido de los datos. Puede estar vacío													text/html
 
 				//	GATEWAY_INTERFACE	La versión de CGI que está usando el servidor web															CGI/1.1
-				//	SCRIPT_NAME			La ruta virtual del script CGI que está siendo ejecutado, tal como se solicitó en la URL					/cgi-bin/script.cgi
+
+				//	HTTPS				
+				//	HTTP_ACCEPT			Los tipos de contenido que el cliente está dispuesto a aceptar												text/html,application/xhtml+xml
+				//	HTTP_HOST			El nombre del servidor virtual que está manejando la solicitud				        						www.example.com
+				//	HTTP_REFERER		El valor de referer, que indica la página anterior a la que se hizo la solicitud        					https://www.google.com/search?q=webserv
+				//	HTTP_USER_AGENT		El contenido del encabezado user-agent, que identifica el navegador del cliente  							Mozilla/5.0 (Windows NT 10.0; Win64; x64)...
+
 				//	PATH_INFO			Cualquier información adicional después del nombre del script en la URL										/extra/path
 				//	PATH_TRANSLATED		La ruta completa en el sistema de archivos del recurso solicitado											/var/www/cgi-bin/extra/path
 
-				//	CONTENT_TYPE		Indica el tipo de contenido de los datos. Puede estar vacío													text/html
-				//	CONTENT_LENGTH		Indica la longitud del cuerpo de la solicitud en bytes. Puede estar vacío									1234
+				//	QUERY_STRING		Es la cadena de consulta (query string), que contiene los parámetros enviados después de ?					item=123&color=red
+
+				//	REDIRECT_STATUS		Código de estado de la anterior redirección. Puede estar vacío												302
+				//	REMOTE_ADDR			La dirección IP del cliente que hizo la solicitud					             							203.0.113.45
+				//	REMOTE_PORT			El puerto del cliente que hizo la solicitud							        								54321 
+
+				//	REQUEST_FILENAME	Ruta completa del archivo solicitado																		/var/www/cgi-bin/script.cgi
+				//	REQUEST_METHOD		El método HTTP utilizado en la solicitud (GET, POST, PUT, DELETE, etc.)		  			            		POST
+				//	REQUEST_SCHEME		Esquema de la solicitud (HTTP o HTTPS)																		http
+				//	REQUEST_URI			Es la URI completa incluyendo la cadena de consulta (query string)		  									/products/details?item=123&color=red
+
+				//	SCRIPT_NAME			La ruta virtual del script CGI que está siendo ejecutado, tal como se solicitó en la URL					/cgi-bin/script.cgi
 
 				//	SERVER_NAME			El valor del encabezado host, que es el nombre del dominio o la dirección IP solicitada		     	    	www.example.com
 				//	SERVER_PORT			El puerto del servidor que está manejando la solicitud					 	               					80
 				//	SERVER_PROTOCOL		El protocolo HTTP que está utilizando el cliente															HTTP/1.1
-				//	REMOTE_ADDR			La dirección IP del cliente que hizo la solicitud					             							203.0.113.45
-				//	REMOTE_PORT			El puerto del cliente que hizo la solicitud							        								54321 
-
-				//	HTTP_HOST			El nombre del servidor virtual que está manejando la solicitud				        						www.example.com
-				//	HTTP_ACCEPT			Los tipos de contenido que el cliente está dispuesto a aceptar												text/html,application/xhtml+xml
-				//	HTTP_REFERER		El valor de referer, que indica la página anterior a la que se hizo la solicitud        					https://www.google.com/search?q=webserv
-				//	HTTP_USER_AGENT		El contenido del encabezado user-agent, que identifica el navegador del cliente  							Mozilla/5.0 (Windows NT 10.0; Win64; x64)...
+				//	SERVER_SOFTWARE		Nombre y versión del software del servidor																	Webserv/1.0 (Ubuntu 22.04.4 LTS)
 
 				//	El cuerpo de la solicitud se envia al CGI a través del STDIN
 
@@ -637,6 +644,7 @@
 
 			void Protocol::response_cgi(EventInfo * event) {
 				if (!event) return;
+
 
 				event->cgi_fd = -1;
 				int write_fd = -1;
@@ -709,7 +717,6 @@
 							args[2] = NULL;
 						}
 
-
 						for (size_t i = 0; i < cgi_vars.size(); ++i)
 							env_array.push_back(const_cast<char*>(cgi_vars[i].c_str()));
 						env_array.push_back(NULL);
@@ -730,6 +737,7 @@
 					}
 					exit(1);
 				}
+				event->redirect_status = 0;
 			}
 
 		#pragma endregion

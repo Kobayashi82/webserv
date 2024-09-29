@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/21 11:52:00 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/29 12:56:54 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/30 00:03:57 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,14 +17,12 @@
 #include "Protocol.hpp"
 #include "Communication.hpp"
 
-	//	TODO	Index usa index.html por defecto
+	//	TODO	Optimized stat calls 
+	//	TODO	La puta se cierra cuando pongo un video, a veces
+
+	//	TODO	Alias e Internal
 	//	TODO	Update resource path with alias or any modified path before cgi
-
-	//	*	127.0.0.1 not receiving logs
-
-	//	*	Error tiene que comprobar locations
-	//	*	Return, error y try_files manejan variables
-	//	*	Location y try_files pueden llevar = (try_files para códigos =404)
+	//	TODO	Error y try_files fallback tienen que comprobar locations
 
 #pragma region Variables
 
@@ -34,6 +32,55 @@
 #pragma endregion
 
 #pragma region Parsers
+
+		// Función para reemplazar todas las ocurrencias de una variable en el string.
+		std::string replaceAll(const std::string & str, const std::string & from, const std::string & to) {
+			if (from.empty()) return str;
+			std::string result = str;
+			std::string::size_type start_pos = 0;
+			while ((start_pos = result.find(from, start_pos)) != std::string::npos) {
+				result.replace(start_pos, from.length(), to);
+				start_pos += to.length();
+			}
+			return result;
+		}
+
+		std::string replaceVariables(EventInfo * event, const std::string & input) {
+			std::string output = input;
+
+			// Mapeo de variables a sus nombres en el header_map
+			std::map<std::string, std::string> variables;
+			variables["$request"] = "$request";
+			variables["$request_method"] = "$request_method";
+			variables["$request_uri"] = "$request_uri";
+			variables["$uri"] = "$uri";
+			variables["$document_uri"] = "$document_uri";
+			variables["$args"] = "$args";
+			variables["$query_string"] = "$query_string";
+			variables["$host"] = "$host";
+			variables["$remote_addr"] = "$remote_addr";
+			variables["$remote_port"] = "$remote_port";
+			variables["$server_addr"] = "$server_addr";
+			variables["$server_port"] = "$server_port";
+			variables["$server_name"] = "$server_name";
+			variables["$http_referer"] = "$http_referer";
+			variables["$http_cookie"] = "$http_cookie";
+			variables["$http_host"] = "$http_host";
+			variables["$http_user_agent"] = "$http_user_agent";
+
+			// Iterar sobre las variables y reemplazarlas si existen en el header_map
+			std::map<std::string, std::string>::const_iterator it_var;
+			for (it_var = variables.begin(); it_var != variables.end(); ++it_var) {
+				std::map<std::string, std::string>::const_iterator it_header = event->header_map.find(it_var->second);
+				if (it_header != event->header_map.end() && !it_header->second.empty()) {
+					output = replaceAll(output, it_var->first, it_header->second);
+				}
+			}
+
+			return output;
+		}
+
+
 
 	#pragma region Directives
 
@@ -90,8 +137,9 @@
 
 				if (!VServ) VServ = &Settings::global;
 
+				temp = replaceVariables(event, temp);
 				std::string path = Utils::fullpath(root + "/" + temp);
-				if (temp.empty() || (!Communication::cache.exists(path) && !file_stat(event, path))) {
+				if (temp.empty() || Utils::file_exists(path)) {
 					event->response_map["Method"] = "Error";
 					event->response_map["Code"] = code;
 				} else {
@@ -124,7 +172,7 @@
 
 				event->response_map["Method"] = "Redirect";
 				event->response_map["Code"] = code; // 301, 302, 303, 307, 308
-				event->response_map["Path"] = path;
+				event->response_map["Path"] = replaceVariables(event, path);
 
 				if (!VServ) VServ = &Settings::global;
 
@@ -205,13 +253,17 @@
 
 			#pragma region Extension
 
-				int cgi_ext(EventInfo * event, VServer * VServ, Location * Loc = NULL) {
+				int cgi_ext(EventInfo * event, VServer * VServ, Location * Loc = NULL, std::string t_path = "") {
 					std::string root, cgi_path;
 
-					std::string ext = Utils::strToLower(event->response_map["Path"]);
+					std::string ext = t_path;
+					if (ext.empty()) ext = Utils::strToLower(event->response_map["Path"]);
 					size_t pos = ext.find_last_of('.');
 					if (pos == std::string::npos) return (0);
 					ext = ext.substr(pos); if (ext.empty()) return (0);
+
+					std::string path = t_path;
+					if (path.empty()) path = event->response_map["Path"];
 
 					if (Loc)							cgi_path = Loc->get("cgi " + ext);
 					if (cgi_path.empty() && VServ)		cgi_path = VServ->get("cgi " + ext);
@@ -222,6 +274,7 @@
 					if (root.empty() && VServ)			root = VServ->get("root");
 					if (root.empty())					root = Settings::global.get("root");
 
+
 					if (Utils::strToLower(cgi_path) != "self-cgi") {
 						if (cgi_path[0] != '/' && cgi_path[0] != '~')	cgi_path = Utils::fullpath(Settings::program_path + cgi_path);
 						else											cgi_path = Utils::fullpath(cgi_path);
@@ -230,11 +283,13 @@
 						if (Utils::file_exists(cgi_path, true) == 2) return (error_page(event, "403", VServ, Loc));
 					}
 
+
 					event->response_map["Method"] = "CGI";
-					event->response_map["Path-Full"] = Utils::fullpath(root + "/" + event->response_map["Path"]);
+					event->response_map["Path-Full"] = Utils::fullpath(root + "/" + path);
 					if (Utils::file_exists(event->response_map["Path-Full"]) == 1) return (error_page(event, "404", VServ, Loc));
 					if (Utils::file_exists(event->response_map["Path-Full"]) == 2) return (error_page(event, "403", VServ, Loc));
 					event->response_map["CGI-Path"] = cgi_path;
+					event->response_map["Code"] = "200";
 
 					return (1);
 				}
@@ -245,31 +300,31 @@
 
 		#pragma region Directory
 
-			int check_dir(EventInfo * event, VServer * VServ, Location * Loc = NULL) {
+			int check_dir(EventInfo * event, VServer * VServ, Location * Loc = NULL, std::string t_path = "") {
 				std::string root;
 
-				if (root.empty() && Loc)	root = Loc->get("root");
+				if (Loc)					root = Loc->get("root");
 				if (root.empty() && VServ)	root = VServ->get("root");
 				if (root.empty())			root = Settings::global.get("root");
 
-				std::string path = event->response_map["Path"];
+				std::string path = t_path;
+				if (path.empty()) path = event->response_map["Path"];
+				size_t pos = path.find_last_of('/');
+				if (pos != std::string::npos) path = path.substr(0, pos);
 
 				if (chdir((root + "/" + path).c_str()) != 0) return (0);
 				
-				if (path.empty()) path = "/";
-
-				//if (Utils::directory_exists(path)) return (0);
+				//if (path.empty()) path = "/";
 
 				std::string index;
-				if (index.empty() && Loc)	index = Loc->get("index");
+				if (Loc)					index = Loc->get("index");
 				if (index.empty() && VServ)	index = VServ->get("index");
 				if (index.empty())			index = Settings::global.get("index");
 				if (index.empty())			index = "index.html";
 
 				std::istringstream iss(index);
 
-				while (iss >> index) {
-					path = event->response_map["Path"] + "/" + index;
+				while (iss >> index) { path = index;
 					if (!Utils::file_exists(path)) {
 						if (!cgi_ext(event, VServ, Loc)) set_file(event, path);
 						return (1);
@@ -281,9 +336,10 @@
 				if (autoindex.empty() && VServ)		autoindex = VServ->get("autoindex");
 				if (autoindex.empty())				autoindex = Settings::global.get("autoindex");
 
-				if (autoindex != "on") return (0);
+				if (autoindex != "on") return (error_page(event, "403", VServ, Loc));
 
-				path = event->response_map["Path"];
+				path = t_path;
+				if (path.empty()) path = event->response_map["Path"];
 				if (path.empty()) path = "/";
 
 				if (!cgi_dir(event, VServ, Loc)) {
@@ -299,19 +355,66 @@
 
 		#pragma region File
 
-			int check_file(EventInfo * event, VServer * VServ, Location * Loc = NULL) {
+			int check_file(EventInfo * event, VServer * VServ, Location * Loc = NULL, std::string path = "") {
 				std::string root;
 
-				if (root.empty() && Loc)	root = Loc->get("root");
+				if (Loc)					root = Loc->get("root");
 				if (root.empty() && VServ)	root = VServ->get("root");
 				if (root.empty())			root = Settings::global.get("root");
 
-				if (chdir(root.c_str()) != 0) return (0);
+				if (path.empty()) path = event->response_map["Path"];
 
-				std::string path = event->response_map["Path"];
+				if (chdir((root).c_str()) != 0) return (0);
+
 				if (!Utils::file_exists(path)) {
 					if (!cgi_ext(event, VServ, Loc)) set_file(event, path);
 					return (1);
+				}
+
+				return (0);
+			}
+
+		#pragma endregion
+
+		#pragma region Try_Files
+
+			int try_files(EventInfo * event, VServer * VServ, Location * Loc) {
+				std::string root;
+
+				if (Loc)					root = Loc->get("root");
+				if (root.empty() && VServ)	root = VServ->get("root");
+				if (root.empty())			root = Settings::global.get("root");
+
+				if (chdir((root).c_str()) != 0) return (0);
+
+				std::string path = replaceVariables(event, event->response_map["Path"]);
+				if (check_file(event, VServ, Loc)) return (1);
+				if (!Utils::directory_exists(path) && check_dir(event, VServ, Loc)) return (1);
+
+
+				std::string files = Loc->get("try_files");
+				if (files.empty()) return (0);
+
+				std::istringstream iss(files);
+
+				while (iss >> files) { path = files;
+
+					if (path[0] == '/') path = path.substr(1);
+					path = replaceVariables(event, path);
+					if (!Utils::file_exists(path)) {
+						if (!cgi_ext(event, VServ, Loc,  "/" + path)) check_file(event, VServ, Loc, "/" + path);
+						return (1);
+					}
+					if (!Utils::directory_exists(path)) {
+						if (!cgi_dir(event, VServ, Loc)) check_dir(event, VServ, Loc, path);
+						return (1);
+					}
+				}
+
+				long code;
+				if (!path.empty() && path[0] == '=') {
+					if (Utils::stol(path.substr(1), code)) return (error_page(event, "500", VServ, Loc));
+					return (error_page(event, Utils::ltos(code), VServ, Loc));
 				}
 
 				return (0);
@@ -334,7 +437,7 @@
 				std::vector<std::pair<std::string, std::string> >::const_iterator it;
 				for (it = Met->data.begin(); it != Met->data.end(); ++it) {
 					if (it->first == "allow" && (it->second == "all" || Utils::isIPInRange(event->client->ip, it->second))) allowed = true;
-					if (it->first == "deny" && allowed == false && (it->second == "all" || Utils::isIPInRange(event->client->ip, it->second))) return (error_page(event, "403", VServ));
+					if (it->first == "deny" && allowed == false && (it->second == "all" || Utils::isIPInRange(event->client->ip, it->second))) return (error_page(event, "403", VServ, Loc));
 					if (it->first == "return") return (redirect(event, it->second, VServ, Loc));
 				}
 
@@ -345,11 +448,7 @@
 
 		#pragma region Location
 
-			int location(EventInfo * event, int index, VServer * VServ) {
-				Location * Loc = NULL;
-
-				if (VServ) Loc = &VServ->location[index];
-				if (!Loc) return (0);
+			int location(EventInfo * event, VServer * VServ, Location * Loc) {
 
 				event->VServ = VServ; event->Loc = Loc; event->vserver_data = &Loc->data;
 
@@ -358,11 +457,17 @@
 				std::vector<std::pair<std::string, std::string> >::const_iterator it;
 				for (it = Loc->data.begin(); it != Loc->data.end(); ++it) {
 					if (it->first == "allow" && (it->second == "all" || Utils::isIPInRange(event->client->ip, it->second))) allowed = true;
-					if (it->first == "deny" && allowed == false && (it->second == "all" || Utils::isIPInRange(event->client->ip, it->second))) return (error_page(event, "403", NULL));
-					if (it->first == "return") return (redirect(event, it->second, NULL));
-					//if (it->first == "try_files") return (redirect(event, it->second, NULL));
-					if (it->first == "method" && method(event, Utils::sstol(it->second), NULL)) return (1);
+					if (it->first == "deny" && allowed == false && (it->second == "all" || Utils::isIPInRange(event->client->ip, it->second))) return (error_page(event, "403",  VServ, Loc));
+					if (it->first == "return") return (redirect(event, it->second,  VServ, Loc));
+					if (it->first == "try_files" && try_files(event, VServ, Loc)) return (1);
+					if (it->first == "method" && method(event, Utils::sstol(it->second), VServ, Loc)) return (1);
 				}
+
+				if (check_file(event, VServ, Loc)) return (1);
+				if (check_dir(event, VServ, Loc)) return (1);
+				// if (try_files(event, VServ, Loc)) return (1);
+
+				return (error_page(event, "405", VServ, Loc));
 
 				event->VServ = VServ; event->Loc = NULL; event->vserver_data = &VServ->data;
 
@@ -373,33 +478,60 @@
 
 		#pragma region VServers
 
-			bool isAddress(VServer * VServ, const std::string & ip, int port) {
-				std::vector<std::pair<std::string, int> >::const_iterator it;
-				for (it = VServ->addresses.begin(); it != VServ->addresses.end(); ++it) {
-					if (it->first == "0.0.0.0" && it->second == port) return (true);
-					if (it->first == ip && it->second == port) return (true);
+			#pragma region Compare Location
+
+				int compare_location(std::string loc_path, std::string path, const std::string root) {
+					int mode = 0;
+
+					if (loc_path.empty() || path.empty()) return (0);
+					if (loc_path.size() > 2 && loc_path.substr(0, 3) == "~* ") { loc_path = loc_path.substr(3); mode = 1; }
+					if (loc_path.size() > 1 && loc_path.substr(0, 2) == "= ") { loc_path = loc_path.substr(2); mode = 2; }
+					if (loc_path.empty()) return (0);
+
+					std::string dir_path;
+					if (path[path.size() - 1] != '/' && !Utils::isFile(Utils::fullpath(root + path))) dir_path = path + "/";
+
+					if (loc_path.size() > path.size() && loc_path.size() > dir_path.size()) return (0);
+
+
+					if (mode == 1) {
+						loc_path = Utils::strToLower(loc_path);
+						path = Utils::strToLower(path);
+						dir_path = Utils::strToLower(dir_path);
+					}
+
+					if (mode == 2) { if (loc_path != path && loc_path != dir_path)	return (0); }							//	Compare 'loc_path' with 'path' and 'dir_path'
+					if (mode != 2) {
+						if (dir_path.empty() && loc_path != path.substr(0, loc_path.size()))			return (0);			//	Compare 'loc_path' with 'path'
+						else if (!dir_path.empty() && loc_path != dir_path.substr(0, loc_path.size()))	return (0);			//	Compare 'loc_path' with 'dir_path'
+					}
+
+					return (loc_path.size());																				//	Return the number of matching characters
 				}
 
-				return (false);
-			}
+			#pragma endregion
 
 			int server(EventInfo * event, VServer * VServ) {
 				Location * Loc = NULL;	int Loc_index = -1;
 										int counter = 0;
+										int match_counter = 0;
+
+				std::string path = "/" + event->response_map["Path"];
+
+				std::string root;
+				if (VServ)			root = VServ->get("root");
+				if (root.empty())	root = Settings::global.get("root");
 
 				std::deque<Location>::iterator l_it;
 				for (l_it = VServ->location.begin(); l_it != VServ->location.end(); ++l_it) {
 					Location * tmp_loc = &(*l_it);
 
-					(void) Loc;
-					(void) Loc_index;
-					(void) tmp_loc;
-					// bool valid_name = false;
-					// std::string server_name; std::istringstream iss(Utils::strToLower(tmp_loc->get("server_name")));
-					// while (iss >> server_name)
-					// 	if (server_name == Utils::strToLower(event->header_map["Host"])) { Loc = tmp_loc; Loc_index = counter; valid_name = true; break; }
-					// if (valid_name) break;
-
+					int tmp_match_counter = compare_location(l_it->get("location"), path, root);
+					if (tmp_match_counter > match_counter) {
+						match_counter = tmp_match_counter;
+						Loc_index = counter;
+						Loc = tmp_loc;
+					}
 					counter++;
 				}
 
@@ -413,7 +545,13 @@
 					if (it->first == "deny" && allowed == false && (it->second == "all" || Utils::isIPInRange(event->client->ip, it->second))) return (error_page(event, "403", VServ));
 					if (it->first == "return") return (redirect(event, it->second, VServ));
 					if (it->first == "method" && method(event, Utils::sstol(it->second), VServ)) return (1);
+					if (it->first == "location" && Utils::sstol(it->second) == Loc_index && location(event, VServ, Loc)) return (1);
 				}
+
+				if (check_file(event, VServ)) return (1);
+				if (check_dir(event, VServ)) return (1);
+
+				return (error_page(event, "404", VServ));
 
 				event->VServ = &Settings::global; event->Loc = NULL; event->vserver_data = &Settings::global.data;
 
@@ -423,6 +561,20 @@
 		#pragma endregion
 
 		#pragma region Global
+
+			#pragma region Is Address
+
+				bool isAddress(VServer * VServ, const std::string & ip, int port) {
+					std::vector<std::pair<std::string, int> >::const_iterator it;
+					for (it = VServ->addresses.begin(); it != VServ->addresses.end(); ++it) {
+						if (it->first == "0.0.0.0" && it->second == port) return (true);
+						if (it->first == ip && it->second == port) return (true);
+					}
+
+					return (false);
+				}
+
+			#pragma endregion
 
 			int global(EventInfo * event) {
 				VServer * default_VServ = NULL;	int default_index = -1;
@@ -462,6 +614,8 @@
 
 				if (check_file(event, NULL)) return (1);
 				if (check_dir(event, NULL)) return (1);
+
+				return (error_page(event, "404", NULL));
 
 				return (0);
 			}
@@ -539,6 +693,9 @@
 
 		//	Add the 'Code-Description' to the response
 			event->response_map["Code-Description"] = Settings::error_codes[Utils::sstol(event->response_map["Code"])];
+
+			if (event->response_method == "Redirect")	event->redirect_status = Utils::sstol(event->response_map["Code"]);
+			else if (event->response_method != "CGI") 	event->redirect_status = 0;
 		}
 
 		#pragma region Information
@@ -688,7 +845,9 @@
 				std::string path = event->header_map["Path"];
 				size_t pos = std::min(path.find_first_of('?'), path.size());
 
-				event->header_map["$request_uri"] = event->header_map["Method"] + " " + path + " " + event->header_map["Protocol"];
+				event->header_map["$request"] = event->header_map["Method"] + " " + path + " " + event->header_map["Protocol"];
+				event->header_map["$request_method"] = event->header_map["Method"];
+				event->header_map["$request_uri"] = path;
 
 				event->header_map["$uri"] = path.substr(0, pos);
 				event->header_map["$document_uri"] = event->header_map["$uri"];
@@ -703,13 +862,13 @@
 					event->header_map["$server_port"] = Utils::ltos(event->socket->port);
 				}
 
-				event->header_map["$server_name"] = event->header_map["Host"];									//	El nombre del dominio que lo maneja o el nombre del primer dominio por defecto
+				event->header_map["$server_name"] = event->header_map["Host"];															//	El nombre del dominio que lo maneja o el nombre del primer dominio por defecto
 				if (event->header_map["$server_name"].empty()) event->header_map["$server_name"] = event->header_map["$server_addr"];
 
 				event->header_map["$http_referer"] = event->header_map["Referer"];
 				event->header_map["$http_cookie"] = event->header_map["Cookie"];
-				event->header_map["$http_user_agent"] = event->header_map["User-Agent"];
 				event->header_map["$http_host"] = event->header_map["Host"];
+				event->header_map["$http_user_agent"] = event->header_map["User-Agent"];
 
 				event->header_map["$host"] = event->header_map["Host"];
 				if (event->header_map["$host"].empty()) event->header_map["$host"] = event->header_map["$server_name"];

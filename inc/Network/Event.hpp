@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/18 11:20:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/28 12:21:22 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/29 21:40:18 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,6 +64,7 @@
 		bool												no_cache;									//	Do not keep in cache
 		bool												close;										//	Close the conection... please
 
+		int													redirect_status;
 		struct timeval										response_time;
 		time_t												last_activity;
 

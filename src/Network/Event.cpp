@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/18 11:21:01 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/28 12:04:29 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/29 21:41:09 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,7 @@
 			no_cache = false; close = false;
 			VServ = NULL; Loc = NULL; vserver_data = NULL;
 
-			response_size = 0; body_size = 0; body_maxsize = 0;
+			response_size = 0; body_size = 0; body_maxsize = 0; redirect_status = 0;
 			last_activity = std::time(NULL); gettimeofday(&response_time, NULL);
 		}
 
@@ -44,7 +44,7 @@
 			no_cache = false; close = false; mod_time = time(NULL); filesize = 0;
 			VServ = NULL; Loc = NULL; vserver_data = NULL;
 
-			response_size = 0; body_size = 0; body_maxsize = 0;
+			response_size = 0; body_size = 0; body_maxsize = 0; redirect_status = 0;
 			last_activity = std::time(NULL); gettimeofday(&response_time, NULL);
 		}
 
@@ -70,7 +70,7 @@
 				header = rhs.header; header_map = rhs.header_map;
 				response_map = rhs.response_map; response_size = rhs.response_size; response_method = rhs.response_method;
 				
-				body_size = rhs.body_size; body_maxsize = rhs.body_maxsize;
+				body_size = rhs.body_size; body_maxsize = rhs.body_maxsize; redirect_status = rhs.redirect_status;
 
 				response_time = rhs.response_time; last_activity = rhs.last_activity;
 			}

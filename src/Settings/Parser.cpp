@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:30:57 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/28 20:42:41 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/29 21:03:51 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -560,17 +560,17 @@
 			std::string space = ""; if (line_count - 1 < 10) space = " ";
 			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] " + space;
 			
-			if (str.empty()) {										log_servers(RD + n_line + "Empty value for " Y "Location" NC, VServ); return (1); }
+			if (str.empty()) {																			log_servers(RD + n_line + "Empty value for " Y "Location" NC, VServ); return (1); }
 
 			std::istringstream stream(str); std::string exact, path;
 
 			stream >> exact; stream >> path;
 
-			if (exact == "=" && path.empty()) {						log_servers(RD + n_line + "Empty value for " Y "Location" NC, VServ); return (1); }
-			if (exact != "=" && !path.empty()) {					log_servers(RD + n_line + "Invalid value " Y + exact + RD " for " Y + "Location" NC, VServ); return (1); }
-			if (exact.empty()) {									log_servers(RD + n_line + "Empty value for " Y "Location" NC, VServ); return (1); }
-			if (exact == "=" && !path.empty() && path[0] != '/') {	log_servers(RD + n_line + "Invalid path " Y + path + RD " for " Y + "Location" NC, VServ); return (1); }
-			if (exact != "=" && exact[0] != '/') {					log_servers(RD + n_line + "Invalid value " Y + exact + RD " for " Y + "Location" NC, VServ); return (1); }
+			if ((exact == "=" || exact == "~*") && path.empty()) {										log_servers(RD + n_line + "Empty value for " Y "Location" NC, VServ); return (1); }
+			if (exact != "=" && exact != "~*" && !path.empty()) {										log_servers(RD + n_line + "Invalid value " Y + exact + RD " for " Y + "Location" NC, VServ); return (1); }
+			if (exact.empty()) {																		log_servers(RD + n_line + "Empty value for " Y "Location" NC, VServ); return (1); }
+			if ((exact == "=" || exact == "~*") && !path.empty() && path[0] != '/'&& path[0] != '@') {	log_servers(RD + n_line + "Invalid path " Y + path + RD " for " Y + "Location" NC, VServ); return (1); }
+			if (exact != "=" && exact != "~*" && exact[0] != '/' && exact[0] != '@') {					log_servers(RD + n_line + "Invalid value " Y + exact + RD " for " Y + "Location" NC, VServ); return (1); }
 
 			return (0);
 		}

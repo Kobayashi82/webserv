@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 14:30:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/29 12:03:38 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/30 00:04:16 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,9 +36,8 @@
 	//	TODO	General errors overhaul
 	//	TODO	Cache not working as it should
 	//	TODO	PHP CGI not sending header
-	//	TODO	Optimized stat calls 
-	
-	//	TODO	Intermediary
+	//	TODO	Connection -1 ???
+
 	//	TODO	Documentation
 
 	//	*		CGI	(POST, PUT, PATCH, DELETE)
