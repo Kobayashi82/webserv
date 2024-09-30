@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/27 09:32:08 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/28 20:42:26 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/30 14:54:13 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -128,6 +128,8 @@
 
 				//	Sent some data
 					if (bytes_written > 0) {
+
+						//Log::log(std::string(event->write_buffer.begin(), event->write_buffer.begin() + bytes_written), Log::MEM_ACCESS);
 
 						event->write_size += bytes_written;																										//	Increase 'write_size'
 						Thread::inc_size_t(Display::mutex, write_bytes, bytes_written);																			//	Increase total bytes written
@@ -276,6 +278,9 @@
 	
 						int result = Protocol::parse_header(event);																//	Try to parse the header (maybe the header is not there yet)
 						if (result == 0) {																						//	There is a header
+							event->read_size += event->read_buffer.size() - bytes_read;
+							bytes_read = event->read_buffer.size();
+
 							c_event->response_map["Protocol"] = event->header_map["Protocol"];
 							c_event->response_map["Code"] = event->header_map["Code"];
 							c_event->response_map["Code-Description"] = event->header_map["Code-Description"];
@@ -301,7 +306,8 @@
 					}
 
 				//	Send the data to client's 'write_buffer'
-					c_event->write_buffer.insert(c_event->write_buffer.end(), buffer, buffer + bytes_read);
+					if (!event->header.empty())
+						c_event->write_buffer.insert(c_event->write_buffer.end(), event->read_buffer.begin(), event->read_buffer.begin() + bytes_read);
 
 				//	All data has been read (content length)
 					if (event->read_info == 0 && event->read_maxsize > 0 && event->read_size >= event->read_maxsize) {

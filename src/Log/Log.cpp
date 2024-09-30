@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:32:38 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/27 20:19:42 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/30 14:30:26 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -242,6 +242,7 @@
 					std::string msg1 = UN BLUE400 + ip + NC + std::string("                ").substr(ip.size()) + method_color + method + std::string("            ").substr(method.size()) + BR + re_path + NC;
 
 					std::string s_bytes = Utils::formatSize(bytes);
+
 					std::string code_color;
 					if (code >= 100 && code < 300) code_color = GREEN600;
 					if (code >= 300 && code < 400) code_color = ORANGE400;

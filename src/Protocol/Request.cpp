@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/21 11:52:00 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/30 00:03:57 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/30 18:19:22 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,9 +16,6 @@
 #include "Epoll.hpp"
 #include "Protocol.hpp"
 #include "Communication.hpp"
-
-	//	TODO	Optimized stat calls 
-	//	TODO	La puta se cierra cuando pongo un video, a veces
 
 	//	TODO	Alias e Internal
 	//	TODO	Update resource path with alias or any modified path before cgi
@@ -86,7 +83,7 @@
 
 		#pragma region Set File
 
-			void set_file(EventInfo * event, std::string & path) {
+			void set_file(EventInfo * event, std::string path) {
 				event->response_map["Method"] = "File";
 				event->response_map["Code"] = "200";
 				event->response_map["Path-Full"] = path;
@@ -125,21 +122,19 @@
 		#pragma region Error Page
 
 			int error_page(EventInfo * event, std::string code, VServer * VServ, Location * Loc = NULL) {
-				std::string temp, root;
+				std::string path, root;
 
-				if (Loc) root = Loc->get("root");
-				if (root.empty() && VServ) root = VServ->get("root");
-				if (root.empty()) root = Settings::global.get("root");
+				if (Loc)					root = Loc->get("root");
+				if (root.empty() && VServ)	root = VServ->get("root");
+				if (root.empty())			root = Settings::global.get("root");
 
-				if (Loc) temp = Loc->get("error_page " + code);
-				if (temp.empty() && VServ) temp = VServ->get("error_page " + code);
-				if (temp.empty()) temp = Settings::global.get("error_page " + code);
+				if (Loc)					path = Loc->get("error_page " + code);
+				if (path.empty() && VServ)	path = VServ->get("error_page " + code);
+				if (path.empty())			path = Settings::global.get("error_page " + code);
 
-				if (!VServ) VServ = &Settings::global;
+				path = replaceVariables(event, path);
 
-				temp = replaceVariables(event, temp);
-				std::string path = Utils::fullpath(root + "/" + temp);
-				if (temp.empty() || Utils::file_exists(path)) {
+				if (path.empty() || Utils::file_exists(Utils::fullpath(root + "/" + path))) {
 					event->response_map["Method"] = "Error";
 					event->response_map["Code"] = code;
 				} else {
@@ -148,10 +143,6 @@
 					event->response_map["Path-Full"] = path;
 				}
 
-				event->VServ = VServ; event->Loc = Loc;
-				if (Loc)		event->vserver_data = &Loc->data;
-				else if (VServ)	event->vserver_data = &VServ->data;
-
 				event->response_map["Content-Type"] = "text/html";
 
 				return (1);
@@ -159,26 +150,21 @@
 
 		#pragma endregion
 
-		#pragma region Redirect
+		#pragma region Return
 
 			static int redirect(EventInfo * event, std::string code_path, VServer * VServ, Location * Loc = NULL) {
 				std::string code, path;
 
-				size_t pos = code_path.find_first_of(' ');
-				if (pos == std::string::npos) return (0);
+				std::istringstream iss(code_path);
 
-				code = code_path.substr(0, pos);
-				path = code_path.substr(pos + 1);
+				iss >> code >> path;
+
+				if (code.empty()) return (error_page(event, "500", VServ, Loc));
+				if (path.empty()) return (error_page(event, code, VServ, Loc));
 
 				event->response_map["Method"] = "Redirect";
 				event->response_map["Code"] = code; // 301, 302, 303, 307, 308
 				event->response_map["Path"] = replaceVariables(event, path);
-
-				if (!VServ) VServ = &Settings::global;
-
-				event->VServ = VServ; event->Loc = Loc;
-				if (Loc)		event->vserver_data = &Loc->data;
-				else if (VServ)	event->vserver_data = &VServ->data;
 
 				return (1);
 			}
@@ -212,6 +198,7 @@
 							event->response_map["Method"] = "CGI";
 							event->response_map["Path-Full"] = cgi_path;
 							event->response_map["CGI-Path"] = "Self-CGI";
+							event->response_map["Code"] = "200";
 							return (1);
 						}
 						return (0);
@@ -245,6 +232,7 @@
 					event->response_map["Method"] = "CGI";
 					event->response_map["Path-Full"] = cgi_path;
 					event->response_map["CGI-Path"] = "Self-CGI";
+					event->response_map["Code"] = "200";
 
 					return (1);
 				}
@@ -274,7 +262,6 @@
 					if (root.empty() && VServ)			root = VServ->get("root");
 					if (root.empty())					root = Settings::global.get("root");
 
-
 					if (Utils::strToLower(cgi_path) != "self-cgi") {
 						if (cgi_path[0] != '/' && cgi_path[0] != '~')	cgi_path = Utils::fullpath(Settings::program_path + cgi_path);
 						else											cgi_path = Utils::fullpath(cgi_path);
@@ -283,9 +270,9 @@
 						if (Utils::file_exists(cgi_path, true) == 2) return (error_page(event, "403", VServ, Loc));
 					}
 
-
 					event->response_map["Method"] = "CGI";
 					event->response_map["Path-Full"] = Utils::fullpath(root + "/" + path);
+
 					if (Utils::file_exists(event->response_map["Path-Full"]) == 1) return (error_page(event, "404", VServ, Loc));
 					if (Utils::file_exists(event->response_map["Path-Full"]) == 2) return (error_page(event, "403", VServ, Loc));
 					event->response_map["CGI-Path"] = cgi_path;
@@ -307,14 +294,13 @@
 				if (root.empty() && VServ)	root = VServ->get("root");
 				if (root.empty())			root = Settings::global.get("root");
 
+
 				std::string path = t_path;
 				if (path.empty()) path = event->response_map["Path"];
 				size_t pos = path.find_last_of('/');
 				if (pos != std::string::npos) path = path.substr(0, pos);
 
 				if (chdir((root + "/" + path).c_str()) != 0) return (0);
-				
-				//if (path.empty()) path = "/";
 
 				std::string index;
 				if (Loc)					index = Loc->get("index");
@@ -325,8 +311,9 @@
 				std::istringstream iss(index);
 
 				while (iss >> index) { path = index;
+				
 					if (!Utils::file_exists(path)) {
-						if (!cgi_ext(event, VServ, Loc)) set_file(event, path);
+						if (!cgi_ext(event, VServ, Loc,  event->response_map["Path"] + "/" + path)) set_file(event, event->response_map["Path"] + "/" + path);
 						return (1);
 					}
 				}
@@ -337,6 +324,7 @@
 				if (autoindex.empty())				autoindex = Settings::global.get("autoindex");
 
 				if (autoindex != "on") return (error_page(event, "403", VServ, Loc));
+
 
 				path = t_path;
 				if (path.empty()) path = event->response_map["Path"];
@@ -364,7 +352,7 @@
 
 				if (path.empty()) path = event->response_map["Path"];
 
-				if (chdir((root).c_str()) != 0) return (0);
+				if (path.empty() || chdir((root).c_str()) != 0) return (0);
 
 				if (!Utils::file_exists(path)) {
 					if (!cgi_ext(event, VServ, Loc)) set_file(event, path);
@@ -465,9 +453,8 @@
 
 				if (check_file(event, VServ, Loc)) return (1);
 				if (check_dir(event, VServ, Loc)) return (1);
-				// if (try_files(event, VServ, Loc)) return (1);
 
-				return (error_page(event, "405", VServ, Loc));
+				return (error_page(event, "404", VServ, Loc));
 
 				event->VServ = VServ; event->Loc = NULL; event->vserver_data = &VServ->data;
 
@@ -682,6 +669,13 @@
 
 		//	Response method is a file, check if must be cached
 			if (event->response_method == "File") {
+				std::string root;
+
+				if (event->Loc)						root = event->Loc->get("root");
+				if (root.empty() && event->VServ)	root = event->VServ->get("root");
+				if (root.empty())					root = Settings::global.get("root");
+
+				event->response_map["Path-Full"] = Utils::fullpath(root + "/" + event->response_map["Path-Full"]);
 				if (!Communication::cache.exists(event->response_map["Path-Full"]) && !file_stat(event, event->response_map["Path-Full"]))	//	If not in cache and the file doesn't exist or can't be read...
 					error_page(event, "404", event->VServ, event->Loc);																		//	Return "404 (Not Found)"
 				else {
@@ -695,7 +689,7 @@
 			event->response_map["Code-Description"] = Settings::error_codes[Utils::sstol(event->response_map["Code"])];
 
 			if (event->response_method == "Redirect")	event->redirect_status = Utils::sstol(event->response_map["Code"]);
-			else if (event->response_method != "CGI") 	event->redirect_status = 0;
+			else if (event->response_method != "CGI") 	event->redirect_status = 200;
 		}
 
 		#pragma region Information
@@ -921,18 +915,39 @@
 					std::istringstream first_line(line);
 					std::string value1, value2, value3;
 
-
 					if (event->type == CLIENT) {
-						if (first_line >> value1 >> value2 >> value3) {												//	Get the data from the first line (Method, Path and Protocol)
+						if (first_line >> value1 && first_line >> value2 && first_line >> value3) {					//	Get the data from the first line (Method, Path and Protocol)
 							event->header_map["Method"] = value1;
 							event->header_map["Path"] = Security::decode_url(value2);
 							event->header_map["Protocol"] = value3;
 						} else return (2);																			//	There are errors in the first line
 					} if (event->type == CGI) {
-						if (first_line >> value1 >> value2 >> value3) {												//	Get the data from the first line (Protocol, Code and Code description)
-							event->header_map["Protocol"] = value1;
-							event->header_map["Code"] = value2;
-							event->header_map["Code-Description"] = value3;
+						if (first_line >> value1 && first_line >> value2 && first_line >> value3) {					//	Get the data from the first line (Protocol, Code and Code description)
+							EventInfo * c_event = Event::get(event->client->fd);
+							if (value1 == "Status:") {
+								if (!c_event) return (3);
+								std::string status =  c_event->header_map["Protocol"] + " " + value2 + " " + Settings::error_codes[Utils::sstol(value2)] + "\r\n";
+								event->read_buffer.erase(event->read_buffer.begin(), event->read_buffer.begin() + line.size() + 1);
+								event->read_buffer.insert(event->read_buffer.begin(), status.begin(), status.end());
+								event->header_map["Code"] = value2;
+								event->header_map["Code-Description"] = Settings::error_codes[Utils::sstol(value2)];
+								c_event->response_map["Code"] = value2;
+								c_event->response_map["Code-Description"] = Settings::error_codes[Utils::sstol(value2)];
+							} else {
+								std::string status = c_event->header_map["Protocol"] + " 200 " + Settings::error_codes[200] + "\r\n";
+								event->read_buffer.insert(event->read_buffer.begin(), status.begin(), status.end());
+								event->header_map["Code"] = "200";
+								event->header_map["Code-Description"] = Settings::error_codes[200];
+								c_event->response_map["Code"] = "200";
+								c_event->response_map["Code-Description"] = Settings::error_codes[200];
+							}
+							event->header = std::string(event->read_buffer.begin(), event->read_buffer.end());
+							size_t pos = event->header.find("\r\n\r\n");																//	Find the end of the header
+
+							if (pos == std::string::npos)	return (1);															//	Incomplete header
+							else							event->header = event->header.substr(0, pos);								//	Get only the header content
+							c_event->redirect_status = Utils::sstol(event->header_map["Code"]);
+							// Check if must process code
 
 							if (parse_code(event, Utils::sstol(value2))) return (3);								//	The server will manage the response
 						} else return (2);																			//	There are errors in the first line

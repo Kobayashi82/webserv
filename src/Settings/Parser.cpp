@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:30:57 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/29 21:03:51 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/30 15:51:14 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -420,8 +420,10 @@
 					if (value[0] == '.')	log_servers(RD + n_line + "Invalid extension " Y + value + RD " for " Y "CGI" NC, VServ);
 					else					log_servers(RD + n_line + "Invalid method " Y + Utils::strToUpper(value) + RD " for " Y "CGI" NC, VServ);
 					global.bad_config = true;
-				} else if (value[0] != '.' && Utils::strToLower(filePath) == "self-cgi") { log_servers(RD + n_line + "Cannot use " Y "self-CGI" RD " for the method " Y + Utils::strToUpper(value) + NC, VServ); global.bad_config = true; }
-				else global.add(firstPart + " " + *it, filePath);
+				} else if (value[0] != '.' && Utils::strToLower(filePath) == "self-cgi") { log_servers(RD + n_line + "Cannot use " Y "self-CGI" RD " for the method " Y + Utils::strToUpper(value) + NC, VServ); global.bad_config = true;
+				} else if (lvalue == "dir" || lvalue == "head" || lvalue == "get" || lvalue == "post" || lvalue == "put" || lvalue == "patch" || lvalue == "delete")
+					global.add(Utils::strToLower(firstPart) + " " + Utils::strToLower(*it), filePath);
+				else global.add(Utils::strToLower(firstPart) + " " + *it, filePath);
 			}
 
 			return (0);
@@ -445,8 +447,10 @@
 					if (value[0] == '.')	log_servers(RD + n_line + "Invalid extension " Y + value + RD " for " Y "CGI" NC, &VServ);
 					else					log_servers(RD + n_line + "Invalid method " Y + Utils::strToUpper(value) + RD " for " Y "CGI" NC, &VServ);
 					VServ.bad_config = true;
-				} else if (value[0] != '.' && Utils::strToLower(filePath) == "self-cgi") { log_servers(RD + n_line + "Cannot use " Y "self-CGI" RD " for the method " Y + Utils::strToUpper(value) + NC, &VServ); VServ.bad_config = true;}
-				else VServ.add(firstPart + " " + *it, filePath);
+				} else if (value[0] != '.' && Utils::strToLower(filePath) == "self-cgi") { log_servers(RD + n_line + "Cannot use " Y "self-CGI" RD " for the method " Y + Utils::strToUpper(value) + NC, &VServ); VServ.bad_config = true;
+				} else if (lvalue == "dir" || lvalue == "head" || lvalue == "get" || lvalue == "post" || lvalue == "put" || lvalue == "patch" || lvalue == "delete")
+					VServ.add(Utils::strToLower(firstPart) + " " + Utils::strToLower(*it), filePath);
+				else VServ.add(Utils::strToLower(firstPart) + " " + *it, filePath);
 			}
 
 			return (0);
@@ -470,8 +474,10 @@
 					if (value[0] == '.')	log_servers(RD + n_line + "Invalid extension " Y + value + RD " for " Y "CGI" NC, Loc.VServ);
 					else					log_servers(RD + n_line + "Invalid method " Y + Utils::strToUpper(value) + RD " for " Y "CGI" NC, Loc.VServ);
 					Loc.VServ->bad_config = true;
-				} else if (value[0] != '.' && Utils::strToLower(filePath) == "self-cgi") { log_servers(RD + n_line + "Cannot use " Y "self-CGI" RD " for the method " Y + Utils::strToUpper(value) + NC, Loc.VServ); Loc.VServ->bad_config = true; }
-				else Loc.add(firstPart + " " + *it, filePath);
+				} else if (value[0] != '.' && Utils::strToLower(filePath) == "self-cgi") { log_servers(RD + n_line + "Cannot use " Y "self-CGI" RD " for the method " Y + Utils::strToUpper(value) + NC, Loc.VServ); Loc.VServ->bad_config = true;
+				} else if (lvalue == "dir" || lvalue == "head" || lvalue == "get" || lvalue == "post" || lvalue == "put" || lvalue == "patch" || lvalue == "delete")
+					Loc.add(Utils::strToLower(firstPart) + " " + Utils::strToLower(*it), filePath);
+				else Loc.add(Utils::strToLower(firstPart) + " " + *it, filePath);
 			}
 
 			return (0);

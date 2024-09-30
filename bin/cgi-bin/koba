@@ -1,0 +1,3 @@
+#!/bin/bash
+
+'/mnt/d/Programas/Drivers/Mis Programas/C/Active/webserv/bin/cgi-bin/python-cgi'  "$@"

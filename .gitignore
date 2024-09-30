@@ -12,10 +12,6 @@
 !bin/cgi-bin
 !bin/cgi-bin/**
 !bin/default.cfg
-!bin/index.html
-!bin/index.php
-!bin/index.py
-!bin/favicon.ico
 !bin/www
 !bin/www/**
 !.gitignore

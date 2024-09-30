@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/21 11:59:50 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/29 21:56:57 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/30 16:56:05 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -105,6 +105,7 @@
 					"Server: " + event->response_map["Server"] + "\r\n"
 					"Date: " + event->response_map["Date"] + "\r\n"
 					"Cache-Status: MISS" + "\r\n"
+					"Cache-Control: no-store, no-cache, must-revalidate, max-age=0" + "\r\n"
 					"Content-Type: " + Settings::mime_types["html"] + "\r\n"
 					"X-Content-Type-Options: nosniff\r\n"
 					"Content-Length: " + Utils::ltos(body.size()) + "\r\n"
@@ -141,6 +142,7 @@
 				"Server: " + event->response_map["Server"] + "\r\n"
 				"Date: " + event->response_map["Date"] + "\r\n"
 				"Cache-Status: MISS" + "\r\n"
+				"Cache-Control: no-store, no-cache, must-revalidate, max-age=0" + "\r\n"
 				"Location: " + Security::encode_url(event->response_map["Path"]) + "\r\n"
 				"X-Content-Type-Options: nosniff" + "\r\n"
 				"Content-Length: 0" + "\r\n"
@@ -235,10 +237,13 @@
 
 		#pragma region Add Directory
 
-			static void add_dir(std::string & body, const std::string & dir_path) {
+			static void add_dir(std::string & body, std::string dir_path, const std::string & dir) {
+				if (dir_path == ".") dir_path = "";
+				dir_path = "/" + dir_path;
+				if (dir_path[dir_path.size() - 1] != '/') dir_path += "/";
 				body +=
 				"<tr>\n"
-				"    <td><strong><a class=\"directory\" href=" + Security::encode_url(dir_path) + ">" + dir_path + "</a></strong></td>\n"
+				"    <td><strong><a class=\"directory\" href=" + Security::encode_url(dir_path + dir) + ">" + dir + "</a></strong></td>\n"
 				"    <td></td>\n"
 				"    <td></td>\n"
 				"</tr>\n";
@@ -297,7 +302,7 @@
 				add_style(body, dir_path, event->response_map["Root"]);												//	Add the column and style to the body
 
 				for (std::vector<std::string>::iterator it = directories.begin(); it != directories.end(); ++it)	//	Add directories to the body
-					add_dir(body, *it);
+					add_dir(body, dir_path, *it);
 
 				for (std::vector<std::string>::iterator it = files.begin(); it != files.end(); ++it)				//	Add files to the body
 					add_file(body, dir_path, *it);
@@ -313,6 +318,7 @@
 					"Server: " + event->response_map["Server"] + "\r\n"
 					"Date: " + event->response_map["Date"] + "\r\n"
 					"Cache-Status: MISS" + "\r\n"
+					"Cache-Control: no-store, no-cache, must-revalidate, max-age=0" + "\r\n"
 					"Content-Type: " + Settings::mime_types["html"] + "\r\n"
 					"X-Content-Type-Options: nosniff" + "\r\n"
 					"Content-Length: " + Utils::ltos(body.size()) + "\r\n"
@@ -377,6 +383,7 @@
 								"Age: " + Utils::str_time(time(NULL) - fcache.added_time) + "\r\n"
 								"Last-Modified: " + fcache.mod_stime + "\r\n"
 								"Content-Type: " + event->response_map["Content-Type"] + "\r\n"
+								"Cache-Control: public, max-age=3600" + "\r\n"
 								"X-Content-Type-Options: nosniff" + "\r\n"
 								"Content-Range: bytes " + Utils::ltos(start) + "-" + Utils::ltos(end) + "/" + Utils::ltos(filesize) + "\r\n"
 								"Content-Length: " + Utils::ltos(end - start) + "\r\n"
@@ -389,6 +396,7 @@
 								"Cache-Status: HIT" + "\r\n"
 								"Age: " + Utils::str_time(time(NULL) - fcache.added_time) + "\r\n"
 								"Last-Modified: " + fcache.mod_stime + "\r\n"
+								"Cache-Control: no-store, no-cache, must-revalidate, max-age=0" + "\r\n"
 								"Content-Type: " + event->response_map["Content-Type"] + "\r\n"
 								"X-Content-Type-Options: nosniff" + "\r\n"
 								"Content-Length: " + Utils::ltos(end - start) + "\r\n"
@@ -477,6 +485,7 @@
 						"Cache-Status: MISS" + "\r\n"
 						"Last-Modified: " + event->response_map["Last-Modified"] + "\r\n"
 						"Accept-Ranges: bytes" + "\r\n"
+						"Cache-Control: no-store, no-cache, must-revalidate, max-age=0" + "\r\n"
 						"Content-Type: " + event->response_map["Content-Type"] + "\r\n"
 						"X-Content-Type-Options: nosniff" + "\r\n"
 						"Content-Length: " + Utils::ltos(end - start) + "\r\n"
@@ -570,7 +579,7 @@
 
 				cgi_vars.push_back("QUERY_STRING=" + event->header_map["$query_string"]);
 
-				if (event->redirect_status != 0) cgi_vars.push_back("REDIRECT_STATUS=" + Utils::ltos(event->redirect_status));
+				cgi_vars.push_back("REDIRECT_STATUS=" + Utils::ltos(event->redirect_status));
 				cgi_vars.push_back("REMOTE_ADDR=" + event->header_map["$remote_addr"]);
 				cgi_vars.push_back("REMOTE_PORT=" + event->header_map["$remote_port"]);
 
@@ -579,6 +588,7 @@
 				cgi_vars.push_back("REQUEST_SCHEME=http");
 				cgi_vars.push_back("REQUEST_URI=" + event->header_map["$request_uri"]);
 
+				cgi_vars.push_back("SCRIPT_FILENAME=" + event->response_map["Path-Full"]);
 				cgi_vars.push_back("SCRIPT_NAME=/" + event->response_map["Path"]);
 
 				cgi_vars.push_back("SERVER_NAME=" + event->header_map["$host"]);

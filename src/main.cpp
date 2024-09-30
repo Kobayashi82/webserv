@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 14:30:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/30 00:04:16 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/30 16:08:35 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,8 +35,8 @@
 	//	TODO	Check events timeout from another thread (non-blocking cant be done with cgi)
 	//	TODO	General errors overhaul
 	//	TODO	Cache not working as it should
-	//	TODO	PHP CGI not sending header
-	//	TODO	Connection -1 ???
+	//	TODO	Optimized stat calls 
+	//	TODO	La puta se cierra cuando pongo un video, a veces
 
 	//	TODO	Documentation
 
