@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/21 11:52:00 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/30 18:19:22 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/30 22:44:25 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,21 +17,14 @@
 #include "Protocol.hpp"
 #include "Communication.hpp"
 
-	//	TODO	Alias e Internal
-	//	TODO	Update resource path with alias or any modified path before cgi
-	//	TODO	Error y try_files fallback tienen que comprobar locations
-
-#pragma region Variables
-
-	bool		Protocol::internal = false;																//	
-	std::string	Protocol::internal_path;																//	
-
-#pragma endregion
-
 #pragma region Parsers
 
+	#pragma region Variables
+
+	#pragma region Single Variable
+
 		// Función para reemplazar todas las ocurrencias de una variable en el string.
-		std::string replaceAll(const std::string & str, const std::string & from, const std::string & to) {
+		std::string replace_single_var(const std::string & str, const std::string & from, const std::string & to) {
 			if (from.empty()) return str;
 			std::string result = str;
 			std::string::size_type start_pos = 0;
@@ -42,7 +35,11 @@
 			return result;
 		}
 
-		std::string replaceVariables(EventInfo * event, const std::string & input) {
+	#pragma endregion
+
+	#pragma region All Variables
+
+		std::string replace_all_vars(EventInfo * event, const std::string & input) {
 			std::string output = input;
 
 			// Mapeo de variables a sus nombres en el header_map
@@ -70,14 +67,16 @@
 			for (it_var = variables.begin(); it_var != variables.end(); ++it_var) {
 				std::map<std::string, std::string>::const_iterator it_header = event->header_map.find(it_var->second);
 				if (it_header != event->header_map.end() && !it_header->second.empty()) {
-					output = replaceAll(output, it_var->first, it_header->second);
+					output = replace_single_var(output, it_var->first, it_header->second);
 				}
 			}
 
 			return output;
 		}
 
+	#pragma endregion
 
+	#pragma endregion
 
 	#pragma region Directives
 
@@ -132,7 +131,7 @@
 				if (path.empty() && VServ)	path = VServ->get("error_page " + code);
 				if (path.empty())			path = Settings::global.get("error_page " + code);
 
-				path = replaceVariables(event, path);
+				path = replace_all_vars(event, path);
 
 				if (path.empty() || Utils::file_exists(Utils::fullpath(root + "/" + path))) {
 					event->response_map["Method"] = "Error";
@@ -164,7 +163,7 @@
 
 				event->response_map["Method"] = "Redirect";
 				event->response_map["Code"] = code; // 301, 302, 303, 307, 308
-				event->response_map["Path"] = replaceVariables(event, path);
+				event->response_map["Path"] = replace_all_vars(event, path);
 
 				return (1);
 			}
@@ -375,7 +374,7 @@
 
 				if (chdir((root).c_str()) != 0) return (0);
 
-				std::string path = replaceVariables(event, event->response_map["Path"]);
+				std::string path = replace_all_vars(event, event->response_map["Path"]);
 				if (check_file(event, VServ, Loc)) return (1);
 				if (!Utils::directory_exists(path) && check_dir(event, VServ, Loc)) return (1);
 
@@ -388,9 +387,10 @@
 				while (iss >> files) { path = files;
 
 					if (path[0] == '/') path = path.substr(1);
-					path = replaceVariables(event, path);
+					path = replace_all_vars(event, path);
+
 					if (!Utils::file_exists(path)) {
-						if (!cgi_ext(event, VServ, Loc,  "/" + path)) check_file(event, VServ, Loc, "/" + path);
+						if (!cgi_ext(event, VServ, Loc,  path)) check_file(event, VServ, Loc, path);
 						return (1);
 					}
 					if (!Utils::directory_exists(path)) {
@@ -664,7 +664,7 @@
 				event->body_maxsize   =	Utils::sstol(body_maxsize);																			//	Get 'body_maxsize' in numeric format
 				size_t content_length =	Utils::sstol(event->header_map["Content-Length"]);													//	Get 'Content-Length' in numeric format
 				if (event->body_maxsize > 0 && content_length > event->body_maxsize)														//	If 'Content-Length' is greater than 'body_maxsize'...
-					error_page(event, "403", event->VServ, event->Loc);																		//	Return "403 (Forbidden)"
+					error_page(event, "413", event->VServ, event->Loc);																		//	Return "403 (Forbidden)"
 			}
 
 		//	Response method is a file, check if must be cached

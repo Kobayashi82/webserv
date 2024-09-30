@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:32:38 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/30 14:30:26 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/30 20:50:17 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -305,6 +305,12 @@
 
 						if (type == BOTH_ACCESS || type == LOCAL_ACCESS)	path = Settings::data_get(data, "access_log");
 						if (type == BOTH_ERROR  || type == LOCAL_ERROR )	path = Settings::data_get(data, "error_log" );
+
+						if (path.empty()) {
+							data = &VServ->data;
+							if (type == BOTH_ACCESS || type == LOCAL_ACCESS)	path = Settings::data_get(data, "access_log");
+							if (type == BOTH_ERROR  || type == LOCAL_ERROR )	path = Settings::data_get(data, "error_log" );
+						}
 
 						if (path.empty()) {
 							if (type == BOTH_ACCESS || type == LOCAL_ACCESS)	path = Settings::data_get(Settings::global.data, "access_log");

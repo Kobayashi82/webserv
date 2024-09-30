@@ -1,3 +1,0 @@
-#!/bin/bash
-
-./cgi-bin/python-cgi index.py

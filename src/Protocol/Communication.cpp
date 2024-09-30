@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/27 09:32:08 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/30 14:54:13 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/30 22:44:21 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,7 +58,11 @@
 
 				//	Needs to get the header
 					if (event->header == "") {
-						if (event->read_buffer.size() > HEADER_MAXSIZE)	{ event->client->remove(); return (1); }								//	Header too big, return error
+						if (event->read_buffer.size() > HEADER_MAXSIZE)	{
+							// error 431
+							event->client->remove();
+							return (1);								//	Header too big, return error
+						}
 
 						int result = Protocol::parse_header(event);																				//	Try to parse the header (maybe the header is not there yet)
 						if (result == 0) {																										//	There is a header

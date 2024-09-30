@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 14:30:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/30 16:08:35 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/30 21:57:19 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,16 +28,7 @@
 	//	*		siege -b -c 255 -t 10S 127.0.0.1:8081			-	stress test
 	//	*		ps --ppid $(pgrep webserv) -o pid,stat,cmd		-	check zombie processes
 
-	//	TODO	./webserv -i with siege overloaded with logs
-	//			Buffer con los últimos 100 logs y que se impriman cada x tiempo o cuando se llenen... probaré así.
-	//			En el main the logs mantener un timer o algo. Puede ser de 200ms o algo asi
-
 	//	TODO	Check events timeout from another thread (non-blocking cant be done with cgi)
-	//	TODO	General errors overhaul
-	//	TODO	Cache not working as it should
-	//	TODO	Optimized stat calls 
-	//	TODO	La puta se cierra cuando pongo un video, a veces
-
 	//	TODO	Documentation
 
 	//	*		CGI	(POST, PUT, PATCH, DELETE)

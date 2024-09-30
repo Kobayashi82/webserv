@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:30:57 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/30 15:51:14 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/09/30 21:54:59 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -251,7 +251,10 @@
 			while (stream >> error) errors.push_back(error);
 			if (errors.size() < 2) { log_servers(RD + n_line + "Empty value for " Y "error_page" NC, Loc.VServ); Loc.VServ->bad_config = true; return (1); }
 			std::string filePath = errors.back(); errors.pop_back();
-			if (filePath.empty() || filePath[0] != '/') { log_servers(RD + n_line + "Invalid path for " Y "error_page" NC, Loc.VServ); Loc.VServ->bad_config = true; return (1); }
+			if (filePath.empty() || filePath[0] != '/') {
+				log_servers(RD + n_line + "Invalid path for " Y "error_page" NC, Loc.VServ);
+				Loc.VServ->bad_config = true; return (1);
+			}
 			if (errors.size() > 1 && errors.back()[0] == '=') {
 				long code; if (Utils::stol(errors.back().substr(1), code) || (error_codes.find(code) == error_codes.end())) {
 					log_servers(RD + n_line + "Invalid status code " Y + errors.back().substr(1) + RD " for " Y "error_page" NC, Loc.VServ); Loc.VServ->bad_config = true; }
@@ -566,17 +569,17 @@
 			std::string space = ""; if (line_count - 1 < 10) space = " ";
 			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] " + space;
 			
-			if (str.empty()) {																			log_servers(RD + n_line + "Empty value for " Y "Location" NC, VServ); return (1); }
+			if (str.empty()) {															log_servers(RD + n_line + "Empty value for " Y "Location" NC, VServ); return (1); }
 
 			std::istringstream stream(str); std::string exact, path;
 
 			stream >> exact; stream >> path;
 
-			if ((exact == "=" || exact == "~*") && path.empty()) {										log_servers(RD + n_line + "Empty value for " Y "Location" NC, VServ); return (1); }
-			if (exact != "=" && exact != "~*" && !path.empty()) {										log_servers(RD + n_line + "Invalid value " Y + exact + RD " for " Y + "Location" NC, VServ); return (1); }
-			if (exact.empty()) {																		log_servers(RD + n_line + "Empty value for " Y "Location" NC, VServ); return (1); }
-			if ((exact == "=" || exact == "~*") && !path.empty() && path[0] != '/'&& path[0] != '@') {	log_servers(RD + n_line + "Invalid path " Y + path + RD " for " Y + "Location" NC, VServ); return (1); }
-			if (exact != "=" && exact != "~*" && exact[0] != '/' && exact[0] != '@') {					log_servers(RD + n_line + "Invalid value " Y + exact + RD " for " Y + "Location" NC, VServ); return (1); }
+			if ((exact == "=" || exact == "~*") && path.empty()) {						log_servers(RD + n_line + "Empty value for " Y "Location" NC, VServ); return (1); }
+			if (exact != "=" && exact != "~*" && !path.empty()) {						log_servers(RD + n_line + "Invalid value " Y + exact + RD " for " Y + "Location" NC, VServ); return (1); }
+			if (exact.empty()) {														log_servers(RD + n_line + "Empty value for " Y "Location" NC, VServ); return (1); }
+			if ((exact == "=" || exact == "~*") && !path.empty() && path[0] != '/') {	log_servers(RD + n_line + "Invalid path " Y + path + RD " for " Y + "Location" NC, VServ); return (1); }
+			if (exact != "=" && exact != "~*" && exact[0] != '/') {						log_servers(RD + n_line + "Invalid value " Y + exact + RD " for " Y + "Location" NC, VServ); return (1); }
 
 			return (0);
 		}
@@ -613,7 +616,6 @@
 				if (firstPart == "log_rotate") return (0);
 				if (firstPart == "root") return (0);
 				if (firstPart == "index") return (0);
-				if (firstPart == "uploads") return (0);
 				if (firstPart == "body_maxsize") return (0);
 				if (firstPart == "autoindex") return (0);
 				if (firstPart == "allow") return (0);
@@ -633,8 +635,8 @@
 			} else if (section == LOCATION) {
 				if (firstPart == "location") return (0);
 				if (firstPart == "try_files") return (0);
-				if (firstPart == "alias") return (0);
-				if (firstPart == "internal") return (0);
+				// if (firstPart == "alias") return (0);
+				// if (firstPart == "internal") return (0);
 			} else if (section == METHOD) {
 				if (firstPart == "method") return (0);
 				if (firstPart == "allow") return (0);
@@ -720,8 +722,12 @@
 
 				if (firstPart == "http" && section == ROOT && is_http == false) { section = GLOBAL; section_bracket_lvl[0] = bracket_lvl; clear(); }
 				if (firstPart == "server" && section == GLOBAL) { section = SERVER; section_bracket_lvl[1] = bracket_lvl; PVServ = &VServ; }
-				if (firstPart == "location" && section == SERVER) { section = LOCATION; section_bracket_lvl[2] = bracket_lvl; Loc.clear(); }
-				if (firstPart == "method" && section > ROOT && section < METHOD) { subsection = section; section = METHOD; section_bracket_lvl[3] = bracket_lvl; Met.clear(); }
+				if (firstPart == "location" && section == SERVER) { section = LOCATION; section_bracket_lvl[2] = bracket_lvl; Loc.clear(); Loc.VServ = &VServ; }
+				if (firstPart == "method" && section > ROOT && section < METHOD) { subsection = section; section = METHOD; section_bracket_lvl[3] = bracket_lvl; Met.clear();
+					if (section == GLOBAL) Met.VServ = &Settings::global;
+					if (section == SERVER) Met.VServ = &VServ;
+					if (section == LOCATION) { Met.VServ = &VServ; Met.Loc = &Loc; }
+				}
 
 				if (section != ROOT && section != GLOBAL && subsection != GLOBAL && last_line_count != line_count) { last_line_count = line_count; VServ.config.push_back(oline); }
 
@@ -772,6 +778,7 @@
 					if (!NoAdd && firstPart == "location" && parse_location(secondPart, PVServ))											{ firstPart = ""; VServ.bad_config = true; }
 					if (!NoAdd && firstPart == "alias" && parse_alias(firstPart, secondPart, PVServ))										{ firstPart = ""; VServ.bad_config = true; }
 					if (!NoAdd && firstPart == "try_files" && parse_try_files(secondPart, PVServ))											{ firstPart = ""; VServ.bad_config = true; }
+					if (!NoAdd && firstPart == "internal")secondPart = "true";
 					if (!NoAdd && firstPart == "error_page") parse_errors(firstPart, secondPart, Loc);
 					if (!NoAdd && Utils::strToLower(firstPart) == "cgi") parse_cgi(firstPart, secondPart, VServ);
 
