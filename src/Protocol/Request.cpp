@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/21 11:52:00 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/30 22:44:25 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/10/01 00:28:44 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -96,7 +96,7 @@
 
 		#pragma region File Stat
 
-			bool file_stat(EventInfo * event, const std::string & path) {
+			bool Protocol::file_stat(EventInfo * event, const std::string & path) {
 				struct stat path_stat;
 
 				event->filesize = 0;																		//	Reset 'filesize'
@@ -120,7 +120,7 @@
 
 		#pragma region Error Page
 
-			int error_page(EventInfo * event, std::string code, VServer * VServ, Location * Loc = NULL) {
+			int Protocol::error_page(EventInfo * event, std::string code, VServer * VServ, Location * Loc, bool just_check) {
 				std::string path, root;
 
 				if (Loc)					root = Loc->get("root");
@@ -134,6 +134,7 @@
 				path = replace_all_vars(event, path);
 
 				if (path.empty() || Utils::file_exists(Utils::fullpath(root + "/" + path))) {
+					if (just_check) return (0);
 					event->response_map["Method"] = "Error";
 					event->response_map["Code"] = code;
 				} else {
@@ -158,8 +159,8 @@
 
 				iss >> code >> path;
 
-				if (code.empty()) return (error_page(event, "500", VServ, Loc));
-				if (path.empty()) return (error_page(event, code, VServ, Loc));
+				if (code.empty()) return (Protocol::error_page(event, "500", VServ, Loc));
+				if (path.empty()) return (Protocol::error_page(event, code, VServ, Loc));
 
 				event->response_map["Method"] = "Redirect";
 				event->response_map["Code"] = code; // 301, 302, 303, 307, 308
@@ -189,8 +190,8 @@
 					if (cgi_path[0] != '/' && cgi_path[0] != '~')	cgi_path = Utils::fullpath(Settings::program_path + cgi_path);
 					else											cgi_path = Utils::fullpath(cgi_path);
 
-					if (Utils::file_exists(cgi_path, true) == 1) return (error_page(event, "404", VServ, Loc));
-					if (Utils::file_exists(cgi_path, true) == 2) return (error_page(event, "403", VServ, Loc));
+					if (Utils::file_exists(cgi_path, true) == 1) return (Protocol::error_page(event, "404", VServ, Loc));
+					if (Utils::file_exists(cgi_path, true) == 2) return (Protocol::error_page(event, "403", VServ, Loc));
 
 					if (cgi == "head" || cgi == "get" || cgi == "post" || cgi == "put" || cgi == "patch" || cgi == "delete") {
 						if (cgi == Utils::strToLower(event->header_map["Method"])) {
@@ -225,8 +226,8 @@
 					if (cgi_path[0] != '/' && cgi_path[0] != '~')	cgi_path = Utils::fullpath(Settings::program_path + cgi_path);
 					else											cgi_path = Utils::fullpath(cgi_path);
 
-					if (Utils::file_exists(cgi_path, true) == 1) return (error_page(event, "404", VServ, Loc));
-					if (Utils::file_exists(cgi_path, true) == 2) return (error_page(event, "403", VServ, Loc));
+					if (Utils::file_exists(cgi_path, true) == 1) return (Protocol::error_page(event, "404", VServ, Loc));
+					if (Utils::file_exists(cgi_path, true) == 2) return (Protocol::error_page(event, "403", VServ, Loc));
 
 					event->response_map["Method"] = "CGI";
 					event->response_map["Path-Full"] = cgi_path;
@@ -265,15 +266,15 @@
 						if (cgi_path[0] != '/' && cgi_path[0] != '~')	cgi_path = Utils::fullpath(Settings::program_path + cgi_path);
 						else											cgi_path = Utils::fullpath(cgi_path);
 
-						if (Utils::file_exists(cgi_path, true) == 1) return (error_page(event, "404", VServ, Loc));
-						if (Utils::file_exists(cgi_path, true) == 2) return (error_page(event, "403", VServ, Loc));
+						if (Utils::file_exists(cgi_path, true) == 1) return (Protocol::error_page(event, "404", VServ, Loc));
+						if (Utils::file_exists(cgi_path, true) == 2) return (Protocol::error_page(event, "403", VServ, Loc));
 					}
 
 					event->response_map["Method"] = "CGI";
 					event->response_map["Path-Full"] = Utils::fullpath(root + "/" + path);
 
-					if (Utils::file_exists(event->response_map["Path-Full"]) == 1) return (error_page(event, "404", VServ, Loc));
-					if (Utils::file_exists(event->response_map["Path-Full"]) == 2) return (error_page(event, "403", VServ, Loc));
+					if (Utils::file_exists(event->response_map["Path-Full"]) == 1) return (Protocol::error_page(event, "404", VServ, Loc));
+					if (Utils::file_exists(event->response_map["Path-Full"]) == 2) return (Protocol::error_page(event, "403", VServ, Loc));
 					event->response_map["CGI-Path"] = cgi_path;
 					event->response_map["Code"] = "200";
 
@@ -322,7 +323,7 @@
 				if (autoindex.empty() && VServ)		autoindex = VServ->get("autoindex");
 				if (autoindex.empty())				autoindex = Settings::global.get("autoindex");
 
-				if (autoindex != "on") return (error_page(event, "403", VServ, Loc));
+				if (autoindex != "on") return (Protocol::error_page(event, "403", VServ, Loc));
 
 
 				path = t_path;
@@ -401,8 +402,8 @@
 
 				long code;
 				if (!path.empty() && path[0] == '=') {
-					if (Utils::stol(path.substr(1), code)) return (error_page(event, "500", VServ, Loc));
-					return (error_page(event, Utils::ltos(code), VServ, Loc));
+					if (Utils::stol(path.substr(1), code)) return (Protocol::error_page(event, "500", VServ, Loc));
+					return (Protocol::error_page(event, Utils::ltos(code), VServ, Loc));
 				}
 
 				return (0);
@@ -425,7 +426,7 @@
 				std::vector<std::pair<std::string, std::string> >::const_iterator it;
 				for (it = Met->data.begin(); it != Met->data.end(); ++it) {
 					if (it->first == "allow" && (it->second == "all" || Utils::isIPInRange(event->client->ip, it->second))) allowed = true;
-					if (it->first == "deny" && allowed == false && (it->second == "all" || Utils::isIPInRange(event->client->ip, it->second))) return (error_page(event, "403", VServ, Loc));
+					if (it->first == "deny" && allowed == false && (it->second == "all" || Utils::isIPInRange(event->client->ip, it->second))) return (Protocol::error_page(event, "403", VServ, Loc));
 					if (it->first == "return") return (redirect(event, it->second, VServ, Loc));
 				}
 
@@ -445,7 +446,7 @@
 				std::vector<std::pair<std::string, std::string> >::const_iterator it;
 				for (it = Loc->data.begin(); it != Loc->data.end(); ++it) {
 					if (it->first == "allow" && (it->second == "all" || Utils::isIPInRange(event->client->ip, it->second))) allowed = true;
-					if (it->first == "deny" && allowed == false && (it->second == "all" || Utils::isIPInRange(event->client->ip, it->second))) return (error_page(event, "403",  VServ, Loc));
+					if (it->first == "deny" && allowed == false && (it->second == "all" || Utils::isIPInRange(event->client->ip, it->second))) return (Protocol::error_page(event, "403",  VServ, Loc));
 					if (it->first == "return") return (redirect(event, it->second,  VServ, Loc));
 					if (it->first == "try_files" && try_files(event, VServ, Loc)) return (1);
 					if (it->first == "method" && method(event, Utils::sstol(it->second), VServ, Loc)) return (1);
@@ -454,7 +455,7 @@
 				if (check_file(event, VServ, Loc)) return (1);
 				if (check_dir(event, VServ, Loc)) return (1);
 
-				return (error_page(event, "404", VServ, Loc));
+				return (Protocol::error_page(event, "404", VServ, Loc));
 
 				event->VServ = VServ; event->Loc = NULL; event->vserver_data = &VServ->data;
 
@@ -529,7 +530,7 @@
 				std::vector<std::pair<std::string, std::string> >::const_iterator it;
 				for (it = VServ->data.begin(); it != VServ->data.end(); ++it) {
 					if (it->first == "allow" && (it->second == "all" || Utils::isIPInRange(event->client->ip, it->second))) allowed = true;
-					if (it->first == "deny" && allowed == false && (it->second == "all" || Utils::isIPInRange(event->client->ip, it->second))) return (error_page(event, "403", VServ));
+					if (it->first == "deny" && allowed == false && (it->second == "all" || Utils::isIPInRange(event->client->ip, it->second))) return (Protocol::error_page(event, "403", VServ));
 					if (it->first == "return") return (redirect(event, it->second, VServ));
 					if (it->first == "method" && method(event, Utils::sstol(it->second), VServ)) return (1);
 					if (it->first == "location" && Utils::sstol(it->second) == Loc_index && location(event, VServ, Loc)) return (1);
@@ -538,7 +539,7 @@
 				if (check_file(event, VServ)) return (1);
 				if (check_dir(event, VServ)) return (1);
 
-				return (error_page(event, "404", VServ));
+				return (Protocol::error_page(event, "404", VServ));
 
 				event->VServ = &Settings::global; event->Loc = NULL; event->vserver_data = &Settings::global.data;
 
@@ -592,7 +593,7 @@
 				std::vector<std::pair<std::string, std::string> >::const_iterator it;
 				for (it = Settings::global.data.begin(); it != Settings::global.data.end(); ++it) {
 					if (it->first == "allow" && (it->second == "all" || Utils::isIPInRange(event->client->ip, it->second))) allowed = true;
-					if (it->first == "deny" && allowed == false && (it->second == "all" || Utils::isIPInRange(event->client->ip, it->second))) return (error_page(event, "403", NULL));
+					if (it->first == "deny" && allowed == false && (it->second == "all" || Utils::isIPInRange(event->client->ip, it->second))) return (Protocol::error_page(event, "403", NULL));
 					if (it->first == "return") return (redirect(event, it->second, NULL));
 					if (it->first.substr(0, 3) == "cgi" && cgi_method(event, it->first, it->second, NULL)) return (1);
 					if (it->first == "method" && method(event, Utils::sstol(it->second), NULL)) return (1);
@@ -602,7 +603,7 @@
 				if (check_file(event, NULL)) return (1);
 				if (check_dir(event, NULL)) return (1);
 
-				return (error_page(event, "404", NULL));
+				return (Protocol::error_page(event, "404", NULL));
 
 				return (0);
 			}
@@ -664,7 +665,7 @@
 				event->body_maxsize   =	Utils::sstol(body_maxsize);																			//	Get 'body_maxsize' in numeric format
 				size_t content_length =	Utils::sstol(event->header_map["Content-Length"]);													//	Get 'Content-Length' in numeric format
 				if (event->body_maxsize > 0 && content_length > event->body_maxsize)														//	If 'Content-Length' is greater than 'body_maxsize'...
-					error_page(event, "413", event->VServ, event->Loc);																		//	Return "403 (Forbidden)"
+					error_page(event, "413", event->VServ, event->Loc);																		//	Payload too large
 			}
 
 		//	Response method is a file, check if must be cached
@@ -816,19 +817,6 @@
 
 	#pragma endregion
 
-	#pragma region Code
-
-		int Protocol::parse_code(EventInfo * event, int code) {
-			(void) event;
-			(void) code;
-
-			//	Check if there are operations with the code and send the response to the cliente
-			//	Use for the return of a CGI
-			return (0);
-		}
-
-	#pragma endregion
-
 	#pragma region Header
 
 		#pragma region Variables
@@ -942,14 +930,33 @@
 								c_event->response_map["Code-Description"] = Settings::error_codes[200];
 							}
 							event->header = std::string(event->read_buffer.begin(), event->read_buffer.end());
-							size_t pos = event->header.find("\r\n\r\n");																//	Find the end of the header
+							size_t pos = event->header.find("\r\n\r\n");											//	Find the end of the header
 
-							if (pos == std::string::npos)	return (1);															//	Incomplete header
-							else							event->header = event->header.substr(0, pos);								//	Get only the header content
+							if (pos == std::string::npos)	return (1);												//	Incomplete header
+							else							event->header = event->header.substr(0, pos);			//	Get only the header content
 							c_event->redirect_status = Utils::sstol(event->header_map["Code"]);
-							// Check if must process code
 
-							if (parse_code(event, Utils::sstol(value2))) return (3);								//	The server will manage the response
+							if (Protocol::error_page(c_event, event->header_map["Code"], c_event->VServ, c_event->Loc, true)) {
+								c_event->response_method = c_event->response_map["Method"];
+								std::string root;
+
+								if (c_event->Loc)						root = c_event->Loc->get("root");
+								if (root.empty() && c_event->VServ)		root = c_event->VServ->get("root");
+								if (root.empty())						root = Settings::global.get("root");
+
+								c_event->response_map["Path-Full"] = Utils::fullpath(root + "/" + c_event->response_map["Path-Full"]);
+								if (!Communication::cache.exists(c_event->response_map["Path-Full"]) && !file_stat(c_event, c_event->response_map["Path-Full"]))	//	If not in cache and the file doesn't exist or can't be read...
+									error_page(c_event, "404", c_event->VServ, c_event->Loc);																		//	Return "404 (Not Found)"
+								else {
+									size_t pos1 = c_event->header_map["Cache-Control"].find("no-cache");
+									size_t pos2 = c_event->header_map["Cache-Control"].find("no-store");
+									c_event->no_cache = (pos1 != std::string::npos || pos2 != std::string::npos);													//	Determine whether the file should be added to the cache
+								}
+
+								c_event->response_map["Code-Description"] = Settings::error_codes[Utils::sstol(c_event->response_map["Code"])];
+								c_event->redirect_status = 200;
+								Protocol::response_file(c_event); return (3);
+							}
 						} else return (2);																			//	There are errors in the first line
 					}
 				}

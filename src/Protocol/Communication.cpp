@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/27 09:32:08 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/30 22:44:21 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/10/01 00:41:24 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,10 +58,12 @@
 
 				//	Needs to get the header
 					if (event->header == "") {
-						if (event->read_buffer.size() > HEADER_MAXSIZE)	{
-							// error 431
-							event->client->remove();
-							return (1);								//	Header too big, return error
+						if (event->read_buffer.size() > HEADER_MAXSIZE)	{																		//	Header too big, return error
+							event->header_map["Connection"] = "close";																			//	Set 'Connection' to close
+							event->header_map["Write-Only"] = "true";																			//	Don't read from the client anymore
+							Epoll::set(event->fd, false, false);																				//	Close read and write monitor for EPOLL
+							Protocol::error_page(event, "431", event->VServ, event->Loc);														//	Request Header Fields Too Large
+							return (1);
 						}
 
 						int result = Protocol::parse_header(event);																				//	Try to parse the header (maybe the header is not there yet)
@@ -79,7 +81,7 @@
 						event->header_map["Connection"] = "close";																				//	Set 'Connection' to close
 						event->header_map["Write-Only"] = "true";																				//	Don't read from the client anymore
 						Epoll::set(event->fd, false, false);																					//	Close read and write monitor for EPOLL
-						//	return error;																										//	Body too big, return error
+						Protocol::error_page(event, "413", event->VServ, event->Loc);															//	Payload Too Large
 						return (1);
 					}
 
@@ -132,8 +134,6 @@
 
 				//	Sent some data
 					if (bytes_written > 0) {
-
-						//Log::log(std::string(event->write_buffer.begin(), event->write_buffer.begin() + bytes_written), Log::MEM_ACCESS);
 
 						event->write_size += bytes_written;																										//	Increase 'write_size'
 						Thread::inc_size_t(Display::mutex, write_bytes, bytes_written);																			//	Increase total bytes written
@@ -192,6 +192,13 @@
 
 					event->read_buffer.insert(event->read_buffer.end(), buffer, buffer + bytes_read);										//	Store the data read into 'read_buffer'
 					event->read_size += bytes_read;																							//	Increase 'read_size'
+
+					if (event->read_size == static_cast<size_t>(bytes_read)) {
+						EventInfo * c_event = Event::get(event->client->fd);
+						if (Epoll::set(c_event->fd, !(c_event->header_map["Write-Only"] == "true"), true) == -1) {			//	Set EPOLL to monitor write events for the client
+							c_event->client->remove(); return (1);
+						}
+					}
 
 				//	No cache allowed
 					if (event->no_cache == true) {
@@ -305,8 +312,12 @@
 
 							c_event->write_info = event->read_info;																//	Set client's 'write_info'
 							c_event->write_maxsize = event->read_maxsize;														//	Set client's 'write_maxsize'
+
+							if (Epoll::set(c_event->fd, !(c_event->header_map["Write-Only"] == "true"), true) == -1) {			//	Set EPOLL to monitor write events for the client
+								c_event->client->remove(); return (1);
+							}
 						} else if (result == 2) { Event::remove(event->fd); return (1);											//	There is a header, but something went wrong
-						} else if (result == 3) {  Event::remove(event->fd); return (1); }										//	There is a header, but the response is determined by the server, ignore the CGI
+						} else if (result == 3) { Event::remove(event->fd); return (1); }										//	There is a header, but the response is determined by the server, ignore the CGI
 					}
 
 				//	Send the data to client's 'write_buffer'

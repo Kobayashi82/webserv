@@ -69,3 +69,11 @@ Syntax: curl -u username:password <URL>
 Hostname:
 ### Set another hostname to try to connect to an IP:PORT.
 Syntax: curl --resolve "example.com:8080:127.0.0.1"  http://example.com:8080
+
+
+## Utils
+
+curl -v http://127.0.0.1:8081
+curl --resolve "webserv:8081:127.0.0.1"  http://webserv:8081
+siege -b -c 255 -t 10S 127.0.0.1:8081
+ps --ppid $(pgrep webserv) -o pid,stat,cmd	->	check zombie processes

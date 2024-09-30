@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 22:23:52 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/29 00:26:02 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/10/01 00:28:57 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -206,7 +206,7 @@
 #pragma region Non-Blocking FD
 
 	void Utils::NonBlocking_FD(int fd) {
-		return ;																							//	Disabled for now
+		//return ;																							//	Disabled for now
 		int flags = fcntl(fd, F_GETFL, 0);																	//	Get the current flags
 		if (flags == -1) return;
 

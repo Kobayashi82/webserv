@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/21 11:59:50 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/30 16:56:05 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/10/01 00:41:21 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -538,9 +538,9 @@
 				event->write_buffer.clear();																			//	Clear write_buffer
 				event->write_buffer.insert(event->write_buffer.end(), header.begin(), header.end());					//	Copy the header to write_buffer
 
-				if (Epoll::set(event->fd, !(event->header_map["Write-Only"] == "true"), true) == -1)					//	Set EPOLL to monitor write events for the client
-					event->client->remove();
-				else if (Epoll::add(event_data.fd, true, false) == -1) {												//	Set EPOLL to monitor read events for DATA
+				// if (Epoll::set(event->fd, !(event->header_map["Write-Only"] == "true"), true) == -1)					//	Set EPOLL to monitor write events for the client
+				// 	event->client->remove();
+				if (Epoll::add(event_data.fd, true, false) == -1) {												//	Set EPOLL to monitor read events for DATA
 					event->read_maxsize = 0;																			//	If set EPOLL fails, reset the flag,
 					event->write_buffer.clear();																		//	clear writte_buffer
 					Event::remove(event_data.fd);																		//	and remove the DATA event
@@ -691,17 +691,12 @@
 				event->write_maxsize = 0;
 				event->write_buffer.clear();																//	Clear write_buffer
 
-				if (Epoll::set(event->fd, !(event->header_map["Write-Only"] == "true"), true) == -1) {		//	Set EPOLL to monitor write events for the client
+				if (event->cgi_fd != -1 && Epoll::add(event->cgi_fd, false, true) == -1) {				//	Set EPOLL to monitor write events for CGI
 					event->client->remove(); return;
-				} else {
+				}
 
-					if (event->cgi_fd != -1 && Epoll::add(event->cgi_fd, false, true) == -1) {				//	Set EPOLL to monitor write events for CGI
-						event->client->remove(); return;
-					}
-
-					if (Epoll::add(event_read_cgi.fd, true, false) == -1) {									//	Set EPOLL to monitor read events for CGI
-						event->client->remove(); return;
-					}
+				if (Epoll::add(event_read_cgi.fd, true, false) == -1) {									//	Set EPOLL to monitor read events for CGI
+					event->client->remove(); return;
 				}
 
 				//Fork the process

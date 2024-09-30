@@ -6,13 +6,15 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/18 11:21:01 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/29 21:41:09 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/10/01 00:27:55 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Socket.hpp"
 #include "Event.hpp"
 #include "Epoll.hpp"
+#include "Protocol.hpp"
+#include "Communication.hpp"
 
 #pragma region Variables
 
@@ -174,7 +176,40 @@
 				if (it->second.type == SOCKET ||it->second.type == CLIENT) { it++; continue; }
 				if (difftime(current_time, it->second.last_activity) > interval) {
 					std::map<int, EventInfo>::iterator current = it++;
+					EventInfo * event = get(current->first);
+					EventInfo * c_event = get(event->client->fd);
 					remove(current->first);
+
+					Protocol::error_page(c_event, "408", c_event->VServ, c_event->Loc);
+					c_event->response_method = c_event->response_map["Method"];
+					if (c_event->response_method == "File") {
+						std::string root;
+
+						if (c_event->Loc)						root = c_event->Loc->get("root");
+						if (root.empty() && c_event->VServ)		root = c_event->VServ->get("root");
+						if (root.empty())						root = Settings::global.get("root");
+
+						c_event->response_map["Path-Full"] = Utils::fullpath(root + "/" + c_event->response_map["Path-Full"]);
+						if (!Communication::cache.exists(c_event->response_map["Path-Full"]) && !Protocol::file_stat(c_event, c_event->response_map["Path-Full"]))	//	If not in cache and the file doesn't exist or can't be read...
+							Protocol::error_page(c_event, "404", c_event->VServ, c_event->Loc);																		//	Return "404 (Not Found)"
+						else {
+							size_t pos1 = c_event->header_map["Cache-Control"].find("no-cache");
+							size_t pos2 = c_event->header_map["Cache-Control"].find("no-store");
+							c_event->no_cache = (pos1 != std::string::npos || pos2 != std::string::npos);													//	Determine whether the file should be added to the cache
+						}
+
+						c_event->response_map["Code-Description"] = Settings::error_codes[Utils::sstol(c_event->response_map["Code"])];
+						c_event->redirect_status = 200;
+
+						Protocol::response_file(c_event);
+					} else {
+
+						c_event->response_map["Code-Description"] = Settings::error_codes[Utils::sstol(c_event->response_map["Code"])];
+						c_event->redirect_status = 200;
+
+						Protocol::response_error(c_event);
+					}
+					
 				} else it++;
 			}
 		}
