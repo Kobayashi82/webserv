@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 14:30:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/30 23:41:31 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/10/01 00:42:13 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,8 +26,7 @@
 	//	*		siege -b -c 255 -t 10S 127.0.0.1:8081			-	stress test
 	//	*		ps --ppid $(pgrep webserv) -o pid,stat,cmd		-	check zombie processes
 
-	//	TODO	Check events timeout from another thread (non-blocking cant be done with cgi)
-	//	TODO	Optimize intermediary
+	//	TODO	Optimize
 
 	//	*		CGI (POST, PUT, DELETE)
 	//	*		CGI (php, py)

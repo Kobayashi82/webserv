@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/18 10:59:39 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/25 13:31:18 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/10/01 15:04:36 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -144,6 +144,7 @@
 					SocketInfo current = *s_it; ++s_it;
 					remove(current);
 				}
+
 				Thread::set_int(Display::mutex, Communication::total_clients, 0);
 			}
 
@@ -207,6 +208,7 @@
 			Communication::clients.push_back(Client(fd, event->socket, ip, port));
 			Event::events[fd] = EventInfo(fd, CLIENT, event->socket, NULL);
 			Event::events[fd].client = &Communication::clients.back();
+			event->socket->clients.push_back(&Communication::clients.back());
 
 			if (Epoll::add(fd, true, false) == -1) { Event::events[fd].client->remove(); return; }
 
@@ -247,7 +249,7 @@
 			Thread::mutex_set(Display::mutex, Thread::MTX_LOCK);
 
 				if (ask_socket == 1) { ask_socket = 0; Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK); create(); Display::update(); return (1); }
-				if (ask_socket == 2) { ask_socket = 0; Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK); close(); Display::update(); return (2); }
+				if (ask_socket == 2) { ask_socket = 0; Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK); close();  Display::update(); return (2); }
 
 			Thread::mutex_set(Display::mutex, Thread::MTX_UNLOCK);
 

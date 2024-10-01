@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/21 11:59:50 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/10/01 00:41:21 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/10/01 13:24:22 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -105,7 +105,7 @@
 					"Server: " + event->response_map["Server"] + "\r\n"
 					"Date: " + event->response_map["Date"] + "\r\n"
 					"Cache-Status: MISS" + "\r\n"
-					"Cache-Control: no-store, no-cache, must-revalidate, max-age=0" + "\r\n"
+					"Cache-Control: no-store, no-cache" + "\r\n"
 					"Content-Type: " + Settings::mime_types["html"] + "\r\n"
 					"X-Content-Type-Options: nosniff\r\n"
 					"Content-Length: " + Utils::ltos(body.size()) + "\r\n"
@@ -142,7 +142,7 @@
 				"Server: " + event->response_map["Server"] + "\r\n"
 				"Date: " + event->response_map["Date"] + "\r\n"
 				"Cache-Status: MISS" + "\r\n"
-				"Cache-Control: no-store, no-cache, must-revalidate, max-age=0" + "\r\n"
+				"Cache-Control: no-store, no-cache" + "\r\n"
 				"Location: " + Security::encode_url(event->response_map["Path"]) + "\r\n"
 				"X-Content-Type-Options: nosniff" + "\r\n"
 				"Content-Length: 0" + "\r\n"
@@ -318,7 +318,7 @@
 					"Server: " + event->response_map["Server"] + "\r\n"
 					"Date: " + event->response_map["Date"] + "\r\n"
 					"Cache-Status: MISS" + "\r\n"
-					"Cache-Control: no-store, no-cache, must-revalidate, max-age=0" + "\r\n"
+					"Cache-Control: no-store, no-cache" + "\r\n"
 					"Content-Type: " + Settings::mime_types["html"] + "\r\n"
 					"X-Content-Type-Options: nosniff" + "\r\n"
 					"Content-Length: " + Utils::ltos(body.size()) + "\r\n"
@@ -396,7 +396,7 @@
 								"Cache-Status: HIT" + "\r\n"
 								"Age: " + Utils::str_time(time(NULL) - fcache.added_time) + "\r\n"
 								"Last-Modified: " + fcache.mod_stime + "\r\n"
-								"Cache-Control: no-store, no-cache, must-revalidate, max-age=0" + "\r\n"
+								"Cache-Control: no-store, no-cache" + "\r\n"
 								"Content-Type: " + event->response_map["Content-Type"] + "\r\n"
 								"X-Content-Type-Options: nosniff" + "\r\n"
 								"Content-Length: " + Utils::ltos(end - start) + "\r\n"
@@ -485,7 +485,7 @@
 						"Cache-Status: MISS" + "\r\n"
 						"Last-Modified: " + event->response_map["Last-Modified"] + "\r\n"
 						"Accept-Ranges: bytes" + "\r\n"
-						"Cache-Control: no-store, no-cache, must-revalidate, max-age=0" + "\r\n"
+						"Cache-Control: no-store, no-cache" + "\r\n"
 						"Content-Type: " + event->response_map["Content-Type"] + "\r\n"
 						"X-Content-Type-Options: nosniff" + "\r\n"
 						"Content-Length: " + Utils::ltos(end - start) + "\r\n"
@@ -700,10 +700,10 @@
 				}
 
 				//Fork the process
-				int pid = fork();
-				if (pid == -1) {
+				event->pid = fork();
+				if (event->pid == -1) {
 					event->client->remove(); return;
-				} else if (pid == 0) {
+				} else if (event->pid == 0) {
 					{
 						Epoll::close();
 

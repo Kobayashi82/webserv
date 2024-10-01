@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/18 11:21:01 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/10/01 00:27:55 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/10/01 15:04:47 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,7 +47,7 @@
 			VServ = NULL; Loc = NULL; vserver_data = NULL;
 
 			response_size = 0; body_size = 0; body_maxsize = 0; redirect_status = 0;
-			last_activity = std::time(NULL); gettimeofday(&response_time, NULL);
+			last_activity = std::time(NULL); gettimeofday(&response_time, NULL); pid = 0;
 		}
 
 		EventInfo::EventInfo(const EventInfo & src) { *this = src; }
@@ -74,7 +74,7 @@
 				
 				body_size = rhs.body_size; body_maxsize = rhs.body_maxsize; redirect_status = rhs.redirect_status;
 
-				response_time = rhs.response_time; last_activity = rhs.last_activity;
+				response_time = rhs.response_time; last_activity = rhs.last_activity; pid = rhs.pid;
 			}
 			return (*this);
 		}
@@ -125,7 +125,6 @@
 		#pragma region Remove (Client)
 
 			void Event::remove(Client * Cli) {
-				if (events.size() == 0) return;
 				std::map<int, EventInfo>::iterator it = events.begin();
 				while (it != events.end()) {
 					std::map<int, EventInfo>::iterator current = it++;
@@ -180,36 +179,16 @@
 					EventInfo * c_event = get(event->client->fd);
 					remove(current->first);
 
+					if (c_event->pid != 0) { kill(c_event->pid, SIGKILL); c_event->pid = 0; }
 					Protocol::error_page(c_event, "408", c_event->VServ, c_event->Loc);
 					c_event->response_method = c_event->response_map["Method"];
 					if (c_event->response_method == "File") {
-						std::string root;
-
-						if (c_event->Loc)						root = c_event->Loc->get("root");
-						if (root.empty() && c_event->VServ)		root = c_event->VServ->get("root");
-						if (root.empty())						root = Settings::global.get("root");
-
-						c_event->response_map["Path-Full"] = Utils::fullpath(root + "/" + c_event->response_map["Path-Full"]);
-						if (!Communication::cache.exists(c_event->response_map["Path-Full"]) && !Protocol::file_stat(c_event, c_event->response_map["Path-Full"]))	//	If not in cache and the file doesn't exist or can't be read...
-							Protocol::error_page(c_event, "404", c_event->VServ, c_event->Loc);																		//	Return "404 (Not Found)"
-						else {
-							size_t pos1 = c_event->header_map["Cache-Control"].find("no-cache");
-							size_t pos2 = c_event->header_map["Cache-Control"].find("no-store");
-							c_event->no_cache = (pos1 != std::string::npos || pos2 != std::string::npos);													//	Determine whether the file should be added to the cache
-						}
-
-						c_event->response_map["Code-Description"] = Settings::error_codes[Utils::sstol(c_event->response_map["Code"])];
-						c_event->redirect_status = 200;
-
-						Protocol::response_file(c_event);
+						Protocol::check_code(c_event, true);
 					} else {
-
 						c_event->response_map["Code-Description"] = Settings::error_codes[Utils::sstol(c_event->response_map["Code"])];
 						c_event->redirect_status = 200;
-
 						Protocol::response_error(c_event);
 					}
-					
 				} else it++;
 			}
 		}

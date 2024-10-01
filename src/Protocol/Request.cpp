@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/21 11:52:00 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/10/01 00:28:44 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/10/01 15:39:43 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,172 @@
 #include "Communication.hpp"
 
 #pragma region Parsers
+
+	int Protocol::check_code(EventInfo * event, bool force) {
+		if (force || error_page(event, event->header_map["Code"], event->VServ, event->Loc, true)) {
+			event->response_method = event->response_map["Method"];
+			std::string root;
+
+			if (event->Loc)							root = event->Loc->get("root");
+			if (root.empty() && event->VServ)		root = event->VServ->get("root");
+			if (root.empty())						root = Settings::global.get("root");
+
+			event->response_map["Path-Full"] = Utils::fullpath(root + "/" + event->response_map["Path-Full"]);
+			if (!Communication::cache.exists(event->response_map["Path-Full"]) && !file_stat(event, event->response_map["Path-Full"]))	//	If not in cache and the file doesn't exist or can't be read...
+				error_page(event, "404", event->VServ, event->Loc);																		//	Return "404 (Not Found)"
+			else {
+				size_t pos1 = event->header_map["Cache-Control"].find("no-cache");
+				size_t pos2 = event->header_map["Cache-Control"].find("no-store");
+				event->no_cache = (pos1 != std::string::npos || pos2 != std::string::npos);													//	Determine whether the file should be added to the cache
+			}
+
+			event->response_map["Code-Description"] = Settings::error_codes[Utils::sstol(event->response_map["Code"])];
+			event->redirect_status = 200;
+			Protocol::response_file(event);
+			return (1);
+		}
+		return (0);
+	}
+
+	#pragma region Header
+
+		#pragma region Variables
+
+			void Protocol::parse_variables(EventInfo * event) {
+				if (!event) return;
+
+				std::string path = event->header_map["Path"];
+				size_t pos = std::min(path.find_first_of('?'), path.size());
+
+				event->header_map["$request"] = event->header_map["Method"] + " " + path + " " + event->header_map["Protocol"];
+				event->header_map["$request_method"] = event->header_map["Method"];
+				event->header_map["$request_uri"] = path;
+
+				event->header_map["$uri"] = path.substr(0, pos);
+				event->header_map["$document_uri"] = event->header_map["$uri"];
+
+				if (pos != path.size()) event->header_map["$args"] = path.substr(pos + 1);
+				event->header_map["$query_string"] = event->header_map["$args"];
+
+				event->header_map["$remote_addr"] = event->client->ip;
+				event->header_map["$remote_port"] = Utils::ltos(event->client->port);
+				if (event->type == CLIENT) {
+					event->header_map["$server_addr"] = event->socket->ip;
+					event->header_map["$server_port"] = Utils::ltos(event->socket->port);
+				}
+
+				event->header_map["$server_name"] = event->header_map["Host"];															//	El nombre del dominio que lo maneja o el nombre del primer dominio por defecto
+				if (event->header_map["$server_name"].empty()) event->header_map["$server_name"] = event->header_map["$server_addr"];
+
+				event->header_map["$http_referer"] = event->header_map["Referer"];
+				event->header_map["$http_cookie"] = event->header_map["Cookie"];
+				event->header_map["$http_host"] = event->header_map["Host"];
+				event->header_map["$http_user_agent"] = event->header_map["User-Agent"];
+
+				event->header_map["$host"] = event->header_map["Host"];
+				if (event->header_map["$host"].empty()) event->header_map["$host"] = event->header_map["$server_name"];
+				if (event->header_map["$host"].empty()) event->header_map["$host"] = event->header_map["$server_addr"];
+			}
+
+
+			//										EJEMPLO DE UNA SOLICITUD DE UN CLIENTE
+
+			//			GET /products/details?item=123&color=red HTTP/1.1
+			//			Host: www.example.com
+			//			User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36
+			//			Referer: https://www.google.com/search?q=webserv
+			//			Cookie: sessionid=abcdef1234567890; theme=dark
+
+			//	$request				La solicitud completa.				               															GET/products/details?item=123&color=red HTTP/1.1
+			//	$request_method			El método HTTP utilizado en la solicitud (GET, POST, PUT, DELETE, etc.)	  			        	    		GET
+			//	$request_uri			Es la URI completa incluyendo la cadena de consulta (query string)		  									/products/details?item=123&color=red
+			//	$uri, $document_uri		Es la URI sin incluir la cadena de consulta (query string)				 	  								/products/details
+			//	$args, $query_string	Es la cadena de consulta (query string), que contiene los parámetros enviados después de ?					item=123&color=red
+			//	$host					El nombre del host solicitado. Si no se especifica, se usa server_name o la dirección IP del servidor		www.example.com
+			//	$remote_addr			La dirección IP del cliente que hizo la solicitud					             							203.0.113.45
+			//	$remote_port			El puerto del cliente que hizo la solicitud							        								54321 
+			//	$server_addr			La dirección IP del servidor que está manejando la solicitud				             					192.168.1.10
+			//	$server_port			El puerto del servidor que está manejando la solicitud					 	               					80
+			//	$server_name			El nombre del servidor virtual que está manejando la solicitud				        						www.example.com
+			//	$http_referer			El valor de referer, que indica la página anterior a la que se hizo la solicitud        					https://www.google.com/search?q=webserv
+			//	$http_cookie			El valor de la cookie enviada en la solicitud HTTP															sessionid=abcdef1234567890; theme=dark
+			//	$http_host				El valor del encabezado host, que es el nombre del dominio o la dirección IP solicitada		       		  	www.example.com
+			//	$http_user_agent		El contenido del encabezado user-agent, que identifica el navegador del cliente  							Mozilla/5.0 (Windows NT 10.0; Win64; x64)...
+
+		#pragma endregion
+
+		#pragma region Header
+
+			int Protocol::parse_header(EventInfo * event) {
+				if (!event) return (2);
+
+				if (event->read_buffer.empty()) return (1);
+
+				std::string header = std::string(event->read_buffer.begin(), event->read_buffer.end());				//	Create a string with the data read
+				size_t pos = header.find("\r\n\r\n");																//	Find the end of the header
+
+				if (pos == std::string::npos)	return (1);															//	Incomplete header
+				else							event->header = header.substr(0, pos);								//	Get only the header content
+
+				std::istringstream stream(header); std::string line;
+
+				if (std::getline(stream, line)) {																	//	Read the first line
+					std::istringstream first_line(line);
+					std::string value1, value2, value3;
+
+					if (event->type == CLIENT) {
+						if (first_line >> value1 && first_line >> value2 && first_line >> value3) {					//	Get the data from the first line (Method, Path and Protocol)
+							event->header_map["Method"] = value1;
+							event->header_map["Path"] = Security::decode_url(value2);
+							event->header_map["Protocol"] = value3;
+						} else return (2);																			//	There are errors in the first line
+					} if (event->type == CGI) {
+						if (first_line >> value1 && first_line >> value2 && first_line >> value3) {					//	Get the data from the first line (Protocol, Code and Code description)
+							EventInfo * c_event = Event::get(event->client->fd);
+							if (value1 == "Status:") {
+								if (!c_event) return (3);
+								std::string status =  c_event->header_map["Protocol"] + " " + value2 + " " + Settings::error_codes[Utils::sstol(value2)] + "\r\n";
+								event->read_buffer.erase(event->read_buffer.begin(), event->read_buffer.begin() + line.size() + 1);
+								event->read_buffer.insert(event->read_buffer.begin(), status.begin(), status.end());
+								event->header_map["Code"] = value2;
+								event->header_map["Code-Description"] = Settings::error_codes[Utils::sstol(value2)];
+								c_event->response_map["Code"] = value2;
+								c_event->response_map["Code-Description"] = Settings::error_codes[Utils::sstol(value2)];
+							} else {
+								std::string status = c_event->header_map["Protocol"] + " 200 " + Settings::error_codes[200] + "\r\n";
+								event->read_buffer.insert(event->read_buffer.begin(), status.begin(), status.end());
+								event->header_map["Code"] = "200";
+								event->header_map["Code-Description"] = Settings::error_codes[200];
+								c_event->response_map["Code"] = "200";
+								c_event->response_map["Code-Description"] = Settings::error_codes[200];
+							}
+							event->header = std::string(event->read_buffer.begin(), event->read_buffer.end());
+							size_t pos = event->header.find("\r\n\r\n");											//	Find the end of the header
+
+							if (pos == std::string::npos)	return (1);												//	Incomplete header
+							else							event->header = event->header.substr(0, pos);			//	Get only the header content
+							c_event->redirect_status = Utils::sstol(event->header_map["Code"]);
+							if (check_code(c_event)) return (3);
+						} else return (2);																			//	There are errors in the first line
+					}
+				}
+
+				while (std::getline(stream, line) && line != "\r") {												//	Read the lines (ignoring '\r')
+					line.erase(line.size() - 1, 1);
+					pos = line.find(':');																			//	Find ':' to split Key - Value
+					if (pos != std::string::npos) event->header_map[line.substr(0, pos)] = line.substr(pos + 1);	//	Add the Key - Value to 'header_map'
+
+					if (event->type == CLIENT) parse_variables(event);												//	Create header variables
+				}
+				pos = event->header_map["Host"].find_first_of(':');
+				if (pos != std::string::npos) event->header_map["Host"] = Utils::strim(event->header_map["Host"].substr(0, pos));
+
+			return (0);
+		}
+
+		#pragma endregion
+
+	#pragma endregion
 
 	#pragma region Variables
 
@@ -297,10 +463,8 @@
 
 				std::string path = t_path;
 				if (path.empty()) path = event->response_map["Path"];
-				size_t pos = path.find_last_of('/');
-				if (pos != std::string::npos) path = path.substr(0, pos);
 
-				if (chdir((root + "/" + path).c_str()) != 0) return (0);
+				if (chdir((Utils::fullpath(root + "/" + path)).c_str()) != 0) return (0);
 
 				std::string index;
 				if (Loc)					index = Loc->get("index");
@@ -311,9 +475,8 @@
 				std::istringstream iss(index);
 
 				while (iss >> index) { path = index;
-				
 					if (!Utils::file_exists(path)) {
-						if (!cgi_ext(event, VServ, Loc,  event->response_map["Path"] + "/" + path)) set_file(event, event->response_map["Path"] + "/" + path);
+						if (!cgi_ext(event, VServ, Loc, event->response_map["Path"] + "/" + path)) set_file(event, event->response_map["Path"] + "/" + path);
 						return (1);
 					}
 				}
@@ -556,6 +719,7 @@
 					std::vector<std::pair<std::string, int> >::const_iterator it;
 					for (it = VServ->addresses.begin(); it != VServ->addresses.end(); ++it) {
 						if (it->first == "0.0.0.0" && it->second == port) return (true);
+						if (ip == "0.0.0.0" && it->second == port) return (true);
 						if (it->first == ip && it->second == port) return (true);
 					}
 
@@ -812,167 +976,6 @@
 			//	<p>You don't have permission to access / on this server.</p>
 			//	</body>
 			//	</html>
-
-		#pragma endregion
-
-	#pragma endregion
-
-	#pragma region Header
-
-		#pragma region Variables
-
-			void Protocol::parse_variables(EventInfo * event) {
-				if (!event) return;
-
-				std::string path = event->header_map["Path"];
-				size_t pos = std::min(path.find_first_of('?'), path.size());
-
-				event->header_map["$request"] = event->header_map["Method"] + " " + path + " " + event->header_map["Protocol"];
-				event->header_map["$request_method"] = event->header_map["Method"];
-				event->header_map["$request_uri"] = path;
-
-				event->header_map["$uri"] = path.substr(0, pos);
-				event->header_map["$document_uri"] = event->header_map["$uri"];
-
-				if (pos != path.size()) event->header_map["$args"] = path.substr(pos + 1);
-				event->header_map["$query_string"] = event->header_map["$args"];
-
-				event->header_map["$remote_addr"] = event->client->ip;
-				event->header_map["$remote_port"] = Utils::ltos(event->client->port);
-				if (event->type == CLIENT) {
-					event->header_map["$server_addr"] = event->socket->ip;
-					event->header_map["$server_port"] = Utils::ltos(event->socket->port);
-				}
-
-				event->header_map["$server_name"] = event->header_map["Host"];															//	El nombre del dominio que lo maneja o el nombre del primer dominio por defecto
-				if (event->header_map["$server_name"].empty()) event->header_map["$server_name"] = event->header_map["$server_addr"];
-
-				event->header_map["$http_referer"] = event->header_map["Referer"];
-				event->header_map["$http_cookie"] = event->header_map["Cookie"];
-				event->header_map["$http_host"] = event->header_map["Host"];
-				event->header_map["$http_user_agent"] = event->header_map["User-Agent"];
-
-				event->header_map["$host"] = event->header_map["Host"];
-				if (event->header_map["$host"].empty()) event->header_map["$host"] = event->header_map["$server_name"];
-				if (event->header_map["$host"].empty()) event->header_map["$host"] = event->header_map["$server_addr"];
-			}
-
-
-			//										EJEMPLO DE UNA SOLICITUD DE UN CLIENTE
-
-			//			GET /products/details?item=123&color=red HTTP/1.1
-			//			Host: www.example.com
-			//			User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36
-			//			Referer: https://www.google.com/search?q=webserv
-			//			Cookie: sessionid=abcdef1234567890; theme=dark
-
-			//	$request				La solicitud completa.				               															GET/products/details?item=123&color=red HTTP/1.1
-			//	$request_method			El método HTTP utilizado en la solicitud (GET, POST, PUT, DELETE, etc.)	  			        	    		GET
-			//	$request_uri			Es la URI completa incluyendo la cadena de consulta (query string)		  									/products/details?item=123&color=red
-			//	$uri, $document_uri		Es la URI sin incluir la cadena de consulta (query string)				 	  								/products/details
-			//	$args, $query_string	Es la cadena de consulta (query string), que contiene los parámetros enviados después de ?					item=123&color=red
-			//	$host					El nombre del host solicitado. Si no se especifica, se usa server_name o la dirección IP del servidor		www.example.com
-			//	$remote_addr			La dirección IP del cliente que hizo la solicitud					             							203.0.113.45
-			//	$remote_port			El puerto del cliente que hizo la solicitud							        								54321 
-			//	$server_addr			La dirección IP del servidor que está manejando la solicitud				             					192.168.1.10
-			//	$server_port			El puerto del servidor que está manejando la solicitud					 	               					80
-			//	$server_name			El nombre del servidor virtual que está manejando la solicitud				        						www.example.com
-			//	$http_referer			El valor de referer, que indica la página anterior a la que se hizo la solicitud        					https://www.google.com/search?q=webserv
-			//	$http_cookie			El valor de la cookie enviada en la solicitud HTTP															sessionid=abcdef1234567890; theme=dark
-			//	$http_host				El valor del encabezado host, que es el nombre del dominio o la dirección IP solicitada		       		  	www.example.com
-			//	$http_user_agent		El contenido del encabezado user-agent, que identifica el navegador del cliente  							Mozilla/5.0 (Windows NT 10.0; Win64; x64)...
-
-		#pragma endregion
-
-		#pragma region Header
-
-			int Protocol::parse_header(EventInfo * event) {
-				if (!event) return (2);
-
-				if (event->read_buffer.empty()) return (1);
-
-				std::string header = std::string(event->read_buffer.begin(), event->read_buffer.end());				//	Create a string with the data read
-				size_t pos = header.find("\r\n\r\n");																//	Find the end of the header
-
-				if (pos == std::string::npos)	return (1);															//	Incomplete header
-				else							event->header = header.substr(0, pos);								//	Get only the header content
-
-				std::istringstream stream(header); std::string line;
-
-				if (std::getline(stream, line)) {																	//	Read the first line
-					std::istringstream first_line(line);
-					std::string value1, value2, value3;
-
-					if (event->type == CLIENT) {
-						if (first_line >> value1 && first_line >> value2 && first_line >> value3) {					//	Get the data from the first line (Method, Path and Protocol)
-							event->header_map["Method"] = value1;
-							event->header_map["Path"] = Security::decode_url(value2);
-							event->header_map["Protocol"] = value3;
-						} else return (2);																			//	There are errors in the first line
-					} if (event->type == CGI) {
-						if (first_line >> value1 && first_line >> value2 && first_line >> value3) {					//	Get the data from the first line (Protocol, Code and Code description)
-							EventInfo * c_event = Event::get(event->client->fd);
-							if (value1 == "Status:") {
-								if (!c_event) return (3);
-								std::string status =  c_event->header_map["Protocol"] + " " + value2 + " " + Settings::error_codes[Utils::sstol(value2)] + "\r\n";
-								event->read_buffer.erase(event->read_buffer.begin(), event->read_buffer.begin() + line.size() + 1);
-								event->read_buffer.insert(event->read_buffer.begin(), status.begin(), status.end());
-								event->header_map["Code"] = value2;
-								event->header_map["Code-Description"] = Settings::error_codes[Utils::sstol(value2)];
-								c_event->response_map["Code"] = value2;
-								c_event->response_map["Code-Description"] = Settings::error_codes[Utils::sstol(value2)];
-							} else {
-								std::string status = c_event->header_map["Protocol"] + " 200 " + Settings::error_codes[200] + "\r\n";
-								event->read_buffer.insert(event->read_buffer.begin(), status.begin(), status.end());
-								event->header_map["Code"] = "200";
-								event->header_map["Code-Description"] = Settings::error_codes[200];
-								c_event->response_map["Code"] = "200";
-								c_event->response_map["Code-Description"] = Settings::error_codes[200];
-							}
-							event->header = std::string(event->read_buffer.begin(), event->read_buffer.end());
-							size_t pos = event->header.find("\r\n\r\n");											//	Find the end of the header
-
-							if (pos == std::string::npos)	return (1);												//	Incomplete header
-							else							event->header = event->header.substr(0, pos);			//	Get only the header content
-							c_event->redirect_status = Utils::sstol(event->header_map["Code"]);
-
-							if (Protocol::error_page(c_event, event->header_map["Code"], c_event->VServ, c_event->Loc, true)) {
-								c_event->response_method = c_event->response_map["Method"];
-								std::string root;
-
-								if (c_event->Loc)						root = c_event->Loc->get("root");
-								if (root.empty() && c_event->VServ)		root = c_event->VServ->get("root");
-								if (root.empty())						root = Settings::global.get("root");
-
-								c_event->response_map["Path-Full"] = Utils::fullpath(root + "/" + c_event->response_map["Path-Full"]);
-								if (!Communication::cache.exists(c_event->response_map["Path-Full"]) && !file_stat(c_event, c_event->response_map["Path-Full"]))	//	If not in cache and the file doesn't exist or can't be read...
-									error_page(c_event, "404", c_event->VServ, c_event->Loc);																		//	Return "404 (Not Found)"
-								else {
-									size_t pos1 = c_event->header_map["Cache-Control"].find("no-cache");
-									size_t pos2 = c_event->header_map["Cache-Control"].find("no-store");
-									c_event->no_cache = (pos1 != std::string::npos || pos2 != std::string::npos);													//	Determine whether the file should be added to the cache
-								}
-
-								c_event->response_map["Code-Description"] = Settings::error_codes[Utils::sstol(c_event->response_map["Code"])];
-								c_event->redirect_status = 200;
-								Protocol::response_file(c_event); return (3);
-							}
-						} else return (2);																			//	There are errors in the first line
-					}
-				}
-
-				while (std::getline(stream, line) && line != "\r") {												//	Read the lines (ignoring '\r')
-					line.erase(line.size() - 1, 1);
-					pos = line.find(':');																			//	Find ':' to split Key - Value
-					if (pos != std::string::npos) event->header_map[line.substr(0, pos)] = line.substr(pos + 1);	//	Add the Key - Value to 'header_map'
-
-					if (event->type == CLIENT) parse_variables(event);												//	Create header variables
-				}
-				pos = event->header_map["Host"].find_first_of(':');
-				if (pos != std::string::npos) event->header_map["Host"] = Utils::strim(event->header_map["Host"].substr(0, pos));
-
-			return (0);
-		}
 
 		#pragma endregion
 

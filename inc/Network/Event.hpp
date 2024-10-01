@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/18 11:20:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/29 21:40:18 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/10/01 13:11:28 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 #include <vector>																						//	For std::vector container
 #include <map>																							//	For std::map container
 #include <ctime>
+#include <csignal>
 
 #pragma region EventInfo
 
@@ -67,6 +68,7 @@
 		int													redirect_status;
 		struct timeval										response_time;
 		time_t												last_activity;
+		int													pid;
 
 		VServer *											VServ;
 		Location *											Loc;

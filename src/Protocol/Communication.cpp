@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/27 09:32:08 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/10/01 00:41:24 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/10/01 13:39:41 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -357,6 +357,8 @@
 					if (c_event) {
 						c_event->header_map["Connection"] = "close";															//	Set 'Connection' to close
 						c_event->write_info = 3;																				//	Set a flag (no more data)
+						if (c_event->cgi_fd != -1) Event::remove(c_event->cgi_fd);
+						c_event->cgi_fd = -1;
 					}
 					Event::remove(event->fd); return (1);																		//	Remove the event
 
@@ -366,6 +368,8 @@
 					if (c_event) {
 						c_event->header_map["Connection"] = "close";															//	Set 'Connection' to close
 						c_event->write_info = 3;																				//	Set a flag (no more data)
+						if (c_event->cgi_fd != -1) Event::remove(c_event->cgi_fd);
+						c_event->cgi_fd = -1;
 					}
 					Event::remove(event->fd); return (1);																		//	Remove the event
 				}
