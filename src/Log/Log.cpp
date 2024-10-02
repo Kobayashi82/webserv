@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/27 19:32:38 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/30 20:50:17 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/10/02 22:56:33 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -401,10 +401,11 @@
 		#pragma region Execute
 
 			void Log::exec_logrot(const std::string config_path) {
-				return;
+				return;																					//	Disabled because we dont have admin rights
 				std::string logrotate_path = get_logrot_path();
 
 				if (logrotate_path.empty() || create_logrot(config_path)) return;
+				std::cout << " - " << logrotate_path << "\n";
 				std::system((logrotate_path +  " '" + config_path + "' > /dev/null 2>&1").c_str());
 				remove(config_path.c_str());
 			}

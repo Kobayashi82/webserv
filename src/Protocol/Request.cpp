@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/21 11:52:00 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/10/01 15:39:43 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/10/03 01:07:14 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,31 +19,43 @@
 
 #pragma region Parsers
 
-	int Protocol::check_code(EventInfo * event, bool force) {
-		if (force || error_page(event, event->header_map["Code"], event->VServ, event->Loc, true)) {
-			event->response_method = event->response_map["Method"];
-			std::string root;
+	#pragma region Check Code
 
-			if (event->Loc)							root = event->Loc->get("root");
-			if (root.empty() && event->VServ)		root = event->VServ->get("root");
-			if (root.empty())						root = Settings::global.get("root");
+		int Protocol::check_code(EventInfo * event, bool force, std::string code) {
+			if (!code.empty()) event->header_map["Code"] = code;
+			if (error_page(event, event->header_map["Code"], event->VServ, event->Loc, !force)) {
+				event->response_method = event->response_map["Method"];
 
-			event->response_map["Path-Full"] = Utils::fullpath(root + "/" + event->response_map["Path-Full"]);
-			if (!Communication::cache.exists(event->response_map["Path-Full"]) && !file_stat(event, event->response_map["Path-Full"]))	//	If not in cache and the file doesn't exist or can't be read...
-				error_page(event, "404", event->VServ, event->Loc);																		//	Return "404 (Not Found)"
-			else {
-				size_t pos1 = event->header_map["Cache-Control"].find("no-cache");
-				size_t pos2 = event->header_map["Cache-Control"].find("no-store");
-				event->no_cache = (pos1 != std::string::npos || pos2 != std::string::npos);													//	Determine whether the file should be added to the cache
+				if (force && event->response_method == "Error") {
+					event->response_map["Code-Description"] = Settings::error_codes[Utils::sstol(event->response_map["Code"])];
+					event->redirect_status = 200;
+					Protocol::response_error(event);
+					return (1);
+				}
+				std::string root;
+
+				if (event->Loc)							root = event->Loc->get("root");
+				if (root.empty() && event->VServ)		root = event->VServ->get("root");
+				if (root.empty())						root = Settings::global.get("root");
+
+				event->response_map["Path-Full"] = Utils::fullpath(root + "/" + event->response_map["Path-Full"]);
+				if (!Communication::cache.exists(event->response_map["Path-Full"]) && !file_stat(event, event->response_map["Path-Full"]))	//	If not in cache and the file doesn't exist or can't be read...
+					error_page(event, "404", event->VServ, event->Loc);																		//	Return "404 (Not Found)"
+				else {
+					size_t pos1 = event->header_map["Cache-Control"].find("no-cache");
+					size_t pos2 = event->header_map["Cache-Control"].find("no-store");
+					event->no_cache = (pos1 != std::string::npos || pos2 != std::string::npos);													//	Determine whether the file should be added to the cache
+				}
+
+				event->response_map["Code-Description"] = Settings::error_codes[Utils::sstol(event->response_map["Code"])];
+				event->redirect_status = 200;
+				Protocol::response_file(event);
+				return (1);
 			}
-
-			event->response_map["Code-Description"] = Settings::error_codes[Utils::sstol(event->response_map["Code"])];
-			event->redirect_status = 200;
-			Protocol::response_file(event);
-			return (1);
+			return (0);
 		}
-		return (0);
-	}
+
+	#pragma endregion
 
 	#pragma region Header
 
@@ -138,7 +150,7 @@
 							event->header_map["Protocol"] = value3;
 						} else return (2);																			//	There are errors in the first line
 					} if (event->type == CGI) {
-						if (first_line >> value1 && first_line >> value2 && first_line >> value3) {					//	Get the data from the first line (Protocol, Code and Code description)
+						if (first_line >> value1 && first_line >> value2) {											//	Get the data from the first line (Protocol, Code and Code description)
 							EventInfo * c_event = Event::get(event->client->fd);
 							if (value1 == "Status:") {
 								if (!c_event) return (3);
@@ -147,6 +159,8 @@
 								event->read_buffer.insert(event->read_buffer.begin(), status.begin(), status.end());
 								event->header_map["Code"] = value2;
 								event->header_map["Code-Description"] = Settings::error_codes[Utils::sstol(value2)];
+								c_event->header_map["Code"] = value2;
+								c_event->header_map["Code-Description"] = Settings::error_codes[Utils::sstol(value2)];
 								c_event->response_map["Code"] = value2;
 								c_event->response_map["Code-Description"] = Settings::error_codes[Utils::sstol(value2)];
 							} else {
@@ -154,6 +168,8 @@
 								event->read_buffer.insert(event->read_buffer.begin(), status.begin(), status.end());
 								event->header_map["Code"] = "200";
 								event->header_map["Code-Description"] = Settings::error_codes[200];
+								c_event->header_map["Code"] = "200";
+								c_event->header_map["Code-Description"] = Settings::error_codes[200];
 								c_event->response_map["Code"] = "200";
 								c_event->response_map["Code-Description"] = Settings::error_codes[200];
 							}
@@ -163,7 +179,7 @@
 							if (pos == std::string::npos)	return (1);												//	Incomplete header
 							else							event->header = event->header.substr(0, pos);			//	Get only the header content
 							c_event->redirect_status = Utils::sstol(event->header_map["Code"]);
-							if (check_code(c_event)) return (3);
+							if (check_code(c_event)) return (4);
 						} else return (2);																			//	There are errors in the first line
 					}
 				}
@@ -298,6 +314,7 @@
 				if (path.empty())			path = Settings::global.get("error_page " + code);
 
 				path = replace_all_vars(event, path);
+				if (path.empty() || chdir((root).c_str()) != 0) return (0);
 
 				if (path.empty() || Utils::file_exists(Utils::fullpath(root + "/" + path))) {
 					if (just_check) return (0);
@@ -463,6 +480,14 @@
 
 				std::string path = t_path;
 				if (path.empty()) path = event->response_map["Path"];
+				path = replace_all_vars(event, path);
+
+				if (!path.empty() && path[path.size() - 1] != '/' && Utils::file_exists(Utils::fullpath(root + "/" + path))) {
+					event->response_map["Method"] = "Redirect";
+					event->response_map["Code"] = "302";
+					event->response_map["Path"] = "/" + path + "/";
+					return (1);
+				}
 
 				if (chdir((Utils::fullpath(root + "/" + path)).c_str()) != 0) return (0);
 

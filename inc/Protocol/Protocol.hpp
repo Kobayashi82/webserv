@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 12:49:42 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/10/01 12:43:05 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/10/02 23:34:05 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,7 +45,7 @@
 			static void process_response(EventInfo * event);											//	Process the response type and return the appropriate response
 
 			//	Methods
-			static int	check_code(EventInfo * event, bool force = false);
+			static int	check_code(EventInfo * event, bool force = false, std::string code = "");
 			static bool	file_stat(EventInfo * event, const std::string & path);
 			static int	error_page(EventInfo * event, std::string code, VServer * VServ, Location * Loc = NULL, bool just_check = false);
 			static int	file_cache(EventInfo * event, std::string & path);								//	Gets a file from cache (if exists)

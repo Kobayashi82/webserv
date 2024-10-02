@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 14:30:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/10/01 00:42:13 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/10/03 00:03:40 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -106,7 +106,7 @@
 
 		Log::stop(); Display::stop(); Log::release_mutex(); Display::disableRawMode();
 
-		Log::exec_logrot(Settings::program_path + ".logrotate.cfg");
+		Log::exec_logrot(Utils::fullpath(Settings::program_path + "/.logrotate.cfg"));
 		
 		return (Settings::terminate);
 	}

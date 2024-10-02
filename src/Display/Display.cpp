@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/14 14:37:32 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/10/01 15:04:40 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/10/02 22:43:15 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,7 +81,7 @@
 
 	#pragma region Check
 
-		int Display::signal_check() {
+		int Display::signal_check() {	//	CTRL + 'C' or CTRL + '\'
 			if (signal == 130 || signal == 131) {
 				if (Settings::check_only || !isRawMode() || ForceRawModeDisabled) {
 					std::cout << NC CL CL;
@@ -90,16 +90,18 @@
 
 				return (1);
 			}
-			if (signal == 148) {
+			if (signal == 148) {		//	CTRL + 'Z'
 				if (Settings::check_only || !isRawMode() || ForceRawModeDisabled) std::cout << NC CL CL "  ";
 
 				Thread::mutex_set(mutex, Thread::MTX_LOCK);
+					Display::background = true;
 					disableRawMode();
 				Thread::mutex_set(mutex, Thread::MTX_UNLOCK);
 			}
-			if (signal == 146) {
+			if (signal == 146) {		//	Resume (fg)
 
 				Thread::mutex_set(mutex, Thread::MTX_LOCK);
+					Display::background = false;
 					enableRawMode();
 				Thread::mutex_set(mutex, Thread::MTX_UNLOCK);
 
