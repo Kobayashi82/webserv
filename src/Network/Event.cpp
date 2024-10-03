@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/18 11:21:01 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/10/01 15:04:47 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/10/03 08:36:52 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -176,19 +176,12 @@
 				if (difftime(current_time, it->second.last_activity) > interval) {
 					std::map<int, EventInfo>::iterator current = it++;
 					EventInfo * event = get(current->first);
+					if (!event) continue;
 					EventInfo * c_event = get(event->client->fd);
 					remove(current->first);
-
+					if (!c_event) continue;
 					if (c_event->pid != 0) { kill(c_event->pid, SIGKILL); c_event->pid = 0; }
-					Protocol::error_page(c_event, "408", c_event->VServ, c_event->Loc);
-					c_event->response_method = c_event->response_map["Method"];
-					if (c_event->response_method == "File") {
-						Protocol::check_code(c_event, true);
-					} else {
-						c_event->response_map["Code-Description"] = Settings::error_codes[Utils::sstol(c_event->response_map["Code"])];
-						c_event->redirect_status = 200;
-						Protocol::response_error(c_event);
-					}
+					Protocol::check_code(c_event, true, "408");
 				} else it++;
 			}
 		}

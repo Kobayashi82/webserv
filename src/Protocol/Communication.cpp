@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/27 09:32:08 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/10/03 00:38:37 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/10/03 08:36:58 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -188,65 +188,73 @@
 			//	Read some data
 				if (bytes_read > 0) {
 
-					Event::update_last_activity(event->fd);																					//	Reset event timeout
+					Event::update_last_activity(event->fd);																						//	Reset event timeout
 
-					event->read_buffer.insert(event->read_buffer.end(), buffer, buffer + bytes_read);										//	Store the data read into 'read_buffer'
-					event->read_size += bytes_read;																							//	Increase 'read_size'
+					event->read_buffer.insert(event->read_buffer.end(), buffer, buffer + bytes_read);											//	Store the data read into 'read_buffer'
+					event->read_size += bytes_read;																								//	Increase 'read_size'
 
 					if (event->read_size == static_cast<size_t>(bytes_read)) {
 						EventInfo * c_event = Event::get(event->client->fd);
-						if (Epoll::set(c_event->fd, !(c_event->header_map["Write-Only"] == "true"), true) == -1) {			//	Set EPOLL to monitor write events for the client
+						if (c_event && Epoll::set(c_event->fd, !(c_event->header_map["Write-Only"] == "true"), true) == -1) {					//	Set EPOLL to monitor write events for the client
 							c_event->client->remove(); return (1);
 						}
 					}
 
 				//	No cache allowed
 					if (event->no_cache == true) {
-						EventInfo * c_event = Event::get(event->client->fd);																//	Get the client's event
-						c_event->write_buffer.insert(c_event->write_buffer.end(), buffer, buffer + bytes_read);								//	Send the data to client's 'write_buffer'
-						event->read_buffer.clear();
+						EventInfo * c_event = Event::get(event->client->fd);																	//	Get the client's event
+						if (c_event) {
+							c_event->write_buffer.insert(c_event->write_buffer.end(), buffer, buffer + bytes_read);								//	Send the data to client's 'write_buffer'
+							event->read_buffer.clear();
 
-					//	All data has been read
-						if (event->read_size >= event->read_maxsize) {
-							c_event->write_info = 3;																						//	Set a flag (no more data)
-							Event::remove(event->fd); return (1);																			//	Remove the event
-						}
+						//	All data has been read
+							if (event->read_size >= event->read_maxsize) {
+								c_event->write_info = 3;																						//	Set a flag (no more data)
+								Event::remove(event->fd); return (1);																			//	Remove the event
+							}
+						} else { Event::remove(event->fd); return (1); }
 
 				//	Cache allowed and all data has been read
 					} else if (event->read_size >= event->read_maxsize) {
-						std::string data(event->read_buffer.begin(), event->read_buffer.end());												//	Create a string with the data
-
-						EventInfo * c_event = Event::get(event->client->fd);																//	Get the client's event
-						cache.add(event->read_path, data, c_event->response_map["Last-Modified"], c_event->mod_time);						//	Add the data to the cache
-						Communication::cache.remove_caching(event->read_path);																//	Remove the file from the caching list
-						c_event->write_info = 3;																							//	Set a flag (no more data)
-						c_event->write_buffer.insert(c_event->write_buffer.end(), event->read_buffer.begin(), event->read_buffer.end());	//	Send the data to client's 'write_buffer'
-						Event::remove(event->fd); return (1);																				//	Remove the event
+						std::string data(event->read_buffer.begin(), event->read_buffer.end());													//	Create a string with the data
+						EventInfo * c_event = Event::get(event->client->fd);																	//	Get the client's event
+						if (c_event) {
+							cache.add(event->read_path, data, c_event->response_map["Last-Modified"], c_event->mod_time);						//	Add the data to the cache
+							Communication::cache.remove_caching(event->read_path);																//	Remove the file from the caching list
+							c_event->write_info = 3;																							//	Set a flag (no more data)
+							c_event->write_buffer.insert(c_event->write_buffer.end(), event->read_buffer.begin(), event->read_buffer.end());	//	Send the data to client's 'write_buffer'
+						}
+						Event::remove(event->fd); return (1);																					//	Remove the event
 					}
 
 			//	No data
 				} else if (bytes_read == 0) {
-					EventInfo * c_event = Event::get(event->client->fd);																	//	Get the client's event
-					c_event->read_info = 3;																									//	Set a flag (no more data)
-					if (event->no_cache == false)
-						c_event->write_buffer.insert(c_event->write_buffer.end(), event->read_buffer.begin(), event->read_buffer.end());	//	Send the data to client's 'write_buffer'
-					Event::remove(event->fd); return (1);																					//	Remove the event
+					EventInfo * c_event = Event::get(event->client->fd);																		//	Get the client's event
+					if (c_event) {
+						c_event->read_info = 3;																									//	Set a flag (no more data)
+						if (event->no_cache == false)
+							c_event->write_buffer.insert(c_event->write_buffer.end(), event->read_buffer.begin(), event->read_buffer.end());	//	Send the data to client's 'write_buffer'
+					}
+					Event::remove(event->fd); return (1);																						//	Remove the event
 
 			//	Error reading
 				} else if (bytes_read == -1) {
-					EventInfo * c_event = Event::get(event->client->fd);																	//	Get the client's event
-					c_event->read_info = 3;																									//	Set a flag (no more data)
-					if (event->no_cache == false)
-						c_event->write_buffer.insert(c_event->write_buffer.end(), event->read_buffer.begin(), event->read_buffer.end());	//	Send the data to client's 'write_buffer'
-					Event::remove(event->fd); return (1);																					//	Remove the event
+					EventInfo * c_event = Event::get(event->client->fd);																		//	Get the client's event
+					if (c_event) {
+						c_event->read_info = 3;																										//	Set a flag (no more data)
+						if (event->no_cache == false)
+							c_event->write_buffer.insert(c_event->write_buffer.end(), event->read_buffer.begin(), event->read_buffer.end());		//	Send the data to client's 'write_buffer'
+						Protocol::check_code(c_event, true, "500");
+					}
+					Event::remove(event->fd); return (1);																						//	Remove the event
 				}
 
 			//	Send more data from the file to the pipe (EPOLL is monitoring the pipe)
 				size_t chunk = CHUNK_SIZE;
-				if (event->read_maxsize > 0) chunk = std::min(event->read_maxsize - event->read_size, CHUNK_SIZE);							//	Set the size of the chunk
+				if (event->read_maxsize > 0) chunk = std::min(event->read_maxsize - event->read_size, CHUNK_SIZE);								//	Set the size of the chunk
 
-				if (splice(event->pipe[0], NULL, event->pipe[1], NULL, chunk, SPLICE_F_MOVE) == -1) {										//	Move data with splice from the file FD to the pipe
-					Event::remove(event->fd); return (1);																					//	Remove the event
+				if (splice(event->pipe[0], NULL, event->pipe[1], NULL, chunk, SPLICE_F_MOVE) == -1) {											//	Move data with splice from the file FD to the pipe
+					Event::remove(event->fd); return (1);																						//	Remove the event
 				}
 
 				return (0);
@@ -317,12 +325,12 @@
 								c_event->client->remove(); return (1);
 							}
 						} else if (result == 2) {
-							if (c_event->cgi_fd != -1) { Event::remove(c_event->cgi_fd); c_event->cgi_fd = -1; }
-							Protocol::check_code(c_event, true, "500"); Event::remove(event->fd); return (1);				//	There is a header, but something went wrong
+							if (c_event->cgi_fd != -1) { Event::remove(c_event->cgi_fd); c_event->cgi_fd = -1; }				//	There is a header, but something went wrong
+							Protocol::check_code(c_event, true, "500"); Event::remove(event->fd); return (1);
 						} else if (result == 3) {
-							if (c_event->cgi_fd != -1) { Event::remove(c_event->cgi_fd); c_event->cgi_fd = -1; }
-							Protocol::check_code(c_event, true, "500"); Event::remove(event->fd); return (1);				//	There is a header, but the response is determined by the server, ignore the CGI
-						} else if (result == 4) { Event::remove(event->fd); return (1); }														//	
+							if (c_event->cgi_fd != -1) { Event::remove(c_event->cgi_fd); c_event->cgi_fd = -1; }				//	There is a header, but no 'c_event'
+							Protocol::check_code(c_event, true, "500"); Event::remove(event->fd); return (1);
+						} else if (result == 4) { Event::remove(event->fd); return (1); }										//	There is a header, but the response is determined by the server, ignore the CGI
 					}
 
 				//	Send the data to client's 'write_buffer'
