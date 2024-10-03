@@ -6,7 +6,7 @@
 #    By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/02/20 17:51:39 by vzurera-          #+#    #+#              #
-#    Updated: 2024/10/02 22:37:22 by vzurera-         ###   ########.fr        #
+#    Updated: 2024/10/03 13:08:32 by vzurera-         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -102,7 +102,7 @@ Compile: $(OBJS)
 	@$(CC) $(FLAGS) $(INC_DIR) $(OBJS) -o bin/$(NAME);
 	@printf "\r%50s\r\t$(CYAN)Compiled    $(GREEN)✓ $(YELLOW)$(NAME)$(NC)\n"
 #	Create launcher for root folder (Temp)
-	@printf 'cd bin && ./webserv "$$@"\n' > webserv
+	@printf 'chmod +x bin/cgi-bin/*\ncd bin && ./webserv "$$@"\n' > webserv
 	@chmod +x webserv
 #	Progress line
 	@$(MAKE) -s progress; printf "\n"
