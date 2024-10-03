@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/21 11:52:00 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/10/03 08:29:29 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/10/03 09:13:44 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,12 @@
 #include "Epoll.hpp"
 #include "Protocol.hpp"
 #include "Communication.hpp"
+
+#pragma region Variables
+
+	bool	Protocol::isAlias = false;
+
+#pragma endregion
 
 #pragma region Parsers
 
@@ -317,7 +323,7 @@
 				if (path.empty())			path = Settings::global.get("error_page " + code);
 
 				path = replace_all_vars(event, path);
-				if (path.empty() || chdir(root.c_str()) != 0) return (0);
+				if (path.empty() || (!Protocol::isAlias && chdir(root.c_str()) != 0)) return (0);
 
 				if (path.empty() || Utils::file_exists(Utils::fullpath(root + "/" + path))) {
 					if (just_check) return (0);
@@ -368,7 +374,7 @@
 					if (root.empty() && VServ)		root = VServ->get("root");
 					if (root.empty())				root = Settings::global.get("root");
 					
-					if (chdir(Utils::fullpath(root).c_str()) != 0) return (0);
+					if (!Protocol::isAlias && chdir(Utils::fullpath(root).c_str()) != 0) return (0);
 
 					size_t pos = cgi.find_first_of(' ');
 					if (pos == std::string::npos) return (0);
@@ -490,13 +496,14 @@
 				if (path.empty()) path = event->response_map["Path"];
 				path = replace_all_vars(event, path);
 
-				if (!path.empty() && path[path.size() - 1] != '/' && Utils::file_exists(Utils::fullpath(root + "/" + path))) {
+				if (!path.empty() && path[path.size() - 1] != '/' && Utils::file_exists(Utils::fullpath(root + "/" + path)) && !Utils::directory_exists(Utils::fullpath(root + "/" + path))) {
 					event->response_map["Method"] = "Redirect";
 					event->response_map["Code"] = "301";
 					event->response_map["Path"] = "/" + path + "/";
 					return (1);
 				}
 
+				if (Protocol::isAlias) root = "";
 				if (chdir(Utils::fullpath(root + "/" + path).c_str()) != 0) return (0);
 
 				std::string index;
@@ -548,7 +555,7 @@
 
 				if (path.empty()) path = event->response_map["Path"];
 
-				if (path.empty() || chdir(root.c_str()) != 0) return (0);
+				if (path.empty() || (!Protocol::isAlias && chdir(root.c_str()) != 0)) return (0);
 
 				if (!Utils::file_exists(path)) {
 					if (!cgi_ext(event, VServ, Loc)) set_file(event, path);
@@ -569,7 +576,7 @@
 				if (root.empty() && VServ)	root = VServ->get("root");
 				if (root.empty())			root = Settings::global.get("root");
 
-				if (chdir(root.c_str()) != 0) return (0);
+				if (!Protocol::isAlias && chdir(root.c_str()) != 0) return (0);
 
 				std::string path = replace_all_vars(event, event->response_map["Path"]);
 				if (check_file(event, VServ, Loc)) return (1);
@@ -607,6 +614,20 @@
 
 		#pragma endregion
 
+		#pragma region Alias
+
+			static int alias(EventInfo * event, Location * Loc) {
+				std::string path = Loc->get("alias");
+				if (path.empty()) return (0);
+
+				Protocol::isAlias = true;
+				int len = Loc->get("location").size();
+				event->response_map["Path"] = Utils::fullpath(path + "/" + event->response_map["Path"].substr(len - 1));
+				return (0);
+			}
+
+		#pragma endregion
+
 		#pragma region Method
 
 			int method(EventInfo * event, int index, VServer * VServ, Location * Loc = NULL) {
@@ -637,6 +658,8 @@
 
 				event->VServ = VServ; event->Loc = Loc; event->vserver_data = &Loc->data;
 
+				alias(event, Loc);
+				
 				bool allowed = false;
 
 				std::vector<std::pair<std::string, std::string> >::const_iterator it;
@@ -650,6 +673,9 @@
 
 				if (check_file(event, VServ, Loc)) return (1);
 				if (check_dir(event, VServ, Loc)) return (1);
+
+				Protocol::isAlias = false;
+				event->response_map["Path"] = event->response_map["Old-Path"];
 
 				return (Protocol::error_page(event, "404", VServ, Loc));
 
@@ -814,6 +840,7 @@
 		void Protocol::parse_request(EventInfo * event) {
 			if (!event) return;
 
+			isAlias = false;
 		//	Retrieve the request path without the query string
 			std::string path = event->header_map["$uri"];																					//	Request path without the query string
 			size_t dot_pos = path.find('.');
@@ -827,6 +854,7 @@
 				event->response_map["Path"] = path.substr(1);
 				event->response_map["Path-Info"] = "";
 			}
+			event->response_map["Old-Path"] = event->response_map["Path"];
 
 		//	General header information
 			event->response_map["Protocol"] = "HTTP/1.1";																					//	Protocol of the connection (by default HTTP/1.1)
@@ -873,7 +901,7 @@
 				if (root.empty() && event->VServ)	root = event->VServ->get("root");
 				if (root.empty())					root = Settings::global.get("root");
 
-				event->response_map["Path-Full"] = Utils::fullpath(root + "/" + event->response_map["Path-Full"]);
+				if (!isAlias) event->response_map["Path-Full"] = Utils::fullpath(root + "/" + event->response_map["Path-Full"]);
 				if (!Communication::cache.exists(event->response_map["Path-Full"]) && !file_stat(event, event->response_map["Path-Full"]))	//	If not in cache and the file doesn't exist or can't be read...
 					error_page(event, "404", event->VServ, event->Loc);																		//	Return "404 (Not Found)"
 				else {

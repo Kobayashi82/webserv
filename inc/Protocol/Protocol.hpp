@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/13 12:49:42 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/10/02 23:34:05 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/10/03 08:46:42 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,6 +27,9 @@
 	class Protocol {
 
 		public:
+
+			//	Variables
+			static bool	isAlias;
 
 			//	Request
 			static void	parse_request(EventInfo * event);												//	Create a map container with the values necessary to generate a response

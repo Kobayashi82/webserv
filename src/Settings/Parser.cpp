@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:30:57 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/30 21:54:59 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/10/03 08:38:52 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -635,7 +635,7 @@
 			} else if (section == LOCATION) {
 				if (firstPart == "location") return (0);
 				if (firstPart == "try_files") return (0);
-				// if (firstPart == "alias") return (0);
+				if (firstPart == "alias") return (0);
 				// if (firstPart == "internal") return (0);
 			} else if (section == METHOD) {
 				if (firstPart == "method") return (0);
