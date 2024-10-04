@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:30:57 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/10/03 08:38:52 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/10/04 16:05:18 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,6 +53,7 @@
 			if (str[0] == '~') str = Utils::expand_tilde(str);
 			if (str[0] != '/') str = program_path + str;
 
+			str = Utils::line_spaces_on(str);
 			if (isFile && check_path) {
 				std::string dir_path = str.substr(0, str.find_last_of('/'));
 				if (stat(dir_path.c_str(), &info) != 0) {
@@ -197,12 +198,15 @@
 		int Settings::parse_errors(const std::string & firstPart, const std::string & secondPart, VServer * VServ = NULL) {
 			std::string space = ""; if (line_count - 1 < 10) space = " ";
 			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] " + space;
-			std::istringstream stream(secondPart);
+
+			std::istringstream stream(Utils::line_spaces_off(secondPart));
 			std::vector<std::string> errors; std::string error;
 
 			while (stream >> error) errors.push_back(error);
 			if (errors.size() < 2) { log_servers(RD + n_line + "Empty value for " Y "error_page" NC, VServ); global.bad_config = true; return (1); }
 			std::string filePath = errors.back(); errors.pop_back();
+			filePath = Utils::line_spaces_on(filePath);
+			Utils::trim(filePath);
 			if (filePath.empty() || filePath[0] != '/') { log_servers(RD + n_line + "Invalid path for " Y "error_page" NC, VServ); global.bad_config = true; return (1); }
 			if (errors.size() > 1 && errors.back()[0] == '=') {
 				long code; if (Utils::stol(errors.back().substr(1), code) || (error_codes.find(code) == error_codes.end())) {
@@ -221,12 +225,15 @@
 		int Settings::parse_errors(const std::string & firstPart, const std::string & secondPart, VServer & VServ) {
 			std::string space = ""; if (line_count - 1 < 10) space = " ";
 			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] " + space;
-			std::istringstream stream(secondPart);
+
+			std::istringstream stream(Utils::line_spaces_off(secondPart));
 			std::vector<std::string> errors; std::string error;
 
 			while (stream >> error) errors.push_back(error);
 			if (errors.size() < 2) { log_servers(RD + n_line + "Empty value for " Y "error_page" NC, &VServ); VServ.bad_config = true; return (1); }
 			std::string filePath = errors.back(); errors.pop_back();
+			filePath = Utils::line_spaces_on(filePath);
+			Utils::trim(filePath);
 			if (filePath.empty() || filePath[0] != '/') { log_servers(RD + n_line + "Invalid path for " Y "error_page" NC, &VServ); VServ.bad_config = true; return (1); }
 			if (errors.size() > 1 && errors.back()[0] == '=') {
 				long code; if (Utils::stol(errors.back().substr(1), code) || (error_codes.find(code) == error_codes.end())) {
@@ -245,12 +252,15 @@
 		int Settings::parse_errors(const std::string & firstPart, const std::string & secondPart, Location & Loc) {
 			std::string space = ""; if (line_count - 1 < 10) space = " ";
 			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] " + space;
-			std::istringstream stream(secondPart);
+
+			std::istringstream stream(Utils::line_spaces_off(secondPart));
 			std::vector<std::string> errors; std::string error;
 
 			while (stream >> error) errors.push_back(error);
 			if (errors.size() < 2) { log_servers(RD + n_line + "Empty value for " Y "error_page" NC, Loc.VServ); Loc.VServ->bad_config = true; return (1); }
 			std::string filePath = errors.back(); errors.pop_back();
+			filePath = Utils::line_spaces_on(filePath);
+			Utils::trim(filePath);
 			if (filePath.empty() || filePath[0] != '/') {
 				log_servers(RD + n_line + "Invalid path for " Y "error_page" NC, Loc.VServ);
 				Loc.VServ->bad_config = true; return (1);
@@ -349,7 +359,11 @@
 			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] " + space;
 			std::istringstream stream(str); std::string code, path;
 
-			stream >> code; stream >> path;
+			stream >> code;
+			std::getline(stream, path);
+			Utils::trim(path);
+			path = Utils::line_spaces_on(path);
+
 			if (code.empty()) { log_servers(RD + n_line + "Empty value for " Y "return" NC, VServ); return (1); }
 			if (!(code[0] != '/' && !(code.size() >= 7 && code.compare(0, 7, "http://") == 0) && !(code.size() >= 8 && code.compare(0, 8, "https://") == 0))) {
 				log_servers(RD + n_line + "Missing status code for " Y "return" NC, VServ); return (1); }
@@ -360,6 +374,7 @@
 			if (!path.empty() && (path[0] != '/' && !(path.size() >= 7 && path.compare(0, 7, "http://") == 0) && !(path.size() >= 8 && path.compare(0, 8, "https://") == 0))) {
 				log_servers(RD + n_line + "Invalid path for " Y "return" NC, VServ); return (1); }
 
+			str = Utils::line_spaces_on(str);
 			return (0);
 		}
 
@@ -371,6 +386,7 @@
 			std::string space = ""; if (line_count - 1 < 10) space = " ";
 			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] " + space;
 			
+			str = Utils::line_spaces_on(str);
 			if (str.empty()) {			log_servers(RD + n_line + "Empty value for " Y + "alias" + NC, VServ); return (1); }
 
 			if (Utils::isFile(str)) return (parse_path(firstPart, str, true, true));
@@ -388,6 +404,8 @@
 		int Settings::parse_try_files(std::string & str, VServer * VServ = NULL) {
 			std::string space = ""; if (line_count - 1 < 10) space = " ";
 			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] " + space;
+
+			str = Utils::line_spaces_off(str);
 			std::istringstream stream(str); std::string code;
 			if (str.empty()) {			log_servers(RD + n_line + "Empty value for " Y + "try_files" + NC, VServ); return (1); }
 
@@ -408,11 +426,13 @@
 		int Settings::parse_cgi(const std::string & firstPart, const std::string & secondPart, VServer * VServ = NULL) {
 			std::string space = ""; if (line_count - 1 < 10) space = " ";
 			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] " + space;
-			std::istringstream stream(secondPart); std::vector<std::string> values; std::string value;
+			
+			std::istringstream stream(Utils::line_spaces_off(secondPart)); std::vector<std::string> values; std::string value;
 
 			while (stream >> value) values.push_back(value);
 			if (values.size() == 0) { log_servers(RD + n_line + "Empty value for " Y "CGI" NC, VServ); global.bad_config = true; return (1); }
 			std::string filePath = values.back(); values.pop_back();
+			filePath = Utils::line_spaces_on(filePath);
 			if (values.size() == 0) { log_servers(RD + n_line + "Missing value or path for " Y "CGI" NC, VServ); global.bad_config = true; return (1); }
 			//if (filePath.empty() || (filePath[0] != '/' && filePath[0] != '~' && Utils::strToLower(filePath) != "self-cgi")) { log_servers(RD + n_line + "Invalid path for " Y "CGI" NC, VServ); global.bad_config = true; return (1); }
 			if (Utils::strToLower(filePath) != "self-cgi" && parse_path("CGI", filePath, true, true)) { global.bad_config = true; }
@@ -435,11 +455,12 @@
 		int Settings::parse_cgi(const std::string & firstPart, const std::string & secondPart, VServer & VServ) {
 			std::string space = ""; if (line_count - 1 < 10) space = " ";
 			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] " + space;
-			std::istringstream stream(secondPart); std::vector<std::string> values; std::string value;
+			std::istringstream stream(Utils::line_spaces_off(secondPart)); std::vector<std::string> values; std::string value;
 
 			while (stream >> value) values.push_back(value);
 			if (values.size() == 0) { log_servers(RD + n_line + "Empty value for " Y "CGI" NC, &VServ); VServ.bad_config = true; return (1); }
 			std::string filePath = values.back(); values.pop_back();
+			filePath = Utils::line_spaces_on(filePath);
 			if (values.size() == 0) { log_servers(RD + n_line + "Missing value or path for " Y "CGI" NC, &VServ); VServ.bad_config = true; return (1); }
 			//if (filePath.empty() || (filePath[0] != '/' && filePath[0] != '~' && Utils::strToLower(filePath) != "self-cgi")) { log_servers(RD + n_line + "Invalid path for " Y "CGI" NC, &VServ); VServ.bad_config = true; return (1); }
 			if (Utils::strToLower(filePath) != "self-cgi" && parse_path("CGI", filePath, true, true)) { VServ.bad_config = true; }
@@ -462,11 +483,12 @@
 		int Settings::parse_cgi(const std::string & firstPart, const std::string & secondPart, Location & Loc) {
 			std::string space = ""; if (line_count - 1 < 10) space = " ";
 			std::string n_line = "[" Y + Utils::ltos(line_count - 1) + RD "] " + space;
-			std::istringstream stream(secondPart); std::vector<std::string> values; std::string value;
+			std::istringstream stream(Utils::line_spaces_off(secondPart)); std::vector<std::string> values; std::string value;
 
 			while (stream >> value) values.push_back(value);
 			if (values.size() == 0) { log_servers(RD + n_line + "Empty value for " Y "CGI" NC, Loc.VServ); Loc.VServ->bad_config = true; return (1); }
 			std::string filePath = values.back(); values.pop_back();
+			filePath = Utils::line_spaces_on(filePath);
 			if (values.size() == 0) { log_servers(RD + n_line + "Missing value or path for " Y "CGI" NC, Loc.VServ); Loc.VServ->bad_config = true; return (1); }
 			//if (filePath.empty() || (filePath[0] != '/' && filePath[0] != '~' && Utils::strToLower(filePath) != "self-cgi")) { log_servers(RD + n_line + "Invalid path for " Y "CGI" NC, Loc.VServ); Loc.VServ->bad_config = true; return (1); }
 			if (Utils::strToLower(filePath) != "self-cgi" && parse_path("CGI", filePath, true, true)) { Loc.VServ->bad_config = true; }
@@ -571,15 +593,19 @@
 			
 			if (str.empty()) {															log_servers(RD + n_line + "Empty value for " Y "Location" NC, VServ); return (1); }
 
+			str = Utils::line_spaces_off(str);
 			std::istringstream stream(str); std::string exact, path;
 
 			stream >> exact; stream >> path;
 
+			exact = Utils::line_spaces_on(exact);
+			path = Utils::line_spaces_on(path);
 			if ((exact == "=" || exact == "~*") && path.empty()) {						log_servers(RD + n_line + "Empty value for " Y "Location" NC, VServ); return (1); }
 			if (exact != "=" && exact != "~*" && !path.empty()) {						log_servers(RD + n_line + "Invalid value " Y + exact + RD " for " Y + "Location" NC, VServ); return (1); }
 			if (exact.empty()) {														log_servers(RD + n_line + "Empty value for " Y "Location" NC, VServ); return (1); }
 			if ((exact == "=" || exact == "~*") && !path.empty() && path[0] != '/') {	log_servers(RD + n_line + "Invalid path " Y + path + RD " for " Y + "Location" NC, VServ); return (1); }
 			if (exact != "=" && exact != "~*" && exact[0] != '/') {						log_servers(RD + n_line + "Invalid value " Y + exact + RD " for " Y + "Location" NC, VServ); return (1); }
+			str = Utils::line_spaces_on(str);
 
 			return (0);
 		}

@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:37:20 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/28 22:31:59 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/10/04 15:39:53 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,6 +43,8 @@ class Utils {
 		static std::string	str_nocolor(const std::string & str);										//	Get a string without color characters
 		static std::string	replace_tabs(const std::string & str, int tabSize = 8);						//	Replace tabs with spaces
 		static std::string	str_time(time_t time);														//	Get the time in seconds as a string
+		static std::string	line_spaces_on(const std::string & str);
+		static std::string	line_spaces_off(const std::string & str);
 
 		//	Network
 		static bool			isValidIP(const std::string & IP);											//	Validate an IP address

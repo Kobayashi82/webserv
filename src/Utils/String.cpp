@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/08 21:36:49 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/28 00:17:47 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/10/04 15:41:08 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -269,6 +269,37 @@
 		sprintf(buffer, "%ld", (long)time);
 
 		return (std::string(buffer));
+	}
+
+#pragma endregion
+
+#pragma region Line Spaces On
+
+	std::string Utils::line_spaces_on(const std::string & str) {
+		std::string tmp;
+
+		for (size_t i = 0; i < str.size(); ++i) {
+			if		(str[i] == '\\' && str[i + 1] == ' ') {	tmp += " "; i++; }
+			else if	(str[i] == '\\' && str[i + 1] == '_') {	tmp += " "; i++; }
+			else											tmp += str[i];
+		}
+
+		return (tmp);
+	}
+
+#pragma endregion
+
+#pragma region Line Spaces Off
+
+	std::string Utils::line_spaces_off(const std::string & str) {
+		std::string tmp;
+
+		for (size_t i = 0; i < str.size(); ++i) {
+			if (str[i] == '\\' && str[i + 1] == ' ') {	tmp += "\\_"; i++; }
+			else										tmp += str[i];
+		}
+
+		return (tmp);
 	}
 
 #pragma endregion

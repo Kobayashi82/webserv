@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/21 11:52:00 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/10/03 10:44:48 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/10/04 16:02:22 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -210,66 +210,63 @@
 
 	#pragma endregion
 
-	#pragma region Variables
-
-	#pragma region Single Variable
-
-		// Función para reemplazar todas las ocurrencias de una variable en el string.
-		std::string replace_single_var(const std::string & str, const std::string & from, const std::string & to) {
-			if (from.empty()) return str;
-			std::string result = str;
-			std::string::size_type start_pos = 0;
-			while ((start_pos = result.find(from, start_pos)) != std::string::npos) {
-				result.replace(start_pos, from.length(), to);
-				start_pos += to.length();
-			}
-			return result;
-		}
-
-	#pragma endregion
-
-	#pragma region All Variables
-
-		std::string replace_all_vars(EventInfo * event, const std::string & input) {
-			std::string output = input;
-
-			// Mapeo de variables a sus nombres en el header_map
-			std::map<std::string, std::string> variables;
-			variables["$request"] = "$request";
-			variables["$request_method"] = "$request_method";
-			variables["$request_uri"] = "$request_uri";
-			variables["$uri"] = "$uri";
-			variables["$document_uri"] = "$document_uri";
-			variables["$args"] = "$args";
-			variables["$query_string"] = "$query_string";
-			variables["$host"] = "$host";
-			variables["$remote_addr"] = "$remote_addr";
-			variables["$remote_port"] = "$remote_port";
-			variables["$server_addr"] = "$server_addr";
-			variables["$server_port"] = "$server_port";
-			variables["$server_name"] = "$server_name";
-			variables["$http_referer"] = "$http_referer";
-			variables["$http_cookie"] = "$http_cookie";
-			variables["$http_host"] = "$http_host";
-			variables["$http_user_agent"] = "$http_user_agent";
-
-			// Iterar sobre las variables y reemplazarlas si existen en el header_map
-			std::map<std::string, std::string>::const_iterator it_var;
-			for (it_var = variables.begin(); it_var != variables.end(); ++it_var) {
-				std::map<std::string, std::string>::const_iterator it_header = event->header_map.find(it_var->second);
-				if (it_header != event->header_map.end() && !it_header->second.empty()) {
-					output = replace_single_var(output, it_var->first, it_header->second);
-				}
-			}
-
-			return output;
-		}
-
-	#pragma endregion
-
-	#pragma endregion
-
 	#pragma region Directives
+
+		#pragma region Variables
+
+			#pragma region Single Variable
+
+				std::string replace_single_var(const std::string & str, const std::string & from, const std::string & to) {
+					if (from.empty()) return str;
+					std::string result = str;
+					std::string::size_type start_pos = 0;
+					while ((start_pos = result.find(from, start_pos)) != std::string::npos) {
+						result.replace(start_pos, from.length(), to);
+						start_pos += to.length();
+					}
+					return result;
+				}
+
+			#pragma endregion
+
+			#pragma region All Variables
+
+				std::string replace_all_vars(EventInfo * event, const std::string & input) {
+					std::string output = input;
+
+					std::map<std::string, std::string> variables;
+					variables["$request"] = "$request";
+					variables["$request_method"] = "$request_method";
+					variables["$request_uri"] = "$request_uri";
+					variables["$uri"] = "$uri";
+					variables["$document_uri"] = "$document_uri";
+					variables["$args"] = "$args";
+					variables["$query_string"] = "$query_string";
+					variables["$host"] = "$host";
+					variables["$remote_addr"] = "$remote_addr";
+					variables["$remote_port"] = "$remote_port";
+					variables["$server_addr"] = "$server_addr";
+					variables["$server_port"] = "$server_port";
+					variables["$server_name"] = "$server_name";
+					variables["$http_referer"] = "$http_referer";
+					variables["$http_cookie"] = "$http_cookie";
+					variables["$http_host"] = "$http_host";
+					variables["$http_user_agent"] = "$http_user_agent";
+
+					std::map<std::string, std::string>::const_iterator it_var;
+					for (it_var = variables.begin(); it_var != variables.end(); ++it_var) {
+						std::map<std::string, std::string>::const_iterator it_header = event->header_map.find(it_var->second);
+						if (it_header != event->header_map.end() && !it_header->second.empty()) {
+							output = replace_single_var(output, it_var->first, it_header->second);
+						}
+					}
+
+					return output;
+				}
+
+			#pragma endregion
+
+	#pragma endregion
 
 		#pragma region Set File
 
@@ -349,7 +346,9 @@
 
 				std::istringstream iss(code_path);
 
-				iss >> code >> path;
+				iss >> code;
+				std::getline(iss, path);
+				Utils::trim(path);
 
 				if (code.empty()) return (Protocol::error_page(event, "500", VServ, Loc));
 				if (path.empty()) return (Protocol::error_page(event, code, VServ, Loc));
@@ -512,9 +511,11 @@
 				if (index.empty())			index = Settings::global.get("index");
 				if (index.empty())			index = "index.html";
 
+				index = Utils::line_spaces_off(index);
 				std::istringstream iss(index);
 
 				while (iss >> index) { path = index;
+					path = Utils::line_spaces_on(path);
 					if (!Utils::file_exists(path)) {
 						if (!cgi_ext(event, VServ, Loc, event->response_map["Path"] + "/" + path)) set_file(event, event->response_map["Path"] + "/" + path);
 						return (1);
@@ -589,7 +590,7 @@
 				std::istringstream iss(files);
 
 				while (iss >> files) { path = files;
-
+					path = Utils::line_spaces_on(path);
 					if (path[0] == '/') path = path.substr(1);
 					path = replace_all_vars(event, path);
 
@@ -623,6 +624,7 @@
 				Protocol::isAlias = true;
 				int len = Loc->get("location").size();
 				event->response_map["Path"] = Utils::fullpath(path + "/" + event->response_map["Path"].substr(len - 1));
+				Log::log(event->response_map["Path"], Log::MEM_ACCESS);
 				return (0);
 			}
 
