@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/12 13:59:39 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/27 23:18:06 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/10/05 13:44:58 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -112,7 +112,7 @@
 	}
 
 	bool Utils::isIPInRange(const std::string & IP, const std::string & range) {						//	Check if an IP is in a given range
-		if (range.size() > 6 && range.substr(0, 7) == "0.0.0.0") return (true);
+		if (range.size() >= 7 && range.substr(0, 7) == "0.0.0.0") return (true);
 		std::string::size_type slashPos = range.find('/');
 		if (!isValid_IPAddress(IP)) return (false);
 		if (slashPos == std::string::npos) return (IP == range);

@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/21 11:52:00 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/10/04 16:02:22 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/10/05 13:44:38 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -320,7 +320,8 @@
 				if (path.empty())			path = Settings::global.get("error_page " + code);
 
 				path = replace_all_vars(event, path);
-				if (path.empty() || (!Protocol::isAlias && chdir(root.c_str()) != 0)) return (0);
+
+				if (!Protocol::isAlias && chdir(root.c_str()) != 0) return (0);
 
 				if (path.empty() || Utils::file_exists(Utils::fullpath(root + "/" + path))) {
 					if (just_check) return (0);
@@ -349,6 +350,7 @@
 				iss >> code;
 				std::getline(iss, path);
 				Utils::trim(path);
+
 
 				if (code.empty()) return (Protocol::error_page(event, "500", VServ, Loc));
 				if (path.empty()) return (Protocol::error_page(event, code, VServ, Loc));
@@ -624,7 +626,6 @@
 				Protocol::isAlias = true;
 				int len = Loc->get("location").size();
 				event->response_map["Path"] = Utils::fullpath(path + "/" + event->response_map["Path"].substr(len - 1));
-				Log::log(event->response_map["Path"], Log::MEM_ACCESS);
 				return (0);
 			}
 
@@ -874,7 +875,8 @@
 				error_page(event, "500", event->VServ, event->Loc);																			//	Return "500 (Internal Server Error)"
 
 		//	Only HEAD and GET are valid without a CGI
-			if (event->response_map["Method"] != "CGI" && event->header_map["Method"] != "HEAD" && event->header_map["Method"] != "GET")
+			if (event->response_map["Method"] != "CGI" && event->response_map["Method"] != "Redirect" && event->response_map["Method"] != "Error"
+				&& event->header_map["Method"] != "HEAD" && event->header_map["Method"] != "GET")
 				error_page(event, "403", event->VServ, event->Loc);																			//	Return "403 (Forbidden)"
 
 		//	Check if response method is unknown (not really a case, but whatever...)
