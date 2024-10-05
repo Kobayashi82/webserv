@@ -11,6 +11,9 @@ function addFile(target, file) {
   const isImage = file.type.match("image.*"),
     objectURL = URL.createObjectURL(file);
 
+  if (FILES[objectURL] || Object.values(FILES).some(existingFile => existingFile.name === file.name))
+    return; // Salir de la función si el archivo ya existe
+
   const clone = isImage
     ? imageTempl.content.cloneNode(true)
     : fileTempl.content.cloneNode(true);

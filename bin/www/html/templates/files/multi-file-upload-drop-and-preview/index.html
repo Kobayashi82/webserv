@@ -2,16 +2,16 @@
 <html lang="en" >
 <head>
   <meta charset="UTF-8">
-  <title>CodePen - Responsive,  multi file upload modal with drop-on support and file preview in jira style | vanilla / tailwind</title>
+  <title>WebServ 1.0 - Upload Files</title>
   <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/1.2.0/tailwind.min.css'><link rel="stylesheet" href="./style.css">
 
 </head>
 <body>
 <!-- partial:index.partial.html -->
-<div class="bg-gray-500 h-screen w-screen sm:px-8 md:px-16 sm:py-8">
+<div class="custom-background h-screen w-screen sm:px-8 md:px-16 sm:py-8">
       <main class="container mx-auto max-w-screen-lg h-full">
         <!-- file upload modal -->
-        <article aria-label="File Upload Modal" class="relative h-full flex flex-col bg-white shadow-xl rounded-md" ondrop="dropHandler(event);" ondragover="dragOverHandler(event);" ondragleave="dragLeaveHandler(event);" ondragenter="dragEnterHandler(event);">
+        <article aria-label="File Upload Modal" class="relative h-full flex flex-col custom-bg-dark shadow-xl rounded-md" ondrop="dropHandler(event);" ondragover="dragOverHandler(event);" ondragleave="dragLeaveHandler(event);" ondragenter="dragEnterHandler(event);">
           <!-- overlay -->
           <div id="overlay" class="w-full h-full absolute top-0 left-0 pointer-events-none z-50 flex flex-col items-center justify-center rounded-md">
             <i>
@@ -25,34 +25,32 @@
           <!-- scroll area -->
           <section class="h-full overflow-auto p-8 w-full h-full flex flex-col">
             <header class="border-dashed border-2 border-gray-400 py-12 flex flex-col justify-center items-center">
-              <p class="mb-3 font-semibold text-gray-900 flex flex-wrap justify-center">
+              <p class="mb-3 text-white flex flex-wrap justify-center">
                 <span>Drag and drop your</span>&nbsp;<span>files anywhere or</span>
               </p>
               <input id="hidden-input" type="file" multiple class="hidden" />
-              <button id="button" class="mt-2 rounded-sm px-3 py-1 bg-gray-200 hover:bg-gray-300 focus:shadow-outline focus:outline-none">
+              <button id="button" class="rounded-sm px-3 py-1 bg-blue-700 hover:bg-blue-500 text-white focus:outline-none">
                 Upload a file
               </button>
             </header>
 
-            <h1 class="pt-8 pb-3 font-semibold sm:text-lg text-gray-900">
+            <h1 class="pt-4 pb-3 sm:text-sm text-white">
               To Upload
             </h1>
 
             <!-- image gallery  -->
             <ul id="gallery" class="flex flex-1 flex-wrap -m-1">
               <li id="empty" class="h-full w-full text-center flex flex-col items-center justify-center items-center">
-                <img class="mx-auto w-32" src="https://user-images.githubusercontent.com/507615/54591670-ac0a0180-4a65-11e9-846c-e55ffce0fe7b.png" alt="no data" />
-                <span class="text-small text-gray-500">No files selected</span>
               </li>
             </ul>
           </section>
 
           <!-- sticky footer -->
           <footer class="flex justify-end px-8 pb-8 pt-4">
-            <button id="submit" class="rounded-sm px-3 py-1 bg-blue-700 hover:bg-blue-500 text-white focus:shadow-outline focus:outline-none">
+            <button id="submit" class="rounded-sm px-3 py-1 bg-blue-700 hover:bg-blue-500 text-white focus:outline-none">
               Upload now
             </button>
-            <button id="cancel" class="ml-3 rounded-sm px-3 py-1 hover:bg-gray-300 focus:shadow-outline focus:outline-none">
+            <button id="cancel" class="ml-3 rounded-sm px-3 py-1 focus:outline-none">
               Cancel
             </button>
           </footer>
