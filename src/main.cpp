@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 14:30:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/10/03 00:03:40 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/10/05 14:15:33 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,6 +66,7 @@
 		Communication::total_clients = 0;
 		Communication::write_bytes = 0;
 		Communication::read_bytes = 0;
+		Communication::cache.clear();
 
 		Settings::clear(true);
 		Settings::load_args(argc, argv);

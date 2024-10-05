@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/24 19:40:07 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/28 14:07:46 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/10/05 14:22:08 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@
 
 		CacheInfo::CacheInfo(const std::string & _path, const std::string & _content, std::string _mod_stime, time_t _mod_time, time_t _expire_time) :
 			path(_path), content(_content), size(_content.size()), mod_stime(_mod_stime), mod_time(_mod_time), expire_time(time(NULL) + _expire_time) {
-				added_time = time(NULL); check_time = time(NULL);
+				added_time = time(NULL); check_time = time(NULL); check_time_interval = 10;
 			}
 
 		CacheInfo::CacheInfo(const CacheInfo & src) { *this = src; }
@@ -29,12 +29,12 @@
 	#pragma region Overloads
 
 		CacheInfo & CacheInfo::operator=(const CacheInfo & rhs) {
-			if (this != &rhs) { path = rhs.path; content = rhs.content; size = rhs.size; mod_stime = rhs.mod_stime; mod_time = rhs.mod_time; added_time = rhs.added_time; expire_time = rhs.expire_time; check_time = rhs.check_time; }
+			if (this != &rhs) { path = rhs.path; content = rhs.content; size = rhs.size; mod_stime = rhs.mod_stime; mod_time = rhs.mod_time; added_time = rhs.added_time; expire_time = rhs.expire_time; check_time = rhs.check_time; check_time_interval = rhs.check_time_interval; }
 			return (*this);
 		}
 
 		bool CacheInfo::operator==(const CacheInfo & rhs) const {
-			return (path == rhs.path && content == rhs.content && size == rhs.size && mod_stime == rhs.mod_stime && mod_time == rhs.mod_time && added_time == rhs.added_time && expire_time == rhs.expire_time && check_time == rhs.check_time);
+			return (path == rhs.path && content == rhs.content && size == rhs.size && mod_stime == rhs.mod_stime && mod_time == rhs.mod_time && added_time == rhs.added_time && expire_time == rhs.expire_time && check_time == rhs.check_time && check_time_interval == rhs.check_time_interval);
 		}
 
 	#pragma endregion
@@ -48,7 +48,7 @@
 	#pragma region Check
 
 		bool CacheInfo::check() {
-			if (time(NULL) > check_time + 60 && Utils::file_modification_time_data(path) > mod_time) return (true);
+			if (time(NULL) > check_time + check_time_interval && Utils::file_modification_time_data(path) > mod_time) return (true);
 
 			check_time = time(NULL);
 			return (false);

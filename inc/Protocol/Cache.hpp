@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/24 19:39:57 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/09/28 13:12:55 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/10/05 14:21:29 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,7 @@
 		time_t		added_time;																			//	The time the file was added as seconds
 		time_t		expire_time;																		//	The expiration time of the cache entry
 		time_t		check_time;
+		int			check_time_interval;																//	Time in seconds after which, if there's no access to the cache file, the modification time must be checked against the local file
 
 		//	Constructors
 		CacheInfo(const std::string & _path, const std::string & _content, std::string _mod_stime, time_t _mod_time, time_t _expire_time);	//	Parameterized constructor
