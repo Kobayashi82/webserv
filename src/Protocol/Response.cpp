@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/21 11:59:50 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/10/04 14:40:53 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/10/06 14:23:55 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -691,11 +691,11 @@
 				event->write_maxsize = 0;
 				event->write_buffer.clear();																//	Clear write_buffer
 
-				if (event->cgi_fd != -1 && Epoll::add(event->cgi_fd, false, true) == -1) {				//	Set EPOLL to monitor write events for CGI
+				if (event->cgi_fd != -1 && Epoll::add(event->cgi_fd, false, true) == -1) {					//	Set EPOLL to monitor write events for CGI
 					event->client->remove(); return;
 				}
 
-				if (Epoll::add(event_read_cgi.fd, true, false) == -1) {									//	Set EPOLL to monitor read events for CGI
+				if (Epoll::add(event_read_cgi.fd, true, false) == -1) {										//	Set EPOLL to monitor read events for CGI
 					event->client->remove(); return;
 				}
 
@@ -726,7 +726,7 @@
 							env_array.push_back(const_cast<char*>(cgi_vars[i].c_str()));
 						env_array.push_back(NULL);
 
-						if (write_fd != -1) dup2(write_fd, STDIN_FILENO);
+						if (write_fd != -1) dup2(write_fd, STDIN_FILENO); else close(STDIN_FILENO);
 						dup2(event_read_cgi.pipe[1], STDOUT_FILENO);
 
 						int dev_null = open("/dev/null", O_WRONLY);
@@ -737,7 +737,6 @@
 							if (it->second.pipe[0]) close(it->second.pipe[0]);
 							if (it->second.pipe[1]) close(it->second.pipe[1]);
 						}
-
 
 						execve(args[0], args, &env_array[0]);
 					}

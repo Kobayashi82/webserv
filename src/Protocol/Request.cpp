@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/21 11:52:00 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/10/05 13:44:38 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/10/06 13:44:38 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -167,20 +167,25 @@
 								event->read_buffer.erase(event->read_buffer.begin(), event->read_buffer.begin() + line.size() + 1);
 								event->read_buffer.insert(event->read_buffer.begin(), status.begin(), status.end());
 								event->header_map["Code"] = value2;
-								event->header_map["Code-Description"] = Settings::error_codes[Utils::sstol(value2)];
 								c_event->header_map["Code"] = value2;
-								c_event->header_map["Code-Description"] = Settings::error_codes[Utils::sstol(value2)];
 								c_event->response_map["Code"] = value2;
+								event->header_map["Code-Description"] = Settings::error_codes[Utils::sstol(value2)];
+								c_event->header_map["Code-Description"] = Settings::error_codes[Utils::sstol(value2)];
 								c_event->response_map["Code-Description"] = Settings::error_codes[Utils::sstol(value2)];
 							} else {
+								int code = 200;
 								std::string status = c_event->header_map["Protocol"] + " 200 " + Settings::error_codes[200] + "\r\n";
+								if (header.find("Location:") != std::string::npos) {
+									status = c_event->header_map["Protocol"] + " 302 " + Settings::error_codes[302] + "\r\n";
+									code = 302;
+								}
 								event->read_buffer.insert(event->read_buffer.begin(), status.begin(), status.end());
-								event->header_map["Code"] = "200";
-								event->header_map["Code-Description"] = Settings::error_codes[200];
-								c_event->header_map["Code"] = "200";
-								c_event->header_map["Code-Description"] = Settings::error_codes[200];
-								c_event->response_map["Code"] = "200";
-								c_event->response_map["Code-Description"] = Settings::error_codes[200];
+								event->header_map["Code"] = code;
+								c_event->header_map["Code"] = event->header_map["Code"];
+								c_event->response_map["Code"] = event->header_map["Code"];
+								event->header_map["Code-Description"] = Settings::error_codes[code];
+								c_event->header_map["Code-Description"] = Settings::error_codes[code];
+								c_event->response_map["Code-Description"] = Settings::error_codes[code];
 							}
 							event->header = std::string(event->read_buffer.begin(), event->read_buffer.end());
 							size_t pos = event->header.find("\r\n\r\n");											//	Find the end of the header
@@ -202,7 +207,6 @@
 				}
 				pos = event->header_map["Host"].find_first_of(':');
 				if (pos != std::string::npos) event->header_map["Host"] = Utils::strim(event->header_map["Host"].substr(0, pos));
-
 			return (0);
 		}
 

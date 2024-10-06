@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/24 19:40:07 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/10/05 14:22:08 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/10/06 13:35:28 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@
 
 		CacheInfo::CacheInfo(const std::string & _path, const std::string & _content, std::string _mod_stime, time_t _mod_time, time_t _expire_time) :
 			path(_path), content(_content), size(_content.size()), mod_stime(_mod_stime), mod_time(_mod_time), expire_time(time(NULL) + _expire_time) {
-				added_time = time(NULL); check_time = time(NULL); check_time_interval = 10;
+				added_time = time(NULL); check_time = time(NULL); check_time_interval = 5;
 			}
 
 		CacheInfo::CacheInfo(const CacheInfo & src) { *this = src; }
