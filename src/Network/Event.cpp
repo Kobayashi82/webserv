@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/18 11:21:01 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/10/03 08:36:52 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/10/07 14:33:13 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,7 +29,7 @@
 		EventInfo::EventInfo() : fd(-1), type(NOTHING), socket(NULL), client(NULL) {
 			pipe[0] = -1; pipe[1] = -1;
 			read_path = ""; read_size = 0; read_maxsize = 0; read_info = 0;
-			write_path = ""; write_size = 0; write_maxsize = 0; write_info = 0; cgi_fd = -1;
+			write_path = ""; write_size = 0; write_maxsize = 0; write_info = 0; cgi_fd = -1; cgi_read_fd = -1;
 			
 			no_cache = false; close = false;
 			VServ = NULL; Loc = NULL; vserver_data = NULL;
@@ -41,7 +41,7 @@
 		EventInfo::EventInfo(int _fd, int _type, SocketInfo * _socket, Client * _client) : fd(_fd), type(_type), socket(_socket), client(_client) {
 			pipe[0] = -1; pipe[1] = -1;
 			read_path = ""; read_size = 0; read_maxsize = 0; read_info = 0;
-			write_path = ""; write_size = 0; write_maxsize = 0; write_info = 0; cgi_fd = -1;
+			write_path = ""; write_size = 0; write_maxsize = 0; write_info = 0; cgi_fd = -1; cgi_read_fd = -1;
 			
 			no_cache = false; close = false; mod_time = time(NULL); filesize = 0;
 			VServ = NULL; Loc = NULL; vserver_data = NULL;
@@ -62,7 +62,7 @@
 				
 				pipe[0] = rhs.pipe[0]; pipe[1] = rhs.pipe[1];
 				read_path = rhs.read_path; read_size = rhs.read_size; read_maxsize = rhs.read_maxsize; read_info = rhs.read_info;
-				write_path = rhs.write_path; write_size = rhs.write_size; write_maxsize = rhs.write_maxsize; write_info = rhs.write_info; cgi_fd = rhs.cgi_fd;
+				write_path = rhs.write_path; write_size = rhs.write_size; write_maxsize = rhs.write_maxsize; write_info = rhs.write_info; cgi_fd = rhs.cgi_fd; cgi_read_fd = rhs.cgi_read_fd;
 
 				no_cache = rhs.no_cache; close = rhs.close; mod_time = rhs.mod_time; filesize = rhs.filesize;
 				VServ = rhs.VServ; Loc = rhs.Loc; vserver_data = rhs.vserver_data;
@@ -70,8 +70,7 @@
 				read_buffer = rhs.read_buffer; write_buffer = rhs.write_buffer;
 
 				header = rhs.header; header_map = rhs.header_map;
-				response_map = rhs.response_map; response_size = rhs.response_size; response_method = rhs.response_method;
-				
+				response_map = rhs.response_map; response_size = rhs.response_size; response_method = rhs.response_method;				
 				body_size = rhs.body_size; body_maxsize = rhs.body_maxsize; redirect_status = rhs.redirect_status;
 
 				response_time = rhs.response_time; last_activity = rhs.last_activity; pid = rhs.pid;

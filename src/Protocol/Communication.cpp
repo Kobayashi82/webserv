@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/27 09:32:08 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/10/06 13:53:50 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/10/07 14:36:50 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,7 +29,7 @@
 	size_t				Communication::write_bytes;														//	Total number of bytes uploaded by the server
 
 	const size_t		Communication::CHUNK_SIZE = 4096;												//	Size of the buffer for read and write operations
-	const size_t		Communication::HEADER_MAXSIZE = 8192;											//	Maximum size allowed for the header (8 KB by default)
+	const size_t		Communication::HEADER_MAXSIZE = 2048;											//	Maximum size allowed for the header (8 KB by default)
 
 #pragma endregion
 
@@ -62,7 +62,7 @@
 							event->header_map["Connection"] = "close";																			//	Set 'Connection' to close
 							event->header_map["Write-Only"] = "true";																			//	Don't read from the client anymore
 							Epoll::set(event->fd, false, false);																				//	Close read and write monitor for EPOLL
-							Protocol::error_page(event, "431", event->VServ, event->Loc);														//	Request Header Fields Too Large
+							Protocol::check_code(event, true, "431");																			//	Request Header Fields Too Large
 							return (1);
 						}
 
@@ -81,7 +81,12 @@
 						event->header_map["Connection"] = "close";																				//	Set 'Connection' to close
 						event->header_map["Write-Only"] = "true";																				//	Don't read from the client anymore
 						Epoll::set(event->fd, false, false);																					//	Close read and write monitor for EPOLL
-						Protocol::error_page(event, "413", event->VServ, event->Loc);															//	Payload Too Large
+						if (event->response_method == "CGI") {
+							if (event->pid != 0) { kill(event->pid, SIGKILL); event->pid = 0; }
+							Event::remove(event->cgi_fd);		event->cgi_fd = -1;
+							Event::remove(event->cgi_read_fd);	event->cgi_read_fd = -1;
+						}
+						Protocol::check_code(event, true, "413");																				//	Payload Too Large
 						return (1);
 					}
 

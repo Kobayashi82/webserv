@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/18 11:20:55 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/10/01 13:11:28 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/10/07 13:47:15 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,6 +51,7 @@
 		size_t												write_maxsize;								//	The file size
 		int													write_info;									//	Info on the file size (0 = known, 1 = unknow, 2 = no more data)
 		int													cgi_fd;
+		int													cgi_read_fd;
 
 		std::string											header;
 		std::map<std::string, std::string>					header_map;

@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/21 11:52:00 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/10/07 12:27:01 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/10/07 14:32:58 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -330,7 +330,6 @@
 
 				if (path.empty() || Utils::file_exists(Utils::fullpath(root + "/" + path))) {
 					if (just_check) return (0);
-					Log::log("NOP", Log::MEM_ACCESS);
 					event->response_map["Method"] = "Error";
 					event->response_map["Code"] = code;
 				} else {
@@ -907,11 +906,14 @@
 			std::string									body_maxsize;
 			if (event->Loc)								body_maxsize = event->Loc->get("body_maxsize");
 			if (body_maxsize.empty() && event->VServ)	body_maxsize = event->VServ->get("body_maxsize");									//	Get 'body_maxsize'
+			if (body_maxsize.empty())					body_maxsize = Settings::global.get("body_maxsize");									//	Get 'body_maxsize'
 			if (!body_maxsize.empty()) {
 				event->body_maxsize   =	Utils::sstol(body_maxsize);																			//	Get 'body_maxsize' in numeric format
 				size_t content_length =	Utils::sstol(event->header_map["Content-Length"]);													//	Get 'Content-Length' in numeric format
-				if (event->body_maxsize > 0 && content_length > event->body_maxsize)														//	If 'Content-Length' is greater than 'body_maxsize'...
+				if (event->body_maxsize > 0 && (content_length >= event->body_maxsize || event->read_buffer.size() >= event->body_maxsize)) {	//	If 'Content-Length' is greater than 'body_maxsize'...
 					error_page(event, "413", event->VServ, event->Loc);																		//	Payload too large
+					event->response_method = event->response_map["Method"];
+				}
 			}
 
 		//	Response method is a file, check if must be cached
