@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/21 11:59:50 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/10/06 14:23:55 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/10/07 12:20:51 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -164,7 +164,8 @@
 
 		#pragma region Add Style
 
-			static void add_style(std::string & body, std::string dir_path, const std::string root) {
+			static void add_style(EventInfo * event, std::string & body, std::string dir_path, const std::string root) {
+				if (Protocol::isAlias) dir_path = event->response_map["Old-Path"];
 				if (dir_path == ".") dir_path = "";
 				if (dir_path[0] != '/') dir_path = "/" + dir_path;
 				if (dir_path[dir_path.size() - 1] != '/') dir_path += "/";
@@ -237,7 +238,8 @@
 
 		#pragma region Add Directory
 
-			static void add_dir(std::string & body, std::string dir_path, const std::string & dir) {
+			static void add_dir(EventInfo * event, std::string & body, std::string dir_path, const std::string & dir) {
+				if (Protocol::isAlias) dir_path = event->response_map["Old-Path"];
 				if (dir_path == ".") dir_path = "";
 				dir_path = "/" + dir_path;
 				if (dir_path[dir_path.size() - 1] != '/') dir_path += "/";
@@ -253,7 +255,8 @@
 
 		#pragma region Add File
 
-			static void add_file(std::string & body, std::string dir_path, const std::string & file) {
+			static void add_file(EventInfo * event, std::string & body, std::string dir_path, const std::string & file) {
+				if (Protocol::isAlias) dir_path = event->response_map["Old-Path"];
 				if (dir_path == ".") dir_path = "";
 				dir_path = "/" + dir_path;
 				if (dir_path[dir_path.size() - 1] != '/') dir_path += "/";
@@ -299,13 +302,13 @@
 				closedir(dir);																						//	Close the directory
 
 				std::string body;																					//	Create the body of the response
-				add_style(body, dir_path, event->response_map["Root"]);												//	Add the column and style to the body
+				add_style(event, body, dir_path, event->response_map["Root"]);												//	Add the column and style to the body
 
 				for (std::vector<std::string>::iterator it = directories.begin(); it != directories.end(); ++it)	//	Add directories to the body
-					add_dir(body, dir_path, *it);
+					add_dir(event, body, dir_path, *it);
 
 				for (std::vector<std::string>::iterator it = files.begin(); it != files.end(); ++it)				//	Add files to the body
-					add_file(body, dir_path, *it);
+					add_file(event, body, dir_path, *it);
 
 				body +=																								//	Finish the body of the response
 					"       </tbody>\n"

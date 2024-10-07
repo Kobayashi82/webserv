@@ -6,7 +6,7 @@
 /*   By: vzurera- <vzurera-@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/21 11:52:00 by vzurera-          #+#    #+#             */
-/*   Updated: 2024/10/06 13:44:38 by vzurera-         ###   ########.fr       */
+/*   Updated: 2024/10/07 12:27:01 by vzurera-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -325,10 +325,12 @@
 
 				path = replace_all_vars(event, path);
 
-				if (!Protocol::isAlias && chdir(root.c_str()) != 0) return (0);
+				Protocol::isAlias = false;
+				if (chdir(root.c_str()) != 0) return (0);
 
 				if (path.empty() || Utils::file_exists(Utils::fullpath(root + "/" + path))) {
 					if (just_check) return (0);
+					Log::log("NOP", Log::MEM_ACCESS);
 					event->response_map["Method"] = "Error";
 					event->response_map["Code"] = code;
 				} else {
@@ -515,7 +517,6 @@
 				if (Loc)					index = Loc->get("index");
 				if (index.empty() && VServ)	index = VServ->get("index");
 				if (index.empty())			index = Settings::global.get("index");
-				if (index.empty())			index = "index.html";
 
 				index = Utils::line_spaces_off(index);
 				std::istringstream iss(index);
@@ -628,8 +629,20 @@
 				if (path.empty()) return (0);
 
 				Protocol::isAlias = true;
-				int len = Loc->get("location").size();
+				size_t len = Loc->get("location").size();
+				if (len > event->response_map["Path"].size()) len = event->response_map["Path"].size() + 1;
 				event->response_map["Path"] = Utils::fullpath(path + "/" + event->response_map["Path"].substr(len - 1));
+
+				path = event->response_map["Path"];
+				std::string old_path = event->response_map["Old-Path"];
+				if (!old_path.empty() && old_path[old_path.size() - 1] != '/'
+					&& !path.empty() && path[path.size() - 1] != '/' && Utils::file_exists(path) && !Utils::directory_exists(path)) {
+					event->response_map["Method"] = "Redirect";
+					event->response_map["Code"] = "301";
+					event->response_map["Path"] = "/" + event->response_map["Old-Path"] + "/";
+					return (1);
+				}
+
 				return (0);
 			}
 
@@ -665,7 +678,7 @@
 
 				event->VServ = VServ; event->Loc = Loc; event->vserver_data = &Loc->data;
 
-				alias(event, Loc);
+				if (alias(event, Loc)) return (1);
 				
 				bool allowed = false;
 
