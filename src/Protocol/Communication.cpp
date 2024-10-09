@@ -58,21 +58,28 @@
 
 				//	Needs to get the header
 					if (event->header == "") {
-						if (event->read_buffer.size() > HEADER_MAXSIZE)	{																		//	Header too big, return error
+
+						int result = Protocol::parse_header(event);																				//	Try to parse the header (maybe the header is not there yet)
+						if (result == 0) {																										//	There is a header
+							if (event->header.size() > HEADER_MAXSIZE) {																		//	Header too big, return error
+								event->header_map["Connection"] = "close";																			//	Set 'Connection' to close
+								event->header_map["Write-Only"] = "true";																			//	Don't read from the client anymore
+								Epoll::set(event->fd, false, false);																				//	Close read and write monitor for EPOLL
+								Protocol::check_code(event, true, "431");																			//	Request Header Fields Too Large
+								return (1);
+							}
+							event->read_size = event->read_buffer.size() - event->header.size();												//	Set 'read_size'
+							event->read_buffer.erase(event->read_buffer.begin(), event->read_buffer.begin() + event->header.size());			//	Remove the header from 'read_buffer'
+							Protocol::process_request(event);																					//	Process the request
+
+						} else if (result == 2) { event->client->remove(); return (1);															//	There is a header, but something went wrong
+						} else if (event->read_buffer.size() > HEADER_MAXSIZE) {																	//	Header too big, return error
 							event->header_map["Connection"] = "close";																			//	Set 'Connection' to close
 							event->header_map["Write-Only"] = "true";																			//	Don't read from the client anymore
 							Epoll::set(event->fd, false, false);																				//	Close read and write monitor for EPOLL
 							Protocol::check_code(event, true, "431");																			//	Request Header Fields Too Large
 							return (1);
 						}
-
-						int result = Protocol::parse_header(event);																				//	Try to parse the header (maybe the header is not there yet)
-						if (result == 0) {																										//	There is a header
-							event->read_size = event->read_buffer.size() - event->header.size();												//	Set 'read_size'
-							event->read_buffer.erase(event->read_buffer.begin(), event->read_buffer.begin() + event->header.size());			//	Remove the header from 'read_buffer'
-							Protocol::process_request(event);																					//	Process the request
-
-						} else if (result == 2) { event->client->remove(); return (1); }														//	There is a header, but something went wrong
 
 					} else event->read_size += bytes_read;																						//	Increase 'read_size'
 
@@ -298,8 +305,6 @@
 				//	Needs to get the header
 					if (event->read_info == 0 && event->read_maxsize == 0 && event->header == "") {
 						size_t content_length = 0;
-						if (event->read_buffer.size() > HEADER_MAXSIZE) { Event::remove(event->fd); return (1); }				//	Header too big, return error	
-	
 						int result = Protocol::parse_header(event);																//	Try to parse the header (maybe the header is not there yet)
 						if (result == 0) {																						//	There is a header
 							event->read_size += event->read_buffer.size() - bytes_read;

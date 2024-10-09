@@ -146,6 +146,7 @@
 				if (pos == std::string::npos)	return (1);															//	Incomplete header
 				else							event->header = header.substr(0, pos);								//	Get only the header content
 
+
 				std::istringstream stream(header); std::string line;
 
 				if (std::getline(stream, line)) {																	//	Read the first line
@@ -158,7 +159,7 @@
 							event->header_map["Path"] = Security::decode_url(value2);
 							event->header_map["Protocol"] = value3;
 						} else return (2);																			//	There are errors in the first line
-					} if (event->type == CGI) {
+					} else if (event->type == CGI) {
 						if (first_line >> value1 && first_line >> value2) {											//	Get the data from the first line (Protocol, Code and Code description)
 							EventInfo * c_event = Event::get(event->client->fd);
 							if (!c_event) return (3);
