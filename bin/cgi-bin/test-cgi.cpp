@@ -76,6 +76,7 @@ int main(int argc, char **argv) {
 		variables["HTTP_HOST"]			=	std::make_pair("HTTP_HOST",				"El nombre del servidor virtual que está manejando la solicitud");
 		variables["HTTP_REFERER"]		=	std::make_pair("HTTP_REFERER",			"El valor de 'Referer', que indica la página anterior a la que se hizo la solicitud");
 		variables["HTTP_USER_AGENT"]	=	std::make_pair("HTTP_USER_AGENT",		"El contenido del encabezado 'User-Agent', que identifica el navegador del cliente");
+		variables["HTTP_COOKIE"]		=	std::make_pair("HTTP_COOKIE",			"El contenido de la cookie del cliente");
 		variables["PATH_INFO"]			=	std::make_pair("PATH_INFO",				"Cualquier información adicional después del nombre del script en la URL");
 		variables["PATH_TRANSLATED"]	=	std::make_pair("PATH_TRANSLATED",		"La ruta completa en el sistema de archivos del recurso solicitado");
 		variables["QUERY_STRING"]		=	std::make_pair("QUERY_STRING",			"Es la cadena de consulta (query string), que contiene los parámetros enviados después de ?");
@@ -102,6 +103,7 @@ int main(int argc, char **argv) {
 		if (std::getenv("HTTP_HOST"))			variables["HTTP_HOST"]			=	std::make_pair(std::getenv("HTTP_HOST"),			"El nombre del servidor virtual que está manejando la solicitud");
 		if (std::getenv("HTTP_REFERER"))		variables["HTTP_REFERER"]		=	std::make_pair(std::getenv("HTTP_REFERER"),			"El valor de 'Referer', que indica la página anterior a la que se hizo la solicitud");
 		if (std::getenv("HTTP_USER_AGENT"))		variables["HTTP_USER_AGENT"]	=	std::make_pair(std::getenv("HTTP_USER_AGENT"),		"El contenido del encabezado 'User-Agent', que identifica el navegador del cliente");
+		if (std::getenv("HTTP_COOKIE"))			variables["HTTP_COOKIE"]		=	std::make_pair(std::getenv("HTTP_COOKIE"),			"El contenido de la cookie del cliente");
 		if (std::getenv("PATH_INFO"))			variables["PATH_INFO"]			=	std::make_pair(std::getenv("PATH_INFO"),			"Cualquier información adicional después del nombre del script en la URL");
 		if (std::getenv("PATH_TRANSLATED"))		variables["PATH_TRANSLATED"]	=	std::make_pair(std::getenv("PATH_TRANSLATED"),		"La ruta completa en el sistema de archivos del recurso solicitado");
 		if (std::getenv("QUERY_STRING"))		variables["QUERY_STRING"]		=	std::make_pair(std::getenv("QUERY_STRING"),			"Es la cadena de consulta (query string), que contiene los parámetros enviados después de ?");

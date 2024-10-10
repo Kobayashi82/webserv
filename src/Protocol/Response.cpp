@@ -574,6 +574,7 @@
 				cgi_vars.push_back("HTTP_HOST=" + event->header_map["$server_name"]);
 				cgi_vars.push_back("HTTP_REFERER=" + event->header_map["Referer"]);
 				cgi_vars.push_back("HTTP_USER_AGENT=" + event->header_map["User-Agent"]);
+				cgi_vars.push_back("HTTP_COOKIE=" + event->header_map["$http_cookie"]);
 
 				cgi_vars.push_back("PATH_INFO=" + event->response_map["Path-Info"]);
 				size_t pos = event->response_map["Path"].find_last_of('/');
