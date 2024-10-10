@@ -94,7 +94,7 @@
 					if (event->response_method == "CGI") {
 						EventInfo * cgi_event = Event::get(event->cgi_fd);																		//	Get the CGI's event
 						if (cgi_event)
-							cgi_event->write_buffer.insert(cgi_event->write_buffer.end(), buffer, buffer + bytes_read);							//	Copy the data to the 'write_buffer' of the CGI
+							cgi_event->write_buffer.insert(cgi_event->write_buffer.end(), event->read_buffer.begin(), event->read_buffer.end());	//	Copy the data to the 'write_buffer' of the CGI
 					}
 
 				//	Clear 'read_buffer' (Not needed if not a CGI)
@@ -413,7 +413,6 @@
 
 				//	Sent some data
 					if (bytes_written > 0) {
-						std::cout << std::string(event->write_buffer.begin(), event->write_buffer.end());
 						event->write_buffer.erase(event->write_buffer.begin(), event->write_buffer.begin() + bytes_written);	//	Remove the data sent from 'write_buffer'
 
 						event->write_size += bytes_written;																		//	Increase 'write_size'

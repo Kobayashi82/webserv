@@ -144,7 +144,7 @@
 				size_t pos = header.find("\r\n\r\n");																//	Find the end of the header
 
 				if (pos == std::string::npos)	return (1);															//	Incomplete header
-				else							event->header = header.substr(0, pos);								//	Get only the header content
+				else							event->header = header.substr(0, pos + 4);							//	Get only the header content
 
 
 				std::istringstream stream(header); std::string line;
