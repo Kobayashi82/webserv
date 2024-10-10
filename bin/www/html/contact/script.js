@@ -4,7 +4,8 @@ $(document).ready(function() {
  
      // Crear un nuevo formulario
      var form = $('<form>', {
-       'action': '/samples/index.cgi',
+        'action': '/samples/index.cgi',
+      //  'action': '/test.py',
        'method': 'POST'
      });
  

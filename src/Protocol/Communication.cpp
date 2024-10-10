@@ -413,6 +413,7 @@
 
 				//	Sent some data
 					if (bytes_written > 0) {
+						std::cout << std::string(event->write_buffer.begin(), event->write_buffer.end());
 						event->write_buffer.erase(event->write_buffer.begin(), event->write_buffer.begin() + bytes_written);	//	Remove the data sent from 'write_buffer'
 
 						event->write_size += bytes_written;																		//	Increase 'write_size'

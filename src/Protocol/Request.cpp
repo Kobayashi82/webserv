@@ -181,7 +181,7 @@
 									code = 302;
 								}
 								event->read_buffer.insert(event->read_buffer.begin(), status.begin(), status.end());
-								event->header_map["Code"] = code;
+								event->header_map["Code"] = Utils::ltos(code);
 								c_event->header_map["Code"] = event->header_map["Code"];
 								c_event->response_map["Code"] = event->header_map["Code"];
 								event->header_map["Code-Description"] = Settings::error_codes[code];
