@@ -1,0 +1,207 @@
+*, *::after, *::before {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: sans-serif;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px;
+  background: #0277BD;
+}
+.header .menu .hamburger {
+  border: none;
+  background: transparent;
+}
+@media (min-width: 1000px) {
+  .header .menu .hamburger {
+    display: none;
+  }
+}
+.header .menu .nav li {
+  color: #353554;
+  cursor: pointer;
+  position: relative;
+}
+.header .menu .nav li::after {
+  content: "";
+  display: block;
+  height: 1px;
+  margin-top: 1px;
+  width: 100%;
+  position: absolute;
+  background: #fff;
+  transform: scale(0);
+  transition: 0.3s;
+}
+.header .menu .nav li:hover::after {
+  transform: scale(1);
+}
+.header .menu .nav li.active {
+  color: #fff;
+}
+.header .menu .nav li.active::after {
+  transform: scale(1);
+}
+@media (min-width: 1000px) {
+  .header .menu .nav {
+    display: flex;
+  }
+  .header .menu .nav li {
+    list-style: none;
+  }
+  .header .menu .nav li:not(:first-child) {
+    margin-left: 1em;
+  }
+}
+@media (max-width: 1000px) {
+  .header .menu .nav.collapsed {
+    display: none;
+  }
+}
+.header .controls {
+  display: flex;
+  align-items: center;
+}
+.header .controls__item:not(:first-child) .icon {
+  margin-left: 2em;
+}
+.header .controls__item .text {
+  font-size: 0.8rem;
+}
+@media (max-width: 1000px) {
+  .header .controls__item .text {
+    display: none;
+  }
+}
+
+.title {
+  position: relative;
+  padding: 2em 4em;
+  background: #0274BA;
+}
+.title .text {
+  font-size: 2em;
+  font-weight: 600;
+  color: #fff;
+}
+.title .btn-flow {
+  position: absolute;
+  left: 1em;
+  top: calc(100% - 25px);
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #18FFFF;
+  border-radius: 50%;
+}
+
+.table-box .table {
+  width: 100%;
+  margin-top: 1rem;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  color: #666;
+}
+.table-box .table__head tr th:not(:first-child) {
+  padding-bottom: 1rem;
+  border-bottom: 1px solid grey;
+}
+.table-box .table tr {
+  z-index: -1;
+}
+.table-box .table tr th:nth-child(4),
+.table-box .table tr td:nth-child(4) {
+  width: 10rem;
+  text-align: right;
+  z-index: -1;
+}
+.table-box .table tr th:nth-child(5),
+.table-box .table tr td:nth-child(5) {
+  width: 2rem;
+  text-align: center;
+}
+.table-box .table tr th:nth-child(1),
+.table-box .table tr td:nth-child(1) {
+  width: 5rem;
+  text-align: center;
+}
+.table-box .table tr th:nth-child(3),
+.table-box .table tr td:nth-child(3) {
+  width: 7rem;
+  text-align: left;
+}
+.table-box .table tr th:nth-child(2),
+.table-box .table tr td:nth-child(2) {
+  text-align: left;
+}
+.table-box .table__body tr td {
+  padding: 1rem 0.2rem;
+}
+.table-box .table__body td:first-child {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  font-size: 1.4rem;
+}
+.table-box .table__body td:first-child::after {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: inline-block;
+  content: "";
+  width: 2em;
+  height: 2em;
+  background: #c8c8c8;
+  z-index: -2;
+  border-radius: 50%;
+}
+.table-box .table__body td:last-child {
+  position: relative;
+}
+.table-box .table__body td:last-child [data-behavior=file-settings] {
+  cursor: pointer;
+}
+.table-box .table__body td:last-child .file-menu {
+  position: absolute;
+  top: 1em;
+  right: 1.5em;
+  padding: 0;
+  z-index: 10;
+  background: #eee;
+  transition: 0.5s;
+}
+.table-box .table__body td:last-child .file-menu li {
+  list-style: none;
+  padding: 0.5em;
+  text-align: right;
+  border: 1px solid #ccc;
+  color: #000;
+  transition: 0.5s;
+  z-index: 20;
+}
+.table-box .table__body td:last-child .file-menu li:hover {
+  cursor: pointer;
+  background: #ccc;
+}
+.table-box .table__body td:last-child .file-menu.collapsed {
+  opacity: 0;
+}
+
+.file-icon.fa-folder {
+  color: #fff;
+}
+.file-icon.fa-file-excel {
+  color: #080;
+}
+.file-icon.fa-file-image {
+  color: #800;
+}

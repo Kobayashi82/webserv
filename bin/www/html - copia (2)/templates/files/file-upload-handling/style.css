@@ -1,0 +1,38 @@
+/* Create the look of a generic thumbnail */
+.thumbnail {
+  position:relative;
+  display:inline-block;
+  width:100px;
+  height:100px;
+  color:white;
+  background-color:rgba(0,0,0,0.4);
+  border-radius:5px;
+  border:3px solid white;
+  box-shadow:0 2px 5px 2px rgba(0,0,0,0.2);
+  cursor:pointer;
+  margin:0 0.5em;
+  
+  background-position:center;
+  background-size:cover;
+}
+
+
+
+/* This will hide the file input */
+.imagepicker input {
+  display:none;
+}
+/* This will add a floating plus symbol to an element */
+.imagepicker:before {
+  content:'+';
+  position:absolute;
+  font-size:3em;
+  vertical-align:middle;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+}
+/* This will hide the plus symbol behind the background of an element if the class "picked" is added to the element */
+.imagepicker.picked:before {
+  z-index:-1;
+}

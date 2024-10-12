@@ -301,8 +301,11 @@
 
 				closedir(dir);																						//	Close the directory
 
+				std::sort(directories.begin(), directories.end());
+				std::sort(files.begin(), files.end());
+
 				std::string body;																					//	Create the body of the response
-				add_style(event, body, dir_path, event->response_map["Root"]);												//	Add the column and style to the body
+				add_style(event, body, dir_path, event->response_map["Root"]);										//	Add the column and style to the body
 
 				for (std::vector<std::string>::iterator it = directories.begin(); it != directories.end(); ++it)	//	Add directories to the body
 					add_dir(event, body, dir_path, *it);
@@ -354,7 +357,7 @@
 		#pragma region Cache
 
 			int Protocol::file_cache(EventInfo * event, std::string & path) {
-				if (!event->no_cache || !Communication::cache.get_caching(path)) {													//	If cache is allowed
+				if (event->no_cache || !Communication::cache.get_caching(path)) {													//	If cache is allowed
 					try {
 						CacheInfo & fcache = Communication::cache.get(path);														//	Get the file from cache
 

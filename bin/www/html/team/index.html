@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8">
+  <title>Meet the team</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" /><link rel="stylesheet" href="./style.css">
+
+</head>
+<body>
+<!-- partial:index.partial.html -->
+<section>
+  <div class="container flow-content">
+    <h2 class="section-title">Meet the team</h2>
+    <ul role="list" class="grid">
+      <!-- VZURERA- -->
+      <li>
+        <article class="card" data-visible="false">
+          <div class="card__front flow-content">
+            <img class="card__img mx-auto" src="vzurera-.jpg" alt="vzurera-" />
+            <div class="flow-content" data-spacing="sm">
+              <p class="card__name">Victor Javier Zurera Del Valle</p>
+              <p class="card__position">Position</p>
+            </div>
+          </div>
+          <div class="card__back flow-content">
+            <p class="card__name">Victor Javier Zurera Del Valle</p>
+            <q>Description</q>
+            <ul role="list" class="card__social flex-group">
+              <li>
+                <a href="https://profile.intra.42.fr/users/vzurera-" target="_blank">
+                  <img src="42.png" alt="42" style="width: 24px; height: 16px; margin-top: 5px;">
+                </a>
+              </li>
+              <li>
+                <a href="https://github.com/Kobayashi82" target="_blank">
+                  <i class="fa-brands fa-github fa-xl" style="color: white;"></i>
+                </a>
+              </li>
+            </ul>
+          </div>
+          <footer class="card__footer">
+            <button data-card-controller class="card__toggle">
+              <i class="fa-solid fa-plus card__toggle-icon"></i>
+            </button>
+          </footer>
+        </article>
+      </li>
+      <!-- JMARTOS- -->
+      <li>
+        <article class="card" data-visible="false">
+          <div class="card__front flow-content">
+            <img class="card__img mx-auto" src="jmartos-.png" alt="jmartos-" />
+            <div class="flow-content" data-spacing="sm">
+              <p class="card__name">Juan Carlos Martos Vergara</p>
+              <p class="card__position">Position</p>
+            </div>
+          </div>
+          <div class="card__back flow-content">
+            <p class="card__name">Juan Carlos Martos Vergara</p>
+            <q>Description</q>
+            <ul role="list" class="card__social flex-group">
+              <li>
+                <a href="https://profile.intra.42.fr/users/jmartos-" target="_blank">
+                  <img src="42.png" alt="42" style="width: 24px; height: 16px; margin-top: 5px;">
+                </a>
+              </li>
+              <li>
+                <a href="https://github.com/BigKevlar" target="_blank">
+                  <i class="fa-brands fa-github fa-xl" style="color: white;"></i>
+                </a>
+              </li>
+            </ul>
+          </div>
+          <footer class="card__footer">
+            <button data-card-controller class="card__toggle">
+              <i class="fa-solid fa-plus card__toggle-icon"></i>
+            </button>
+          </footer>
+        </article>
+      </li>
+      <!-- AROSAS-J -->
+      <li>
+        <article class="card" data-visible="false">
+          <div class="card__front flow-content">
+            <img class="card__img mx-auto" src="arosas-j.png" alt="arosas-j" />
+            <div class="flow-content" data-spacing="sm">
+              <p class="card__name">Alejandro Rosas Jaime</p>
+              <p class="card__position">Position</p>
+            </div>
+          </div>
+          <div class="card__back flow-content">
+            <p class="card__name">Alejandro Rosas Jaime</p>
+            <q>Description</q>
+            <ul role="list" class="card__social flex-group">
+              <li>
+                <a href="https://profile.intra.42.fr/users/arosas-j" target="_blank">
+                  <img src="42.png" alt="42" style="width: 24px; height: 16px; margin-top: 5px;">
+                </a>
+              </li>
+              <li>
+                <a href="https://github.com/arosas-j" target="_blank">
+                  <i class="fa-brands fa-github fa-xl" style="color: white;"></i>
+                </a>
+              </li>
+            </ul>
+          </div>
+          <footer class="card__footer">
+            <button data-card-controller class="card__toggle">
+              <i class="fa-solid fa-plus card__toggle-icon"></i>
+            </button>
+          </footer>
+        </article>
+      </li>
+    </ul>
+  </div>
+</section>
+
+  <script>
+    const cardControllers = document.querySelectorAll("[data-card-controller]");
+
+    cardControllers.forEach(controller => {
+      controller.addEventListener("click", (e) => {
+        const card = e.currentTarget.parentElement.parentElement;
+        const isVisible = card.dataset.visible;
+
+        if (isVisible === "false") {
+          card.setAttribute("data-visible", true);
+        } else {
+          card.setAttribute("data-visible", false);
+        }
+      })
+    })
+  </script>
+
+</body>
+</html>

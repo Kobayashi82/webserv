@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8">
+  <title>CodePen - Custom Animated Multi Steps Form</title>
+  <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-beta/css/bootstrap.min.css'>
+<link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Merriweather:300,300i,400,400i,700,700i'>
+<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.5.2/animate.min.css'><link rel="stylesheet" href="./style.css">
+
+</head>
+<body>
+<!-- partial:index.partial.html -->
+<div class="form-wizard">  
+  <div class="steps">
+    <ul>
+      <li>
+        <span>1</span>
+        Create Account
+      </li>
+      <li>
+        <span>2</span> 
+        Personal Info
+      </li>
+      <li>
+        <span>3</span>
+        Social Info
+      </li>
+        <li>
+        <span>4</span>
+        Finish
+      </li>
+    </ul>
+  </div>
+  <div class="myContainer">
+    <div class="form-container animated">
+      <h2 class="text-center form-title">Create Account</h2>
+      <form>
+        <div class="form-group">
+          <input type="text" placeholder="Username">
+        </div>
+        <div class="form-group">
+          <input type="text" placeholder="Email Address">
+        </div>
+        <div class="form-group">
+          <input type="password" placeholder="Password">
+        </div>
+        <div class="form-group text-center mar-b-0">
+          <input type="button" value="NEXT" class="btn btn-primary next">        
+        </div>
+      </form>
+    </div>
+    <div class="form-container animated">
+      <h2 class="text-center form-title">Personal Info</h2>
+      <form>
+        <div class="form-group">
+          <input type="text" placeholder="First Name">
+        </div>
+        <div class="form-group">
+          <input type="text" placeholder="Last Name">
+        </div>
+        <div class="form-group">
+          <input type="text" placeholder="Phone No.">
+        </div>
+        <div class="form-group">
+          <textarea placeholder="Address"></textarea>
+        </div>
+        <div class="form-group text-center mar-b-0">
+          <input type="button" value="BACK" class="btn btn-default back">        
+          <input type="button" value="NEXT" class="btn btn-primary next">        
+        </div>
+      </form>
+    </div>
+    <div class="form-container animated">
+      <h2 class="text-center form-title">Social Media Info</h2>
+      <form>
+        <div class="form-group">
+          <input type="text" placeholder="Facebook">
+        </div>
+        <div class="form-group">
+          <input type="text" placeholder="Twitter">
+        </div>
+        <div class="form-group">
+          <input type="text" placeholder="Instagram">
+        </div>
+        <div class="form-group text-center mar-b-0">
+          <input type="button" value="BACK" class="btn btn-default back">        
+          <input type="button" value="NEXT" class="btn btn-primary next">        
+        </div>
+      </form>
+    </div>
+    <div class="form-container animated">
+      <h2 class="text-center form-title">Finish</h2>
+      <form>
+        <div class="form-group">
+          <h3 class="text-center">Thanks for Stay Tuned!</h3>
+          <p class="text-center">Made by <a href="https://codepen.io/HanumanSahay/" target="_blank">@Hanuman Sahay</a></p>
+        </div>
+        <div class="form-group text-center mar-b-0"> 
+          <input type="button" value="BACK" class="btn btn-default back"> 
+          <input type="submit" value="SUBMIT" class="btn btn-primary submit">         
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<!-- partial -->
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script><script  src="./script.js"></script>
+
+</body>
+</html>
