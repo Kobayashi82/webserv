@@ -662,11 +662,10 @@
 			void Protocol::response_cgi(EventInfo * event) {
 				if (!event) return;
 
-
 				event->cgi_fd = -1;
 				int write_fd = -1;
 			//	Create the event to write to the CGI
-				if (event->header_map["Content-Length"].empty() == false || event->read_buffer.size() - event->header.size() > 0) {
+				//if (event->header_map["Content-Length"].empty() == false || event->read_buffer.size() - event->header.size() > 0) {
 					int write_pipe[2];
 					if (pipe(write_pipe) == -1) { event->client->remove(); return; }						//	Create the pipe for CGI (read from it)
 					Utils::NonBlocking_FD(write_pipe[0]);													//	Set the read end of the pipe as non-blocking
@@ -678,7 +677,7 @@
 					event_write_cgi.pipe[1] = -1;
 					event->cgi_fd = event_write_cgi.fd;
 					Event::events[event_write_cgi.fd] = event_write_cgi;									//	Add the CGI event to the event's list
-				}
+				//}
 
 			//	Create the event to read from the CGI
 				int read_pipe[2];
