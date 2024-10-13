@@ -206,7 +206,7 @@
 #pragma region Non-Blocking FD
 
 	void Utils::NonBlocking_FD(int fd) {
-		//return ;																							//	Disabled for now
+		return ;																							//	Disabled for now
 		int flags = fcntl(fd, F_GETFL, 0);																	//	Get the current flags
 		if (flags == -1) return;
 

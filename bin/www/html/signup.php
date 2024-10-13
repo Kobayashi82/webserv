@@ -221,4 +221,3 @@ document.getElementById('signupForm').addEventListener('submit', function(e) {
 </script>
 </body>
 </html>
-

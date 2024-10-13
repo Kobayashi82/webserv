@@ -192,7 +192,7 @@
 							size_t pos = event->header.find("\r\n\r\n");											//	Find the end of the header
 
 							if (pos == std::string::npos)	return (1);												//	Incomplete header
-							else							event->header = event->header.substr(0, pos);			//	Get only the header content
+							else							event->header = event->header.substr(0, pos + 4);		//	Get only the header content
 							c_event->redirect_status = Utils::sstol(event->header_map["Code"]);
 							if (check_code(c_event)) return (4);
 						} else return (2);																			//	There are errors in the first line

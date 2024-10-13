@@ -112,3 +112,99 @@ textarea:focus {
     margin-top: 10px;
     font-size: 14px;
 }
+
+header {
+	position: relative;
+	width: calc(100% + 5px);
+	height: 200px; /* Puedes ajustar la altura que desees */
+	overflow: hidden; /* Esto asegura que la imagen no se salga del contenedor */
+	margin-left: -10px;
+	margin-top: -10px;
+  }
+  
+  .banner {
+	width: 100%;
+	height: 100%;
+	object-fit: cover; /* La imagen se escala para cubrir todo el área */
+  }
+  
+  .logout-link {
+	position: absolute;
+	top: 10px;
+	right: 20px;
+	color: white;
+	background-color: rgba(0, 0, 0, 0.5);
+	padding: 5px 10px;
+	border-radius: 5px;
+	text-decoration: none;
+  }
+  
+  .logout-link:hover {
+	background-color: rgba(0, 0, 0, 0.8);
+  }
+
+/* Separador bonito */
+.separator {
+	border: 0;
+	height: 2px;
+	background: linear-gradient(to right, #ff7e5f, #feb47b);
+	margin: 20px 0;
+	margin-left: -10px; /* Margen negativo para ajustar la izquierda */
+	margin-top: 0px; /* Margen negativo para ajustar arriba */
+  }
+  
+  /* Cuadro de archivos */
+  .file-box {
+	margin: 20px 0; /* Ajustamos el margen solo arriba y abajo */
+	padding: 20px;
+	width: 60%; /* Máximo porcentaje de la ventana */
+	min-width: 300px; /* Mínimo tamaño fijo */
+	max-width: 40%; /* Máximo tamaño como porcentaje */
+	border: 2px solid #ddd;
+	border-radius: 10px;
+	background-color: #f9f9f9;
+	float: left; /* Pega el cuadro a la izquierda */
+  }
+  
+  /* Tabla de archivos */
+  .file-table {
+	width: 100%;
+	border-collapse: collapse;
+  }
+  
+  .file-table th, .file-table td {
+	padding: 10px;
+	border-bottom: 1px solid #ddd;
+	text-align: left;
+  }
+  
+  .file-table th {
+	background-color: #f2f2f2;
+  }
+  
+  /* Estilos para el progreso de subida */
+  #progress-container {
+	margin-top: 10px;
+	display: none; /* Oculto por defecto */
+  }
+  
+  progress {
+	width: 100%;
+	height: 20px;
+	margin-top: 10px;
+  }
+  
+  #cancel-upload-btn {
+	margin-top: 10px;
+	background-color: #ff4d4d;
+	color: white;
+	padding: 5px 10px;
+	border: none;
+	border-radius: 5px;
+	cursor: pointer;
+  }
+  
+  #cancel-upload-btn:hover {
+	background-color: #ff1a1a;
+  }
+  

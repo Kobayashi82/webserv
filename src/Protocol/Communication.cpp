@@ -28,8 +28,8 @@
 	size_t				Communication::read_bytes;														//	Total number of bytes downloaded by the server
 	size_t				Communication::write_bytes;														//	Total number of bytes uploaded by the server
 
-	const size_t		Communication::CHUNK_SIZE = 4096;												//	Size of the buffer for read and write operations
-	const size_t		Communication::HEADER_MAXSIZE = 2048;											//	Maximum size allowed for the header (8 KB by default)
+	const size_t		Communication::CHUNK_SIZE = 8192;												//	Size of the buffer for read and write operations
+	const size_t		Communication::HEADER_MAXSIZE = 8192;											//	Maximum size allowed for the header (8 KB by default)
 
 #pragma endregion
 
@@ -54,6 +54,7 @@
 					event->client->update_last_activity();																						//	Reset client timeout
 
 					event->read_buffer.insert(event->read_buffer.end(), buffer, buffer + bytes_read);											//	Store the data read into 'read_buffer'
+					//std::cout << std::string(event->read_buffer.end() - bytes_read, event->read_buffer.end());
 					Thread::inc_size_t(Display::mutex, read_bytes, bytes_read);																	//	Increase total bytes read
 
 				//	Needs to get the header
@@ -291,6 +292,7 @@
 
 					event->read_buffer.insert(event->read_buffer.end(), buffer, buffer + bytes_read);							//	Store the data read into 'read_buffer'
 					event->read_size += bytes_read;																				//	Increase 'read_size'
+					// std::cout << std::string(event->read_buffer.begin(), event->read_buffer.end());
 
 					if (event->read_info == 1 || event->read_info == 2)
 						c_event->response_size += event->read_size - event->header.size();										//	Increase 'read_size' only if 'read_info' equal to 1 or 2
@@ -413,9 +415,10 @@
 
 				//	Sent some data
 					if (bytes_written > 0) {
+						//std::cout << std::string(event->write_buffer.begin(), event->write_buffer.begin() + bytes_written);
 						event->write_buffer.erase(event->write_buffer.begin(), event->write_buffer.begin() + bytes_written);	//	Remove the data sent from 'write_buffer'
 
-						event->write_size += bytes_written;																		//	Increase 'write_size'
+					event->write_size += bytes_written;																			//	Increase 'write_size'
 
 				//	No writing if 'write_buffer' is empty, so this must be an error
 					} else if (bytes_written == 0) { Event::remove(event->fd); return;											//	Remove the event
