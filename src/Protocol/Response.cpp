@@ -546,7 +546,7 @@
 
 				// if (Epoll::set(event->fd, !(event->header_map["Write-Only"] == "true"), true) == -1)					//	Set EPOLL to monitor write events for the client
 				// 	event->client->remove();
-				if (Epoll::add(event_data.fd, true, false) == -1) {												//	Set EPOLL to monitor read events for DATA
+				if (Epoll::add(event_data.fd, true, false) == -1) {														//	Set EPOLL to monitor read events for DATA
 					event->read_maxsize = 0;																			//	If set EPOLL fails, reset the flag,
 					event->write_buffer.clear();																		//	clear writte_buffer
 					Event::remove(event_data.fd);																		//	and remove the DATA event

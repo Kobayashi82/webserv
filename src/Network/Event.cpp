@@ -177,8 +177,8 @@
 					EventInfo * event = get(current->first);
 					if (!event) continue;
 					EventInfo * c_event = get(event->client->fd);
-					remove(current->first);
 					if (!c_event) continue;
+					remove(current->first);
 					if (c_event->pid != 0) { kill(c_event->pid, SIGKILL); c_event->pid = 0; }
 					Protocol::check_code(c_event, true, "408");
 				} else it++;

@@ -215,7 +215,6 @@ function deleteFile(fileName) {
     // Botón para cancelar la subida
     cancelButton.addEventListener('click', function() {
       xhr.abort(); // Cancela la subida
-      alert('Subida cancelada');
       resetUploadUI();
     });
 

@@ -78,14 +78,17 @@
 					} else event->read_size += bytes_read;																						//	Increase 'read_size'
 
 				//	If 'read_size' is greater than 'body_maxsize'
-					if (event->body_maxsize > 0 && event->read_size >= event->body_maxsize) {
+					if (event->body_maxsize > 0 && (event->read_size >= event->body_maxsize + event->header.size()
+						|| static_cast<size_t>(Utils::sstol(event->header_map["Content-Length"])) >= event->body_maxsize)) {
 						event->header_map["Connection"] = "close";																				//	Set 'Connection' to close
 						event->header_map["Write-Only"] = "true";																				//	Don't read from the client anymore
 						Epoll::set(event->fd, false, false);																					//	Close read and write monitor for EPOLL
+						event->read_buffer.clear();
+						event->write_buffer.clear();
 						if (event->response_method == "CGI") {
 							if (event->pid != 0) { kill(event->pid, SIGKILL); event->pid = 0; }
-							Event::remove(event->cgi_fd);		event->cgi_fd = -1;
 							Event::remove(event->cgi_read_fd);	event->cgi_read_fd = -1;
+							Event::remove(event->cgi_fd);		event->cgi_fd = -1;
 						}
 						Protocol::check_code(event, true, "413");																				//	Payload Too Large
 						return (1);
@@ -348,17 +351,17 @@
 						Event::remove(event->fd); return (1);																	//	Remove the event
 					}
 
-				//	All data has been read (chunked)
-					if (event->read_info == 2) {
-						static std::string last_data;
-						if (last_data.size() > 7) last_data = last_data.substr(last_data.size() - 7);
-						last_data += std::string(event->read_buffer.begin(), event->read_buffer.end());							//	Keep the last 7 bytes of data
+				// //	All data has been read (chunked)
+				// 	if (event->read_info == 2) {
+				// 		static std::string last_data;
+				// 		if (last_data.size() > 7) last_data = last_data.substr(last_data.size() - 7);
+				// 		last_data += std::string(event->read_buffer.begin(), event->read_buffer.end());							//	Keep the last 7 bytes of data
 						
-						if (last_data.substr(std::min(last_data.size() - 7, last_data.size())) == "\r\n0\r\n\r\n") {			//	If last 7 bytes are the end of the chunks
-							c_event->write_info = 3;																			//	Set a flag (no more data)
-							Event::remove(event->fd); return (1);																//	Remove the event
-						}
-					}
+				// 		if (last_data.substr(std::min(last_data.size() - 7, last_data.size())) == "\r\n0\r\n\r\n") {			//	If last 7 bytes are the end of the chunks
+				// 			c_event->write_info = 3;																			//	Set a flag (no more data)
+				// 			Event::remove(event->fd); return (1);																//	Remove the event
+				// 		}
+				// 	}
 
 				//	All data has been read (unkown content length)
 					if (static_cast<size_t>(bytes_read) < CHUNK_SIZE && (event->read_info == 1 || event->header == "")) {

@@ -910,11 +910,11 @@
 			if (body_maxsize.empty())					body_maxsize = Settings::global.get("body_maxsize");									//	Get 'body_maxsize'
 			if (!body_maxsize.empty()) {
 				event->body_maxsize   =	Utils::sstol(body_maxsize);																			//	Get 'body_maxsize' in numeric format
-				size_t content_length =	Utils::sstol(event->header_map["Content-Length"]);													//	Get 'Content-Length' in numeric format
-				if (event->body_maxsize > 0 && (content_length >= event->body_maxsize || event->read_buffer.size() >= event->body_maxsize)) {	//	If 'Content-Length' is greater than 'body_maxsize'...
-					error_page(event, "413", event->VServ, event->Loc);																		//	Payload too large
-					event->response_method = event->response_map["Method"];
-				}
+				//size_t content_length =	Utils::sstol(event->header_map["Content-Length"]);													//	Get 'Content-Length' in numeric format
+				// if (event->body_maxsize > 0 && (content_length >= event->body_maxsize || event->read_buffer.size() >= event->body_maxsize)) {	//	If 'Content-Length' is greater than 'body_maxsize'...
+				// 	error_page(event, "413", event->VServ, event->Loc);																		//	Payload too large
+				// 	event->response_method = event->response_map["Method"];
+				// }
 			}
 
 		//	Response method is a file, check if must be cached
