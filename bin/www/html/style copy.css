@@ -167,13 +167,6 @@ header {
 	float: left; /* Pega el cuadro a la izquierda */
   }
   
-  .file-table {
-	flex-grow: 1; /* Hace que la tabla ocupe el espacio restante */
-	overflow-y: auto; /* Scroll si la tabla es muy grande */
-	width: 100%;
-	margin-bottom: 20px; /* Espacio entre la tabla y los botones */
-  }
-  
   /* Tabla de archivos */
   .file-table {
 	width: 100%;

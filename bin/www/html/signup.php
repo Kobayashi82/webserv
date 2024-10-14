@@ -145,7 +145,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
       <button type="submit" class="btn btn-primary btn-block btn-large">Create Account</button>
   </form>
   <p style="text-align: center; margin-top: 15px; font-size: 12px; color: gray;">
-      Already have an account? <a href="/login.html" style="color: yellow; margin-left: 5px;">Log In</a>
+      Already have an account? <a href="/login.php" style="color: yellow; margin-left: 5px;">Log In</a>
   </p>
   <p id="error-message"></p>
 </div>

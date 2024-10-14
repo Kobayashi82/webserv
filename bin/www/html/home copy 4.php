@@ -72,7 +72,7 @@ $userDirectory = 'users/' . $username;
 // Verifica si la carpeta del usuario existe, si no, crea la carpeta
 if (!is_dir($userDirectory)) {
     if (!mkdir($userDirectory, 0777, true)) {
-        echo "Error al crear la carpeta del usuario";
+        echo "Error al crear la carpeta del usuario.";
         exit();
     }
 }
@@ -82,7 +82,9 @@ $files = scandir($userDirectory);
 $filesList = [];
 foreach ($files as $file) {
     // Ignora las carpetas '.' y '..'
-    if ($file == '.' || $file == '..') continue;
+    if ($file == '.' || $file == '..') {
+        continue;
+    }
 
     // Verifica si es un archivo (no una carpeta)
     if (is_file($userDirectory . '/' . $file)) {
@@ -94,7 +96,6 @@ foreach ($files as $file) {
     }
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -153,10 +154,6 @@ foreach ($files as $file) {
 
   <!-- Cuadro para la lista de archivos -->
   <div class="file-box">
-     <!-- Título centrado sobre la tabla -->
-  <div style="text-align: center; margin-bottom: 10px;">
-    <label class="file-box-title">Mis Archivos</label>
-  </div>
     <table class="file-table">
       <thead>
         <tr>
@@ -171,6 +168,7 @@ foreach ($files as $file) {
             <td><?php echo htmlspecialchars($file['name']); ?></td>
             <td><?php echo $file['size']; ?></td>
             <td>
+              <!-- Sustituir los botones por iconos -->
               <i class="fas fa-download action-icons" onclick="downloadFile('<?php echo $file['name']; ?>')" title="Descargar"></i>
               <i class="fas fa-trash-alt action-icons" onclick="deleteFile('<?php echo $file['name']; ?>')" title="Eliminar"></i>
             </td>
@@ -203,9 +201,12 @@ foreach ($files as $file) {
     xhr.onload = function() {
         const response = JSON.parse(xhr.responseText);
         if (response.status === 'success') {
+            // Recarga la página después de eliminar el archivo
             location.reload();  // Recarga la página para reflejar los cambios
         } else {
-            alert('Error al eliminar el archivo: ' + response.message);  // Muestra el mensaje de error solo si la eliminación falla
+            // Muestra el mensaje de error solo si la eliminación falla
+            alert('Error al eliminar el archivo: ' + response.message);
+            location.reload();
         }
     };
 
@@ -283,6 +284,7 @@ foreach ($files as $file) {
       xhr.abort();  // Aborta la solicitud actual
       location.reload();
       progressContainer.style.display = 'none';
+      // Habilitar los controles de archivo después de cancelar
       fileInputElement.disabled = false;
       uploadButton.disabled = false;
     };

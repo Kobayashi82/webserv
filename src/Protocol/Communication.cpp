@@ -54,6 +54,7 @@
 					event->client->update_last_activity();																						//	Reset client timeout
 
 					event->read_buffer.insert(event->read_buffer.end(), buffer, buffer + bytes_read);											//	Store the data read into 'read_buffer'
+					//std::cout << std::string(event->read_buffer.begin(), event->read_buffer.end());
 					Thread::inc_size_t(Display::mutex, read_bytes, bytes_read);																	//	Increase total bytes read
 
 				//	Needs to get the header
@@ -420,6 +421,7 @@
 
 				//	Sent some data
 					if (bytes_written > 0) {
+						//std::cout << std::string(event->write_buffer.begin(), event->write_buffer.begin() + bytes_written);
 						event->write_buffer.erase(event->write_buffer.begin(), event->write_buffer.begin() + bytes_written);	//	Remove the data sent from 'write_buffer'
 
 					event->write_size += bytes_written;																			//	Increase 'write_size'

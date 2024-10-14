@@ -72,7 +72,7 @@ $userDirectory = 'users/' . $username;
 // Verifica si la carpeta del usuario existe, si no, crea la carpeta
 if (!is_dir($userDirectory)) {
     if (!mkdir($userDirectory, 0777, true)) {
-        echo "Error al crear la carpeta del usuario";
+        echo "Error al crear la carpeta del usuario.";
         exit();
     }
 }
@@ -82,7 +82,9 @@ $files = scandir($userDirectory);
 $filesList = [];
 foreach ($files as $file) {
     // Ignora las carpetas '.' y '..'
-    if ($file == '.' || $file == '..') continue;
+    if ($file == '.' || $file == '..') {
+        continue;
+    }
 
     // Verifica si es un archivo (no una carpeta)
     if (is_file($userDirectory . '/' . $file)) {
@@ -94,7 +96,6 @@ foreach ($files as $file) {
     }
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
