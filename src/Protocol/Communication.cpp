@@ -409,6 +409,8 @@
 				if (!event->write_buffer.empty()) {
 
 					Event::update_last_activity(event->fd);																		//	Reset event timeout
+					EventInfo * c_event = Event::get(event->client->fd);														//	Get the client's event
+					if (c_event) Event::update_last_activity(c_event->cgi_read_fd);
 
 					size_t buffer_size = event->write_buffer.size();
 					size_t chunk = CHUNK_SIZE;

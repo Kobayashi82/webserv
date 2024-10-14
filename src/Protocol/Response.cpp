@@ -690,6 +690,7 @@
 				event_read_cgi.pipe[1] = read_pipe[1];
 
 				Event::events[event_read_cgi.fd] = event_read_cgi;											//	Add the CGI event to the event's list
+				event->cgi_read_fd = event_read_cgi.fd;
 
 			//	Set EPOLL
 				event->write_info = 0;

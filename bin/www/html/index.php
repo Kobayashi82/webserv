@@ -44,7 +44,7 @@ if (isset($_COOKIE['user_session_cookie'])) {
 
 // Si ya está logueado, redirigir
 if (isset($_SESSION['user_session'])) {
-    header('Location: /contact.php');
+    header('Location: /home.php');
     exit();
 } else {
     // Si no existe la cookie, redirigir al login

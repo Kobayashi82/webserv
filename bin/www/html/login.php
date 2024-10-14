@@ -3,8 +3,9 @@ session_start();
 
 // Función para verificar si las credenciales almacenadas en la cookie son válidas
 function checkUserSession($username) {
+    
     // Intentar abrir el archivo de usuarios
-    $userdata = @file_get_contents('userdata');
+    $userdata = @file_get_contents('users/userdata');
     if ($userdata === false) {
         return false;
     }
@@ -44,7 +45,7 @@ if (isset($_COOKIE['user_session_cookie'])) {
 
 // Si ya está logueado, redirigir
 if (isset($_SESSION['user_session'])) {
-    header('Location: /contact.php');
+    header('Location: /home.php');
     exit();
 }
 
@@ -58,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $password = isset($postData['p']) ? $postData['p'] : '';
 
     // Verificar si el archivo userdata existe
-    $userdata = @file_get_contents('userdata');
+    $userdata = @file_get_contents('users/userdata');
     if ($userdata === false) {
         echo json_encode(['success' => false, 'message' => 'User data file not found']);
         exit();
@@ -99,6 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     exit();
 }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -177,7 +179,7 @@ document.getElementById('loginForm').addEventListener('submit', function(e) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            window.location.href = '/contact.php'; // Redirige a contact.php en caso de éxito
+            window.location.href = '/home.php'; // Redirige a home.php en caso de éxito
         } else {
             const errorMessage = document.getElementById('error-message');
             errorMessage.textContent = data.message; // Muestra el mensaje de error justo debajo del botón

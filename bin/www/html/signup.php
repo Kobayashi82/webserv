@@ -3,8 +3,11 @@ session_start();
 
 // Función para verificar si las credenciales almacenadas en el archivo userdata son válidas
 function checkUserSession($username) {
+    // Ubicación del archivo userdata
+    $userdataFile = 'users/userdata';
+    
     // Intentar abrir el archivo de usuarios
-    $userdata = @file_get_contents('userdata');
+    $userdata = @file_get_contents($userdataFile);
     if ($userdata === false) {
         return false;
     }
@@ -44,7 +47,7 @@ if (isset($_COOKIE['user_session_cookie'])) {
 
 // Si ya está logueado, redirigir
 if (isset($_SESSION['user_session'])) {
-    header('Location: /contact.html');
+    header('Location: /home.php');
     exit();
 }
 
@@ -60,11 +63,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $password = isset($postData['password']) ? $postData['password'] : '';
     $confirm_password = isset($postData['confirm_password']) ? $postData['confirm_password'] : '';
 
+    // Definir la ruta del archivo userdata
+    $userFolder = 'users';
+    $userdataFile = $userFolder . '/userdata';
+    
+    // Verificar si la carpeta "users" existe, si no, crearla
+    if (!is_dir($userFolder)) {
+        if (!mkdir($userFolder, 0777, true)) {
+            echo json_encode(['success' => false, 'message' => 'Unable to create users directory']);
+            exit();
+        }
+    }
+
     // Verificar si el archivo userdata existe
-    $userdata = @file_get_contents('userdata');
+    $userdata = @file_get_contents($userdataFile);
     if ($userdata === false) {
         // Si el archivo no existe, lo creamos y abrimos en modo escritura
-        $file = fopen('userdata', 'w');
+        $file = fopen($userdataFile, 'w');
         if ($file === false) {
             echo json_encode(['success' => false, 'message' => 'Unable to create userdata file']);
             exit();
@@ -89,9 +104,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
     }
 
+    // Verificar si las contraseñas coinciden
+    if ($password !== $confirm_password) {
+        echo json_encode(['success' => false, 'message' => 'Passwords do not match']);
+        exit();
+    }
+
     // Si el usuario no existe, añadir el nuevo usuario al archivo
     $newUser = $email . ';' . $password . "\n";
-    $file = fopen('userdata', 'a');
+    $file = fopen($userdataFile, 'a');
     if ($file === false) {
         echo json_encode(['success' => false, 'message' => 'Unable to open userdata file']);
         exit();
@@ -102,6 +123,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     echo json_encode(['success' => true, 'message' => 'User registered successfully']);
     exit();
 }
+
 ?>
 
 <!DOCTYPE html>
