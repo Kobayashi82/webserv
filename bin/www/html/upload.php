@@ -1,43 +1,16 @@
 <?php
-session_start();
+session_start();																							//	Inicia una nueva sesión o reanuda la sesión existente
 
-// Función para verificar si las credenciales almacenadas en la cookie son válidas
-function checkUserSession($username) {
-    $userdata = @file_get_contents('userdata');
-    if ($userdata === false) {
-        return false;
-    }
+include('functions.php');																					//	Incluye el archivo de funciones
 
-    $lines = explode("\n", $userdata);
-    foreach ($lines as $line) {
-        $line = trim($line);
-        if ($line === '') {
-            continue;
-        }
-        list($storedUser, $storedPass) = explode(';', $line);
-
-        if ($storedUser == $username) {
-            return true;
-        }
-    }
-    return false;
-}
-
-if (isset($_COOKIE['user_session_cookie'])) {
-    $username = $_COOKIE['user_session_cookie'];
-
-    if (checkUserSession($username)) {
-        $_SESSION['user_session'] = $username;
-    } else {
-        setcookie('user_session_cookie', '', time() - 3600, "/");
-        unset($_COOKIE['user_session_cookie']);
-    }
-}
+UserSession();																								//	Verifica si la sesión del usuario ya está activa a través de la cookie y la inicia si es válida
 
 if (!isset($_SESSION['user_session'])) {
-    header('Location: login.php');
+    header('Location: login.php');																			//	Si no existe la cookie, redirigir al 'login.php'
     exit();
 }
+
+
 
 $username = strtolower($_SESSION['user_session']);
 $userDirectory = __DIR__ . '/users/' . $username;

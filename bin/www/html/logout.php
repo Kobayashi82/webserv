@@ -1,13 +1,10 @@
 <?php
-session_start();
+session_start();																							//	Inicia una nueva sesión o reanuda la sesión existente
 
-// Destruir la sesión y eliminar todas las variables de sesión
-session_unset(); // Elimina todas las variables de sesión
-session_destroy(); // Destruye la sesión
+session_unset();																							//	Eliminar todas las variables de sesión
+session_destroy();																							//	Destruir la sesión
 
-// Eliminar las cookies de sesión si están configuradas
-setcookie('user_session_cookie', '', time() - 3600, "/"); // Eliminar la cookie de sesión
+setcookie('user_session_cookie', '', time() - 3600, "/");													//	Eliminar la cookie de sesión
 
-// Redirigir al login
-header('Location: /login.php');
-exit();
+header('Location: /login.php');																				//	Redirigir al login
+?>

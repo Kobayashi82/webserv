@@ -1,88 +1,40 @@
 <?php
-session_start();
+session_start();																							//	Inicia una nueva sesión o reanuda la sesión existente
 
-// Función para verificar si las credenciales almacenadas en la cookie son válidas
-function checkUserSession($username) {
-    // Intentar abrir el archivo de usuarios
-    $userdata = @file_get_contents('userdata');
-    if ($userdata === false) {
-        return false;
-    }
+include('functions.php');																					//	Incluye el archivo de funciones
 
-    // Procesar las líneas del archivo de usuarios
-    $lines = explode("\n", $userdata);
-    foreach ($lines as $line) {
-        $line = trim($line); // Eliminar espacios y saltos de línea innecesarios
-        if ($line === '') {
-            continue; // Ignorar líneas vacías
-        }
+UserSession();																								//	Verifica si la sesión del usuario ya está activa a través de la cookie y la inicia si es válida
 
-        list($storedUser, $storedPass) = explode(';', $line);
-
-        // Comprobar si el usuario coincide
-        if ($storedUser == $username) {
-            return true;
-        }
-    }
-    return false;
-}
-
-// Verificar si la cookie de sesión existe y tiene un valor
-if (isset($_COOKIE['user_session_cookie'])) {
-    $username = $_COOKIE['user_session_cookie'];
-
-    // Verificar si el nombre de usuario en la cookie es válido
-    if (checkUserSession($username)) {
-        // Iniciar sesión automáticamente si la cookie es válida
-        $_SESSION['user_session'] = $username;
-    } else {
-        // Si la cookie no es válida, eliminarla
-        setcookie('user_session_cookie', '', time() - 3600, "/");
-        unset($_COOKIE['user_session_cookie']);
-    }
-}
-
-// Verifica si el usuario está logueado (por sesión o cookie)
 if (!isset($_SESSION['user_session'])) {
-    header('Location: login.php');
+    header('Location: login.php');																			//	Si no existe la cookie, redirigir al 'login.php'
     exit();
 }
 
-// Obtiene el nombre de usuario y convierte a minúsculas
-$username = strtolower($_SESSION['user_session']);
+$email = strtolower($_SESSION['user_session']);																//	Obtiene el 'email' del usuario y lo convierte a minúsculas
+$userDirectory = 'users/' . $email;																			//	Define el directorio del usuario
 
-// Define el directorio del usuario en minúsculas
-$userDirectory = 'users/' . $username;
+$file = $_GET['file'] ?? '';																				//	Obtiene el archivo a eliminar desde la URL
+$filePath = $userDirectory . '/' . $file;																	//	Obtiene el la ruta completa al archivo
 
-// Verifica que el archivo existe en la carpeta del usuario
-$file = $_GET['file'] ?? '';
-$filePath = $userDirectory . '/' . $file;
+if (is_file($filePath)) {																					//	Verifica si el archivo existe y es un archivo válido
+    header('Content-Type: application/octet-stream');														//	Establece el tipo de archivo
+    header('Content-Disposition: attachment; filename="' . basename($file) . '"');							//	Indica que el archivo debe descargarse y define su nombre en la descarga
+    header('Content-Length: ' . filesize($filePath));														//	Establece el tamaño del archivo
+    header('Cache-Control: no-cache, no-store, must-revalidate');											//	No usar la caché del cliente
 
-if (is_file($filePath)) {
-    // Evita cualquier salida antes de las cabeceras
-    ob_start();  // Inicia el búfer de salida
+    ini_set('memory_limit', '1024M');																		//	Aumenta a 1024 MB el límite de memoria de PHP
 
-    // Establece las cabeceras para forzar la descarga del archivo
-    header('Content-Type: application/octet-stream');
-    header('Content-Disposition: attachment; filename="' . basename($file) . '"');
-    header('Content-Length: ' . filesize($filePath));
-    header('Cache-Control: no-cache, no-store, must-revalidate'); // Evitar caché
+    $file = fopen($filePath, 'rb');																			//	Abre el archivo en modo binario de solo lectura
 
-    // Abre el archivo en modo binario de solo lectura
-    ini_set('memory_limit', '1024M');  // Aumenta a 1024 MB
-
-    $file = fopen($filePath, 'rb');
-
-    while (!feof($file)) {
-        echo fread($file, 8192);  // Lee 8KB del archivo
-        flush();  // Asegúrate de que se vacía el buffer al cliente
+    while (!feof($file)) {																					//	Lee todo el contenido del archivo
+        echo fread($file, 8192);																			//	Lee y envía el archivo en chunks de 8 KB
+        flush();																							//	Fuerza el vaciado del buffer para que se escriban los datos
     }
 
-    fclose($file);  // Cierra el archivo
-
-    ob_end_flush(); // Envía el contenido y limpia el búfer
-    exit();
+    fclose($file);																							//	Cierra el archivo
 } else {
-    echo 'Archivo no encontrado';
-    exit();
+	echo json_encode(['status' => 'error', 'message' => 'Archivo no encontrado']);							//	Si no existe, devolvemos un mensaje de "failed" al cliente
 }
+
+exit();
+?>

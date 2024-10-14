@@ -1,245 +1,147 @@
 <?php
-session_start();
+session_start();																							//	Inicia una nueva sesión o reanuda la sesión existente
 
-// Función para verificar si las credenciales almacenadas en el archivo userdata son válidas
-function checkUserSession($username) {
-    // Ubicación del archivo userdata
-    $userdataFile = 'users/userdata';
-    
-    // Intentar abrir el archivo de usuarios
-    $userdata = @file_get_contents($userdataFile);
-    if ($userdata === false) {
-        return false;
-    }
+include('functions.php');																					//	Incluye el archivo de funciones
 
-    // Procesar las líneas del archivo de usuarios
-    $lines = explode("\n", $userdata);
-    foreach ($lines as $line) {
-        $line = trim($line); // Eliminar espacios y saltos de línea innecesarios
-        if ($line === '') {
-            continue; // Ignorar líneas vacías
-        }
+UserSession();																								//	Verifica si la sesión del usuario ya está activa a través de la cookie y la inicia si es válida
 
-        list($storedUser, $storedPass) = explode(';', $line);
-
-        // Comprobar si el usuario coincide
-        if ($storedUser == $username) {
-            return true;
-        }
-    }
-    return false;
-}
-
-// Verificar si la cookie de sesión existe y tiene un valor
-if (isset($_COOKIE['user_session_cookie'])) {
-    $username = $_COOKIE['user_session_cookie'];
-
-    // Verificar si el nombre de usuario en la cookie es válido
-    if (checkUserSession($username)) {
-        // Iniciar sesión automáticamente si la cookie es válida
-        $_SESSION['user_session'] = $username;
-    } else {
-        // Si la cookie no es válida, eliminarla
-        setcookie('user_session_cookie', '', time() - 3600, "/");
-        unset($_COOKIE['user_session_cookie']);
-    }
-}
-
-// Si ya está logueado, redirigir
 if (isset($_SESSION['user_session'])) {
-    header('Location: /home.php');
+    header('Location: /home.php');																			//	Si está logueado, redirigir al 'home.php'
     exit();
 }
 
-// Procesar datos del formulario solo si se envían por POST
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // Leer los datos del cuerpo de la solicitud (stdin)
-    parse_str(file_get_contents("php://input"), $postData);
+// <!-- ------------------------------------------- POST ------------------------------------------- -->
 
-    // Verificar si los datos están presentes
-    $firstname = isset($postData['firstname']) ? $postData['firstname'] : '';
-    $lastname = isset($postData['lastname']) ? $postData['lastname'] : '';
-    $email = isset($postData['email']) ? $postData['email'] : '';
-    $password = isset($postData['password']) ? $postData['password'] : '';
-    $confirm_password = isset($postData['confirm_password']) ? $postData['confirm_password'] : '';
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {																	//	Procesar datos del formulario solo si se envían por POST
+    parse_str(file_get_contents("php://input"), $postData);													//	Leer los datos del cuerpo de la solicitud (stdin)
 
-    // Definir la ruta del archivo userdata
-    $userFolder = 'users';
-    $userdataFile = $userFolder . '/userdata';
+    $firstname = isset($postData['firstname']) ? $postData['firstname'] : '';								//	Obtener el valor de 'nombre'
+    $lastname = isset($postData['lastname']) ? $postData['lastname'] : '';									//	Obtener el valor de 'apellidos'
+    $email = isset($postData['email']) ? $postData['email'] : '';											//	Obtener el valor de 'email'
+    $password = isset($postData['password']) ? $postData['password'] : '';									//	Obtener el valor de 'pass'
+    $confirm_password = isset($postData['confirm_password']) ? $postData['confirm_password'] : '';			//	Obtener el valor de 'confirm_pass'
+
+    $userdataFile = 'users/userdata';																		//	Definir la ruta del archivo 'userdata'
     
-    // Verificar si la carpeta "users" existe, si no, crearla
-    if (!is_dir($userFolder)) {
-        if (!mkdir($userFolder, 0777, true)) {
-            echo json_encode(['success' => false, 'message' => 'Unable to create users directory']);
-            exit();
-        }
-    }
+	if (!is_dir('users') && !mkdir('users', 0777, true)) {													//	Verificar si el directorio 'users' existe, si no, crea el directorio
+		echo json_encode(['success' => false, 'message' => 'Error interno al crear la cuenta']);			//	Si falla al crear el directorio, devolvemos un mensaje de "failed" al cliente
+		exit();
+	}
 
-    // Verificar si el archivo userdata existe
-    $userdata = @file_get_contents($userdataFile);
+    $userdata = @file_get_contents($userdataFile);															//	Verificar si el archivo 'userdata' existe
     if ($userdata === false) {
-        // Si el archivo no existe, lo creamos y abrimos en modo escritura
-        $file = fopen($userdataFile, 'w');
+        $file = fopen($userdataFile, 'w');																	//	Si 'userdata' no existe, lo creamos y abrimos en modo escritura
         if ($file === false) {
-            echo json_encode(['success' => false, 'message' => 'Unable to create userdata file']);
+            echo json_encode(['success' => false, 'message' => 'Error interno al crear la cuenta']);		//	Si falla al abrirlo, devolvemos un mensaje de "failed" al cliente
             exit();
         }
-        fclose($file);
-        // Inicializamos la variable $userdata
-        $userdata = '';
+        fclose($file);																						//	Cerramos el archivo 'userdata'
     }
 
-    // Procesar las líneas del archivo de usuarios para verificar si el usuario ya existe
-    $lines = explode("\n", $userdata);
+    $lines = explode("\n", $userdata);																		//	Procesar las líneas del archivo de usuarios
     foreach ($lines as $line) {
-        $line = trim($line); // Eliminar espacios y saltos de línea innecesarios
-        if ($line === '') continue; // Ignorar líneas vacías
+        $line = trim($line);																				//	Eliminar espacios y saltos de línea innecesarios
+        if ($line === '') continue;																			//	Ignorar líneas vacías
 
-        list($storedUser, $storedPass) = explode(';', $line);
+        list($storedUser, $storedPass) = explode(';', $line);												//	Dividir la cadena en 'email' y 'pass'
 
-        // Comprobar si el usuario ya existe
-        if (strtolower($storedUser) == strtolower($email)) {
-            echo json_encode(['success' => false, 'message' => 'User already exists']);
+        if (strtolower($storedUser) == strtolower($email)) {												//	Comprobar si el 'email' coincide
+            echo json_encode(['success' => false, 'message' => 'Ese e-mail pertenece a otro usuario']);		//	El 'email' ya existe, devolvemos un mensaje de "failed" al cliente
             exit();
         }
     }
 
-    // Verificar si las contraseñas coinciden
-    if ($password !== $confirm_password) {
-        echo json_encode(['success' => false, 'message' => 'Passwords do not match']);
+    if ($password !== $confirm_password) {																	//	Comprobar si 'pass' y 'confirm_pass' coinciden
+        echo json_encode(['success' => false, 'message' => 'Las contraseñas no coinciden']);				//	No coinciden, devolvemos un mensaje de "failed" al cliente
         exit();
     }
 
-    // Si el usuario no existe, añadir el nuevo usuario al archivo
-    $newUser = $email . ';' . $password . "\n";
-    $file = fopen($userdataFile, 'a');
+    $newUser = $email . ';' . $password . "\n";																//	Si el usuario no existe, añadimos el nuevo usuario al archivo
+    $file = fopen($userdataFile, 'a');																		//	Abrimos 'userdata' en modo escritura
     if ($file === false) {
-        echo json_encode(['success' => false, 'message' => 'Unable to open userdata file']);
+        echo json_encode(['success' => false, 'message' => 'Error interno al crear la cuenta']);			//	Si no se puede abrir 'userdata', enviar un mensaje de "failed" al cliente
         exit();
     }
-    fwrite($file, $newUser);
-    fclose($file);
+    fwrite($file, $newUser);																				//	Guardamos el nuevo usuario
+    fclose($file);																							//	Cerramos el archivo 'userdata'
 
-    echo json_encode(['success' => true, 'message' => 'User registered successfully']);
+    echo json_encode(['success' => true, 'message' => 'Usuario registrado con éxito']);						//	Enviar un mesaje de "success" al cliente
     exit();
 }
-
 ?>
+
+<!-- -------------------------------------------- HTML -------------------------------------------- -->
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>WebServ 1.0 - Sign Up</title>
-  <link rel="stylesheet" href="./style.css">
+	<meta charset="UTF-8">																												<!-- Define el tipo de caracteres utilizado en la página -->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">																<!-- Configura el viewport para adaptabilidad en móviles -->
+	<title>Registrarse</title>																											<!-- Título de la página -->
+	<link rel="stylesheet" href="resources/style.css">																					<!-- Enlace a la hoja de estilos -->
 </head>
 <body>
-<div class="signup">
-  <h1>Sign Up</h1>
-  <form id="signupForm" novalidate> <!-- Añadido novalidate para desactivar la validación nativa -->
-      <input type="text" name="firstname" id="firstname" placeholder="First Name" required="required" />
-      <input type="text" name="lastname" id="lastname" placeholder="Last Name" required="required" />
-      <input type="email" name="email" id="email" placeholder="Email" required="required" />
-      <input type="password" name="password" id="password" placeholder="Password" required="required" />
-      <input type="password" name="confirm_password" id="confirm_password" placeholder="Confirm Password" required="required" />
-      <button type="submit" class="btn btn-primary btn-block btn-large">Create Account</button>
-  </form>
-  <p style="text-align: center; margin-top: 15px; font-size: 12px; color: gray;">
-      Already have an account? <a href="/login.php" style="color: yellow; margin-left: 5px;">Log In</a>
-  </p>
-  <p id="error-message"></p>
+<div class="signup">																													<!-- Contenedor principal -->
+	<h1>Crea tu cuenta</h1>																												<!-- Título de la sección -->
+	<form id="signupForm">
+		<input type="text" name="firstname" id="firstname" placeholder="Nombre" required="required" />									<!-- Campo para ingresar el 'nombre' -->
+		<input type="text" name="lastname" id="lastname" placeholder="Apellidos" required="required" />									<!-- Campo para ingresar el 'apellidos' -->
+		<input type="email" name="email" id="email" placeholder="Email" required="required" />											<!-- Campo para ingresar el 'email' -->
+		<input type="password" name="password" id="password" placeholder="Contraseña" required="required" />							<!-- Campo para ingresar el 'pass' -->
+		<input type="password" name="confirm_password" id="confirm_password" placeholder="Confirmar contraseña" required="required" />	<!-- Campo para ingresar el 'confirm_pass' -->
+		<button type="submit" class="btn btn-primary btn-block btn-large">Crear Cuenta</button>											<!-- Botón para enviar el formulario -->
+	</form>
+
+	<p style="text-align: left; margin-top: 15px; font-size: 12px; color: gray; margin-left: 50px;">
+		¿Ya tienes una cuenta? <a href="/login.php" style="color: #C0C000; margin-left: 15px;">Iniciar sesión</a>						<!-- Enlace a la página de registro -->
+    <br />
+		¿Necesitas ayuda?<a href="/contact.php" style="color: #C0C000; margin-left: 42px;">Contáctanos</a>								<!-- Enlace para la página de contacto -->
+	</p>
+	<p id="error-message"></p>																											<!-- Elemento para mostrar mensajes de error -->
 </div>
 
+<!-- ------------------------------------------- SCRIPT ------------------------------------------- -->
+
 <script>
-document.getElementById('signupForm').addEventListener('submit', function(e) {
-    e.preventDefault(); // Prevenir el comportamiento por defecto del formulario
-    
-    // Validaciones personalizadas
-    const firstname = document.getElementById('firstname');
-    const lastname = document.getElementById('lastname');
-    const email = document.getElementById('email');
-    const password = document.getElementById('password');
-    const confirm_password = document.getElementById('confirm_password');
-    
-    let formIsValid = true; // Variable para saber si el formulario es válido
 
-    // Validación del primer nombre
-    if (firstname.value === '') {
-        firstname.setCustomValidity('Please enter your first name');
-        formIsValid = false;
-    } else {
-        firstname.setCustomValidity('');
-    }
-    
-    // Validación del apellido
-    if (lastname.value === '') {
-        lastname.setCustomValidity('Please enter your last name');
-        formIsValid = false;
-    } else {
-        lastname.setCustomValidity('');
-    }
+	document.getElementById('signupForm').addEventListener('submit', function(e) {
+		e.preventDefault();																					//	Previene el envío del formulario por defecto
+		
+		// Validaciones personalizadas
+		const firstname = document.getElementById('firstname');												//	Obtiene el valor de 'nombre'
+		const lastname = document.getElementById('lastname');												//	Obtiene el valor de 'apellidos'
+		const email = document.getElementById('email');														//	Obtiene el valor de 'email'
+		const password = document.getElementById('password');												//	Obtiene el valor de 'pass'
+		const confirm_password = document.getElementById('confirm_password');								//	Obtiene el valor de 'confirm_pass'
+		
+		fetch('/signup.php', {																				//	Realiza la solicitud a 'signup.php' con los datos del formulario, osea, (POST a signup.php)
+			method: 'POST',
+			headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+			body: `firstname=${encodeURIComponent(firstname.value)}&` +
+				`lastname=${encodeURIComponent(lastname.value)}&` +
+				`email=${encodeURIComponent(email.value)}&` +
+				`password=${encodeURIComponent(password.value)}&` +
+				`confirm_password=${encodeURIComponent(confirm_password.value)}`
+		})
 
-    // Validación del email
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    if (email.value === '') {
-        email.setCustomValidity('Please enter your email');
-        formIsValid = false;
-    } else if (!emailRegex.test(email.value)) { // Comprobamos si el email es válido con la expresión regular
-        email.setCustomValidity('Please enter a valid email');
-        formIsValid = false;
-    } else {
-        email.setCustomValidity('');
-    }
+		.then(response => response.json())																	//	Convierte la respuesta en formato JSON para poder acceder a los datos
 
-    // Validación de la contraseña
-    if (password.value === '') {
-        password.setCustomValidity('Please enter your password');
-        formIsValid = false;
-    } else {
-        password.setCustomValidity('');
-    }
+		.then(data => {																						//	Maneja la respuesta del servidor
+			if (data.success) {
+				alert('Cuenta creada con éxito');															//	Muestra una alerta de "success"
+				window.location.href = '/login.php';														//	Redirige a 'login.php' en caso de éxito
+			} else {
+				const errorMessage = document.getElementById('error-message');
+				errorMessage.textContent = data.message;													//	Muestra un mensaje de error debajo del botón
+			}
+		})
 
-    // Validación de la confirmación de la contraseña
-    if (confirm_password.value === '') {
-        confirm_password.setCustomValidity('Please confirm your password');
-        formIsValid = false;
-    } else if (password.value !== confirm_password.value) {
-        confirm_password.setCustomValidity('Passwords do not match');
-        formIsValid = false;
-    } else {
-        confirm_password.setCustomValidity('');
-    }
+		.catch(error => {																					//	Maneja los errores de la solicitud
+			console.error('Error:', error);																	//	Imprime el error en la consola
+			alert('Se produjo un error al procesar tu solicitud');											//	Muestra una alerta al usuario
+		})
 
-    // Si algún campo no es válido, no enviamos el formulario
-    if (!formIsValid) {
-        document.getElementById('signupForm').reportValidity();
-        return; // Salir del submit
-    }
-
-    // Si la validación es correcta, enviamos el formulario usando Fetch API
-    const formData = `firstname=${encodeURIComponent(firstname.value)}&lastname=${encodeURIComponent(lastname.value)}&email=${encodeURIComponent(email.value)}&password=${encodeURIComponent(password.value)}&confirm_password=${encodeURIComponent(confirm_password.value)}`;
-
-    fetch('/signup.php', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: formData
-    })
-    .then(response => response.json()) // Procesar la respuesta como JSON
-    .then(data => {
-        if (data.success) {
-            alert('Account created successfully');
-            window.location.href = '/login.php';
-        } else {
-            alert(data.message);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('There was an error processing your request.');
-    });
-});
+	});
 </script>
 </body>
 </html>

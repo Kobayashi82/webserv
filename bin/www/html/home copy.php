@@ -1,83 +1,38 @@
 <?php
 session_start();
 
-// Función para verificar si las credenciales almacenadas en la cookie son válidas
-function checkUserSession($username) {
-    // Intentar abrir el archivo de usuarios
-    $userdata = @file_get_contents('userdata');
-    if ($userdata === false) {
-        return false;
-    }
+include('functions.php');																					//	Incluye el archivo de funciones
 
-    // Procesar las líneas del archivo de usuarios
-    $lines = explode("\n", $userdata);
-    foreach ($lines as $line) {
-        $line = trim($line); // Eliminar espacios y saltos de línea innecesarios
-        if ($line === '') {
-            continue; // Ignorar líneas vacías
-        }
+UserSession();																								//	Verifica si la sesión del usuario ya está activa a través de la cookie y la inicia si es válida
 
-        list($storedUser, $storedPass) = explode(';', $line);
-
-        // Comprobar si el usuario coincide
-        if ($storedUser == $username) {
-            return true;
-        }
-    }
-    return false;
-}
-
-// Verificar si la cookie de sesión existe y tiene un valor
-if (isset($_COOKIE['user_session_cookie'])) {
-    $username = $_COOKIE['user_session_cookie'];
-
-    // Verificar si el nombre de usuario en la cookie es válido
-    if (checkUserSession($username)) {
-        // Iniciar sesión automáticamente si la cookie es válida
-        $_SESSION['user_session'] = $username;
-    } else {
-        // Si la cookie no es válida, eliminarla
-        setcookie('user_session_cookie', '', time() - 3600, "/");
-        unset($_COOKIE['user_session_cookie']);
-    }
-}
-
-// Verifica si el usuario está logueado (por sesión o cookie)
 if (!isset($_SESSION['user_session'])) {
-    header('Location: login.php');
+    header('Location: login.php');																			//	Si no existe la cookie, redirigir al 'login.php'
     exit();
 }
 
-// Obtiene el nombre de usuario y convierte a minúsculas
-$username = strtolower($_SESSION['user_session']);
 
-// Define el directorio del usuario en minúsculas
-$userDirectory = 'users/' . $username;
 
-// Verifica si la carpeta del usuario existe, si no, crea la carpeta
-if (!is_dir($userDirectory)) {
-    if (!mkdir($userDirectory, 0777, true)) {
-        echo "Error al crear la carpeta del usuario.";
-        exit();
-    }
-}
+
+
+
+$email = strtolower($_SESSION['user_session']);																//	Obtiene el 'email' del usuario y lo convierte a minúsculas
+$userDirectory = 'users/' . $email;																			//	Define el directorio del usuario
+createUserDirectory($userDirectory);																		//	Crea el directorio si no existe
 
 // Lee los archivos dentro de la carpeta del usuario
 $files = scandir($userDirectory);
 $filesList = [];
 foreach ($files as $file) {
     // Ignora las carpetas '.' y '..'
-    if ($file == '.' || $file == '..') {
-        continue;
-    }
+    if ($file == '.' || $file == '..') continue;
 
     // Verifica si es un archivo (no una carpeta)
     if (is_file($userDirectory . '/' . $file)) {
-        // Obtiene el tamaño del archivo en kilobytes (KB)
-        $fileSize = number_format(filesize($userDirectory . '/' . $file) / 1024, 2) . ' KB';
+        // Obtiene el tamaño del archivo en bytes
+        $fileSize = filesize($userDirectory . '/' . $file);
 
-        // Agrega la información del archivo a la lista
-        $filesList[] = ['name' => $file, 'size' => $fileSize];
+        // Agrega la información del archivo a la lista, usando la función para formatear el tamaño
+        $filesList[] = ['name' => $file, 'size' => formatFileSize($fileSize)];
     }
 }
 ?>
@@ -88,12 +43,57 @@ foreach ($files as $file) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Webserv 1.0</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">	<!-- Enlace a Font Awesome para usar iconos -->
+  <link rel="stylesheet" href="resources/style.css">
+  <style>
+    /* Estilo personalizado para los iconos de acción */
+    .action-icons {
+      cursor: pointer;
+      font-size: 1.2em; /* Tamaño de los iconos */
+      margin-right: 10px;
+      color: #333;
+    }
+
+    .action-icons:hover {
+      color: #007bff; /* Cambia el color al pasar el mouse */
+    }
+
+    /* Estilo de la barra de progreso */
+    #progress-container {
+      margin-top: 10px;
+      display: none;
+    }
+
+    #upload-progress {
+      width: 100%;
+      height: 20px;
+    }
+
+    #cancel-upload-btn {
+      margin-left: 10px;
+      background-color: red;
+      color: white;
+      padding: 5px 10px;
+      border: none;
+      cursor: pointer;
+    }
+
+    #cancel-upload-btn:hover {
+      background-color: darkred;
+    }
+  </style>
 </head>
 <body>
   <header>
-    <img src="banner.jpg" alt="Banner" class="banner">
-    <a href="logout.php" class="logout-link">Logout</a>
+    <img src="resources/banner.jpg" alt="Banner" class="banner">
+
+  <a href="profile.php" class="icon-link" title="Modificar datos">
+    <i class="fas fa-user-edit"></i>
+  </a>
+
+  <a href="logout.php" class="icon-link logout-link" title="Cerrar sesión">
+    <i class="fas fa-sign-out-alt"></i>
+  </a>
   </header>
 
   <!-- Separador bonito debajo del banner -->
@@ -101,6 +101,10 @@ foreach ($files as $file) {
 
   <!-- Cuadro para la lista de archivos -->
   <div class="file-box">
+     <!-- Título centrado sobre la tabla -->
+  <div style="text-align: center; margin-bottom: 10px;">
+    <label class="file-box-title">Mis Archivos</label>
+  </div>
     <table class="file-table">
       <thead>
         <tr>
@@ -113,10 +117,10 @@ foreach ($files as $file) {
         <?php foreach ($filesList as $file): ?>
           <tr>
             <td><?php echo htmlspecialchars($file['name']); ?></td>
-            <td><?php echo htmlspecialchars($file['size']); ?></td>
+            <td><?php echo $file['size']; ?></td>
             <td>
-              <button onclick="downloadFile('<?php echo $file['name']; ?>')">Descargar</button>
-              <button onclick="deleteFile('<?php echo $file['name']; ?>')">Eliminar</button>
+              <i class="fas fa-download action-icons" onclick="downloadFile('<?php echo $file['name']; ?>')" title="Descargar"></i>
+              <i class="fas fa-trash-alt action-icons" onclick="deleteFile('<?php echo $file['name']; ?>')" title="Eliminar"></i>
             </td>
           </tr>
         <?php endforeach; ?>
@@ -128,7 +132,7 @@ foreach ($files as $file) {
     <button id="upload-btn">Subir Archivos</button>
 
     <!-- Barra de progreso para la subida de archivos -->
-    <div id="progress-container" style="display:none;">
+    <div id="progress-container">
       <progress id="upload-progress" value="0" max="100"></progress>
       <button id="cancel-upload-btn">Cancelar Subida</button>
     </div>
@@ -140,19 +144,16 @@ foreach ($files as $file) {
     window.location.href = 'download.php?file=' + fileName;
   }
 
-// Eliminar archivo y recargar la página
-function deleteFile(fileName) {
+  // Eliminar archivo y recargar la página
+  function deleteFile(fileName) {
     const xhr = new XMLHttpRequest();
     xhr.open('GET', 'delete.php?file=' + fileName, true);
     xhr.onload = function() {
         const response = JSON.parse(xhr.responseText);
         if (response.status === 'success') {
-            // Recarga la página después de eliminar el archivo
             location.reload();  // Recarga la página para reflejar los cambios
         } else {
-            // Muestra el mensaje de error solo si la eliminación falla
-            alert('Error al eliminar el archivo: ' + response.message);
-            location.reload();
+            alert('Error al eliminar el archivo: ' + response.message);  // Muestra el mensaje de error solo si la eliminación falla
         }
     };
 
@@ -161,17 +162,23 @@ function deleteFile(fileName) {
     };
 
     xhr.send();
-}
+  }
 
   document.getElementById('upload-btn').addEventListener('click', function() {
     const fileInput = document.getElementById('file-upload');
     const files = fileInput.files;
 
     if (files.length === 0) return;
-    
+
     const progressBar = document.getElementById('upload-progress');
     const progressContainer = document.getElementById('progress-container');
     const cancelButton = document.getElementById('cancel-upload-btn');
+    const uploadButton = document.getElementById('upload-btn');
+    const fileInputElement = document.getElementById('file-upload');
+    
+    // Deshabilitar seleccionar y subir durante la carga
+    fileInputElement.disabled = true;
+    uploadButton.disabled = true;
     
     // Muestra la barra de progreso y el botón de cancelar
     progressContainer.style.display = 'block';
@@ -203,32 +210,35 @@ function deleteFile(fileName) {
         alert('Error en la subida de archivos');
       }
       // Oculta la barra de progreso y el botón de cancelar tras completar la subida (éxito o fallo)
-      resetUploadUI();
+      progressContainer.style.display = 'none';
+      // Habilitar los controles de archivo después de la subida
+      fileInputElement.disabled = false;
+      uploadButton.disabled = false;
     };
 
     // Si ocurre un error en la solicitud, cancelar la subida y ocultar todo
     xhr.onerror = function() {
-      alert('Error en la subida de archivos');
-      resetUploadUI();
-    };
-
-    // Botón para cancelar la subida
-    cancelButton.addEventListener('click', function() {
-      xhr.abort(); // Cancela la subida
-      location.reload();
-      resetUploadUI();
-    });
-
-    // Enviar los archivos
-    xhr.send(formData);
-
-    // Función para resetear la interfaz después de la subida
-    function resetUploadUI() {
+      fileInputElement.disabled = false;
+      uploadButton.disabled = false;
       progressBar.value = 0;
       progressContainer.style.display = 'none';
       fileInput.value = ''; // Restablece el campo de archivos seleccionado
-    }
+      alert('Error en la subida de archivos');
+    };
+
+    // Cancelar la subida
+    cancelButton.onclick = function() {
+      xhr.abort();  // Aborta la solicitud actual
+      location.reload();
+      progressContainer.style.display = 'none';
+      fileInputElement.disabled = false;
+      uploadButton.disabled = false;
+    };
+
+    // Envía los archivos
+    xhr.send(formData);
   });
-  </script>
+</script>
+
 </body>
 </html>

@@ -1,151 +1,106 @@
 <?php
-// Verificar si el formulario fue enviado
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // Leer los datos del cuerpo de la solicitud
-    parse_str(file_get_contents("php://input"), $postData);
 
-    // Obtener los datos del formulario
-    $name = isset($postData['name']) ? trim($postData['name']) : '';
-    $email = isset($postData['email']) ? trim($postData['email']) : '';
-    $subject = isset($postData['subject']) ? trim($postData['subject']) : '';
-    $message = isset($postData['message']) ? trim($postData['message']) : '';
+include('functions.php');																					//	Incluye el archivo de funciones
 
-    // Verificar si los campos requeridos no están vacíos
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {																	//	Procesar datos del formulario solo si se envían por POST
+    parse_str(file_get_contents("php://input"), $postData);													//	Leer los datos del cuerpo de la solicitud (stdin)
+
+    $name = isset($postData['name']) ? trim($postData['name']) : '';										//	Obtener el valor de 'nombre'
+    $email = isset($postData['email']) ? trim($postData['email']) : '';										//	Obtener el valor de 'email'
+    $subject = isset($postData['subject']) ? trim($postData['subject']) : '';								//	Obtener el valor de 'asunto'
+    $message = isset($postData['message']) ? trim($postData['message']) : '';								//	Obtener el valor de 'mensaje'
+
     if (!empty($name) && !empty($email) && !empty($subject) && !empty($message)) {
-        // Validar el formato del email
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            echo json_encode(['success' => false, 'message' => 'Invalid email format']);
-            exit();
-        }
 
-        // Verificar si la carpeta "messages" existe, y si no, crearla
-        $directory = 'messages';
-        if (!is_dir($directory)) {
-            mkdir($directory, 0777, true);  // Crear la carpeta con permisos 0777
-        }
+        $msgDirectory = 'messages';																			//	Establece la carpeta de los mensajes
+		createUserDirectory($msgDirectory);																	//	Crea el directorio si no existe
 
-        // Guardar el mensaje en un archivo dentro de la carpeta "messages"
-        $filePath = 'messages/' . uniqid('message_') . '.txt';
-        $messageContent = "Name: $name\nEmail: $email\nSubject: $subject\nMessage: $message\n\n";
-        file_put_contents($filePath, $messageContent);
+        $filePath = $msgDirectory . '/' . uniqid('message_') . '.txt';										//	Ruta completa del archivo del mensaje
+        $messageContent = "Name: $name\nEmail: $email\nSubject: $subject\nMessage: $message\n\n";			//	Contenido del mensaje
+        file_put_contents($filePath, $messageContent);														//	Crea el archivo del mensaje
 
-        // Responder con éxito
-        echo json_encode(['success' => true, 'message' => 'Message sent successfully!']);
-
-        exit();
+        echo json_encode(['success' => true, 'message' => 'Mensaje enviado con éxito']);					//	Enviar un mesaje de "success" al cliente
     } else {
-        echo json_encode(['success' => false, 'message' => 'Please fill in all the fields']);
-        exit();
+		echo json_encode(['success' => false, 'message' => 'No se pudo enviar el mensaje']);				//	Si no se pudo crear, enviar un mensaje de "failed" al cliente
     }
+
+	exit();
 }
 ?>
+
+<!-- -------------------------------------------- HTML -------------------------------------------- -->
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WebServ 1.0 - Contact Us</title>
-    <link rel="stylesheet" href="./style.css">
+    <meta charset="UTF-8">																											<!-- Define el tipo de caracteres utilizado en la página -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">															<!-- Configura el viewport para adaptabilidad en móviles -->
+    <title>Contacto</title>																											<!-- Título de la página -->
+    <link rel="stylesheet" href="resources/style.css">																				<!-- Enlace a la hoja de estilos -->
 </head>
 <body>
-<div class="signup">
-    <h1>Contact Us</h1>
-    <form id="contactForm" method="post" novalidate>
-        <input type="text" name="name" id="name" placeholder="Your Name" required="required" />
-        <input type="email" name="email" id="email" placeholder="Your Email" required="required" />
-        <input type="text" name="subject" id="subject" placeholder="Subject" required="required" />
-        <textarea name="message" id="message" placeholder="Your Message" required="required" rows="5"></textarea>
-        <button type="submit" class="btn btn-primary btn-block btn-large">Send Message</button>
+<div class="signup">																												<!-- Contenedor principal -->
+    <h1>Escríbenos</h1>																												<!-- Título de la sección -->
+    <form id="contactForm" method="post">
+        <input type="text" name="name" id="name" placeholder="Nombre" required="required" />										<!-- Campo para ingresar el 'nombre' -->
+        <input type="email" name="email" id="email" placeholder="Email" required="required" />										<!-- Campo para ingresar el 'email' -->
+        <input type="text" name="subject" id="subject" placeholder="Asunto" required="required" />									<!-- Campo para ingresar el 'asunto' -->
+        <textarea name="message" id="message" placeholder="Mensaje" required="required" rows="5"></textarea>						<!-- Campo para ingresar el 'mensaje' -->
+        <button type="submit" class="btn btn-primary btn-block btn-large">Enviar Mensaje</button>									<!-- Botón para enviar el formulario -->
     </form>
-    <p style="text-align: center; margin-top: 15px; font-size: 12px; color: gray;">
-      Need assistance? <a href="/support.html" style="color: yellow; margin-left: 5px;">Get Support</a>
+
+    <p style="text-align: left; margin-top: 15px; font-size: 12px; color: gray; margin-left: 0px;">
+		¿Necesitas asistencia de inmediato? <a href="/support.html" style="color: #C0C000; margin-left: 3px;">Obtener Soporte</a>	<!-- Enlace a la página de soporte -->
+    <br />
+		¿Volver a la página principal? <a href="/home.php" style="color: #C0C000; margin-left: 42px;">Página Principal</a>			<!-- Enlace para la página principal -->
     </p>
-    <p id="response-message"></p>
 </div>
 
+<!-- ------------------------------------------- SCRIPT ------------------------------------------- -->
+
 <script>
-document.getElementById('contactForm').addEventListener('submit', function(e) {
-    e.preventDefault(); // Prevenir el comportamiento por defecto del formulario
-    
-    // Validaciones personalizadas
-    const name = document.getElementById('name');
-    const email = document.getElementById('email');
-    const subject = document.getElementById('subject');
-    const message = document.getElementById('message');
-    
-    let formIsValid = true; // Variable para saber si el formulario es válido
 
-    // Validar nombre
-    if (name.value === '') {
-        name.setCustomValidity('Please enter your name');
-        formIsValid = false;
-    } else {
-        name.setCustomValidity('');
-    }
+	document.getElementById('contactForm').addEventListener('submit', function(e) {
+		e.preventDefault();																					//	Previene el envío del formulario por defecto
+		
+		const name = document.getElementById('name');														//	Obtiene el valor de 'nombre'
+		const email = document.getElementById('email');														//	Obtiene el valor de 'email'
+		const subject = document.getElementById('subject');													//	Obtiene el valor de 'asunto'
+		const message = document.getElementById('message');													//	Obtiene el valor de 'mensaje'
 
-    // Validar email
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    if (email.value === '') {
-        email.setCustomValidity('Please enter your email');
-        formIsValid = false;
-    } else if (!emailRegex.test(email.value)) {
-        email.setCustomValidity('Please enter a valid email');
-        formIsValid = false;
-    } else {
-        email.setCustomValidity('');
-    }
+		fetch('/contact.php', {																				//	Realiza la solicitud a 'contact.php' con los datos del formulario, osea, (POST a contact.php)
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
+			body: `name=${encodeURIComponent(name.value)}&` +
+				  `email=${encodeURIComponent(email.value)}&` +
+				  `subject=${encodeURIComponent(subject.value)}&` +
+				  `message=${encodeURIComponent(message.value)}`
+		})
 
-    // Validar asunto
-    if (subject.value === '') {
-        subject.setCustomValidity('Please enter the subject');
-        formIsValid = false;
-    } else {
-        subject.setCustomValidity('');
-    }
+		.then(response => response.json())																	//	Convierte la respuesta en formato JSON para poder acceder a los datos
 
-    // Validar mensaje
-    if (message.value === '') {
-        message.setCustomValidity('Please enter your message');
-        formIsValid = false;
-    } else {
-        message.setCustomValidity('');
-    }
+		.then(data => {																						//	Maneja la respuesta del servidor
+			const responseMessage = document.getElementById('response-message');
+			if (data.success) {
+				alert('Message sent successfully!');														//	Muestra una alerta de "success"
+			} else {
+				alert('Message sent failed!');																//	Muestra un mensaje de error debajo del botón
+			}
+		})
 
-    // Si algún campo no es válido, no enviamos el formulario
-    if (!formIsValid) {
-        document.getElementById('contactForm').reportValidity();
-        return; // Salir del submit
-    }
+		.catch(error => {																					//	Maneja los errores de la solicitud
+			console.error('Error:', error);																	//	Imprime el error en la consola
+			alert('Se produjo un error al procesar tu solicitud');											//	Muestra una alerta al usuario
+		})
 
-    // Si la validación es correcta, enviamos el formulario usando Fetch API
-    const formData = `name=${encodeURIComponent(name.value)}&email=${encodeURIComponent(email.value)}&subject=${encodeURIComponent(subject.value)}&message=${encodeURIComponent(message.value)}`;
+		name.value = '';
+		email.value = '';
+		subject.value = '';
+		message.value = '';
+	});
 
-    fetch('/contact.php', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        const responseMessage = document.getElementById('response-message');
-        if (data.success) {
-            alert('Message sent successfully!');
-        } else {
-            alert('Message sent failed!');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('There was an error processing your request');
-    });
-    name.value = '';
-    email.value = '';
-    subject.value = '';
-    message.value = '';
-});
 </script>
 </body>
 </html>
