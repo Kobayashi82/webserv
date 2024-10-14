@@ -31,7 +31,7 @@ function UserSession() {
 
 function createUserDirectory($userDirectory) {																//	Verifica si la carpeta existe, si no, crea la carpeta
 	if (!is_dir($userDirectory) && !mkdir($userDirectory, 0777, true)) {
-		echo json_encode(['success' => false, 'message' => 'No se pudo crear el directorio ' . $userDirectory]);
+		echo json_encode(['status' => 'error', 'message' => 'No se pudo crear el directorio ' . $userDirectory]);
 		exit();
 	}
 }

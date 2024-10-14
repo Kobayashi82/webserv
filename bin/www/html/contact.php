@@ -32,12 +32,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {																	//	Procesar datos de
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">																											<!-- Define el tipo de caracteres utilizado en la página -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">															<!-- Configura el viewport para adaptabilidad en móviles -->
     <title>Contacto</title>																											<!-- Título de la página -->
     <link rel="stylesheet" href="resources/style.css">																				<!-- Enlace a la hoja de estilos -->
 </head>
+
 <body>
 <div class="signup">																												<!-- Contenedor principal -->
     <h1>Escríbenos</h1>																												<!-- Título de la sección -->
@@ -82,7 +84,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {																	//	Procesar datos de
 		.then(response => response.json())																	//	Convierte la respuesta en formato JSON para poder acceder a los datos
 
 		.then(data => {																						//	Maneja la respuesta del servidor
-			const responseMessage = document.getElementById('response-message');
 			if (data.success) {
 				alert('Message sent successfully!');														//	Muestra una alerta de "success"
 			} else {
@@ -99,7 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {																	//	Procesar datos de
 		email.value = '';
 		subject.value = '';
 		message.value = '';
-	});
+	})
 
 </script>
 </body>

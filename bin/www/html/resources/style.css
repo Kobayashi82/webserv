@@ -127,6 +127,28 @@ header {
 	height: 100%;
 	object-fit: cover; /* La imagen se escala para cubrir todo el área */
   }
+
+  .welcome-text {
+    position: absolute; /* Posiciona el texto dentro del banner */
+    top: -10px; /* Reduce la distancia desde la parte superior */
+    left: 50%; /* Centra el texto horizontalmente */
+    transform: translateX(-25%); /* Ajusta el texto para que quede centrado */
+    font-size: 40px; /* Aumenta el tamaño del texto */
+    font-weight: 600; /* Hace el texto más fuerte y visible */
+    font-family: 'Arial', sans-serif; /* Establece una fuente moderna y limpia */
+    text-align: center; /* Centra el texto */
+    text-transform: uppercase; /* Convierte el texto a mayúsculas */
+    white-space: nowrap; /* Impide que el texto se divida en varias líneas */
+    max-width: 90%; /* Establece un ancho máximo para evitar que el texto se "escape" */
+    letter-spacing: 2px; /* Añade espacio entre letras para un efecto más elegante */
+    background: linear-gradient(to right, #ff7e5f, #feb47b); /* Gradiente de colores vibrantes */
+    -webkit-background-clip: text; /* Aplica el gradiente al texto */
+    color: transparent; /* Hace que el color de fondo se vea solo en el texto */
+    z-index: 2; /* Asegura que el texto esté por encima del banner */
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.6); /* Añade sombra al texto para darle profundidad */
+    transition: all 0.3s ease-in-out; /* Añade una transición suave para efectos hover */
+}
+
   .icon-link {
   position: absolute;
   top: 10px;
@@ -239,3 +261,38 @@ header {
 	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); /* Sombra sutil */
   }
   
+   /* Estilo personalizado para los iconos de acción */
+   .action-icons {
+	cursor: pointer;
+	font-size: 1.2em; /* Tamaño de los iconos */
+	margin-right: 10px;
+	color: #333;
+  }
+
+  .action-icons:hover {
+	color: #007bff; /* Cambia el color al pasar el mouse */
+  }
+
+  /* Estilo de la barra de progreso */
+  #progress-container {
+	margin-top: 10px;
+	display: none;
+  }
+
+  #upload-progress {
+	width: 100%;
+	height: 20px;
+  }
+
+  #cancel-upload-btn {
+	margin-left: 10px;
+	background-color: red;
+	color: white;
+	padding: 5px 10px;
+	border: none;
+	cursor: pointer;
+  }
+
+  #cancel-upload-btn:hover {
+	background-color: darkred;
+  }

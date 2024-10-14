@@ -324,7 +324,6 @@
 							} else {																							//	There is 'Content-Length'
 								event->read_maxsize = event->header.size() + content_length;									//	Set 'read_maxsize'
 								c_event->response_size = content_length;														//	Set 'response_size'
-								std::cout << c_event->response_size << "\n";
 							}
 
 							c_event->write_info = event->read_info;																//	Set client's 'write_info'

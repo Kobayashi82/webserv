@@ -74,12 +74,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {																	//	Procesar datos de
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 	<meta charset="UTF-8">																												<!-- Define el tipo de caracteres utilizado en la página -->
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">																<!-- Configura el viewport para adaptabilidad en móviles -->
 	<title>Registrarse</title>																											<!-- Título de la página -->
 	<link rel="stylesheet" href="resources/style.css">																					<!-- Enlace a la hoja de estilos -->
 </head>
+
 <body>
 <div class="signup">																													<!-- Contenedor principal -->
 	<h1>Crea tu cuenta</h1>																												<!-- Título de la sección -->
@@ -141,7 +143,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {																	//	Procesar datos de
 			alert('Se produjo un error al procesar tu solicitud');											//	Muestra una alerta al usuario
 		})
 
-	});
+	})
+
 </script>
 </body>
 </html>
