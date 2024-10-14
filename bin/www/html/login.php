@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {																	//	Procesar datos de
 
     $userdata = @file_get_contents('users/userdata');														//	Verificar si el archivo 'userdata' existe
     if ($userdata === false) {
-        echo json_encode(['success' => false, 'message' => 'User data file not found']);					//	Enviar un mesaje de "failed" al cliente
+        echo json_encode(['success' => false, 'message' => 'Email o contraseña no válidos']);				//	Enviar un mesaje de "failed" al cliente
         exit();
     }
 
