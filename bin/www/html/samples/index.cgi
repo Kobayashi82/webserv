@@ -1,10 +1,3 @@
-#!/usr/bin/python3
 
-print("HTTP/1.1 200 OK\r")
-print("Content-Type: text/html\r")
-print("Content-Length:131\r\n\r")
-
-print("<html><body>")
-print("<h1>Hola, mundo desde Python CGI!</h1>")
-print("<p>Este es un mensaje de prueba desde un script Python CGI.</p>")
-print("</body></html>")
+Este archivo no se ejecuta, es solo un indicador para que se ejecute test-cgi.
+Aunque se le pasa este archivo como argumentos, no se lee su contenido.
