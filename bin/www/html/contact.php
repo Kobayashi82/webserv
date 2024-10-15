@@ -19,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {																	//	Procesar datos de
         $messageContent = "Name: $name\nEmail: $email\nSubject: $subject\nMessage: $message\n\n";			//	Contenido del mensaje
         file_put_contents($filePath, $messageContent);														//	Crea el archivo del mensaje
 
-        echo json_encode(['success' => true, 'message' => 'Mensaje enviado con éxito']);					//	Enviar un mesaje de "success" al cliente
+        echo json_encode(['success' => true, 'message' => 'Mensaje enviado con exito']);					//	Enviar un mesaje de "success" al cliente
     } else {
 		echo json_encode(['success' => false, 'message' => 'No se pudo enviar el mensaje']);				//	Si no se pudo crear, enviar un mensaje de "failed" al cliente
     }

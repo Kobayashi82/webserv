@@ -21,6 +21,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {																	//	Procesar datos de
     $password = isset($postData['password']) ? $postData['password'] : '';									//	Obtener el valor de 'pass'
     $confirm_password = isset($postData['confirm_password']) ? $postData['confirm_password'] : '';			//	Obtener el valor de 'confirm_pass'
 
+	if (strpos($email, '/') !== false) {																	//	Comprobar si el 'email' contiene el caracter prohibido "/"
+		echo json_encode(['success' => false, 'message' => 'El email no puede contener "/"']);				//	Si lo contiene, devolvemos un mensaje de "failed" al cliente
+		exit();
+	}
+
     $userdataFile = 'users/userdata';																		//	Definir la ruta del archivo 'userdata'
     
 	if (!is_dir('users') && !mkdir('users', 0777, true)) {													//	Verificar si el directorio 'users' existe, si no, crea el directorio
@@ -42,11 +47,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {																	//	Procesar datos de
     foreach ($lines as $line) {
         $line = trim($line);																				//	Eliminar espacios y saltos de línea innecesarios
         if ($line === '') continue;																			//	Ignorar líneas vacías
+		$parts = explode(';', $line);
+		if (count($parts) < 4) continue;																		// Si no tiene las 4 partes, continuar con la siguiente línea
 
-        list($storedUser, $storedPass) = explode(';', $line);												//	Dividir la cadena en 'email' y 'pass'
+        list($storedUser, $storedPass, $storedFirstName, $storedLastName) = explode(';', $line);			//	Dividir la cadena en 'email', 'pass', 'firstname', y 'lastname'
 
         if (strtolower($storedUser) == strtolower($email)) {												//	Comprobar si el 'email' coincide
-            echo json_encode(['success' => false, 'message' => 'Ese e-mail pertenece a otro usuario']);		//	El 'email' ya existe, devolvemos un mensaje de "failed" al cliente
+            echo json_encode(['success' => false, 'message' => 'El e-mail pertenece a otro usuario']);		//	El 'email' ya existe, devolvemos un mensaje de "failed" al cliente
             exit();
         }
     }
@@ -56,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {																	//	Procesar datos de
         exit();
     }
 
-    $newUser = $email . ';' . $password . "\n";																//	Si el usuario no existe, añadimos el nuevo usuario al archivo
+    $newUser = $email . ';' . $password . ';' . $firstname . ';' . $lastname . "\n";						//	Si el usuario no existe, añadimos el nuevo usuario al archivo
     $file = fopen($userdataFile, 'a');																		//	Abrimos 'userdata' en modo escritura
     if ($file === false) {
         echo json_encode(['success' => false, 'message' => 'Error interno al crear la cuenta']);			//	Si no se puede abrir 'userdata', enviar un mensaje de "failed" al cliente
@@ -65,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {																	//	Procesar datos de
     fwrite($file, $newUser);																				//	Guardamos el nuevo usuario
     fclose($file);																							//	Cerramos el archivo 'userdata'
 
-    echo json_encode(['success' => true, 'message' => 'Usuario registrado con éxito']);						//	Enviar un mesaje de "success" al cliente
+    echo json_encode(['success' => true, 'message' => 'Usuario registrado con exito']);						//	Enviar un mesaje de "success" al cliente
     exit();
 }
 ?>
@@ -96,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {																	//	Procesar datos de
 
 	<p style="text-align: left; margin-top: 15px; font-size: 12px; color: gray; margin-left: 50px;">
 		¿Ya tienes una cuenta? <a href="/login.php" style="color: #C0C000; margin-left: 15px;">Iniciar sesión</a>						<!-- Enlace a la página de registro -->
-    <br />
+    <br/>
 		¿Necesitas ayuda?<a href="/contact.php" style="color: #C0C000; margin-left: 42px;">Contáctanos</a>								<!-- Enlace para la página de contacto -->
 	</p>
 	<p id="error-message"></p>																											<!-- Elemento para mostrar mensajes de error -->

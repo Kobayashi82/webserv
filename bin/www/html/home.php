@@ -11,8 +11,25 @@ if (!isset($_SESSION['user_session'])) {
 }
 
 $email = strtolower($_SESSION['user_session']);																//	Obtiene el 'email' del usuario y lo convierte a minúsculas
+$name = explode('@', $email)[0];																			//	Obtiene el 'nombre' usando el 'email'
 $userDirectory = 'users/' . $email;																			//	Define el directorio del usuario
 createUserDirectory($userDirectory);																		//	Crea el directorio si no existe
+
+$userdata = @file_get_contents('users/userdata');															//	Verificar si el archivo 'userdata' existe
+$lines = explode("\n", $userdata);																			//	Procesar las líneas del archivo de usuarios
+foreach ($lines as $line) {
+	$name = $line;
+	$line = trim($line);																					//	Eliminar espacios y saltos de línea innecesarios
+	if ($line === '') continue;																				//	Ignorar líneas vacías
+    if (count(explode(';', $line)) < 4) continue;															// Si no tiene las 4 partes, continuar con la siguiente línea
+
+	list($storedUser, $storedPass, $storedFirstName, $storedLastName) = explode(';', $line);				//	Dividir la cadena en 'email', 'pass', 'firstname', y 'lastname'
+
+	if (strtolower($storedUser) == strtolower($email)) {													//	Comprobar si el 'email' coincide
+		$name = $storedFirstName;																			//	Obtener el 'nombre' establecido por el usuario
+		break;
+	}
+}
 
 $files = scandir($userDirectory);																			//	Lee los archivos dentro de la carpeta del usuario
 $filesList = [];
@@ -41,7 +58,7 @@ foreach ($files as $file) {
 <body>
 <header>
 	<img src="resources/banner.jpg" alt="Banner" class="banner">																				<!-- Banner -->
-    <h2 class="welcome-text">Bienvenido, <?php echo htmlspecialchars(explode('@', $email)[0]); ?></h2>											<!-- Bienvenida al usuario actual -->
+    <h2 class="welcome-text">Bienvenido, <?php echo htmlspecialchars($name); ?></h2>															<!-- Bienvenida al usuario actual -->
 	<a href="profile.php" class="icon-link" title="Modificar datos">																			<!-- Botón para modificar los datos del usuario (profile.php) -->
 	<i class="fas fa-user-edit"></i>
 	</a>

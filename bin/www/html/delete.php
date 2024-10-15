@@ -14,7 +14,12 @@ $email = strtolower($_SESSION['user_session']);																//	Obtiene el 'em
 $userDirectory = 'users/' . $email;																			//	Define el directorio del usuario
 
 $file = $_GET['file'] ?? '';																				//	Obtiene el archivo a eliminar desde la URL
-$filePath = $userDirectory . '/' . $file;																	//	Obtiene el la ruta completa al archivo
+$filePath = $userDirectory . '/' . $file;																	//	Obtiene la ruta completa al archivo
+
+if (!$filePath || strncmp($filePath, realpath($userDirectory), strlen(realpath($userDirectory))) !== 0) {	//	Comprobar que el archivo está dentro del directorio permitido
+    echo json_encode(['status' => 'error', 'message' => 'Ruta no valida']);									//	Si la ruta no es válida, devolvemos un mensaje de "failed" al cliente
+	exit();
+}
 
 if (is_file($filePath)) {																					//	Verifica si el archivo existe y es un archivo válido
     if (unlink($filePath)) {																				//	Eliminar el archivo

@@ -28,8 +28,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {																	//	Procesar datos de
     foreach ($lines as $line) {
         $line = trim($line);																				//	Eliminar espacios y saltos de línea innecesarios
         if ($line === '') continue;																			//	Ignorar líneas vacías
+		$parts = explode(';', $line);
+		if (count($parts) < 4) continue;																	// Si no tiene las 4 partes, continuar con la siguiente línea
 
-        list($storedUser, $storedPass) = explode(';', $line);												//	Dividir la cadena en 'email' y 'pass'
+        list($storedUser, $storedPass, $storedFirstName, $storedLastName) = explode(';', $line);			//	Dividir la cadena en 'email', 'pass', 'firstname', y 'lastname'
 
         if (strtolower($storedUser) == strtolower($email) && $storedPass == $pass) {						//	Comprobar si el 'email' y 'pass' coincide
             $_SESSION['user_session'] = $email;																//	Crear la sesión
@@ -44,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {																	//	Procesar datos de
 				}
 			}
 
-            echo json_encode(['success' => true, 'message' => 'Sesión inciada con éxito']);					//	Enviar un mesaje de "success" al cliente
+            echo json_encode(['success' => true, 'message' => 'Sesión inciada con exito']);					//	Enviar un mesaje de "success" al cliente
             exit();
         }
     }
