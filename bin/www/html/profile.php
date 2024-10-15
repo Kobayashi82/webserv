@@ -41,6 +41,43 @@ foreach ($lines as $line) {
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {																	//	Procesar datos del formulario solo si se envían por POST
     parse_str(file_get_contents("php://input"), $postData);													//	Leer los datos del cuerpo de la solicitud (stdin)
 
+	$userdataFile = 'users/userdata';																		//	Definir la ruta del archivo 'userdata'
+
+	if (isset($postData['action']) && $postData['action'] === 'DELETE') {
+		$old_password = isset($postData['old_password']) ? $postData['old_password'] : '';					//	Obtener el valor de 'old_pass'
+
+		if ($pass !== $old_password) {
+			echo json_encode(['success' => false, 'message' => 'Contraseña no válida']);					//	Contraseña inválida, devolvemos un mensaje de "failed" al cliente
+			exit();
+		}
+
+		deleteDirectory($userDirectory);																	//	Elimina el directorio
+
+		$userdata = @file_get_contents($userdataFile);														//	Verificar si el archivo 'userdata' existe
+		if ($userdata !== false) {
+				
+			$newLines = [];																					//	Nuevo array para las líneas sin el usuario a eliminar
+			
+			$lines = explode("\n", $userdata);																//	Procesar las líneas del archivo de usuarios
+			foreach ($lines as $line) {
+				$line = trim($line);																		//	Eliminar espacios y saltos de línea innecesarios
+				if ($line === '') continue;																	//	Ignorar líneas vacías
+				$parts = explode(';', $line);
+				if (count($parts) < 4) continue;															//	Si no tiene las 4 partes, continuar con la siguiente línea
+				
+				list($storedUser, $storedPass, $storedFirstName, $storedLastName) = explode(';', $line);	//	Dividir la cadena en 'email', 'pass', 'firstname', y 'lastname'
+				
+				if (strtolower($storedUser) == strtolower($email)) continue;								//	No añadir esta línea al array
+				$newLines[] = $line;																		//	Añade la linea al array de lines
+			}
+			
+			file_put_contents($userdataFile, implode("\n", $newLines));										//	Guardar las líneas actualizadas en el archivo
+		}
+
+        echo json_encode(array('success' => true, 'message' => 'Cuenta eliminada con exito'));
+        exit();
+    }
+
 	$n_firstname = isset($postData['firstname']) ? $postData['firstname'] : '';								//	Obtener el valor de 'nombre'
     $n_lastname = isset($postData['lastname']) ? $postData['lastname'] : '';								//	Obtener el valor de 'apellidos'
     $n_email = isset($postData['email']) ? $postData['email'] : '';											//	Obtener el valor de 'email'
@@ -52,11 +89,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {																	//	Procesar datos de
 		echo json_encode(['success' => false, 'message' => 'El email no puede contener "/"']);				//	Si lo contiene, devolvemos un mensaje de "failed" al cliente
 		exit();
 	}
-
-    $userdataFile = 'users/userdata';																		//	Definir la ruta del archivo 'userdata'
-    
+  
 	if (!is_dir('users') && !mkdir('users', 0777, true)) {													//	Verificar si el directorio 'users' existe, si no, crea el directorio
-		echo json_encode(['success' => false, 'message' => 'Error interno al crear la cuenta']);			//	Si falla al crear el directorio, devolvemos un mensaje de "failed" al cliente
+		echo json_encode(['success' => false, 'message' => 'Error interno']);								//	Si falla al crear el directorio, devolvemos un mensaje de "failed" al cliente
 		exit();
 	}
 
@@ -64,7 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {																	//	Procesar datos de
     if ($userdata === false) {
         $file = fopen($userdataFile, 'w');																	//	Si 'userdata' no existe, lo creamos y abrimos en modo escritura
         if ($file === false) {
-            echo json_encode(['success' => false, 'message' => 'Error interno al crear la cuenta']);		//	Si falla al abrirlo, devolvemos un mensaje de "failed" al cliente
+            echo json_encode(['success' => false, 'message' => 'Error interno']);							//	Si falla al abrirlo, devolvemos un mensaje de "failed" al cliente
             exit();
         }
         fclose($file);																						//	Cerramos el archivo 'userdata'
@@ -148,7 +183,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {																	//	Procesar datos de
         <input type="password" name="old_password" id="old_password" placeholder="Contraseña actual para aplicar cambios" required="required" />				<!-- Campo para ingresar el 'old pass' -->
         <div class="button-container">
             <button type="button" class="btn btn-primary" onclick="window.history.back();">Volver</button>														<!-- Botón para volver atras -->
-            <button type="submit" class="btn-danger">Eliminar Cuenta</button>																					<!-- Botón para eliminar la cuenta -->
+            <button type="button" id="deleteAccount" class="btn-danger">Eliminar Cuenta</button>																<!-- Botón para eliminar la cuenta -->
         </div>
 	</form>
 
@@ -165,12 +200,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {																	//	Procesar datos de
 	document.getElementById('profileForm').addEventListener('submit', function(e) {
 		e.preventDefault();																					//	Previene el envío del formulario por defecto
 		
-		// Validaciones personalizadas
 		const firstname = document.getElementById('firstname');												//	Obtiene el valor de 'nombre'
 		const lastname = document.getElementById('lastname');												//	Obtiene el valor de 'apellidos'
 		const email = document.getElementById('email');														//	Obtiene el valor de 'email'
 		const password = document.getElementById('password');												//	Obtiene el valor de 'pass'
-		const old_password = document.getElementById('old_password');										//	Obtiene el valor de 'confirm_pass'
+		const old_password = document.getElementById('old_password');										//	Obtiene el valor de 'old_pass'
 		
 		fetch('/profile.php', {																				//	Realiza la solicitud a 'signup.php' con los datos del formulario, osea, (POST a signup.php)
 			method: 'POST',
@@ -198,8 +232,38 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {																	//	Procesar datos de
 			console.error('Error:', error);																	//	Imprime el error en la consola
 			alert('Se produjo un error al procesar tu solicitud');											//	Muestra una alerta al usuario
 		})
-
 	})
+
+	document.getElementById('deleteAccount').addEventListener('click', function(e) {
+        e.preventDefault();																					//	Previene el envío del formulario por defecto
+
+		const old_password = document.getElementById('old_password');										//	Obtiene el valor de 'old_pass'
+
+        if (confirm('¿Estás seguro de que quieres eliminar tu cuenta?')) {									//	Confirmación antes de eliminar
+            fetch('/profile.php', {																			//	Realiza la solicitud a 'profile.php' con el mensaje "DELETE"
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `action=DELETE&old_password=${encodeURIComponent(old_password.value)}`				//	Solo envía el mensaje "DELETE"
+            })
+
+			.then(response => response.json())																//	Convierte la respuesta en formato JSON para poder acceder a los datos
+
+			.then(data => {																					//	Maneja la respuesta del servidor
+                if (data.success) {
+                    alert('Cuenta eliminada con éxito');													//	Muestra una alerta de "success"
+                    window.location.href = '/logout.php';													//	Redirige a logout o cualquier página de confirmación
+                } else {
+                    const errorMessage = document.getElementById('error-message');
+                    errorMessage.textContent = data.message;												//	Muestra un mensaje de error debajo del botón
+                }
+            })
+
+			.catch(error => {																				//	Maneja los errores de la solicitud
+				console.error('Error:', error);																//	Imprime el error en la consola
+				alert('Se produjo un error al procesar tu solicitud');										//	Muestra una alerta al usuario
+			})
+        }
+    })
 
 </script>
 </body>

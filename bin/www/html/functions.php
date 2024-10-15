@@ -59,6 +59,23 @@ function createUserDirectory($userDirectory) {																		//	Verifica si l
 	}
 }
 
+function deleteDirectory($dir) {
+    if (!is_dir($dir)) return false;																				//	Si no es un directorio, retorna false
+
+    $files = array_diff(scandir($dir), array('.', '..'));															//	Obtiene todos los archivos y carpetas dentro del directorio exceptop "." y ".."
+
+    foreach ($files as $file) {
+        $filePath = $dir . DIRECTORY_SEPARATOR . $file;
+        if (is_dir($filePath)) {
+            deleteDirectory($filePath);																				//	Si es un subdirectorio, se llama recursivamente a deleteDirectory
+        } else {
+            unlink($filePath);																						//	Si es un archivo, se elimina con unlink
+        }
+    }
+
+    return rmdir($dir);																								//	Elimina el directorio
+}
+
 function formatFileSize($size) {																					//	Función para formatear el tamaño del archivo en KB, MB, GB, etc.
     $unit = ['bytes', 'KB', 'MB', 'GB', 'TB', 'PB'];
     $mod = 1024;
