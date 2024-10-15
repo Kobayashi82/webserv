@@ -203,9 +203,8 @@ int main(int argc, char **argv) {
 		"    </table>\n";
 
 	if (!input.empty()) body +=
-		"	<h1>Cuerpo de la solicitud</h1>\n"
-		"	<p>" + escapeHtml(input, std::getenv("SHELL")) + "</p>\n";
-
+		"   <h1>Cuerpo de la solicitud</h1>\n"
+		"   <pre style='white-space: pre-wrap; word-wrap: break-word;'>" + input + "</pre>\n";
 	body +=
 		"</body>\n"
 		"</html>\n";

@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Common Gateway Interface (CGI)</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            font-family: 'Open Sans', sans-serif;
+            background: #092756;
+            background: -moz-radial-gradient(0% 100%, ellipse cover, rgba(104,128,138,.4) 10%,rgba(138,114,76,0) 40%),-moz-linear-gradient(top, rgba(57,173,219,.25) 0%, rgba(42,60,87,.4) 100%), -moz-linear-gradient(-45deg, #670d10 0%, #092756 100%);
+            background: -webkit-radial-gradient(0% 100%, ellipse cover, rgba(104,128,138,.4) 10%,rgba(138,114,76,0) 40%), -webkit-linear-gradient(top, rgba(57,173,219,.25) 0%,rgba(42,60,87,.4) 100%), -webkit-linear-gradient(-45deg, #670d10 0%,#092756 100%);
+            background: -o-radial-gradient(0% 100%, ellipse cover, rgba(104,128,138,.4) 10%,rgba(138,114,76,0) 40%), -o-linear-gradient(top, rgba(57,173,219,.25) 0%,rgba(42,60,87,.4) 100%), -o-linear-gradient(-45deg, #670d10 0%,#092756 100%);
+            background: -ms-radial-gradient(0% 100%, ellipse cover, rgba(104,128,138,.4) 10%,rgba(138,114,76,0) 40%), -ms-linear-gradient(top, rgba(57,173,219,.25) 0%,rgba(42,60,87,.4) 100%), -ms-linear-gradient(-45deg, #670d10 0%,#092756 100%);
+            background: -webkit-radial-gradient(0% 100%, ellipse cover, rgba(104,128,138,.4) 10%,rgba(138,114,76,0) 40%), linear-gradient(to bottom, rgba(57,173,219,.25) 0%,rgba(42,60,87,.4) 100%), linear-gradient(135deg, #670d10 0%,#092756 100%);
+            filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#3E1D6D', endColorstr='#092756',GradientType=1 );
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            padding: 2em;
+            background-color: rgba(26, 193, 223, 0.1);
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+		.title-section {
+			font-size: 12px;
+			font-weight: bold;
+			color: #fff;
+			background: linear-gradient(to right, #6a11cb, #2575fc);
+			padding: 8px 20px;
+			border-radius: 10px;
+			box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+			text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+			display: block; /* Cambiar a block para que ocupe toda la línea */
+			margin: 20px auto; /* Esto lo centra en su contenedor */
+			width: fit-content; /* Ajusta el ancho para que solo sea tan ancho como el contenido */
+			text-align: center; /* Alinea el texto dentro del bloque */
+			transition: all 0.3s ease;
+		}
+
+        h1 {
+            font-size: 2.5em;
+        }
+
+        .content {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1.5em;
+        }
+
+		.text-section {
+			flex: 2;
+			color: #d1d1d1;  /* Gris claro y suave */
+			line-height: 1.6;
+			text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);  /* Sombra suave */
+		}
+
+
+        .image-section {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .image-section img {
+            width: 80%;
+            height: auto;
+            border-radius: 10px;
+        }
+
+        hr {
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            margin: 1em 0;
+        }
+
+        .form-section {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .left-column,
+        .right-column {
+            flex: 1;
+            margin: 1em;
+			color: #d1d1d1;  /* Gris claro y suave */
+			line-height: 1.6;
+			text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);  /* Sombra suave */
+        }
+
+        /* Aumentar la separación entre columnas y el separador */
+        .left-column, .right-column {
+            margin: 1em 2em;
+        }
+
+        .left-column input,
+        .left-column textarea,
+        .right-column button {
+            width: 100%;
+            padding: 0.5em;
+            margin-bottom: 1em;
+            border: none;
+            border-radius: 5px;
+        }
+
+        .left-column input {
+            font-size: 1em;
+        }
+
+        .left-column textarea {
+            font-size: 1em;
+            height: 100px;
+        }
+
+		.limage-button {
+			display: block;
+			margin: 0 auto;
+			padding: 1em;
+			background-color: transparent;
+			border: none;
+		}
+
+		/* Cambiar el tamaño de los botones de imagen y agregar borde */
+		.limage-button img {
+			width: 200px; /* Ajusta el ancho a 100% del contenedor */
+			height: 50%; /* Ajusta el alto a 100% del contenedor */
+			object-fit: cover; /* Mantiene la imagen proporcionada sin distorsión */
+			cursor: pointer;
+			margin-left: -75px;
+			border: 4px solid #2c3e50;  /* Borde de color oscuro, similar a un gris oscuro/azul marino */
+			border-radius: 8px;  /* Bordes redondeados */
+			box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.3); /* Sombra sutil */
+			transition: all 0.3s ease; /* Transición suave para el hover */
+		}
+
+		/* Efecto hover para cambiar borde y sombra */
+		.limage-button img:hover {
+			border-color: #3498db;  /* Cambia el color del borde al pasar el mouse */
+			box-shadow: 0px 6px 8px rgba(0, 0, 0, 0.4); /* Aumenta la sombra */
+		}
+
+		.rimage-button {
+			display: block;
+			margin: 0 auto;
+			padding: 1em;
+			background-color: transparent;
+			border: none;
+		}
+
+		/* Cambiar el tamaño de los botones de imagen y agregar borde */
+		.rimage-button img {
+			width: 200px; /* Ajusta el ancho a 100% del contenedor */
+			height: 50%; /* Ajusta el alto a 100% del contenedor */
+			object-fit: cover; /* Mantiene la imagen proporcionada sin distorsión */
+			cursor: pointer;
+			margin-top: 118px;
+			border: 4px solid #2c3e50;  /* Borde de color oscuro, similar a un gris oscuro/azul marino */
+			border-radius: 8px;  /* Bordes redondeados */
+			box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.3); /* Sombra sutil para un efecto de profundidad */
+			transition: all 0.3s ease; /* Transición suave para el hover */
+		}
+
+		/* Efecto hover para cambiar borde y sombra */
+		.rimage-button img:hover {
+			border-color: #3498db;  /* Cambia el color del borde al pasar el mouse */
+			box-shadow: 0px 6px 8px rgba(0, 0, 0, 0.4); /* Aumenta la sombra */
+		}
+
+		#timeoutCounter {
+			color: #3498db;
+			font-size: 4em;  /* Tamaño de fuente más grande */
+			font-weight: bold;
+			text-align: center;  /* Centrado del número */
+			position: absolute;  /* Posicionamiento absoluto */
+			top: 60%;  /* Centrado verticalmente */
+			right: 300px;  /* 10px de margen desde el borde derecho */
+			transform: translateY(-50%);  /* Centrado verticalmente */
+			z-index: 1000;  /* Asegura que esté por encima de otros elementos */
+			
+			/* Agregar sombra */
+			text-shadow: 3px 3px 10px rgba(0, 0, 0, 0.5);  /* Sombra sutil para darle profundidad */
+		}
+
+		input, textarea { 
+			width: 75% !important;
+			margin-top: 5px;
+			margin-left: 25px; 
+			background: rgba(0,0,0,0.3);
+			border: none;
+			outline: none;
+			padding: 10px;
+			font-size: 13px;
+			color: #fff;
+			text-shadow: 1px 1px 1px rgba(0,0,0,0.3);
+			border: 1px solid rgba(0,0,0,0.3);
+			border-radius: 4px;
+			box-shadow: inset 0 -5px 45px rgba(100,100,100,0.2), 0 1px 1px rgba(255,255,255,0.2);
+			-webkit-transition: box-shadow .5s ease;
+			-moz-transition: box-shadow .5s ease;
+			-o-transition: box-shadow .5s ease;
+			-ms-transition: box-shadow .5s ease;
+			transition: box-shadow .5s ease;
+		}
+		textarea { resize: none; }
+		input:focus, textarea:focus { box-shadow: inset 0 -5px 45px rgba(100,100,100,0.4), 0 1px 1px rgba(255,255,255,0.2); }
+
+    </style>
+
+</head>
+
+<body>
+    <div class="container">
+        <div class="title-section">
+            <h1>Common Gateway Interface (CGI)</h1>
+        </div>
+
+        <div class="content">
+            <div class="text-section">
+                <p>CGI es una tecnología que permite que un servidor web ejecute programas (scripts) externos, generando contenido dinámico para el cliente.</p>
+                <p>A diferencia de la CLI (Command Line Interface), donde los comandos se ejecutan manualmente desde una terminal, CGI permite la ejecución de scripts en el servidor a través de peticiones HTTP, como GET o POST.</p>
+                <p>El servidor web recibe la solicitud del cliente, ejecuta el script y devuelve el resultado al navegador.</p>
+            </div>
+
+            <div class="image-section">
+                <img src="example.png" alt="Ejemplo de CGI">
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="form-section">
+            <div class="left-column">
+                <p>Al hacer click en este botón, la información será enviada al servidor a través de una query y del cuerpo de la petición (stdin, POST).</p>
+                <input maxlength="100" type="text" placeholder="Parámetros de la consulta...">
+                <textarea maxlength="250" placeholder="Cuerpo del mensaje..."></textarea>
+
+                <button class="limage-button" onclick="submitQuery()">
+                    <img src="sample.png" alt="Enviar a sample.cgi">
+                </button>
+            </div>
+
+            <hr>
+
+            <div class="right-column">
+                <p>Si un CGI entra en un bucle o se bloquea, el servidor web terminará la ejecución y enviará un código de error 408 (Request Timeout).</p>
+				<p>Al hacer click en este botón podrá probar generar un timeout.</p>
+				<p>Deberá esperar alrededor de 25 segundos hasta que vea el mensaje.</p>
+				<p id="timeoutCounter" class="timer"></p>
+                <button class="rimage-button" id="timeoutButton" onclick="startTimeoutRequest()">
+                    <img src="timeout.png" alt="Abrir /timeout.html en otra pestaña">
+                </button>
+            </div>
+        </div>
+
+        <p style="text-align: center; margin-top: 15px; font-size: 12px; color: gray; margin-left: -20px;">
+			<a href="/home.php" style="color: #C0C000; margin-left: 15px;">Página de inicio</a>	<!-- Enlace a la página de inicio -->
+		</p>
+    </div>
+
+	<script>
+		function submitQuery() {
+			const query = document.querySelector('input').value;
+			const body = document.querySelector('textarea').value;
+		
+			// Crear un formulario oculto
+			const form = document.createElement('form');
+			form.method = 'POST';
+			form.action = 'sample.cgi';
+			form.target = '_blank'; // Abrir en nueva pestaña
+		
+			// Solo agregar el campo 'query' si tiene valor
+			if (query.trim() !== '') form.action = `sample.cgi?${encodeURIComponent(query)}`;
+		
+			// Solo agregar el campo 'body' si tiene valor
+			if (body.trim() !== '') {
+				const bodyInput = document.createElement('input');
+				bodyInput.type = 'hidden';
+				bodyInput.name = 'body';
+				bodyInput.value = body; // Codificar el texto
+				form.appendChild(bodyInput);
+			}
+		
+			// Agregar el formulario al documento y enviarlo
+			document.body.appendChild(form);
+			form.submit();
+		
+			// Limpiar los campos después de enviarlo
+			document.querySelector('input').value = '';
+			document.querySelector('textarea').value = '';
+	
+			// Eliminar el formulario después de enviarlo
+			document.body.removeChild(form);
+		}
+
+		function startTimeoutRequest() {
+			const button = document.getElementById('timeoutButton');
+			button.disabled = true;
+
+			// Contador inicial
+			let timeElapsed = 0;  // segundos
+			const counterElement = document.getElementById('timeoutCounter');
+			
+			// Mostrar el contador y empezar la cuenta hacia adelante
+			const interval = setInterval(function() {
+				timeElapsed++;
+				counterElement.textContent = `${timeElapsed}`;
+
+			}, 1000);  // Actualizar cada segundo
+
+			// Redirigir de inmediato a la nueva página (sin esperar al temporizador)
+			window.location.href = 'timeout.py';
+		}
+	</script>
+
+</body>
+</html>
