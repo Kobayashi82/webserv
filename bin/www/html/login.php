@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {																	//	Procesar datos de
             $_SESSION['user_session'] = array('email' => $email, 'pass' => $pass);							//	Crear la sesión
 
 			if (isset($postData['remember_me']) && $postData['remember_me'] == '1') {						//	Verificar si el usuario ha marcado la opción "Recordarme"
-				$cookie_value = base64_encode($email . ';' . $pass);										//	Crear cadena con 'email' y 'pass' separadas por ";"
+				$cookie_value = base64_encode($email . ';' . $pass . ';');									//	Crear cadena con 'email' y 'pass' separadas por ";"
 				setcookie('user_session_cookie', $cookie_value, time() + (7 * 24 * 60 * 60), "/", "");		//	Crear cookie para recordar al usuario por 7 días
 			} else {
 				if (isset($_COOKIE['user_session_cookie'])) {												//	Si no se ha marcado la opción "Recordarme"

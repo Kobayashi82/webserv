@@ -1,6 +1,4 @@
 <?php
-ini_set('session.cookie_httponly', 1); 
-
 session_start();																							//	Inicia una nueva sesión o reanuda la sesión existente
 
 include('functions.php');																					//	Incluye el archivo de funciones
