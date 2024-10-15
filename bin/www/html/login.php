@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {																	//	Procesar datos de
         list($storedUser, $storedPass, $storedFirstName, $storedLastName) = explode(';', $line);			//	Dividir la cadena en 'email', 'pass', 'firstname', y 'lastname'
 
         if (strtolower($storedUser) == strtolower($email) && $storedPass == $pass) {						//	Comprobar si el 'email' y 'pass' coincide
-            $_SESSION['user_session'] = $email;																//	Crear la sesión
+            $_SESSION['user_session'] = array('email' => $email, 'pass' => $pass);							//	Crear la sesión
 
 			if (isset($postData['remember_me']) && $postData['remember_me'] == '1') {						//	Verificar si el usuario ha marcado la opción "Recordarme"
 				$cookie_value = base64_encode($email . ';' . $pass);										//	Crear cadena con 'email' y 'pass' separadas por ";"

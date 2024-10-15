@@ -1,7 +1,7 @@
 <?php
 
 function checkUserSession($email, $pass) {
-    $userdata = @file_get_contents('users/userdata');																//	Abrir el archivo de usuarios
+	$userdata = @file_get_contents('users/userdata');																//	Abrir el archivo de usuarios
     if ($userdata === false) return false;
 
     $lines = explode("\n", $userdata);																				//	Procesar las líneas del archivo de usuarios
@@ -12,18 +12,37 @@ function checkUserSession($email, $pass) {
 		if (count($parts) < 4) continue;																			// Si no tiene las 4 partes, continuar con la siguiente línea
 
         list($storedUser, $storedPass, $storedFirstName, $storedLastName) = explode(';', $line);					//	Dividir la cadena en 'email', 'pass', 'firstname', y 'lastname'
-        if ($stored_email == $email && $stored_pass == $pass) return true;											//	Comprobar si el 'email' y 'pass' coincide
+        if ($storedUser == $email && $storedPass == $pass) return true;											//	Comprobar si el 'email' y 'pass' coincide
     }
 
     return false;
 }
 
 function UserSession() {
+	$userdata = @file_get_contents('users/userdata');																//	Abrir el archivo de usuarios
+    if ($userdata === false) {
+		session_unset();																							//	Eliminar todas las variables de sesión
+		session_destroy();																							//	Destruir la sesión
+		setcookie('user_session_cookie', '', time() - 3600, "/");													//	Eliminar la cookie de sesión
+		return false;
+	}
+
+	if (isset($_SESSION['user_session'])) {
+		$s_email = strtolower($_SESSION['user_session']['email']);
+		$s_pass = $_SESSION['user_session']['pass'];
+		if (!checkUserSession($s_email, $s_pass)) {
+			session_unset();																						//	Eliminar todas las variables de sesión
+			session_destroy();																						//	Destruir la sesión
+			setcookie('user_session_cookie', '', time() - 3600, "/");												//	Eliminar la cookie de sesión
+			return false;
+		}
+	}
+
 	if (isset($_COOKIE['user_session_cookie'])) {																	//	Verificar si la cookie de sesión existe y tiene un valor
-		list($email, $pass, $firstname, $lastname) = explode(';', base64_decode($_COOKIE['user_session_cookie']));  // Separar 'email', 'pass', 'firstname', y 'lastname' de la cookie
+		list($email, $pass) = explode(';', base64_decode($_COOKIE['user_session_cookie']));  						// Separar 'email', 'pass' de la cookie
 
 		if (checkUserSession($email, $pass)) {																		//	Verificar si el nombre de 'email' y la 'pass'' son válidos
-			$_SESSION['user_session'] = $email;																		//	Iniciar sesión automáticamente si la cookie es válida
+			$_SESSION['user_session'] = array('email' => $email, 'pass' => $pass);									//	Iniciar sesión automáticamente si la cookie es válida
 		} else {
 			setcookie('user_session_cookie', '', time() - 3600, "/");												//	Eliminar la cookie del cliente
 			unset($_COOKIE['user_session_cookie']);																	//	Eliminar la cookie del entorno

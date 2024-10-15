@@ -10,7 +10,7 @@ if (!isset($_SESSION['user_session'])) {
     exit();
 }
 
-$email = strtolower($_SESSION['user_session']);																//	Obtiene el 'email' del usuario y lo convierte a minúsculas
+$email = strtolower($_SESSION['user_session']['email']);													//	Obtiene el 'email' del usuario y lo convierte a minúsculas
 $userDirectory = 'users/' . $email;																			//	Define el directorio del usuario
 createUserDirectory($userDirectory);																		//	Crea el directorio si no existe
 
