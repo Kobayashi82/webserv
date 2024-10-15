@@ -116,7 +116,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {																	//	Procesar datos de
 	document.getElementById('signupForm').addEventListener('submit', function(e) {
 		e.preventDefault();																					//	Previene el envío del formulario por defecto
 		
-		// Validaciones personalizadas
 		const firstname = document.getElementById('firstname');												//	Obtiene el valor de 'nombre'
 		const lastname = document.getElementById('lastname');												//	Obtiene el valor de 'apellidos'
 		const email = document.getElementById('email');														//	Obtiene el valor de 'email'

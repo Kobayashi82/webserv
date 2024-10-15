@@ -1,94 +1,127 @@
 <?php
-session_start();
+session_start();																							//	Inicia una nueva sesión o reanuda la sesión existente
 
-// Verificar si el usuario está logueado
+include('functions.php');																					//	Incluye el archivo de funciones
+
+UserSession();																								//	Verifica si la sesión del usuario ya está activa a través de la cookie y la inicia si es válida
+
 if (!isset($_SESSION['user_session'])) {
-    header('Location: login.php');
+    header('Location: login.php');																			//	Si no existe la cookie, redirigir al 'login.php'
     exit();
 }
 
-include('functions.php'); // Archivo con funciones comunes
-$email = $_SESSION['user_session']; // Obtener el email del usuario logueado
-$tempEmail = $email['email']; // Obtener solo el email
+$email = $_SESSION['user_session']['email'];																//	Obtiene el 'email' del usuario y lo convierte a minúsculas
+$pass = '';																									//	Obtiene el 'pass'
+$name = '';																									//	Obtiene el 'nombre'
+$last_name = '';																							//	Obtiene el 'apellido'
 
-// Cargar datos del usuario actual desde el archivo
-$userdataFile = 'users/userdata';
-$userdata = @file_get_contents($userdataFile);
-if ($userdata === false) {
-    die('Error al cargar los datos del usuario.');
-}
+$userDirectory = 'users/' . strtolower($email);																//	Define el directorio del usuario
+createUserDirectory($userDirectory);																		//	Crea el directorio si no existe
 
-$lines = explode("\n", $userdata);
-$userData = null;
-
+$userdata = @file_get_contents('users/userdata');															//	Verificar si el archivo 'userdata' existe
+$lines = explode("\n", $userdata);																			//	Procesar las líneas del archivo de usuarios
 foreach ($lines as $line) {
-    $line = trim($line);
-    if ($line === '') continue;
+	$name = $line;
+	$line = trim($line);																					//	Eliminar espacios y saltos de línea innecesarios
+	if ($line === '') continue;																				//	Ignorar líneas vacías
+    if (count(explode(';', $line)) < 4) continue;															// Si no tiene las 4 partes, continuar con la siguiente línea
 
-    $parts = explode(';', $line);
-    if (count($parts) < 4) continue; // Verificar que la línea tiene al menos 4 partes
+	list($storedUser, $storedPass, $storedFirstName, $storedLastName) = explode(';', $line);				//	Dividir la cadena en 'email', 'pass', 'firstname', y 'lastname'
 
-    list($storedEmail, $storedPass, $storedFirstName, $storedLastName) = $parts;
-
-    // Verificación del email almacenado
-    if (strtolower($storedEmail) === strtolower($tempEmail)) {
-        $userData = [
-            'email' => $storedEmail,
-            'firstname' => $storedFirstName,
-            'lastname' => $storedLastName,
-            'password' => $storedPass
-        ];
-        break;
-    }
+	if (strtolower($storedUser) == strtolower($email)) {													//	Comprobar si el 'email' coincide
+		$pass = $storedPass;																				//	Obtener el 'pass' establecido por el usuario
+		$name = $storedFirstName;																			//	Obtener el 'nombre' establecido por el usuario
+		$last_name = $storedLastName;																		//	Obtener el 'apellido' establecido por el usuario
+		break;
+	}
 }
 
-if ($userData === null) {
-    die('Usuario no encontrado.');
-}
+// <!-- ------------------------------------------- POST ------------------------------------------- -->
 
-// Actualizar los datos del usuario cuando se envía el formulario
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $newFirstName = isset($_POST['firstname']) ? $_POST['firstname'] : '';
-    $newLastName = isset($_POST['lastname']) ? $_POST['lastname'] : '';
-    $newEmail = isset($_POST['email']) ? $_POST['email'] : '';
-    $oldPassword = isset($_POST['old_password']) ? $_POST['old_password'] : ''; // Obtener la contraseña antigua
-    $newPassword = isset($_POST['password']) ? $_POST['password'] : '';
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {																	//	Procesar datos del formulario solo si se envían por POST
+    parse_str(file_get_contents("php://input"), $postData);													//	Leer los datos del cuerpo de la solicitud (stdin)
 
-    // Validar que los datos no estén vacíos y que la contraseña antigua coincida
-    if (empty($newFirstName) || empty($newLastName) || empty($newEmail)) {
-        if ($oldPassword != $userData['password']) { // Verificar la contraseña antigua sea diferente a la nueva
-            // Leer todo el archivo de usuarios y actualizar la información del usuario
-            $newLines = [];
-            foreach ($lines as $line) {
-                $line = trim($line);
-                if ($line === '') continue;
+	$n_firstname = isset($postData['firstname']) ? $postData['firstname'] : '';								//	Obtener el valor de 'nombre'
+    $n_lastname = isset($postData['lastname']) ? $postData['lastname'] : '';								//	Obtener el valor de 'apellidos'
+    $n_email = isset($postData['email']) ? $postData['email'] : '';											//	Obtener el valor de 'email'
+    $n_password = isset($postData['password']) ? $postData['password'] : '';								//	Obtener el valor de 'pass'
+    $old_password = isset($postData['old_password']) ? $postData['old_password'] : '';						//	Obtener el valor de 'old_pass'
 
-                $parts = explode(';', $line);
-                if (count($parts) < 4) continue;
 
-                list($storedEmail, $storedPass, $storedFirstName, $storedLastName) = $parts;
+	if (strpos($n_email, '/') !== false) {																	//	Comprobar si el 'email' contiene el caracter prohibido "/"
+		echo json_encode(['success' => false, 'message' => 'El email no puede contener "/"']);				//	Si lo contiene, devolvemos un mensaje de "failed" al cliente
+		exit();
+	}
 
-                if (strtolower($storedEmail) === strtolower($tempEmail)) {
-                    // Reemplazar los datos con los nuevos
-                    $storedPass = !empty($newPassword) ? $newPassword : $storedPass; // Actualizar contraseña solo si se ingresó
-                    $newLines[] = "$newEmail;$storedPass;$newFirstName;$newLastName";
-                    $_SESSION['user_session']['email'] = $newEmail; // Actualizar el email en la sesión si cambia
-                } else {
-                    $newLines[] = $line;
-                }
-            }
+    $userdataFile = 'users/userdata';																		//	Definir la ruta del archivo 'userdata'
+    
+	if (!is_dir('users') && !mkdir('users', 0777, true)) {													//	Verificar si el directorio 'users' existe, si no, crea el directorio
+		echo json_encode(['success' => false, 'message' => 'Error interno al crear la cuenta']);			//	Si falla al crear el directorio, devolvemos un mensaje de "failed" al cliente
+		exit();
+	}
 
-            // Guardar los datos actualizados en el archivo
-            file_put_contents($userdataFile, implode("\n", $newLines) . "\n");
-            echo "<script>alert('Datos actualizados con éxito');</script>";
-            header('Location: profile.php'); // Recargar la página
+    $userdata = @file_get_contents($userdataFile);															//	Verificar si el archivo 'userdata' existe
+    if ($userdata === false) {
+        $file = fopen($userdataFile, 'w');																	//	Si 'userdata' no existe, lo creamos y abrimos en modo escritura
+        if ($file === false) {
+            echo json_encode(['success' => false, 'message' => 'Error interno al crear la cuenta']);		//	Si falla al abrirlo, devolvemos un mensaje de "failed" al cliente
             exit();
-        } else {
-            echo "<script>alert('La contraseña actual es incorrecta');</script>";
         }
-    } else {
-        echo "<script>alert('Por favor, completa todos los campos');</script>";
+        fclose($file);																						//	Cerramos el archivo 'userdata'
     }
+
+	if ($pass !== $old_password) {																			//	Comprobar si 'pass' y 'old_pass' no coinciden
+		echo json_encode(['success' => false, 'message' => 'Las contraseñas actual es incorrecta']);		//	Contraseña inválida, devolvemos un mensaje de "failed" al cliente
+		exit();
+	}
+
+	$newLines = [];																							//	Nuevo array para las líneas sin el usuario a eliminar
+	$userFound = false;																						//	Variable para marcar si el usuario fue encontrado
+
+    $lines = explode("\n", $userdata);																		//	Procesar las líneas del archivo de usuarios
+    foreach ($lines as $line) {
+        $line = trim($line);																				//	Eliminar espacios y saltos de línea innecesarios
+        if ($line === '') continue;																			//	Ignorar líneas vacías
+		$parts = explode(';', $line);
+		if (count($parts) < 4) continue;																	//	Si no tiene las 4 partes, continuar con la siguiente línea
+		
+        list($storedUser, $storedPass, $storedFirstName, $storedLastName) = explode(';', $line);			//	Dividir la cadena en 'email', 'pass', 'firstname', y 'lastname'
+
+		if (strtolower($storedUser) == strtolower($email)) {
+			$userFound = true;																				//	Usuario encontrado
+			continue;																						//	No añadir esta línea al array
+		}
+        if (strtolower($storedUser) == strtolower($n_email)) {												//	Comprobar si el 'email' coincide
+            echo json_encode(['success' => false, 'message' => 'El e-mail pertenece a otro usuario']);		//	El 'email' ya existe, devolvemos un mensaje de "failed" al cliente
+            exit();
+        }
+		$newLines[] = $line;																				//	Añade la linea al array de lines
+    }
+
+	if (!$userFound) {
+		echo json_encode(['success' => false, 'message' => 'Usuario no encontrado']);						//	No existe el usuario, devolvemos un mensaje de "failed" al cliente
+		exit();
+	}
+
+	if (empty($n_password)) $n_password = $pass;
+    $newUser = $n_email . ';' . $n_password . ';' . $n_firstname . ';' . $n_lastname . ";\n";				//	Si el usuario no existe, añadimos el nuevo usuario al archivo
+
+	$newLines[] = $newUser;																					//	Añadir la nueva línea al array de líneas
+    file_put_contents($userdataFile, implode("\n", $newLines));												//	Guardar las líneas actualizadas en el archivo
+
+	if (is_dir($userDirectory)) {
+		$newUserDirectory = 'users/' . strtolower($n_email);												//	Ruta de la nueva carpeta
+		rename($userDirectory, $newUserDirectory);															//	Cambia el nombre la carpera
+	}
+
+	$_SESSION['user_session'] = array('email' => $n_email, 'pass' => $n_password);							//	Crear la sesión
+	if (isset($_COOKIE['user_session_cookie'])) {
+		$cookie_value = base64_encode($n_email . ';' . $n_password . ';');									//	Crear cadena con 'email' y 'pass' separadas por ";"
+		setcookie('user_session_cookie', $cookie_value, time() + (7 * 24 * 60 * 60), "/", "");				//	Crear cookie para recordar al usuario por 7 días
+	}
+
+    echo json_encode(['success' => true, 'message' => 'Usuario registrado con exito']);						//	Enviar un mesaje de "success" al cliente
+    exit();
 }
 
 ?>
@@ -97,29 +130,77 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Perfil</title>
-    <link rel="stylesheet" href="resources/style.css">
+    <meta charset="UTF-8">																																		<!-- Define el tipo de caracteres utilizado en la página -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">																						<!-- Configura el viewport para adaptabilidad en móviles -->
+    <title>Perfil</title>																																		<!-- Título de la página -->
+    <link rel="stylesheet" href="resources/style.css">																											<!-- Enlace a la hoja de estilos -->
 </head>
 
 <body>
-    <div class="signup">
-        <h1>Actualizar Datos</h1>
-        <form id="profileForm" method="POST">
-            <input type="text" name="firstname" id="firstname" placeholder="Nombre" required="required" />
-            <input type="text" name="lastname" id="lastname" placeholder="Apellidos" required="required" />
-            <input type="email" name="email" id="email" placeholder="Email" required="required" />
-            <input type="password" name="password" id="password" placeholder="Nueva Contraseña (opcional)" />
-            <button type="submit" class="btn btn-primary btn-block btn-large">Actualizar Datos</button><br \>
-            <input type="password" name="old_password" id="old_password" placeholder="Contraseña actual para aplicar cambios" required="required" />
-            <div class="button-container">
-                <button type="button" class="btn btn-primary" onclick="window.history.back();">Volver</button>
-                <button type="submit" class="btn-danger">Eliminar Cuenta</button>
-            </div>
-    <p id="error-message"></p>
-        <p id="error-message"></p>
-    </div>
-</body>
+<div class="signup">																																			<!-- Contenedor principal -->
+    <h1>Actualizar Datos</h1>																																	<!-- Título de la sección -->
+    <form id="profileForm">
+        <input type="text" name="firstname" id="firstname" placeholder="Nombre" value="<?php echo htmlspecialchars($name); ?>" required="required" />			<!-- Campo para ingresar el 'nombre' -->
+        <input type="text" name="lastname" id="lastname" placeholder="Apellidos" value="<?php echo htmlspecialchars($last_name); ?>" required="required" />		<!-- Campo para ingresar el 'apellidos' -->
+        <input type="email" name="email" id="email" placeholder="Email" value="<?php echo htmlspecialchars($email); ?>" required="required" />					<!-- Campo para ingresar el 'email' -->
+        <input type="password" name="password" id="password" placeholder="Nueva Contraseña (opcional)" />														<!-- Campo para ingresar el 'nueva pass' -->
+        <button type="submit" class="btn btn-primary btn-block btn-large">Actualizar Datos</button><br \>														<!-- Botón para enviar el formulario -->
+        <input type="password" name="old_password" id="old_password" placeholder="Contraseña actual para aplicar cambios" required="required" />				<!-- Campo para ingresar el 'old pass' -->
+        <div class="button-container">
+            <button type="button" class="btn btn-primary" onclick="window.history.back();">Volver</button>														<!-- Botón para volver atras -->
+            <button type="submit" class="btn-danger">Eliminar Cuenta</button>																					<!-- Botón para eliminar la cuenta -->
+        </div>
+	</form>
 
+	<p style="text-align: left; margin-top: 15px; font-size: 12px; color: gray; margin-left: 50px;">
+		¿Necesitas ayuda?<a href="/contact.php" style="color: #C0C000; margin-left: 42px;">Contáctanos</a>														<!-- Enlace para la página de contacto -->
+	</p>
+	<p id="error-message"></p>																																	<!-- Elemento para mostrar mensajes de error -->
+</div>
+
+<!-- ------------------------------------------- SCRIPT ------------------------------------------- -->
+
+<script>
+
+	document.getElementById('profileForm').addEventListener('submit', function(e) {
+		e.preventDefault();																					//	Previene el envío del formulario por defecto
+		
+		// Validaciones personalizadas
+		const firstname = document.getElementById('firstname');												//	Obtiene el valor de 'nombre'
+		const lastname = document.getElementById('lastname');												//	Obtiene el valor de 'apellidos'
+		const email = document.getElementById('email');														//	Obtiene el valor de 'email'
+		const password = document.getElementById('password');												//	Obtiene el valor de 'pass'
+		const old_password = document.getElementById('old_password');										//	Obtiene el valor de 'confirm_pass'
+		
+		fetch('/profile.php', {																				//	Realiza la solicitud a 'signup.php' con los datos del formulario, osea, (POST a signup.php)
+			method: 'POST',
+			headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+			body: `firstname=${encodeURIComponent(firstname.value)}&` +
+				`lastname=${encodeURIComponent(lastname.value)}&` +
+				`email=${encodeURIComponent(email.value)}&` +
+				`password=${encodeURIComponent(password.value)}&` +
+				`old_password=${encodeURIComponent(old_password.value)}`
+		})
+
+		.then(response => response.json())																	//	Convierte la respuesta en formato JSON para poder acceder a los datos
+
+		.then(data => {																						//	Maneja la respuesta del servidor
+			if (data.success) {
+				alert('Datos actualizados con éxito');														//	Muestra una alerta de "success"
+				window.location.href = '/home.php';															//	Redirige a 'login.php' en caso de éxito
+			} else {
+				const errorMessage = document.getElementById('error-message');
+				errorMessage.textContent = data.message;													//	Muestra un mensaje de error debajo del botón
+			}
+		})
+
+		.catch(error => {																					//	Maneja los errores de la solicitud
+			console.error('Error:', error);																	//	Imprime el error en la consola
+			alert('Se produjo un error al procesar tu solicitud');											//	Muestra una alerta al usuario
+		})
+
+	})
+
+</script>
+</body>
 </html>
