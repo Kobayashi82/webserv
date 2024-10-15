@@ -12,7 +12,7 @@ function checkUserSession($email, $pass) {
 		if (count($parts) < 4) continue;																			// Si no tiene las 4 partes, continuar con la siguiente línea
 
         list($storedUser, $storedPass, $storedFirstName, $storedLastName) = explode(';', $line);					//	Dividir la cadena en 'email', 'pass', 'firstname', y 'lastname'
-        if ($storedUser == $email && $storedPass == $pass) return true;											//	Comprobar si el 'email' y 'pass' coincide
+        if (strtolower($storedUser) == strtolower($email) && $storedPass == $pass) return true;						//	Comprobar si el 'email' y 'pass' coincide
     }
 
     return false;
@@ -24,6 +24,7 @@ function UserSession() {
 		session_unset();																							//	Eliminar todas las variables de sesión
 		session_destroy();																							//	Destruir la sesión
 		setcookie('user_session_cookie', '', time() - 3600, "/");													//	Eliminar la cookie de sesión
+		unset($_COOKIE['user_session_cookie']);																		//	Eliminar la cookie del entorno
 		return false;
 	}
 
@@ -34,12 +35,13 @@ function UserSession() {
 			session_unset();																						//	Eliminar todas las variables de sesión
 			session_destroy();																						//	Destruir la sesión
 			setcookie('user_session_cookie', '', time() - 3600, "/");												//	Eliminar la cookie de sesión
+			unset($_COOKIE['user_session_cookie']);																	//	Eliminar la cookie del entorno
 			return false;
 		}
 	}
 
 	if (isset($_COOKIE['user_session_cookie'])) {																	//	Verificar si la cookie de sesión existe y tiene un valor
-		list($email, $pass) = explode(';', base64_decode($_COOKIE['user_session_cookie']));  						// Separar 'email', 'pass' de la cookie
+		list($email, $pass) = explode(';', base64_decode($_COOKIE['user_session_cookie']));  						//	Separar 'email', 'pass' de la cookie
 
 		if (checkUserSession($email, $pass)) {																		//	Verificar si el nombre de 'email' y la 'pass'' son válidos
 			$_SESSION['user_session'] = array('email' => $email, 'pass' => $pass);									//	Iniciar sesión automáticamente si la cookie es válida
