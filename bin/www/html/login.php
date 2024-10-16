@@ -41,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {																	//	Procesar datos de
 				setcookie('user_session_cookie', $cookie_value, time() + (7 * 24 * 60 * 60), "/", "");		//	Crear cookie para recordar al usuario por 7 días
 			} else {
 				if (isset($_COOKIE['user_session_cookie'])) {												//	Si no se ha marcado la opción "Recordarme"
-					setcookie('user_session_cookie', '', time() - 3600, "/");								//	Eliminar la cookie del cliente
+					setcookie('user_session_cookie', '', time() - 3600, "/", false, true);					//	Eliminar la cookie del cliente
 					unset($_COOKIE['user_session_cookie']);													//	Eliminar la cookie del entorno
 				}
 			}
