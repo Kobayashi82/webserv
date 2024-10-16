@@ -112,7 +112,7 @@ foreach ($files as $file) {
 </div>
 
 <div class="button-panel">
-    <a target="_blank" href="/directory">
+    <a target="_blank" href="/directory/">
         <button class="image-button">
             <img src="resources/directory.png" alt="Directorios">
             <span>Directorios</span>
