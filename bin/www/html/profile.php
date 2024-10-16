@@ -152,7 +152,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {																	//	Procesar datos de
 	$_SESSION['user_session'] = array('email' => $n_email, 'pass' => $n_password);							//	Crear la sesión
 	if (isset($_COOKIE['user_session_cookie'])) {
 		$cookie_value = base64_encode($n_email . ';' . $n_password . ';');									//	Crear cadena con 'email' y 'pass' separadas por ";"
-		setcookie('user_session_cookie', $cookie_value, time() + (7 * 24 * 60 * 60), "/", "");				//	Crear cookie para recordar al usuario por 7 días
+		setcookie('user_session_cookie', $cookie_value, time() + (7 * 24 * 60 * 60), "/", "", false, true);				//	Crear cookie para recordar al usuario por 7 días
 	}
 
     echo json_encode(['success' => true, 'message' => 'Usuario registrado con exito']);						//	Enviar un mesaje de "success" al cliente

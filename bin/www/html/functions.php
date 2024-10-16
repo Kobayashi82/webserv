@@ -24,8 +24,9 @@ function UserSession() {
     if ($userdata === false) {
 		session_unset();																							//	Eliminar todas las variables de sesión
 		session_destroy();																							//	Destruir la sesión
-		setcookie('user_session_cookie', '', time() - 3600, "/", false, true);													//	Eliminar la cookie de sesión
+		setcookie('user_session_cookie', '', time() - 3600, "/", "", false, true);										//	Eliminar la cookie de sesión
 		unset($_COOKIE['user_session_cookie']);																		//	Eliminar la cookie del entorno
+		session_start();
 		return false;
 	}
 
@@ -35,8 +36,9 @@ function UserSession() {
 		if (!checkUserSession($s_email, $s_pass)) {
 			session_unset();																						//	Eliminar todas las variables de sesión
 			session_destroy();																						//	Destruir la sesión
-			setcookie('user_session_cookie', '', time() - 3600, "/", false, true);												//	Eliminar la cookie de sesión
+			setcookie('user_session_cookie', '', time() - 3600, "/", "", false, true);									//	Eliminar la cookie de sesión
 			unset($_COOKIE['user_session_cookie']);																	//	Eliminar la cookie del entorno
+			session_start();
 			return false;
 		}
 	}
@@ -47,7 +49,7 @@ function UserSession() {
 		if (checkUserSession($email, $pass)) {																		//	Verificar si el nombre de 'email' y la 'pass'' son válidos
 			$_SESSION['user_session'] = array('email' => $email, 'pass' => $pass);									//	Iniciar sesión automáticamente si la cookie es válida
 		} else {
-			setcookie('user_session_cookie', '', time() - 3600, "/", false, true);												//	Eliminar la cookie del cliente
+			setcookie('user_session_cookie', '', time() - 3600, "/", "", false, true);									//	Eliminar la cookie del cliente
 			unset($_COOKIE['user_session_cookie']);																	//	Eliminar la cookie del entorno
 		}
 	}
