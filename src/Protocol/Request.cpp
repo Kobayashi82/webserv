@@ -327,6 +327,7 @@
 				path = replace_all_vars(event, path);
 
 				Protocol::isAlias = false;
+
 				if (chdir(root.c_str()) != 0) return (0);
 
 				if (path.empty() || Utils::file_exists(Utils::fullpath(root + "/" + path))) {
@@ -886,10 +887,11 @@
 
 
 		//	Unknown request methods return an error
+			if (!global(event) || event->response_map["Code"].empty())																		//	If it is not a valid response...
+				error_page(event, "500", event->VServ, event->Loc);																			//	Return "500 (Internal Server Error)"
+
 			if (std::string("HEAD|GET|POST|PUT|PATCH|DELETE").find(event->header_map["Method"]) == std::string::npos)
 				error_page(event, "405", event->VServ, event->Loc);																			//	Return "405 (Method Not Allowed)"
-			else if (!global(event) || event->response_map["Code"].empty())																	//	If it is not a valid response...
-				error_page(event, "500", event->VServ, event->Loc);																			//	Return "500 (Internal Server Error)"
 
 		//	Only HEAD and GET are valid without a CGI
 			if (event->response_map["Method"] != "CGI" && event->response_map["Method"] != "Redirect" && event->response_map["Method"] != "Error"

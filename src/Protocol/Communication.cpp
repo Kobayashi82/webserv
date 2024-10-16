@@ -43,18 +43,14 @@
 				if (!event) return (0);
 
 				char buffer[CHUNK_SIZE];			memset(buffer, 0, sizeof(buffer));															//	Initialize buffer
-				//char peek_buffer[CHUNK_SIZE + 1];	memset(peek_buffer, 0, sizeof(peek_buffer));												//	Initialize peek buffer
+				ssize_t bytes_read = recv(event->fd, buffer, CHUNK_SIZE, 0);																	//	Read a chunk (THIS IS THE READ)
 
-				//ssize_t bytes_peek = recv(event->fd, peek_buffer, CHUNK_SIZE + 1, MSG_PEEK);													//	Peek chunk + 1 byte to check if there are more data
-				ssize_t bytes_read = recv(event->fd, buffer, CHUNK_SIZE, 0);																	//	Read a chunk
-				
 			//	Read some data
 				if (bytes_read > 0) {
 
 					event->client->update_last_activity();																						//	Reset client timeout
 
 					event->read_buffer.insert(event->read_buffer.end(), buffer, buffer + bytes_read);											//	Store the data read into 'read_buffer'
-					//std::cout << std::string(event->read_buffer.begin(), event->read_buffer.end());
 					Thread::inc_size_t(Display::mutex, read_bytes, bytes_read);																	//	Increase total bytes read
 
 				//	Needs to get the header
@@ -70,7 +66,7 @@
 								return (1);
 							}
 
-							event->read_size = event->read_buffer.size() + event->header.size();												//	Set 'read_size'
+							event->read_size = event->read_buffer.size();																			//	Set 'read_size'
 							event->read_maxsize = Utils::sstol(event->header_map["Content-Length"]) + event->header.size();
 							event->read_buffer.erase(event->read_buffer.begin(), event->read_buffer.begin() + event->header.size());			//	Remove the header from 'read_buffer'
 							Protocol::process_request(event);																					//	Process the request
@@ -79,7 +75,7 @@
 					} else event->read_size += bytes_read;																						//	Increase 'read_size'
 
 				//	If 'read_size' is greater than 'body_maxsize'
-					if (event->body_maxsize > 0 && (event->read_size >= event->body_maxsize + event->header.size()
+					if (!event->header.empty() && event->body_maxsize > 0 && (event->read_size >= event->body_maxsize + event->header.size()
 						|| static_cast<size_t>(Utils::sstol(event->header_map["Content-Length"])) >= event->body_maxsize)) {
 						event->header_map["Connection"] = "close";																				//	Set 'Connection' to close
 						event->header_map["Write-Only"] = "true";																				//	Don't read from the client anymore
@@ -119,7 +115,6 @@
 
 			//	Error reading
 				} else if (bytes_read == -1) {
-					Log::log(RED500 "Communication failed with " BLUE400 + event->client->ip + NC, Log::BOTH_ERROR, event->socket->VServ);		//	Log message
 					event->client->remove(); return (1);																						//	Remove the client
 				}		
 
@@ -140,7 +135,7 @@
 					size_t buffer_size = event->write_buffer.size();
 					size_t chunk = std::min(buffer_size, static_cast<size_t>(CHUNK_SIZE));																		//	Set the size of the chunk
 
-					ssize_t bytes_written = send(event->fd, event->write_buffer.data(), chunk, MSG_DONTWAIT);													//	Send the data
+					ssize_t bytes_written = send(event->fd, event->write_buffer.data(), chunk, MSG_DONTWAIT);													//	Send the data (THIS IS THE WRITE)
 
 				//	Sent some data
 					if (bytes_written > 0) {

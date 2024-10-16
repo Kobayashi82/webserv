@@ -155,7 +155,7 @@
 
 	#pragma region Events
 
-		int Epoll::events() {
+		int Epoll::events() {																			//	This function is call from the loop in Main
 			if (epoll_fd < 0) return (2);
 			struct epoll_event events[MAX_EVENTS];
 
@@ -171,7 +171,7 @@
 				EventInfo * event = Event::get(events[i].data.fd);
 				if (!event) continue;
 
-				if (events[i].events & EPOLLIN) {
+				if (events[i].events & EPOLLIN) {														//	Check for READ
 					switch (event->type) {
 						case SOCKET: 	{ Socket::accept(event);				break; }
 						case CLIENT: 	{ Communication::read_client(event);	break; }
@@ -183,7 +183,7 @@
 				event = Event::get(events[i].data.fd);
 				if (!event) continue;
 
-				if (events[i].events & EPOLLOUT) {
+				if (events[i].events & EPOLLOUT) {														//	Check for WRITE
 					switch (event->type) {
 						case CLIENT: 	{ Communication::write_client(event);	break; }
 						case DATA: 		{										break; }

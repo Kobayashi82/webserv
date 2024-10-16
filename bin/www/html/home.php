@@ -179,7 +179,7 @@ foreach ($files as $file) {
 	function deleteFile(fileName) {																			//	Eliminar archivo
 		const xhr = new XMLHttpRequest();																	//	Crear un objeto 'XMLHttpRequest' para enviar una solicitud HTTP asíncrona al servidor
 
-		xhr.open('GET', 'delete.php?file=' + fileName, true);												//	Configurar la solicitud GET asincrónica para eliminar el archivo
+		xhr.open('DELETE', 'delete.php?file=' + fileName, true);											//	Configurar la solicitud GET asincrónica para eliminar el archivo
 
 		xhr.onload = function() {																			//	Manejar la respuesta una vez que se complete la solicitud
 			const response = JSON.parse(xhr.responseText);													//	Convertir la respuesta JSON en un objeto JavaScript

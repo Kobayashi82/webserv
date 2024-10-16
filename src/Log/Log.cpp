@@ -239,7 +239,9 @@
 					else if (method == "DELETE") method_color = RED400;
 					else  method_color = RED800;
 
-					std::string msg1 = UN BLUE400 + ip + NC + std::string("                ").substr(ip.size()) + method_color + method + std::string("            ").substr(method.size()) + BR + re_path + NC;
+					int method_size = 12;
+					if (method.size() <= 12) method_size = method.size();
+					std::string msg1 = UN BLUE400 + ip + NC + std::string("                ").substr(ip.size()) + method_color + method + std::string("            ").substr(method_size) + BR + re_path + NC;
 
 					std::string s_bytes = Utils::formatSize(bytes);
 
@@ -253,7 +255,9 @@
 					std::string logtime = BLUE600 "[" LIME600 + Settings::timer.current_date() + " " EMERALD400 + Settings::timer.current_time() + BLUE600 "]  " NC;
 
 					if (isLocal) {
-						std::string msg3 = ip + std::string("                ").substr(ip.size()) + method_color + method + std::string("          ").substr(method.size());
+						method_size = 10;
+						if (method.size() <= 10) method_size = method.size();
+						std::string msg3 = ip + std::string("                ").substr(ip.size()) + method_color + method + std::string("          ").substr(method_size);
 						std::string msg4 = scode + "    " + s_bytes + std::string("           ").substr(s_bytes.size()) + time + " ms" + std::string("         ").substr(time.size()) + re_path;
 
 						return (logtime + msg3 + msg4);
