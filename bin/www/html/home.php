@@ -62,7 +62,7 @@ foreach ($files as $file) {
 <header>
 	<img src="resources/banner.jpg" alt="Banner" class="banner">																				<!-- Banner -->
 	<h2 class="welcome-text">																													<!-- Bienvenida al usuario actual -->
-		Bienvenido,<br>
+		Bienvenido<br>
 		<?php echo htmlspecialchars($name . ' ' . $last_name); ?>
 	</h2>
 	<a href="profile.php" class="icon-link" title="Modificar datos">																			<!-- Botón para modificar los datos del usuario (profile.php) -->
