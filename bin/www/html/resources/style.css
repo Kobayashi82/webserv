@@ -339,7 +339,9 @@ header {
 .image-button {
   display: flex;
   align-items: center;
-  justify-content: center;  /* Para centrar el contenido */
+  /* //justify-content: center;  Para centrar el contenido */
+  justify-content: flex-start;  /* Cambia a flex-start para alinear a la izquierda */
+
   background-color: #f5f5f5;
   border: none;
   padding: 10px;
