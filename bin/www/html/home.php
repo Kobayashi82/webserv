@@ -12,6 +12,7 @@ if (!isset($_SESSION['user_session'])) {
 
 $email = strtolower($_SESSION['user_session']['email']);													//	Obtiene el 'email' del usuario y lo convierte a minúsculas
 $name = explode('@', $email)[0];																			//	Obtiene el 'nombre' usando el 'email'
+$last_name = '';																							//	Obtiene el 'last name' del usuario y lo convierte a minúsculas
 $userDirectory = 'users/' . $email;																			//	Define el directorio del usuario
 createUserDirectory($userDirectory);																		//	Crea el directorio si no existe
 
@@ -27,6 +28,7 @@ foreach ($lines as $line) {
 
 	if (strtolower($storedUser) == strtolower($email)) {													//	Comprobar si el 'email' coincide
 		$name = $storedFirstName;																			//	Obtener el 'nombre' establecido por el usuario
+		$last_name = $storedLastName;																		//	Obtener el 'apellidos' establecido por el usuario
 		break;
 	}
 }
@@ -59,7 +61,7 @@ foreach ($files as $file) {
 <body>
 <header>
 	<img src="resources/banner.jpg" alt="Banner" class="banner">																				<!-- Banner -->
-    <h2 class="welcome-text">Bienvenido, <?php echo htmlspecialchars($name); ?></h2>															<!-- Bienvenida al usuario actual -->
+    <h2 class="welcome-text">Bienvenido, <?php echo htmlspecialchars($name . ' ' . $last_name); ?></h2>											<!-- Bienvenida al usuario actual -->
 	<a href="profile.php" class="icon-link" title="Modificar datos">																			<!-- Botón para modificar los datos del usuario (profile.php) -->
 	<i class="fas fa-user-edit"></i>
 	</a>
