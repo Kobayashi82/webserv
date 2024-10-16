@@ -125,7 +125,13 @@ foreach ($files as $file) {
 			<span>Redirecciones</span>
 		</button>
 	</a>
-    <a target="_blank" href="/directory/">
+	<a target="_blank" href="/alias/">
+		<button class="image-button">
+			<img src="resources/alias.png" alt="Alias">
+			<span>Alias</span>
+		</button>
+	</a>
+	<a target="_blank" href="/directory/">
         <button class="image-button">
             <img src="resources/directory.png" alt="Directorios">
             <span>Directorios</span>
