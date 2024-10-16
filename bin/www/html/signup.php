@@ -63,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {																	//	Procesar datos de
         exit();
     }
 
-    $newUser = $email . ';' . $password . ';' . $firstname . ';' . $lastname . "\n";						//	Si el usuario no existe, añadimos el nuevo usuario al archivo
+    $newUser = $email . ';' . $password . ';' . $firstname . ';' . $lastname . ";\n";						//	Si el usuario no existe, añadimos el nuevo usuario al archivo
     $file = fopen($userdataFile, 'a');																		//	Abrimos 'userdata' en modo escritura
     if ($file === false) {
         echo json_encode(['success' => false, 'message' => 'Error interno al crear la cuenta']);			//	Si no se puede abrir 'userdata', enviar un mensaje de "failed" al cliente

@@ -40,6 +40,7 @@ foreach ($files as $file) {
         $filesList[] = ['name' => $file, 'size' => formatFileSize($fileSize)];								//	Agrega la información del archivo a la lista
     }
 }
+
 ?>
 
 <!-- -------------------------------------------- HTML -------------------------------------------- -->
@@ -70,7 +71,7 @@ foreach ($files as $file) {
 
 <hr class="separator">																															<!-- Separador bonito debajo del banner -->
 
-<div class="file-box">																															<!-- Cuadro para la lista de archivos -->
+<div class="file-box scroll-container">																															<!-- Cuadro para la lista de archivos -->
 	<div style="text-align: center; margin-bottom: 10px;">																						<!-- Título centrado sobre la tabla -->
    		<label class="file-box-title">Mis Archivos</label>
 	</div>
@@ -114,37 +115,37 @@ foreach ($files as $file) {
     </a>
     <a href="/redirect">
         <button class="image-button">
-            <img src="path/to/redirect-icon.png" alt="Redirecciones">
-            <span>Redirecciones</span>
+            <img src="resources/redirect.png" alt="Redirecciones">
+            <span>Redireccion</span>
         </button>
     </a>
-    <a href="/team">
+    <a href="team/index.html">
         <button class="image-button">
-            <img src="path/to/team-icon.png" alt="El equipo">
+            <img src="resources/team.png" alt="El equipo">
             <span>El equipo</span>
         </button>
     </a>
-    <a href="/cgi">
+    <a href="cgi/index.html">
         <button class="image-button">
-            <img src="path/to/cgi-icon.png" alt="CGI">
+            <img src="resources/cgi.png" alt="CGI">
             <span>CGI</span>
         </button>
     </a>
-    <a href="/contact.php">
+    <a href="contact.php">
         <button class="image-button">
-            <img src="path/to/contact-icon.png" alt="Escríbenos">
+            <img src="resources/contact.png" alt="Escríbenos">
             <span>Escríbenos</span>
         </button>
     </a>
     <a href="/messages.py">
         <button class="image-button">
-            <img src="path/to/messages-icon.png" alt="Mensajes">
+            <img src="resources/mesages424242.png" alt="Mensajes">
             <span>Mensajes</span>
         </button>
     </a>
-    <a href="/resources/doc.pdf" target="_blank">
+    <a href="resources/Webserv.pdf" target="_blank">
         <button class="image-button">
-            <img src="path/to/doc-icon.png" alt="Documentación">
+            <img src="resources/documentation.png" alt="Documentación">
             <span>Documentación</span>
         </button>
     </a>

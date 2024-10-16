@@ -362,3 +362,10 @@ header {
 .image-button:hover {
   background-color: #e0e0e0;
 }
+
+/* ESTILO PARA EL USO DEL SCROLL VERTICAL. */
+
+.scroll-container {
+  max-height: 600px;    /* Altura máxima antes de que aparezca el scroll */
+  overflow-y: auto;     /* Habilitar el scroll vertical cuando sea necesario */
+}
