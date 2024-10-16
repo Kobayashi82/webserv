@@ -113,46 +113,46 @@ foreach ($files as $file) {
 </div>
 
 <div class="button-panel">
+	<a target="_blank" href="cgi/index.html">
+		<button class="image-button">
+			<img src="resources/cgi.png" alt="CGI">
+			<span>CGI</span>
+		</button>
+	</a>
+	<a target="_blank" href="/redirect">
+		<button class="image-button">
+			<img src="resources/redirect.png" alt="Redirecciones">
+			<span>Redirecciones</span>
+		</button>
+	</a>
     <a target="_blank" href="/directory/">
         <button class="image-button">
             <img src="resources/directory.png" alt="Directorios">
             <span>Directorios</span>
         </button>
     </a>
-    <a target="_blank" href="/redirect">
-        <button class="image-button">
-            <img src="resources/redirect.png" alt="Redirecciones">
-            <span>Redireccion</span>
-        </button>
-    </a>
+	<a target="_blank" href="/messages.py">
+		<button class="image-button">
+			<img src="resources/mesages.png" alt="Mensajes">
+			<span>Mensajes</span>
+		</button>
+	</a>
+	<a target="_blank" href="resources/Webserv.pdf">
+		<button class="image-button">
+			<img src="resources/documentation.png" alt="Documentación">
+			<span>Documentación</span>
+		</button>
+	</a>
+	<a href="contact.php">
+		<button class="image-button">
+			<img src="resources/contact.png" alt="Escríbenos">
+			<span>Escríbenos</span>
+		</button>
+	</a>
     <a href="team/index.html">
         <button class="image-button">
             <img src="resources/team.png" alt="El equipo">
-            <span>El equipo</span>
-        </button>
-    </a>
-    <a target="_blank" href="cgi/index.html">
-        <button class="image-button">
-            <img src="resources/cgi.png" alt="CGI">
-            <span>CGI</span>
-        </button>
-    </a>
-    <a href="contact.php">
-        <button class="image-button">
-            <img src="resources/contact.png" alt="Escríbenos">
-            <span>Escríbenos</span>
-        </button>
-    </a>
-    <a target="_blank" href="/messages.py">
-        <button class="image-button">
-            <img src="resources/mesages.png" alt="Mensajes">
-            <span>Mensajes</span>
-        </button>
-    </a>
-    <a target="_blank" href="resources/Webserv.pdf">
-        <button class="image-button">
-            <img src="resources/documentation.png" alt="Documentación">
-            <span>Documentación</span>
+            <span>El Equipo</span>
         </button>
     </a>
 </div>
