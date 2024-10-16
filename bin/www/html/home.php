@@ -105,6 +105,51 @@ foreach ($files as $file) {
 	</div>
 </div>
 
+<div class="button-panel">
+    <a href="/directory">
+        <button class="image-button">
+            <img src="resources/directory.png" alt="Directorios">
+            <span>Directorios</span>
+        </button>
+    </a>
+    <a href="/redirect">
+        <button class="image-button">
+            <img src="path/to/redirect-icon.png" alt="Redirecciones">
+            <span>Redirecciones</span>
+        </button>
+    </a>
+    <a href="/team">
+        <button class="image-button">
+            <img src="path/to/team-icon.png" alt="El equipo">
+            <span>El equipo</span>
+        </button>
+    </a>
+    <a href="/cgi">
+        <button class="image-button">
+            <img src="path/to/cgi-icon.png" alt="CGI">
+            <span>CGI</span>
+        </button>
+    </a>
+    <a href="/contact.php">
+        <button class="image-button">
+            <img src="path/to/contact-icon.png" alt="Escríbenos">
+            <span>Escríbenos</span>
+        </button>
+    </a>
+    <a href="/messages.py">
+        <button class="image-button">
+            <img src="path/to/messages-icon.png" alt="Mensajes">
+            <span>Mensajes</span>
+        </button>
+    </a>
+    <a href="/resources/doc.pdf" target="_blank">
+        <button class="image-button">
+            <img src="path/to/doc-icon.png" alt="Documentación">
+            <span>Documentación</span>
+        </button>
+    </a>
+</div>
+
 <!-- ------------------------------------------- SCRIPT ------------------------------------------- -->
 
 <script>
