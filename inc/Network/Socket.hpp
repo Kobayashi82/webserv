@@ -75,8 +75,7 @@
 			static void accept(EventInfo * event);														//	Accept a new connection (client)
 
 			static int	server_status();																//	Check if there are any pending changes to the server or virtual servers
-			static void	cleanup_socket();																//	Cleans up removed clients from each socket's own client list
-			
+		
 			static void	NetworkInterfaces();
 
 		private:

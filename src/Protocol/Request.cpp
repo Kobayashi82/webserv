@@ -16,6 +16,7 @@
 #include "Epoll.hpp"
 #include "Protocol.hpp"
 #include "Communication.hpp"
+#include "Thread.hpp"
 
 #pragma region Variables
 
@@ -302,8 +303,10 @@
 				event->filesize = path_stat.st_size;														//	Set the file size
 
 				char date[30];
+				Thread::mutex_set(Log::mutex, Thread::MTX_LOCK);
 				struct tm* timeInfo = gmtime(&event->mod_time);
-				strftime(date, sizeof(date), "%a, %d %b %Y %H:%M:%S GMT", timeInfo);	
+				strftime(date, sizeof(date), "%a, %d %b %Y %H:%M:%S GMT", timeInfo);
+				Thread::mutex_set(Log::mutex, Thread::MTX_UNLOCK);
 				event->response_map["Last-Modified"] = date;
 
 				return (true);
@@ -883,7 +886,9 @@
 			if (event->response_map["Connection"].empty()) event->response_map["Connection"] = "keep-alive";								//	Respect the client's request if indicated
 			
 			event->response_map["Server"] = Settings::server_name + "/" + Settings::server_version + Settings::os_name;						//	Name and version of the server
-			event->response_map["Date"] = Settings::timer.current_time_header();															//	Current date in GMT format
+			Thread::mutex_set(Log::mutex, Thread::MTX_LOCK);
+				event->response_map["Date"] = Settings::timer.current_time_header();														//	Current date in GMT format
+			Thread::mutex_set(Log::mutex, Thread::MTX_UNLOCK);
 
 
 		//	Unknown request methods return an error
@@ -909,15 +914,8 @@
 			std::string									body_maxsize;
 			if (event->Loc)								body_maxsize = event->Loc->get("body_maxsize");
 			if (body_maxsize.empty() && event->VServ)	body_maxsize = event->VServ->get("body_maxsize");									//	Get 'body_maxsize'
-			if (body_maxsize.empty())					body_maxsize = Settings::global.get("body_maxsize");									//	Get 'body_maxsize'
-			if (!body_maxsize.empty()) {
-				event->body_maxsize   =	Utils::sstol(body_maxsize);																			//	Get 'body_maxsize' in numeric format
-				//size_t content_length =	Utils::sstol(event->header_map["Content-Length"]);													//	Get 'Content-Length' in numeric format
-				// if (event->body_maxsize > 0 && (content_length >= event->body_maxsize || event->read_buffer.size() >= event->body_maxsize)) {	//	If 'Content-Length' is greater than 'body_maxsize'...
-				// 	error_page(event, "413", event->VServ, event->Loc);																		//	Payload too large
-				// 	event->response_method = event->response_map["Method"];
-				// }
-			}
+			if (body_maxsize.empty())					body_maxsize = Settings::global.get("body_maxsize");								//	Get 'body_maxsize'
+			if (!body_maxsize.empty())					event->body_maxsize   =	Utils::sstol(body_maxsize);									//	Get 'body_maxsize' in numeric format
 
 		//	Response method is a file, check if must be cached
 			if (event->response_method == "File") {
@@ -944,128 +942,6 @@
 			else if (event->response_method != "CGI") 	event->redirect_status = 200;
 		}
 
-		#pragma region Information
-
-			//	Directivas tienen preferencias de orden
-
-			//	List of VServer that can manage the ip:port of the conection, aka event->socket->IP & port. Must be enabled
-			//	Get the VServer that manage the request
-			//	Get the location that manage the request
-			//	Get the limit_except that manage the request
-
-			//	If IP is deny.		code 403
-			//	If method deny.		code 405
-			//	If return.			return url			(code and url is in the configuration and the response is the same for local path or url. encode url.)
-			//	If error.			return error		(check inversed if error is manage in VServer or global and if it is a file, check if exists and permissions)
-			//	If directory.		return directory	(code 200. check if exists and permissions)
-			//	If file.			return file			(code 200. check if exists and permissions)
-
-			//	Also return the path for access_log, error_log and theri maxsizes (if aplicable)
-
-
-
-			//	------------------------------
-			//	INFORMACION DE LOS ENCABEZADOS
-			//	------------------------------
-
-			//	Protocol 				HTTP/1.1
-			//	Type					error, redirection, file, directory, cgi
-			//	Path					ruta de la redirección, archivo, carpeta o cgi	(incluye el "Location" en caso de redireccion)	(incluye el "Allow" en caso de error 405 Method Not Allowd)
-			//	Code					código de la respuesta (200, 404, etc...)
-			//	CodeInfo				descripción del código
-			//	Date					fecha actual (Tue, 12 Sep 2024 15:44:18 GMT)
-			//	Server					Webserv/1.0
-			//	X-Content-Type-Options	nosniff
-			//	Connection:				keep-alive (close solamente si el cliente lo solicita)
-			//	Content-Type			tipo de contendio (text/html; charset=UTF-8)  charset=UTF-8 solo si el tipo es "text/"
-			//	Content-Length:			tamaño del cuerpo del mensaje en bytes
-
-
-
-			//	Protocol:				HTTP/1.1
-			//	Code:					200
-			//	Code_Info:				OK
-
-			//	Date:					Tue, 12 Sep 2024 15:44:18 GMT
-			//	Server:					Webserv/1.0
-			//	X-Content-Type-Options:	nosniff
-			//	Connection:				close or keep-alive
-			//	Content-Type:			text/html; charset=UTF-8
-			//	Content-Length:			1234
-
-			//	Location:				http://www.new-url.com/		(para redirecciones)
-			//	Allow:					GET, POST					(para metodos no allowed)
-			//	Cache-Control
-			//	Last-Modified
-
-			//?	ARCHIVO ESTATICO
-			//?	----------------
-			//	HTTP/1.1 200 OK
-			//	Date: Tue, 12 Sep 2024 15:44:18 GMT
-			//	Server: Webserv/1.0
-			//	Content-Type: text/html; charset=UTF-8
-			//	Content-Length: 1234
-			//	Connection: close
-
-			//	<HTML content goes here...>
-
-			//?	ERROR
-			//?	-----
-			//	HTTP/1.1 404 Not Found
-			//	Date: Tue, 12 Sep 2024 15:44:18 GMT
-			//	Server: Webserv/1.0
-			//	Content-Type: text/html; charset=UTF-8
-			//	Content-Length: 88
-			//	Connection: close
-
-			//	<html><body><h1>404 Not Found</h1><p>The requested resource could not be found.</p></body></html>
-
-			//?	REDIRECCION
-			//?	-----------
-			//	HTTP/1.1 301 Moved Permanently
-			//	Date: Tue, 12 Sep 2024 15:44:18 GMT
-			//	Server: MyCustomServer/1.0
-			//	Location: http://www.new-url.com/
-			//	Content-Length: 0
-			//	Connection: close
-
-			//?	DIRECTORIO
-			//?	----------
-			//	HTTP/1.1 200 OK
-			//	Date: Tue, 12 Sep 2024 15:44:18 GMT
-			//	Server: MyCustomServer/1.0
-			//	Content-Type: text/html; charset=UTF-8
-			//	Content-Length: 456
-			//	Connection: close
-
-			//	<html><body><h1>Index of /dir</h1><ul><li><a href="file1.txt">file1.txt</a></li><li><a href="file2.jpg">file2.jpg</a></li></ul></body></html>
-
-			//?	PROTOCOLO NO SOPORTADO (HTTP/2.0)
-			//?	---------------------------------
-			//	HTTP/1.1 505 HTTP Version Not Supported
-			//	Content-Type: text/plain
-			//	Content-Length: 30
-
-			//	HTTP/2.0 Protocol Not Supported
-
-			//?	IP DENEGADA
-			//?	-----------
-			//	HTTP/1.1 403 Forbidden
-			//	Date: Fri, 13 Sep 2024 15:44:18 GMT
-			//	Server: Webserv/1.0
-			//	Content-Type: text/html; charset=UTF-8
-			//	Content-Length: 1234
-
-			//	<html>
-			//	<head><title>403 Forbidden</title></head>
-			//	<body>
-			//	<h1>403 Forbidden</h1>
-			//	<p>You don't have permission to access / on this server.</p>
-			//	</body>
-			//	</html>
-
-		#pragma endregion
-
 	#pragma endregion
 
 #pragma endregion
@@ -1075,7 +951,7 @@
 	void Protocol::process_request(EventInfo * event) {
 		if (!event) return;
 
-		gettimeofday(&event->response_time, NULL);														//	Reset response time
+		gettimeofday(&event->response_time, NULL);																							//	Reset response time
 
 		parse_request(event);
 		process_response(event);

@@ -193,7 +193,6 @@
 			}
 
 			Socket::server_status();
-			Socket::cleanup_socket();
 
 			return (0);
 		}

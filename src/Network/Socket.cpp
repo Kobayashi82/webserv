@@ -258,29 +258,6 @@
 
 	#pragma endregion
 		
-	#pragma region Clean Up
-
-		void Socket::cleanup_socket() {
-			if (!do_cleanup) return;																	//	Only clean up if necessary
-
-			std::list<SocketInfo>::iterator s_it = sockets.begin();
-			while (s_it != sockets.end()) {																//	Iterate over sockets
-				std::list<Client *>::iterator sc_it = s_it->clients.begin();
-				while (sc_it != s_it->clients.end()) { bool found = false;								//	Iterate over socket clients				
-					std::list<Client>::iterator c_it = Communication::clients.begin();
-					while (c_it != Communication::clients.end()) {										//	Iterate over clients
-						if (*c_it == **sc_it) { found = true; break; }									//	client = socket client
-						++c_it;
-					}
-					if (!found)				sc_it = s_it->clients.erase(sc_it);							// If socket client is not in clients, remove it
-					else					++sc_it;
-				}
-				++s_it;
-			}
-		}
-
-	#pragma endregion
-
 	#pragma region Network Interfaces
 
 		void Socket::NetworkInterfaces() {

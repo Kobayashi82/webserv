@@ -179,8 +179,10 @@
 					if (log.msg.substr(0, 3) == "TRF") {
 						if (log.type < LOCAL_ACCESS) { isTRF = true; log_request(log.msg, log.VServ, false); }
 					} else {
+						Thread::mutex_set(Log::mutex, Thread::MTX_LOCK);
 						if (log.msg != "---" && !(Settings::check_only && Settings::loaded == false))
 							log.msg = BLUE600 "[" LIME600 + Settings::timer.current_date() + " " EMERALD400 + Settings::timer.current_time() + BLUE600 "]  " NC + log.msg;
+						Thread::mutex_set(Log::mutex, Thread::MTX_UNLOCK);
 					}
 
 					if (!log.path.empty() && log.path[0] != '/') log.path = Settings::program_path + log.path;
@@ -252,7 +254,9 @@
 
 					std::string msg2 = BLUE800 "Transfered:     " AMBER200 + s_bytes + std::string("           ").substr(s_bytes.size()) + C " in " SKY700 + time + " ms " C "with code " + code_color + Utils::ltos(code) + C " (" + code_color + Settings::error_codes[code] + C ")" NC;
 
-					std::string logtime = BLUE600 "[" LIME600 + Settings::timer.current_date() + " " EMERALD400 + Settings::timer.current_time() + BLUE600 "]  " NC;
+					Thread::mutex_set(mutex, Thread::MTX_LOCK);
+						std::string logtime = BLUE600 "[" LIME600 + Settings::timer.current_date() + " " EMERALD400 + Settings::timer.current_time() + BLUE600 "]  " NC;
+					Thread::mutex_set(mutex, Thread::MTX_UNLOCK);
 
 					if (isLocal) {
 						method_size = 10;

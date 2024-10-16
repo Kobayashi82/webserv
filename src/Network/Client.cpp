@@ -36,7 +36,7 @@
     }
 
 	bool		Client::operator==(const Client & rhs) const {
-		return (fd == rhs.fd && ip == rhs.ip && port == rhs.port && socket == rhs.socket && last_activity == rhs.last_activity && total_requests == rhs.total_requests);
+		return (fd == rhs.fd);
 	}
 
 #pragma endregion
@@ -61,6 +61,10 @@
 		while (c_it != Communication::clients.end()) {
 			if (*this == *c_it) {
 				Event::remove(this);
+
+				for (std::list<Client *>::iterator sc_it = socket->clients.begin(); sc_it != socket->clients.end(); ++sc_it) {
+					if (*this == **sc_it) { socket->clients.erase(sc_it); break; }
+				}
 
 				Communication::clients.erase(c_it);
 
