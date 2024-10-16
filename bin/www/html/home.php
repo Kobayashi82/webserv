@@ -61,7 +61,10 @@ foreach ($files as $file) {
 <body>
 <header>
 	<img src="resources/banner.jpg" alt="Banner" class="banner">																				<!-- Banner -->
-    <h2 class="welcome-text">Bienvenido, <?php echo htmlspecialchars($name . ' ' . $last_name); ?></h2>											<!-- Bienvenida al usuario actual -->
+	<h2 class="welcome-text">																													<!-- Bienvenida al usuario actual -->
+		Bienvenido,<br>
+		<?php echo htmlspecialchars($name . ' ' . $last_name); ?>
+	</h2>
 	<a href="profile.php" class="icon-link" title="Modificar datos">																			<!-- Botón para modificar los datos del usuario (profile.php) -->
 	<i class="fas fa-user-edit"></i>
 	</a>
@@ -109,13 +112,13 @@ foreach ($files as $file) {
 </div>
 
 <div class="button-panel">
-    <a href="/directory">
+    <a target="_blank" href="/directory">
         <button class="image-button">
             <img src="resources/directory.png" alt="Directorios">
             <span>Directorios</span>
         </button>
     </a>
-    <a href="/redirect">
+    <a target="_blank" href="/redirect">
         <button class="image-button">
             <img src="resources/redirect.png" alt="Redirecciones">
             <span>Redireccion</span>
@@ -127,7 +130,7 @@ foreach ($files as $file) {
             <span>El equipo</span>
         </button>
     </a>
-    <a href="cgi/index.html">
+    <a target="_blank" href="cgi/index.html">
         <button class="image-button">
             <img src="resources/cgi.png" alt="CGI">
             <span>CGI</span>
@@ -139,13 +142,13 @@ foreach ($files as $file) {
             <span>Escríbenos</span>
         </button>
     </a>
-    <a href="/messages.py">
+    <a target="_blank" href="/messages.py">
         <button class="image-button">
-            <img src="resources/mesages424242.png" alt="Mensajes">
+            <img src="resources/mesages.png" alt="Mensajes">
             <span>Mensajes</span>
         </button>
     </a>
-    <a href="resources/Webserv.pdf" target="_blank">
+    <a target="_blank" href="resources/Webserv.pdf">
         <button class="image-button">
             <img src="resources/documentation.png" alt="Documentación">
             <span>Documentación</span>
