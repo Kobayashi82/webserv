@@ -39,7 +39,9 @@
 
 html { width: 100%; height:100%; overflow:hidden; }
 
-body { 
+body {
+	margin: 0;
+    padding: 0;
 	width: 100%;
 	height:100%;
 	font-family: 'Open Sans', sans-serif;
@@ -141,13 +143,13 @@ textarea:focus {
 }
 
 header {
-	position: relative;
-	width: calc(100% + 5px);
-	height: 200px; /* Puedes ajustar la altura que desees */
-	overflow: hidden; /* Esto asegura que la imagen no se salga del contenedor */
-	margin-left: -10px;
-	margin-top: -10px;
-  }
+    position: relative;
+    width: 100%; /* Ancho completo */
+    height: 200px; /* Altura que desees */
+    margin: 0; /* Sin margen */
+    padding: 0; /* Sin relleno adicional */
+    overflow: hidden; /* Asegura que la imagen no se desborde */
+}
   
   .banner {
 	width: 100%;
@@ -157,13 +159,13 @@ header {
 
   .welcome-text {
     position: absolute; /* Posiciona el texto dentro del banner */
-    top: -20px; /* Reduce la distancia desde la parte superior */
-    left: 25%; /* Centra el texto horizontalmente */
-    transform: translateX(-25%); /* Ajusta el texto para que quede centrado */
+    top: 50px; /* Centra verticalmente el texto */
+    left: 50%; /* Centra horizontalmente el texto */
+    transform: translate(-50%, -50%); /* Ajusta para que quede centrado tanto vertical como horizontalmente */
+    text-align: center;
     font-size: 40px; /* Aumenta el tamaño del texto */
     font-weight: 600; /* Hace el texto más fuerte y visible */
     font-family: 'Arial', sans-serif; /* Establece una fuente moderna y limpia */
-    text-align: center; /* Centra el texto */
     text-transform: uppercase; /* Convierte el texto a mayúsculas */
     white-space: nowrap; /* Impide que el texto se divida en varias líneas */
     max-width: 90%; /* Establece un ancho máximo para evitar que el texto se "escape" */
@@ -175,6 +177,7 @@ header {
     text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.6); /* Añade sombra al texto para darle profundidad */
     transition: all 0.3s ease-in-out; /* Añade una transición suave para efectos hover */
 }
+
 
   .icon-link {
   position: absolute;
@@ -207,9 +210,19 @@ header {
 	margin-top: 0px; /* Margen negativo para ajustar arriba */
   }
   
+  .center-container {
+    display: flex;
+    justify-content: center; /* Centra horizontalmente */
+    align-items: center; /* Centra verticalmente */
+    min-height: 40vh; /* Ajusta el alto mínimo que quieres */
+    width: 100%; /* Asegura que ocupe todo el ancho */
+    margin-top: 50px; /* Ajusta el margen superior a tu necesidad */
+    box-sizing: border-box; /* Asegura que el padding no interfiera en el tamaño */
+}
+
   /* Cuadro de archivos */
   .file-box {
-	margin: 5px 20px 10px 5px; /* Ajustamos el margen solo arriba y abajo */
+	margin: 5px 20px 20px 20px; /* Ajustamos el margen solo arriba y abajo */
 	padding: 20px;
 	width: 80%;
   flex-grow: 1;

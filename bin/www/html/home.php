@@ -76,6 +76,7 @@ foreach ($files as $file) {
 
 <hr class="separator">																															<!-- Separador bonito debajo del banner -->
 
+<div class="center-container">
 <div class="file-box scroll-container">																															<!-- Cuadro para la lista de archivos -->
 	<div style="text-align: center; margin-bottom: 10px;">																						<!-- Título centrado sobre la tabla -->
    		<label class="file-box-title">Mis Archivos</label>
@@ -154,6 +155,7 @@ foreach ($files as $file) {
             <span>Documentación</span>
         </button>
     </a>
+</div>
 </div>
 
 <!-- ------------------------------------------- SCRIPT ------------------------------------------- -->
