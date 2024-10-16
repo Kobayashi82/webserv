@@ -1,7 +1,3 @@
-Fix leaks and data race
-
-			-----------------------------------------------------
-
 siege -b -c 255 -t 60S 127.0.0.1:8090								-	Stress test
 
 ps --ppid $(pgrep webserv) -o pid,stat,cmd							-	Zombie processes
