@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {																	//	Procesar datos de
 
     $userdata = @file_get_contents('users/userdata');														//	Verificar si el archivo 'userdata' existe
     if ($userdata === false) {
-        echo json_encode(['success' => false, 'message' => 'Email o contraseña no válidos']);				//	Enviar un mesaje de "failed" al cliente
+        echo "\n" . json_encode(['success' => false, 'message' => 'Email o password no validos']) . "\n";	//	Enviar un mesaje de "failed" al cliente
         exit();
     }
 
@@ -46,12 +46,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {																	//	Procesar datos de
 				}
 			}
 
-            echo json_encode(['success' => true, 'message' => 'Sesión inciada con exito']);					//	Enviar un mesaje de "success" al cliente
+            echo "\n" . json_encode(['success' => true, 'message' => 'Sesion inciada con exito']) . "\n";	//	Enviar un mesaje de "success" al cliente
             exit();
         }
     }
 
-    echo json_encode(['success' => false, 'message' => 'Email o contraseña no válidos']);					// Si no coincide ningún usuario, enviar un mensaje de "failed" al cliente
+    echo "\n" . json_encode(['success' => false, 'message' => 'Email o password no validos']) . "\n";		// Si no coincide ningún usuario, enviar un mensaje de "failed" al cliente
 	exit();
 }
 ?>

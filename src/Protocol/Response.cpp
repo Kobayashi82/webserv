@@ -83,7 +83,8 @@
 					"        <a href=\"/\" class=\"back-link\">Volver al inicio</a>\n"
 					"    </div>\n"
 					"</body>\n"
-					"</html>";
+					"</html>\n"
+					"\n<!-- " + code + " - " + description + " -->\n";
 			}
 
 		#pragma endregion

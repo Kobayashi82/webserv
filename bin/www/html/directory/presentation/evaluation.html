@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webserv 1.0 - Comandos</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: Tahoma, Verdana, Arial, sans-serif;
+            background: linear-gradient(135deg, #8b7346, #703b47);
+            color: #fff;
+        }
+
+        .container {
+            text-align: center;
+            background-color: rgba(26, 193, 223, 0.1);
+            padding: 2em;
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 1em;
+        }
+
+        p {
+            font-size: 1.2em;
+            line-height: 1.6em;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 2em;
+        }
+
+        th, td {
+            padding: 15px;
+            padding-left: 5px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: rgba(255, 255, 255, 0.2);
+            font-size: 1.1em;
+        }
+
+        td.command {
+            font-family: monospace;
+            color: #e0e0e0;
+            /* word-break: break-all; */
+            width: 60%; /* Ajusta el ancho de la columna de comandos */
+        }
+
+        td.description {
+            color: #fff;
+            width: 40%; /* Ajusta el ancho de la columna de descripción */
+            text-align: left; /* Alinea el texto a la derecha */
+            padding-left: 100px; /* Alinea el texto a la derecha */
+        }
+
+        th.description {
+            text-align: left; /* Alinea el texto a la derecha */
+            padding-left: 100px; /* Alinea el texto a la derecha */
+        }
+
+        .copy-icon {
+            cursor: pointer;
+            color: #c6c7c6;
+        }
+
+        .copy-icon:hover {
+            color: #cee272;
+        }
+
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Comandos de Prueba</h1>
+        <p>Estos son algunos comandos útiles para probar el funcionamiento de Webserv:</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Comando</th>
+                    <th class="description">Descripción</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="command">
+                        <i class="fas fa-copy copy-icon" onclick="copyToClipboard('siege -b -c 255 -t 60S 127.0.0.1:8090')"></i>
+                        siege -b -c 255 -t 60S 127.0.0.1:8090
+                    </td>
+                    <td class="description">Prueba de estrés</td>
+                </tr>
+                <tr>
+                    <td class="command">
+                        <i class="fas fa-copy copy-icon" onclick="copyToClipboard('ps --ppid $(pgrep webserv) -o pid,stat,cmd')"></i>
+                        ps --ppid $(pgrep webserv) -o pid,stat,cmd
+                    </td>
+                    <td class="description">Procesos zombie</td>
+                </tr>
+                <tr>
+                    <td class="command">
+                        <i class="fas fa-copy copy-icon" onclick="copyToClipboard('curl --resolve default:8081:127.0.0.1 http://default:8081/support.html')"></i>
+                        curl --resolve default:8081:127.0.0.1 http://default:8081/support.html
+                    </td>
+                    <td class="description">Servidor por defecto</td>
+                </tr>
+                <tr>
+                    <td class="command">
+                        <i class="fas fa-copy copy-icon" onclick="copyToClipboard('curl --resolve secundary:8081:127.0.0.1 http://secundary:8081')"></i>
+                        curl --resolve secundary:8081:127.0.0.1 http://secundary:8081
+                    </td>
+                    <td class="description">Servidor secundario</td>
+                </tr>
+                <tr>
+                    <td class="command">
+                        <i class="fas fa-copy copy-icon" onclick="copyToClipboard('curl --resolve non_valid:8081:127.0.0.1 http://non_valid:8081/support.html')"></i>
+                        curl --resolve non_valid:8081:127.0.0.1 http://non_valid:8081/support.html
+                    </td>
+                    <td class="description">Sin servidor. Usar servidor por defecto</td>
+                </tr>
+                <tr>
+                    <td class="command">
+                        <i class="fas fa-copy copy-icon" onclick="copyToClipboard('curl -X POST -H &quot;Content-Type: plain/text&quot; --data &quot;123456789&quot; 127.0.0.1:8090/index.py')"></i>
+                        curl -X POST -H "Content-Type: plain/text" --data "123456789" 127.0.0.1:8090/index.py
+                    </td>
+                    <td class="description">Prueba de "Body Size" - Carga el HTML</td>
+                </tr>
+				<tr>
+					<td class="command">
+						<i class="fas fa-copy copy-icon" onclick="copyToClipboard('curl -X POST -H &quot;Content-Type: plain/text&quot; --data &quot;1234567890&quot; 127.0.0.1:8090/index.py')"></i>
+						curl -X POST -H "Content-Type: plain/text" --data "1234567890" 127.0.0.1:8090/index.py
+					</td>
+					<td class="description">Prueba de "Body Size" - Payload too large</td>
+				</tr>
+				
+                <tr>
+                    <td class="command">
+                        <i class="fas fa-copy copy-icon" onclick="copyToClipboard('curl -X &quot;UNKNOWN&quot; http://127.0.0.1:8081')"></i>
+                        curl -X "UNKNOWN" http://127.0.0.1:8081
+                    </td>
+                    <td class="description">Prueba de método - UNKNOWN</td>
+                </tr>
+                <tr>
+                    <td class="command">
+                        <i class="fas fa-copy copy-icon" onclick="copyToClipboard('curl -X POST -H &quot;Content-Type: application/x-www-form-urlencoded&quot; --data &quot;u=[email]&p=[password]&remember_me=off&quot; 127.0.0.1:8081/login.php')"></i>
+                        curl -X POST -H "Content-Type: application/x-www-form-urlencoded" --data "u=[email]&p=[password]&remember_me=off" 127.0.0.1:8081/login.php
+                    </td>
+                    <td class="description">Prueba de método - POST</td>
+                </tr>
+                <tr>
+                    <td class="command">
+                        <i class="fas fa-copy copy-icon" onclick="copyToClipboard('curl -s http://127.0.0.1:8081/cgi/sample.cgi?algunos_datos | grep algunos_datos')"></i>
+                        curl -s http://127.0.0.1:8081/cgi/sample.cgi?algunos_datos | grep algunos_datos
+                    </td>
+                    <td class="description">Prueba de método - GET</td>
+                </tr>
+                <tr>
+                    <td class="command">
+                        <i class="fas fa-copy copy-icon" onclick="copyToClipboard('curl -i -X &quot;DELETE&quot; http://127.0.0.1:8081/delete.php?file=some_file')"></i>
+                        curl -i -X "DELETE" http://127.0.0.1:8081/delete.php?file=some_file
+                    </td>
+                    <td class="description">Prueba de método - DELETE</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        function copyToClipboard(text) {
+			navigator.clipboard.writeText(text).catch(function(err) {
+        		console.error('Error al copiar al portapapeles: ', err);
+    		});
+        }
+    </script>
+</body>
+
+</html>
