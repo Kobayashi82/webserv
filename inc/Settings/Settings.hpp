@@ -24,6 +24,8 @@
 #include <deque>																						//	For std::deque container
 #include <map>																							//	For std::map container
 
+#include <limits.h>																						//	For PATH_MAX
+
 #pragma region Settings
 
 	class Settings {

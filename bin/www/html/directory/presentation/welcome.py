@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 titulo = "Bienvenido a Webserv 1.0"
-descripcion = "Este es el servidor secundario"
+descripcion = "Un servidor web cutre, pero hecho con cariño 😊"
 nota = "Esta página es un CGI de python"
 
 print("Content-Type: text/html\r\n\r")
@@ -64,3 +64,4 @@ print(f"""
 
 </html>
 """)
+

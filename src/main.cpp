@@ -56,7 +56,7 @@
 
 #pragma region Reload
 
-	void reload(int argc, char **argv) {
+	void reload(std::string current_path, int argc, char **argv) {
 		Epoll::close();
 		Socket::close();
 		Event::remove();
@@ -69,6 +69,9 @@
 		Communication::cache.clear();
 
 		Settings::clear(true);
+
+		chdir(current_path.c_str());
+
 		Settings::load_args(argc, argv);
 
 		Display::signal_handler();
@@ -87,6 +90,11 @@
 	int main(int argc, char **argv) {
 		Settings::load_args(argc, argv);
 
+		std::string current_path;
+		char get_path[PATH_MAX];
+		if (getcwd(get_path, sizeof(get_path)) != NULL) current_path = get_path;
+		current_path = Utils::fullpath(current_path);
+
 		Display::signal_handler();
 		Log::start(); Display::start();
 		
@@ -98,7 +106,7 @@
 		while (Display::isTerminate() == -1) {
 			if (Display::signal_check())	break;
 			if (Epoll::events())			break;
-			if (Display::isTerminate() == 4) reload(argc, argv);
+			if (Display::isTerminate() == 4) reload(current_path, argc, argv);
 		}
 		
 		Epoll::close();

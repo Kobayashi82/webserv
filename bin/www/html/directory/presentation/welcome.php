@@ -1,3 +1,9 @@
+<?php
+    $titulo = "Bienvenido a Webserv 1.0";
+    $descripcion = "Un servidor web cutre, pero hecho con cariño 😊";
+    $nota = "Esta página es un CGI de PHP";
+?>
+
 <!DOCTYPE html>
 <html>
 
@@ -46,9 +52,9 @@
 
 <body>
 	<div class="container">
-		<h1>Bienvenido a Webserv 1.0</h1>
-		<p>Este es el servidor secundario</p>
-		<p class="small-text">Esta página es un HTML estático</p>
+		<h1><?php echo $titulo; ?></h1>
+		<p><?php echo $descripcion; ?></p>
+		<p class="small-text"><?php echo $nota; ?></p>
 	</div>
 </body>
 

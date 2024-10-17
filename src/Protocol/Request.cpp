@@ -476,6 +476,7 @@
 					}
 
 					event->response_map["Method"] = "CGI";
+					if (Protocol::isAlias) root = "";
 					event->response_map["Path-Full"] = Utils::fullpath(root + "/" + path);
 
 					if (Utils::file_exists(event->response_map["Path-Full"]) == 1) return (Protocol::error_page(event, "404", VServ, Loc));
@@ -516,6 +517,7 @@
 
 				if (Protocol::isAlias) root = "";
 				if (chdir(Utils::fullpath(root + "/" + path).c_str()) != 0) return (0);
+
 
 				std::string index;
 				if (Loc)					index = Loc->get("index");
