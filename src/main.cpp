@@ -74,6 +74,10 @@
 			if (Display::isTerminate() == 4) reload(current_path, argc, argv);
 		}
 		
+		for (std::deque<VServer>::iterator it = Settings::vserver.begin(); it != Settings::vserver.end(); ++it)
+			Thread::set_bool(Display::mutex, it->force_off, true);
+		Thread::set_bool(Display::mutex, Settings::global.status, false);
+
 		Epoll::close();
 		Socket::close();
 		Event::remove();

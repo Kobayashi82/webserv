@@ -365,9 +365,6 @@
 			#pragma region Key_E
 
 				static void Key_E() {
-					for (std::deque<VServer>::iterator it = Settings::vserver.begin(); it != Settings::vserver.end(); ++it)
-						Thread::set_bool(Display::mutex, it->force_off, true);
-					Thread::set_bool(Display::mutex, Settings::global.status, false);
 					Thread::set_int(Display::mutex, Settings::terminate, 0);
 				}
 
