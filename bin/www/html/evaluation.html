@@ -119,29 +119,29 @@
                 </tr>
                 <tr>
                     <td class="command">
-                        <i class="fas fa-copy copy-icon" onclick="copyToClipboard('curl --resolve default:8081:127.0.0.1 http://default:8081/support.html')"></i>
-                        curl --resolve default:8081:127.0.0.1 http://default:8081/support.html
+                        <i class="fas fa-copy copy-icon" onclick="copyToClipboard('curl --resolve default:8081:127.0.0.1 http://default:8081/support.html | tail')"></i>
+                        curl --resolve default:8081:127.0.0.1 http://default:8081/support.html | tail
                     </td>
                     <td class="description">Servidor por defecto</td>
                 </tr>
                 <tr>
                     <td class="command">
-                        <i class="fas fa-copy copy-icon" onclick="copyToClipboard('curl --resolve secundary:8081:127.0.0.1 http://secundary:8081')"></i>
-                        curl --resolve secundary:8081:127.0.0.1 http://secundary:8081
+                        <i class="fas fa-copy copy-icon" onclick="copyToClipboard('curl --resolve secundary:8081:127.0.0.1 http://secundary:8081 | tail')"></i>
+                        curl --resolve secundary:8081:127.0.0.1 http://secundary:8081 | tail
                     </td>
                     <td class="description">Servidor secundario</td>
                 </tr>
                 <tr>
                     <td class="command">
-                        <i class="fas fa-copy copy-icon" onclick="copyToClipboard('curl --resolve non_valid:8081:127.0.0.1 http://non_valid:8081/support.html')"></i>
-                        curl --resolve non_valid:8081:127.0.0.1 http://non_valid:8081/support.html
+                        <i class="fas fa-copy copy-icon" onclick="copyToClipboard('curl --resolve non_valid:8081:127.0.0.1 http://non_valid:8081/support.html | tail')"></i>
+                        curl --resolve non_valid:8081:127.0.0.1 http://non_valid:8081/support.html | tail
                     </td>
                     <td class="description">Sin servidor. Usar servidor por defecto</td>
                 </tr>
                 <tr>
                     <td class="command">
-                        <i class="fas fa-copy copy-icon" onclick="copyToClipboard('curl -X POST -H &quot;Content-Type: plain/text&quot; --data &quot;123456789&quot; 127.0.0.1:8090/index.py')"></i>
-                        curl -X POST -H "Content-Type: plain/text" --data "123456789" 127.0.0.1:8090/index.py
+                        <i class="fas fa-copy copy-icon" onclick="copyToClipboard('curl -X POST -H &quot;Content-Type: plain/text&quot; --data &quot;123456789&quot; 127.0.0.1:8090/index.py | tail')"></i>
+                        curl -X POST -H "Content-Type: plain/text" --data "123456789" 127.0.0.1:8090/index.py | tail
                     </td>
                     <td class="description">Prueba de "Body Size" - Carga el HTML</td>
                 </tr>
@@ -155,29 +155,29 @@
 				
                 <tr>
                     <td class="command">
-                        <i class="fas fa-copy copy-icon" onclick="copyToClipboard('curl -X &quot;UNKNOWN&quot; http://127.0.0.1:8081')"></i>
-                        curl -X "UNKNOWN" http://127.0.0.1:8081
+                        <i class="fas fa-copy copy-icon" onclick="copyToClipboard('curl -X &quot;UNKNOWN&quot; http://127.0.0.1:8081 | tail')"></i>
+                        curl -X "UNKNOWN" http://127.0.0.1:8081 | tail
                     </td>
                     <td class="description">Prueba de método - UNKNOWN</td>
                 </tr>
                 <tr>
                     <td class="command">
-                        <i class="fas fa-copy copy-icon" onclick="copyToClipboard('curl -X POST -H &quot;Content-Type: application/x-www-form-urlencoded&quot; --data &quot;u=[email]&p=[password]&remember_me=off&quot; 127.0.0.1:8081/login.php')"></i>
-                        curl -X POST -H "Content-Type: application/x-www-form-urlencoded" --data "u=[email]&p=[password]&remember_me=off" 127.0.0.1:8081/login.php
+                        <i class="fas fa-copy copy-icon" onclick="copyToClipboard('curl -X POST -H &quot;Content-Type: application/x-www-form-urlencoded&quot; --data &quot;u=a@a.a&p=a&remember_me=off&quot; 127.0.0.1:8081/login.php | tail')"></i>
+                        curl -X POST -H "Content-Type: application/x-www-form-urlencoded" --data "u=a@a.a&p=a&remember_me=off" 127.0.0.1:8081/login.php | tail
                     </td>
                     <td class="description">Prueba de método - POST</td>
                 </tr>
                 <tr>
                     <td class="command">
-                        <i class="fas fa-copy copy-icon" onclick="copyToClipboard('curl -s http://127.0.0.1:8081/cgi/sample.cgi?algunos_datos | grep algunos_datos')"></i>
-                        curl -s http://127.0.0.1:8081/cgi/sample.cgi?algunos_datos | grep algunos_datos
+                        <i class="fas fa-copy copy-icon" onclick="copyToClipboard('curl -s http://127.0.0.1:8081/cgi/sample.cgi?algunos_datos | grep algunos_datos | tail')"></i>
+                        curl -s http://127.0.0.1:8081/cgi/sample.cgi?algunos_datos | grep algunos_datos | tail
                     </td>
                     <td class="description">Prueba de método - GET</td>
                 </tr>
                 <tr>
                     <td class="command">
-                        <i class="fas fa-copy copy-icon" onclick="copyToClipboard('curl -i -X &quot;DELETE&quot; http://127.0.0.1:8081/delete.php?file=some_file')"></i>
-                        curl -i -X "DELETE" http://127.0.0.1:8081/delete.php?file=some_file
+                        <i class="fas fa-copy copy-icon" onclick="copyToClipboard('curl -sL -X &quot;DELETE&quot; http://127.0.0.1:8081/delete.php?file=some_file | head')"></i>
+                        curl -sL -X "DELETE" http://127.0.0.1:8081/delete.php?file=some_file | head
                     </td>
                     <td class="description">Prueba de método - DELETE</td>
                 </tr>
