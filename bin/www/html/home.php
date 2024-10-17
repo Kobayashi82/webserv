@@ -113,6 +113,12 @@ foreach ($files as $file) {
 </div>
 
 <div class="button-panel">
+	<a target="_blank" href="evaluation.html">
+		<button class="image-button">
+			<img src="resources/cgi.png" alt="Evaluación">
+			<span>Evaluación</span>
+		</button>
+	</a>
 	<a target="_blank" href="cgi/index.html">
 		<button class="image-button">
 			<img src="resources/cgi.png" alt="CGI">

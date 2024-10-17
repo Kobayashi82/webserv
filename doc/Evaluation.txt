@@ -1,25 +1,3 @@
-siege -b -c 255 -t 60S 127.0.0.1:8090								-	Stress test
-
-ps --ppid $(pgrep webserv) -o pid,stat,cmd							-	Zombie processes
-
-curl --resolve default:8081:127.0.0.1 http://default:8081/support.html				-	Default server
-curl --resolve secundary:8090:127.0.0.1 http://secundary:8090					-	Secundary server
-curl --resolve non_valid:8081:127.0.0.1 http://non_valid:8081/support.html			-	No server with this name, using Default
-
-curl -X POST -H "Content-Type: plain/text" --data "123456789" 127.0.0.1:8090/index.py		-	Load html
-curl -X POST -H "Content-Type: plain/text" --data "1234567890" 127.0.0.1:8090/index.py		-	Payload too large
-
-curl -X POST -H "Content-Type: application/x-www-form-urlencoded" \
---data "u=[email]&p=[password]&remember_me=off" 127.0.0.1:8081/login.php			-	Test POST method
-
-curl -s http://127.0.0.1:8083/cgi/sample.cgi?algunos_datos | grep algunos_datos			-	Test GET method
-
-curl -i -X "DELETE" http://127.0.0.1:8081/delete.php?file=some_file				-	Test DELETE method
-
-curl -X "UNKNOWN" http://127.0.0.1:8083								-	Test UNKNOWN method
-
-			-----------------------------------------------------
-
 Pregunta: ¿Podrían explicar los conceptos básicos de un servidor HTTP? ¿Cómo maneja las solicitudes y respuestas?
 
 Un servidor HTTP es responsable de recibir solicitudes de los clientes (navegadores web u otros clientes HTTP),
