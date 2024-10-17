@@ -41,7 +41,7 @@ COUNTER 			= 0
 # ── FLAGS ── #
 # ─────────── #
 
-CC					= g++
+CC					= clang++
 FLAGS				= -Wall -Wextra -Werror -std=c++98 -g # -O0 -fsanitize=thread # setarch $(uname -m) -R $SHELL
 
 # ───────────────── #
