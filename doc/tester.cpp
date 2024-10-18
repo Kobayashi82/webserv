@@ -45,17 +45,17 @@ int main() {
     // Comandos en cyan con fondo verde
 
     attron(COLOR_PAIR(2));
-    printw("1) Prueba de estrés\n\n");
-    printw("2) Verificar procesos zombie\n\n");
-    printw("3) Acceso al servidor por defecto\n\n");
-    printw("4) Acceso al servidor secundario\n\n");
-    printw("5) Sin servidor (usar servidor por defecto)\n\n");
-    printw("6) Prueba de 'Body Size' (HTML cargado)\n\n");
-    printw("7) Prueba de 'Body Size' (Payload too large)\n\n");
-    printw("8) Prueba de método HTTP desconocido\n\n");
-    printw("9) Prueba de método POST con formulario\n\n");
-    printw("0) Prueba de método GET con parámetros CGI\n\n");
-    printw("-) Prueba de método DELETE\n\n");
+    printw("s) Prueba de estrés\n\n");
+    printw("1) Verificar procesos zombie\n\n");
+    printw("2) Acceso al servidor por defecto\n\n");
+    printw("3) Acceso al servidor secundario\n\n");
+    printw("4) Sin servidor (usar servidor por defecto)\n\n");
+    printw("5) Prueba de 'Body Size' (HTML cargado)\n\n");
+    printw("6) Prueba de 'Body Size' (Payload too large)\n\n");
+    printw("7) Prueba de método HTTP desconocido\n\n");
+    printw("8) Prueba de método POST con formulario\n\n");
+    printw("9) Prueba de método GET con parámetros CGI\n\n");
+    printw("0) Prueba de método DELETE\n\n");
     printw("q) Salir\n\n");
     attroff(COLOR_PAIR(2));
 
@@ -145,17 +145,17 @@ int main() {
     	attroff(COLOR_PAIR(1));
     	printw("\n");
 		attron(COLOR_PAIR(2));
-		printw("1) Prueba de estrés\n\n");
-		printw("2) Verificar procesos zombie\n\n");
-		printw("3) Acceso al servidor por defecto\n\n");
-		printw("4) Acceso al servidor secundario\n\n");
-		printw("5) Sin servidor (usar servidor por defecto)\n\n");
-		printw("6) Prueba de 'Body Size' (HTML cargado)\n\n");
-		printw("7) Prueba de 'Body Size' (Payload too large)\n\n");
-		printw("8) Prueba de método HTTP desconocido\n\n");
-		printw("9) Prueba de método POST con formulario\n\n");
-		printw("0) Prueba de método GET con parámetros CGI\n\n");
-		printw("-) Prueba de método DELETE\n\n");
+		printw("s) Prueba de estrés\n\n");
+		printw("1) Verificar procesos zombie\n\n");
+		printw("2) Acceso al servidor por defecto\n\n");
+		printw("3) Acceso al servidor secundario\n\n");
+		printw("4) Sin servidor (usar servidor por defecto)\n\n");
+		printw("5) Prueba de 'Body Size' (HTML cargado)\n\n");
+		printw("6) Prueba de 'Body Size' (Payload too large)\n\n");
+		printw("7) Prueba de método HTTP desconocido\n\n");
+		printw("8) Prueba de método POST con formulario\n\n");
+		printw("9) Prueba de método GET con parámetros CGI\n\n");
+		printw("0) Prueba de método DELETE\n\n");
 		printw("q) Salir\n\n");
         attroff(COLOR_PAIR(2));
     }
