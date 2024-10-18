@@ -1,14 +1,11 @@
+<center>
+
 # Webserv 1.0
 
-**Autores:**  
-Alejandro Rosas Jaime (arosa-sj)  
-Juan C. Martos Vergara (jmartos-)  
-Victor J. Zurera del Valle (vzurera-)
+</center>
 
 ### Descripción
 **Webserv 1.0** es un servidor web programado en C++ con soporte para el protocolo HTTP 1.1. Está diseñado para servir cualquier página web que no requiera SSL/TLS, siempre que esté configurado correctamente.
-
-Este proyecto ha sido desarrollado como parte de un ejercicio en **42 Málaga**, Octubre de 2024.
 
 ---
 
@@ -57,3 +54,7 @@ http {
         }
     }
 }
+```
+Alejandro Rosas Jaime (arosa-sj)  
+Juan C. Martos Vergara (jmartos-)  
+Victor J. Zurera del Valle (vzurera-)
