@@ -1,5 +1,27 @@
-# webserv
+# Webserv 1.0
 
+**Autores:**  
+Alejandro Rosas Jaime (arosa-sj)  
+Juan C. Martos Vergara (jmartos-)  
+Victor J. Zurera del Valle (vzurera-)
+
+### Descripción
+**Webserv 1.0** es un servidor web programado en C++ con soporte para el protocolo HTTP 1.1. Está diseñado para servir cualquier página web que no requiera SSL/TLS, siempre que esté configurado correctamente.
+
+Este proyecto ha sido desarrollado como parte de un ejercicio en **42 Málaga**, Octubre de 2024.
+
+---
+
+### Características principales
+- **Soporte HTTP/1.1**: Webserv acepta y procesa peticiones HTTP según el protocolo estándar.
+- **Configuración personalizable**: Se puede iniciar Webserv con archivos de configuración específicos.
+- **Soporte para CGI**: Ejecuta scripts CGI (por ejemplo, PHP, Python, etc.).
+- **Manejo de logs**: Webserv genera logs tanto de acceso como de errores.
+- **Manejo de múltiples direcciones IP y puertos**: Puede configurar varios servidores virtuales con diferentes IP y puertos.
+  
+---
+
+### Opciones de uso
 - **Modo gráfico**: `./webserv` abre Webserv en modo gráfico por defecto.
 - **Modo consola**: `./webserv -i` inicia Webserv en modo consola.
 - **Validación**: `./webserv -t` valida el archivo de configuración.
