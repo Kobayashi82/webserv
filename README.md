@@ -55,6 +55,3 @@ http {
     }
 }
 ```
-Alejandro Rosas Jaime (arosa-sj)  
-Juan C. Martos Vergara (jmartos-)  
-Victor J. Zurera del Valle (vzurera-)
