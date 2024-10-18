@@ -1,5 +1,0 @@
-Name: Juan Carlos
-Email: kevlaroscuro@gmail.com
-Subject: saludar
-Message: hola caracola
-

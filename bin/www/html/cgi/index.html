@@ -229,7 +229,7 @@
         <div class="content">
             <div class="text-section">
                 <p>CGI es una tecnología que permite que un servidor web ejecute programas (scripts) externos, generando contenido dinámico para el cliente.</p>
-                <p>A diferencia de la CLI (Command Line Interface), donde los comandos se ejecutan manualmente desde una terminal, CGI permite la ejecución de scripts en el servidor a través de peticiones HTTP, como GET o POST.</p>
+                <p>A diferencia de CLI (Command Line Interface), donde los comandos se ejecutan manualmente desde una terminal, CGI permite la ejecución de scripts en el servidor a través de peticiones HTTP, como GET o POST.</p>
                 <p>El servidor web recibe la solicitud del cliente, ejecuta el script y devuelve el resultado al navegador.</p>
             </div>
 
@@ -242,7 +242,7 @@
 
         <div class="form-section">
             <div class="left-column">
-                <p>Al hacer click en este botón, la información será enviada al servidor a través de una query y del cuerpo de la petición (stdin, POST).</p>
+                <p>Al hacer click en este botón, la información será enviada al servidor con la consulta y el cuerpo de la petición.</p>
                 <input maxlength="100" type="text" placeholder="Parámetros de la consulta...">
                 <textarea maxlength="250" placeholder="Cuerpo del mensaje..."></textarea>
 
@@ -255,8 +255,8 @@
 
             <div class="right-column">
                 <p>Si un CGI entra en un bucle o se bloquea, el servidor web terminará la ejecución y enviará un código de error 408 (Request Timeout).</p>
-				<p>Al hacer click en este botón podrá probar generar un timeout.</p>
-				<p>Deberá esperar alrededor de 25 segundos hasta que vea el mensaje.</p>
+				<p>Al hacer click en este botón podrá generar un timeout.</p>
+				<p>Deberá esperar alrededor de 30 segundos hasta que vea el mensaje.</p>
 				<p id="timeoutCounter" class="timer"></p>
                 <button class="rimage-button" id="timeoutButton" onclick="startTimeoutRequest()">
                     <img src="timeout.png" alt="Abrir /timeout.html en otra pestaña">
