@@ -159,6 +159,7 @@
 					std::string time = Utils::ltos(Settings::timer.elapsed_milliseconds(event->response_time));													//	Get the time to process the request in milliseconds
 					gettimeofday(&event->response_time, NULL);																									//	Reset response time
 					
+					if (!time.empty() && time[0] == '-') time = time.substr(1);
 					Log::log(	"TRF|" + event->header_map["Method"] + "|" + event->header_map["Path"] + "|" + event->response_map["Code"] + "|" + Utils::ltos(event->response_size) +			//	Log the client request
 								"|" + time + "|" + event->client->ip, Log::BOTH_ACCESS, event->VServ, event->vserver_data);
 

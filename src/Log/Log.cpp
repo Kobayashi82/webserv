@@ -176,7 +176,7 @@
 					Utils::trim(log.msg); if (log.msg.empty()) continue;
 
 					bool isTRF = false;
-					if (log.msg.substr(0, 3) == "TRF") {
+					if (log.msg.size() > 3 && log.msg.substr(0, 3) == "TRF") {
 						if (log.type < LOCAL_ACCESS) { isTRF = true; log_request(log.msg, log.VServ, false); }
 					} else {
 						Thread::mutex_set(Log::mutex, Thread::MTX_LOCK);
@@ -189,7 +189,7 @@
 
 					if (log.type < LOCAL_ACCESS) { if (isTRF == false) log_to_memory(log.msg, log.type, log.VServ); }
 					if (log.type > GLOBAL_ERROR && !log.path.empty()) {
-						if (log.msg.substr(0, 3) == "TRF") log.msg = log_request(log.msg, log.VServ, true);
+						if (log.msg.size() && log.msg.substr(0, 3) == "TRF") log.msg = log_request(log.msg, log.VServ, true);
 						logMap[log.path] += Utils::str_nocolor(log.msg) + "\n";
 					}
 				}
@@ -209,88 +209,89 @@
 
 				std::string Log::log_request(std::string log_msg, VServer * VServ, bool isLocal) {
 					if (log_msg.empty()) return ("");
+					try {
+						long		code;
+						size_t		bytes;
 
-					long		code;
-					size_t		bytes;
+						std::string	method;
+						std::string	re_path;
+						std::string	scode;
+						std::string	sbytes;
+						std::string	time;
+						std::string	ip;
+						
+						std::istringstream iss(log_msg);
+						std::getline(iss, log_msg, '|');
+						std::getline(iss, method, '|');
+						std::getline(iss, re_path, '|');
+						std::getline(iss, scode, '|');
+						std::getline(iss, sbytes, '|');
+						std::getline(iss, time, '|');
+						std::getline(iss, ip, '|');
 
-					std::string	method;
-					std::string	re_path;
-					std::string	scode;
-					std::string	sbytes;
-					std::string	time;
-					std::string	ip;
-					
-					std::istringstream iss(log_msg);
-					std::getline(iss, log_msg, '|');
-					std::getline(iss, method, '|');
-					std::getline(iss, re_path, '|');
-					std::getline(iss, scode, '|');
-					std::getline(iss, sbytes, '|');
-					std::getline(iss, time, '|');
-					std::getline(iss, ip, '|');
+						Utils::stol(scode, code);
+						Utils::stol(sbytes, bytes);
 
-					Utils::stol(scode, code);
-					Utils::stol(sbytes, bytes);
+						std::string method_color;
+						if (method == "GET") method_color = AMBER500;
+						else if (method == "HEAD") method_color = GREEN600;
+						else if (method == "POST") method_color = FUCHSIA600;
+						else if (method == "PUT") method_color = TEAL400;
+						else if (method == "PATCH") method_color = TEAL400;
+						else if (method == "DELETE") method_color = RED400;
+						else  method_color = RED800;
 
-					std::string method_color;
-					if (method == "GET") method_color = AMBER500;
-					else if (method == "HEAD") method_color = GREEN600;
-					else if (method == "POST") method_color = FUCHSIA600;
-					else if (method == "PUT") method_color = TEAL400;
-					else if (method == "PATCH") method_color = TEAL400;
-					else if (method == "DELETE") method_color = RED400;
-					else  method_color = RED800;
+						std::string space = "";
+						int method_size = 12;
+						if (method.size() <= 12) method_size = method.size();
+						if (method_size == 12) space = " ";
+						std::string msg1 = UN BLUE400 + ip + NC + std::string("                ").substr(ip.size()) + method_color + method + std::string("            ").substr(method_size) + space + BR + re_path + NC;
 
-					std::string space = "";
-					int method_size = 12;
-					if (method.size() <= 12) method_size = method.size();
-					if (method_size == 12) space = " ";
-					std::string msg1 = UN BLUE400 + ip + NC + std::string("                ").substr(ip.size()) + method_color + method + std::string("            ").substr(method_size) + space + BR + re_path + NC;
+						std::string s_bytes = Utils::formatSize(bytes);
 
-					std::string s_bytes = Utils::formatSize(bytes);
+						std::string code_color;
+						if (code >= 100 && code < 300) code_color = GREEN600;
+						if (code >= 300 && code < 400) code_color = ORANGE400;
+						if (code >= 400 && code < 600) code_color = RED400;
 
-					std::string code_color;
-					if (code >= 100 && code < 300) code_color = GREEN600;
-					if (code >= 300 && code < 400) code_color = ORANGE400;
-					if (code >= 400 && code < 600) code_color = RED400;
-
-					std::string msg2 = BLUE800 "Transfered:     " AMBER200 + s_bytes + std::string("           ").substr(s_bytes.size()) + C " in " SKY700 + time + " ms " C "with code " + code_color + Utils::ltos(code) + C " (" + code_color + Settings::error_codes[code] + C ")" NC;
-
-					Thread::mutex_set(mutex, Thread::MTX_LOCK);
-						std::string logtime = BLUE600 "[" LIME600 + Settings::timer.current_date() + " " EMERALD400 + Settings::timer.current_time() + BLUE600 "]  " NC;
-					Thread::mutex_set(mutex, Thread::MTX_UNLOCK);
-
-					if (isLocal) {
-						method_size = 10;
-						space = "";
-						if (method.size() <= 10) method_size = method.size();
-						if (method_size == 10) space = " ";
-						std::string msg3 = ip + std::string("                ").substr(ip.size()) + method_color + method + std::string("          ").substr(method_size) + space;
-						std::string msg4 = scode + "    " + s_bytes + std::string("           ").substr(s_bytes.size()) + time + " ms" + std::string("         ").substr(time.size()) + re_path;
-
-						return (logtime + msg3 + msg4);
-					}
-
-					msg1 = logtime + msg1;
-					msg2 = "                       " + msg2;
-					
-					if (!Display::background && (Settings::check_only || !Display::isRawMode() || Display::ForceRawModeDisabled)) {
-						std::cout << " " << msg1 << "\n " << msg2 << "\n " <<  Y "-----------------------------------------------------------------------------------------" << NC "\n";
-					} else {
+						std::string msg2 = BLUE800 "Transfered:     " AMBER200 + s_bytes + std::string("           ").substr(s_bytes.size()) + C " in " SKY700 + time + " ms " C "with code " + code_color + Utils::ltos(code) + C " (" + code_color + Settings::error_codes[code] + C ")" NC;
 
 						Thread::mutex_set(mutex, Thread::MTX_LOCK);
-						
-							Settings::global.log.both_add(msg1); Settings::global.log.access_add(msg1);
-							if (VServ) { VServ->log.both_add(msg1); VServ->log.access_add(msg1); }
-							Settings::global.log.both_add(msg2); Settings::global.log.access_add(msg2);
-							if (VServ) { VServ->log.both_add(msg2); VServ->log.access_add(msg2); }
-							Settings::global.log.both_add("---"); Settings::global.log.access_add("---");
-							if (VServ) { VServ->log.both_add("---"); VServ->log.access_add("---"); }
-
+							std::string logtime = BLUE600 "[" LIME600 + Settings::timer.current_date() + " " EMERALD400 + Settings::timer.current_time() + BLUE600 "]  " NC;
 						Thread::mutex_set(mutex, Thread::MTX_UNLOCK);
 
-					}
+						if (isLocal) {
+							method_size = 10;
+							space = "";
+							if (method.size() <= 10) method_size = method.size();
+							if (method_size == 10) space = " ";
+							std::string msg3 = ip + std::string("                ").substr(ip.size()) + method_color + method + std::string("          ").substr(method_size) + space;
+							std::string msg4 = scode + "    " + s_bytes + std::string("           ").substr(s_bytes.size()) + time + " ms" + std::string("         ").substr(time.size()) + re_path;
 
+							return (logtime + msg3 + msg4);
+						}
+
+						msg1 = logtime + msg1;
+						msg2 = "                       " + msg2;
+						
+						if (!Display::background && (Settings::check_only || !Display::isRawMode() || Display::ForceRawModeDisabled)) {
+							std::cout << " " << msg1 << "\n " << msg2 << "\n " <<  Y "-----------------------------------------------------------------------------------------" << NC "\n";
+						} else {
+
+							Thread::mutex_set(mutex, Thread::MTX_LOCK);
+							
+								Settings::global.log.both_add(msg1); Settings::global.log.access_add(msg1);
+								if (VServ) { VServ->log.both_add(msg1); VServ->log.access_add(msg1); }
+								Settings::global.log.both_add(msg2); Settings::global.log.access_add(msg2);
+								if (VServ) { VServ->log.both_add(msg2); VServ->log.access_add(msg2); }
+								Settings::global.log.both_add("---"); Settings::global.log.access_add("---");
+								if (VServ) { VServ->log.both_add("---"); VServ->log.access_add("---"); }
+
+							Thread::mutex_set(mutex, Thread::MTX_UNLOCK);
+
+						}
+
+					} catch (...) {}
 					return ("");
 				}
 
