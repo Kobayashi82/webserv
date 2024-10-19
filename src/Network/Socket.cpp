@@ -117,11 +117,13 @@
 					if (Thread::get_bool(Display::mutex, VServ->status) == false) Thread::set_bool(Display::mutex, VServ->status, true);
 
 					//	Log message
-					std::string ip = addr_it->first;
-					if (ip == "0.0.0.0") ip = "All interfaces";
-					std::string port = Utils::ltos(addr_it->second);
-					std::string msg = UN BLUE400 + ip + NC + std::string("                ").substr(ip.size()) + C " listening on port " + UN BLUE400 + port + NC;
-					Log::log(msg, Log::MEM_ACCESS, VServ);
+					try {
+						std::string ip = addr_it->first;
+						if (ip == "0.0.0.0") ip = "All interfaces";
+						std::string port = Utils::ltos(addr_it->second);
+						std::string msg = UN BLUE400 + ip + NC + std::string("                ").substr(ip.size()) + C " listening on port " + UN BLUE400 + port + NC;
+						Log::log(msg, Log::MEM_ACCESS, VServ);
+					} catch (...) {}
 
 					nothing_created = false;
 				}

@@ -48,7 +48,7 @@
 	int Utils::createPath(const std::string & path) {
 		size_t pos = 0; std::string dir;
 
-		if (path == "") return (0);
+		if (path.empty()) return (0);
 		while ((pos = path.find('/', pos)) != std::string::npos) {
 			dir = path.substr(0, pos++);
 			if (dir.empty()) continue;
@@ -198,7 +198,8 @@
 	std::string Utils::expand_tilde(const std::string & path) {
 		const char * home = getenv("HOME");
 		if (!home) home = getpwuid(getuid())->pw_dir;
-		return (std::string(home) + path.substr(1));
+		if (path.empty())	return (std::string(home));
+		else				return (std::string(home) + path.substr(1));
 	}
 
 #pragma endregion
@@ -227,8 +228,8 @@
 			if (line.find("PRETTY_NAME") != std::string::npos) {
 				size_t pos = line.find('=');
 				if (pos != std::string::npos) {
-					osName = line.substr(pos + 2);
-					if (!osName.empty()) osName = osName.substr(0, osName.size() - 1);
+					osName = line.substr(pos + 1);
+					if (osName.size() > 1) osName = osName.substr(1, osName.size() - 1);
 					break;
 				}
 			}

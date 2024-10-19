@@ -368,10 +368,10 @@
 						if (event->response_map["Range"].size() > 7) {																//	Send a fragment of the file
 							size_t temp = 0;
 							std::string value = event->response_map["Range"].substr(6);
-							if (value[0] == '-') {																					//	bytes=-1024		The client asks for the last 1024 bytes of the file
+							if (!value.empty() && value[0] == '-') {																					//	bytes=-1024		The client asks for the last 1024 bytes of the file
 								if (Utils::stol(value.substr(1), temp) || filesize > temp) { return (0); } // error
 								start = filesize - temp;
-							} else if (value[value.size() - 1] == '-') {															//	bytes=1024-		The client asks for all bytes starting from byte 1024 to the end of the file
+							} else if (!value.empty() && value[value.size() - 1] == '-') {															//	bytes=1024-		The client asks for all bytes starting from byte 1024 to the end of the file
 								if (Utils::stol(value.substr(0, value.size() - 1), temp) || filesize > temp) { return (0); } // error
 								start = temp;
 							} else {																								//	bytes=0-1023	The client asks for bytes from 0 to 1023 (inclusive)
@@ -457,10 +457,10 @@
 				if (event->response_map["Range"].size() > 7) {															//	Send a fragment of the file
 					size_t temp = 0;
 					std::string value = event->response_map["Range"].substr(6);
-					if (value[0] == '-') {																				//	bytes=-1024		The client asks for the last 1024 bytes of the file
+					if (!value.empty() && value[0] == '-') {																				//	bytes=-1024		The client asks for the last 1024 bytes of the file
 						if (Utils::stol(value.substr(1), temp) || filesize > temp) { return; }							// error
 						start = filesize - temp;
-					} else if (value[value.size() - 1] == '-') {														//	bytes=1024-		The client asks for all bytes starting from byte 1024 to the end of the file
+					} else if (!value.empty() && value[value.size() - 1] == '-') {														//	bytes=1024-		The client asks for all bytes starting from byte 1024 to the end of the file
 						if (Utils::stol(value.substr(0, value.size() - 1), temp) || filesize > temp) { return; }		// error
 						start = temp;
 					} else {																							//	bytes=0-1023	The client asks for bytes from 0 to 1023 (inclusive)

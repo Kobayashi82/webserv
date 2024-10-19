@@ -604,7 +604,7 @@
 
 				while (iss >> files) { path = files;
 					path = Utils::line_spaces_on(path);
-					if (path[0] == '/') path = path.substr(1);
+					if (!path.empty() && path[0] == '/') path = path.substr(1);
 					path = replace_all_vars(event, path);
 
 					if (!Utils::file_exists(path)) {
@@ -738,8 +738,8 @@
 
 					if (mode == 2) { if (loc_path != path && loc_path != dir_path)	return (0); }							//	Compare 'loc_path' with 'path' and 'dir_path'
 					if (mode != 2) {
-						if (dir_path.empty() && loc_path != path.substr(0, loc_path.size()))			return (0);			//	Compare 'loc_path' with 'path'
-						else if (!dir_path.empty() && loc_path != dir_path.substr(0, loc_path.size()))	return (0);			//	Compare 'loc_path' with 'dir_path'
+						if (dir_path.empty() && path.size() >= loc_path.size() && loc_path != path.substr(0, loc_path.size()))					return (0);			//	Compare 'loc_path' with 'path'
+						else if (!dir_path.empty() && dir_path.size() >= loc_path.size() && loc_path != dir_path.substr(0, loc_path.size()))	return (0);			//	Compare 'loc_path' with 'dir_path'
 					}
 
 					return (loc_path.size());																				//	Return the number of matching characters
@@ -844,7 +844,7 @@
 					if (it->first == "allow" && (it->second == "all" || Utils::isIPInRange(event->client->ip, it->second))) allowed = true;
 					if (it->first == "deny" && allowed == false && (it->second == "all" || Utils::isIPInRange(event->client->ip, it->second))) return (Protocol::error_page(event, "403", NULL));
 					if (it->first == "return") return (redirect(event, it->second, NULL));
-					if (it->first.substr(0, 3) == "cgi" && cgi_method(event, it->first, it->second, NULL)) return (1);
+					if (it->first.size() > 3 && it->first.substr(0, 3) == "cgi" && cgi_method(event, it->first, it->second, NULL)) return (1);
 					if (it->first == "method" && method(event, Utils::sstol(it->second), NULL)) return (1);
 					if (it->first == "server" && Utils::sstol(it->second) == VServ_index && server(event, VServ)) return (1);
 				}
@@ -877,7 +877,7 @@
 				event->response_map["Path"] = path.substr(1, slash_pos);
 				event->response_map["Path-Info"] = path.substr(slash_pos);
 			} else {
-				event->response_map["Path"] = path.substr(1);
+				if (!path.empty()) event->response_map["Path"] = path.substr(1);
 				event->response_map["Path-Info"] = "";
 			}
 			event->response_map["Old-Path"] = event->response_map["Path"];

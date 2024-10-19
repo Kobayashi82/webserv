@@ -55,7 +55,9 @@
 
 			str = Utils::line_spaces_on(str);
 			if (isFile && check_path) {
-				std::string dir_path = str.substr(0, str.find_last_of('/'));
+				size_t pos = str.find_last_of('/');
+				if (pos == std::string::npos) pos = str.size();
+				std::string dir_path = str.substr(0, pos);
 				if (stat(dir_path.c_str(), &info) != 0) {
 					if (errno == ENOENT)							log_servers(RD + n_line + "The " Y + firstPart + RD " path " Y + dir_path + RD " does not exist" NC, VServ);
 					else if (errno == EACCES)						log_servers(RD + n_line + "No permission to access " Y + dir_path + NC, VServ);

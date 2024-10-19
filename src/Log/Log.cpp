@@ -189,7 +189,7 @@
 
 					if (log.type < LOCAL_ACCESS) { if (isTRF == false) log_to_memory(log.msg, log.type, log.VServ); }
 					if (log.type > GLOBAL_ERROR && !log.path.empty()) {
-						if (log.msg.size() && log.msg.substr(0, 3) == "TRF") log.msg = log_request(log.msg, log.VServ, true);
+						if (log.msg.size() > 3 && log.msg.substr(0, 3) == "TRF") log.msg = log_request(log.msg, log.VServ, true);
 						logMap[log.path] += Utils::str_nocolor(log.msg) + "\n";
 					}
 				}
