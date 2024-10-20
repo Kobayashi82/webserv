@@ -19,8 +19,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {																	//	Procesar datos de
         $messageContent = "Name: $name\nEmail: $email\nSubject: $subject\nMessage: $message\n\n";			//	Contenido del mensaje
         file_put_contents($filePath, $messageContent);														//	Crea el archivo del mensaje
 
+		header("HTTP/1.1 200 OK");
         echo json_encode(['success' => true, 'message' => 'Mensaje enviado con exito']);					//	Enviar un mesaje de "success" al cliente
     } else {
+		header("HTTP/1.1 500 Internal Server Error");
 		echo json_encode(['success' => false, 'message' => 'No se pudo enviar el mensaje']);				//	Si no se pudo crear, enviar un mensaje de "failed" al cliente
     }
 

@@ -22,6 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {																	//	Procesar datos de
     $confirm_password = isset($postData['confirm_password']) ? $postData['confirm_password'] : '';			//	Obtener el valor de 'confirm_pass'
 
 	if (strpos($email, '/') !== false) {																	//	Comprobar si el 'email' contiene el caracter prohibido "/"
+		header("HTTP/1.1 400 Bad Request");
 		echo json_encode(['success' => false, 'message' => 'El email no puede contener "/"']);				//	Si lo contiene, devolvemos un mensaje de "failed" al cliente
 		exit();
 	}
@@ -29,6 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {																	//	Procesar datos de
     $userdataFile = 'users/userdata';																		//	Definir la ruta del archivo 'userdata'
     
 	if (!is_dir('users') && !mkdir('users', 0777, true)) {													//	Verificar si el directorio 'users' existe, si no, crea el directorio
+		header("HTTP/1.1 400 Bad Request");
 		echo json_encode(['success' => false, 'message' => 'Error interno al crear la cuenta']);			//	Si falla al crear el directorio, devolvemos un mensaje de "failed" al cliente
 		exit();
 	}
@@ -37,6 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {																	//	Procesar datos de
     if ($userdata === false) {
         $file = fopen($userdataFile, 'w');																	//	Si 'userdata' no existe, lo creamos y abrimos en modo escritura
         if ($file === false) {
+			header("HTTP/1.1 400 Bad Request");
             echo json_encode(['success' => false, 'message' => 'Error interno al crear la cuenta']);		//	Si falla al abrirlo, devolvemos un mensaje de "failed" al cliente
             exit();
         }
@@ -53,12 +56,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {																	//	Procesar datos de
         list($storedUser, $storedPass, $storedFirstName, $storedLastName) = explode(';', $line);			//	Dividir la cadena en 'email', 'pass', 'firstname', y 'lastname'
 
         if (strtolower($storedUser) == strtolower($email)) {												//	Comprobar si el 'email' coincide
+			header("HTTP/1.1 400 Bad Request");
             echo json_encode(['success' => false, 'message' => 'El e-mail pertenece a otro usuario']);		//	El 'email' ya existe, devolvemos un mensaje de "failed" al cliente
             exit();
         }
     }
 
     if ($password !== $confirm_password) {																	//	Comprobar si 'pass' y 'confirm_pass' coinciden
+		header("HTTP/1.1 400 Bad Request");
         echo json_encode(['success' => false, 'message' => 'Las contraseñas no coinciden']);				//	No coinciden, devolvemos un mensaje de "failed" al cliente
         exit();
     }
@@ -72,6 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {																	//	Procesar datos de
     fwrite($file, $newUser);																				//	Guardamos el nuevo usuario
     fclose($file);																							//	Cerramos el archivo 'userdata'
 
+	header("HTTP/1.1 201 Created");
     echo json_encode(['success' => true, 'message' => 'Usuario registrado con exito']);						//	Enviar un mesaje de "success" al cliente
     exit();
 }

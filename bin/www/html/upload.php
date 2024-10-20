@@ -56,9 +56,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {																//	Procesar datos de
 
         fclose($inputStream);																				//	Cerrar el flujo de entrada cuando hayamos terminado de procesar todos los datos
     } else {
+		header("HTTP/1.1 400 Bad Request");
         echo json_encode(['status' => 'error', 'message' => 'Formato no soportado']);						//	Si el tipo de contenido no es 'multipart/form-data', enviar un mensaje de error
     }
 } else {
+	header("HTTP/1.1 403 Method Not Allowed");
     echo json_encode(['status' => 'error', 'message' => 'Metodo no permitido']);							//	Si no es un método POST, enviar un mensaje de error
 }
+
+header("HTTP/1.1 200 OK");
+
 ?>

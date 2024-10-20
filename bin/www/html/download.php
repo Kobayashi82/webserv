@@ -17,7 +17,8 @@ $file = $_GET['file'] ?? '';																				//	Obtiene el archivo a eliminar
 $filePath = $userDirectory . '/' . $file;																	//	Obtiene la ruta completa al archivo
 
 if (!$filePath || strncmp(realpath($filePath), realpath($userDirectory), strlen(realpath($userDirectory))) !== 0) {	//	Comprobar que el archivo está dentro del directorio permitido
-    echo json_encode(['status' => 'error', 'message' => 'Ruta no valida ']);										//	Si la ruta no es válida, devolvemos un mensaje de "failed" al cliente
+	header("HTTP/1.1 404 Not Found");
+    echo json_encode(['status' => 'error', 'message' => 'Archivo no encontrado']);							//	Si la ruta no es válida, devolvemos un mensaje de "failed" al cliente
 	exit();
 }
 
@@ -38,8 +39,10 @@ if (is_file($filePath)) {																					//	Verifica si el archivo existe y
 
     fclose($file);																							//	Cierra el archivo
 } else {
+	header("HTTP/1.1 404 Not Found");
 	echo json_encode(['status' => 'error', 'message' => 'Archivo no encontrado']);							//	Si no existe, devolvemos un mensaje de "failed" al cliente
 }
 
+header("HTTP/1.1 200 OK");
 exit();
 ?>

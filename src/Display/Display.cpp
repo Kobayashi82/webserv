@@ -396,7 +396,7 @@
 
 				char c, seq[4];
 				if (read(STDIN_FILENO, &c, 1) != 1) return ;																							//	This is Non-Blocking
-				if (c == '\033' && read(STDIN_FILENO, &seq[0], 1) == 1 && read(STDIN_FILENO, &seq[1], 1) == 1 && seq[0] == '[') {
+				if (c == '\033' && read(STDIN_FILENO, &seq[0], 1) == 1 && read(STDIN_FILENO, &seq[1], 1) == 1 && seq[0] == '[') {						//	Read a keypress from an unbuffer terminal
 					if (seq[1] == 'D')		Left();
 					if (seq[1] == 'C')		Right();
 					if (seq[1] == 'A') 		Up();

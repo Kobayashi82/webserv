@@ -56,7 +56,7 @@
 
 			void Epoll::clients_timeout() {
 				uint64_t expirations;
-				read(timeout_fd, &expirations, sizeof(expirations));
+				read(timeout_fd, &expirations, sizeof(expirations));									//	This is called from EPOLL events
 
 				long TimeOut = Settings::KEEP_ALIVE_TIMEOUT;
 
