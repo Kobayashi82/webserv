@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import cgi
 import random
+import os
 
 # Obtener datos del formulario
 form = cgi.FieldStorage()
@@ -79,17 +80,17 @@ print("""
     <form method="post" action="">
         <div class="choice">
             <button type="submit" name="choice" value="piedra">
-                <img src="rock.png" alt="Piedra">
+                <img src="/resources/rock.png" alt="Piedra">
             </button>
         </div>
         <div class="choice">
             <button type="submit" name="choice" value="papel">
-                <img src="paper.png" alt="Papel">
+                <img src="/resources/paper.png" alt="Papel">
             </button>
         </div>
         <div class="choice">
             <button type="submit" name="choice" value="tijeras">
-                <img src="scissor.png" alt="Tijeras">
+                <img src="/resources/scissor.png" alt="Tijeras">
             </button>
         </div>
     </form>
@@ -107,6 +108,7 @@ if user_choice:
 
 print("""
     </div>
+	<p>Ruta actual: {}</p>
 </body>
 </html>
-""")
+""".format(os.getcwd()))
