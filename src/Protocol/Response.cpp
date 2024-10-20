@@ -358,6 +358,7 @@
 		#pragma region Cache
 
 			int Protocol::file_cache(EventInfo * event, std::string & path) {
+				if (event->response_map["Code"] != "200") event->no_cache = true;
 				if (event->no_cache || !Communication::cache.get_caching(path)) {													//	If cache is allowed
 					try {
 						CacheInfo & fcache = Communication::cache.get(path);														//	Get the file from cache

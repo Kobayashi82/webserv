@@ -31,6 +31,8 @@
 		int Protocol::check_code(EventInfo * event, bool force, std::string code) {
 			if (!code.empty()) event->header_map["Code"] = code;
 			if (error_page(event, event->header_map["Code"], event->VServ, event->Loc, !force)) {
+				event->header_map["Connection"] = "close";																		//	Set 'Connection' to close
+				event->header_map["Write-Only"] = "true";																		//	Don't read from the client anymore
 				event->response_method = event->response_map["Method"];
 
 				if (force && event->response_method == "Error") {
@@ -50,7 +52,7 @@
 					event->response_map["Code-Description"] = Settings::error_codes[Utils::sstol(event->response_map["Code"])];
 					event->redirect_status = 200;
 					Protocol::response_error(event);
-					return (1);																		//	Return "404 (Not Found)"
+					return (1);
 				} else {
 					size_t pos1 = event->header_map["Cache-Control"].find("no-cache");
 					size_t pos2 = event->header_map["Cache-Control"].find("no-store");
@@ -159,7 +161,15 @@
 							event->header_map["Method"] = value1;
 							event->header_map["Path"] = Security::decode_url(value2);
 							event->header_map["Protocol"] = value3;
-						} else return (2);																			//	There are errors in the first line
+							std::string remaining;
+        					first_line >> remaining;
+					        if (!remaining.empty()) return (2);
+						} else {
+							event->header_map["Method"] = "GET";
+							event->header_map["Path"] = "/";
+							event->header_map["Protocol"] = "HTTP/1.1";
+							return (2);
+						}
 					} else if (event->type == CGI) {
 						if (first_line >> value1 && first_line >> value2) {											//	Get the data from the first line (Protocol, Code and Code description)
 							EventInfo * c_event = Event::get(event->client->fd);
@@ -204,9 +214,8 @@
 					line.erase(line.size() - 1, 1);
 					pos = line.find(':');																			//	Find ':' to split Key - Value
 					if (pos != std::string::npos) event->header_map[line.substr(0, pos)] = line.substr(pos + 1);	//	Add the Key - Value to 'header_map'
-
-					if (event->type == CLIENT) parse_variables(event);												//	Create header variables
 				}
+				if (event->type == CLIENT) parse_variables(event);												//	Create header variables
 				pos = event->header_map["Host"].find_first_of(':');
 				if (pos != std::string::npos) event->header_map["Host"] = Utils::strim(event->header_map["Host"].substr(0, pos));
 			return (0);
@@ -331,7 +340,7 @@
 
 				Protocol::isAlias = false;
 
-				if (chdir(root.c_str()) != 0) return (0);
+				if (!root.empty() && chdir(root.c_str()) != 0) return (0);
 
 				if (path.empty() || Utils::file_exists(Utils::fullpath(root + "/" + path))) {
 					if (just_check) return (0);

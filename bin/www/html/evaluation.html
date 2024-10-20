@@ -181,7 +181,14 @@
                     </td>
                     <td class="description">Prueba de método - DELETE</td>
                 </tr>
-            </tbody>
+                <tr>
+                    <td class="command">
+                        <i class="fas fa-copy copy-icon" onclick="copyToClipboard('echo -e &quot;GET / \\r\\n\\r\\n&quot; | nc 127.0.0.1 8081 | tail')"></i>
+                        echo -e "GET / \r\n\r\n" | nc 127.0.0.1 8081 | tail
+                    </td>
+                    <td class="description">Prueba de encabezado - BAD REQUEST</td>
+                </tr>
+			</tbody>
         </table>
     </div>
 

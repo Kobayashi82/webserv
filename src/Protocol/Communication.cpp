@@ -70,8 +70,12 @@
 							event->read_maxsize = Utils::sstol(event->header_map["Content-Length"]) + event->header.size();
 							event->read_buffer.erase(event->read_buffer.begin(), event->read_buffer.begin() + event->header.size());			//	Remove the header from 'read_buffer'
 							Protocol::process_request(event);																					//	Process the request
-						} else if (result == 2) { event->client->remove(); return (1); }														//	There is a header, but something went wrong
-
+						} else if (result == 2) {																								//	There is a header, but something went wrong
+							Epoll::set(event->fd, false, false);																				//	Close read and write monitor for EPOLL
+							event->read_buffer.clear();
+							event->write_buffer.clear();
+							Protocol::check_code(event, true, "400"); return (1);
+						}
 					} else event->read_size += bytes_read;																						//	Increase 'read_size'
 
 				//	If 'read_size' is greater than 'body_maxsize'
@@ -330,7 +334,7 @@
 							}
 						} else if (result == 2) {
 							if (c_event->cgi_fd != -1) { Event::remove(c_event->cgi_fd); c_event->cgi_fd = -1; }				//	There is a header, but something went wrong
-							Protocol::check_code(c_event, true, "500"); Event::remove(event->fd); return (1);
+							Protocol::check_code(c_event, true, "400"); Event::remove(event->fd); return (1);
 						} else if (result == 3) {
 							if (c_event->cgi_fd != -1) { Event::remove(c_event->cgi_fd); c_event->cgi_fd = -1; }				//	There is a header, but no 'c_event'
 							Protocol::check_code(c_event, true, "500"); Event::remove(event->fd); return (1);
