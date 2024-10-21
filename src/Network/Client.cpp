@@ -55,7 +55,11 @@
 #pragma region Remove
 
 	void	Client::remove(bool from_socket) {
-		if (fd != -1) { Event::remove(fd); }
+		if (fd != -1) {
+			EventInfo * c_event = Event::get(fd);
+			if (c_event && c_event->pid != 0) { kill(c_event->pid, SIGKILL); c_event->pid = 0; }
+			Event::remove(fd);
+		}
 
 		std::list <Client>::iterator c_it = Communication::clients.begin();
 		while (c_it != Communication::clients.end()) {
