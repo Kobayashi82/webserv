@@ -20,9 +20,8 @@ $files = json_decode($output, true); // Decodificar la salida JSON del script de
             <p>No hay ningún mensaje</p>
         </div>
     <?php else: ?>
-        <?php foreach ($files as $filename => $content): ?>
+        <?php foreach ($files as $content): ?>
             <div class="message-box">
-                <h3><?php echo htmlspecialchars($filename); ?></h3>
                 <?php
                 $lines = explode("\n", $content);
                 foreach ($lines as $line):
