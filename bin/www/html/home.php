@@ -145,7 +145,7 @@ header("HTTP/1.1 200 OK");
             <span>Directorios</span>
         </button>
     </a>
-	<a target="_blank" href="/messages.py">
+	<a target="_blank" href="/messages.php">
 		<button class="image-button">
 			<img src="resources/mesages.png" alt="Mensajes">
 			<span>Mensajes</span>

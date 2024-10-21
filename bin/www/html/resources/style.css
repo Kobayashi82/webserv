@@ -386,3 +386,41 @@ header {
   max-height: 600px;    /* Altura máxima antes de que aparezca el scroll */
   overflow-y: auto;     /* Habilitar el scroll vertical cuando sea necesario */
 }
+
+/* Scoped styles for messages.php */
+.messages-page .messages-container {
+  margin-top: 40px; /* Añade un margen superior para mover el contenido hacia abajo */
+}
+
+.messages-page h1 {
+  text-align: center; /* Centra el texto horizontalmente */
+  color: white; /* Cambia el color del texto a blanco */
+  margin-top: 20px; /* Añade un margen superior */
+  margin-bottom: 20px; /* Añade un margen inferior */
+  font-size: 2em; /* Ajusta el tamaño de la fuente */
+}
+
+.messages-page .message-box {
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  background-color: #f9f9f9;
+  padding: 20px;
+  margin: 20px auto; /* Centra el contenedor horizontalmente */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  max-width: 600px; /* Ancho máximo del contenedor */
+  width: 80%; /* Ancho relativo al contenedor padre */
+  word-wrap: break-word; /* Asegura que el texto se ajuste al contenedor */
+  overflow: hidden; /* Oculta cualquier contenido que se desborde */
+}
+
+.messages-page .message-box h3 {
+  margin-top: 0;
+  font-size: 1.2em;
+  color: #333;
+}
+
+.messages-page .message-box p {
+  margin: 5px 0;
+  color: #555;
+  word-wrap: break-word; /* Asegura que el texto se ajuste al contenedor */
+}
