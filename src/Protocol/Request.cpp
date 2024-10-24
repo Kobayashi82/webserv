@@ -615,6 +615,7 @@
 					path = Utils::line_spaces_on(path);
 					if (!path.empty() && path[0] == '/') path = path.substr(1);
 					path = replace_all_vars(event, path);
+					if (!path.empty() && path[0] == '/') path = path.substr(1);
 
 					if (!Utils::file_exists(path)) {
 						if (!cgi_ext(event, VServ, Loc,  path)) check_file(event, VServ, Loc, path);
