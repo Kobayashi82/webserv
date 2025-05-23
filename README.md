@@ -121,5 +121,5 @@ El proyecto sigue una organización estructurada:
 ---
 
 <div align="center">
-  <p>Webserv 1.0 © 2023-2025 - Proyecto 42</p>
+  <p>Webserv 1.0 © 2024-2025</p>
 </div>
