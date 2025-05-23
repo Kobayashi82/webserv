@@ -3,7 +3,7 @@
 ## 🌐 Descripción
 **Webserv** es un servidor web programado en C++ con soporte para el protocolo HTTP 1.1. Está diseñado para servir cualquier página web que no requiera SSL/TLS, siempre que esté configurado correctamente.
 
-## ✨ Características principales
+## ✨ Características
 - **Soporte HTTP/1.1**: Webserv acepta y procesa peticiones HTTP según el protocolo estándar.
 - **Configuración personalizable**: Se puede iniciar Webserv con archivos de configuración específicos.
 - **Soporte para CGI**: Ejecuta scripts CGI (por ejemplo, PHP, Python, etc.).
@@ -16,14 +16,6 @@
 - **Conexiones keep-alive**: Mantiene conexiones persistentes.
 
 ## 🔧 Instalación
-
-### Requisitos previos
-- Compilador de C++ compatible con C++98
-- Sistema operativo Linux/Unix
-- Make
-
-### Compilación
-Para compilar Webserv, clona el repositorio y ejecuta Make:
 
 ```bash
 git clone https://github.com/tu-usuario/webserv.git
