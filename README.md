@@ -117,9 +117,3 @@ El proyecto sigue una organización estructurada:
 - **Análisis y generación** de solicitudes y respuestas HTTP/1.1
 - **Medidas de seguridad** contra solicitudes maliciosas
 - **Sistema de caché de archivos** para mejorar el rendimiento
-
----
-
-<div align="center">
-  <p>Webserv 1.0 © 2024-2025</p>
-</div>
