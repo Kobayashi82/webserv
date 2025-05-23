@@ -1,15 +1,5 @@
 # Webserv 1.0
 
-## 📋 Índice
-- [Descripción](#descripción)
-- [Características principales](#características-principales)
-- [Instalación](#instalación)
-- [Opciones de uso](#opciones-de-uso)
-- [Archivo de configuración](#archivo-de-configuración)
-- [Estructura del proyecto](#estructura-del-proyecto)
-- [Implementación técnica](#implementación-técnica)
-- [Equipo](#equipo)
-
 ## 🌐 Descripción
 **Webserv** es un servidor web programado en C++ con soporte para el protocolo HTTP 1.1. Está diseñado para servir cualquier página web que no requiera SSL/TLS, siempre que esté configurado correctamente.
 
