@@ -18,7 +18,7 @@
 ## 🔧 Instalación
 
 ```bash
-git clone https://github.com/tu-usuario/webserv.git
+git clone git@github.com:Kobayashi82/Webserv.git
 cd webserv
 make
 ```
