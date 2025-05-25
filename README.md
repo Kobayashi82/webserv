@@ -30,7 +30,7 @@ make
 - **Modo background**: `./webserv &` ejecuta Webserv en segundo plano.
 - **Archivo de configuración personalizado**: `./webserv path/to/config.cfg` utiliza un archivo de configuración específico.
 
-Si no se especifica un archivo de configuración, se utiliza el archivo `default.cfg` en el directorio `bin`. Si este no existe, se creará automáticamente.
+Si no se especifica un archivo de configuración, se utiliza el archivo `default.cfg`. Si este no existe, se creará automáticamente.
 
 ## ⚙️ Archivo de configuración
 
