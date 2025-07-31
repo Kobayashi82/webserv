@@ -3,7 +3,7 @@
 ![System & Kernel](https://img.shields.io/badge/System-brown?style=for-the-badge)
 ![Network Communication](https://img.shields.io/badge/Network-Communication-blue?style=for-the-badge)
 ![HTTP Protocol](https://img.shields.io/badge/Protocol-HTTP-green?style=for-the-badge)
-![C Language](https://img.shields.io/badge/Language-C-red?style=for-the-badge)
+![C++ Language](https://img.shields.io/badge/Language-C++-red?style=for-the-badge)
 
 *Servidor web HTTP con soporte para ejecución de scripts CGI*
 
