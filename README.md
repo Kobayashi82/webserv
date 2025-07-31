@@ -1,3 +1,14 @@
+<div align="center">
+
+![System & Kernel](https://img.shields.io/badge/System-brown?style=for-the-badge)
+![Network Communication](https://img.shields.io/badge/Network-Communication-blue?style=for-the-badge)
+![HTTP Protocol](https://img.shields.io/badge/Protocol-HTTP-green?style=for-the-badge)
+![C Language](https://img.shields.io/badge/Language-C-red?style=for-the-badge)
+
+*Servidor web HTTP con soporte para ejecución de scripts CGI*
+
+</div>
+
 # Webserv 1.0
 
 ## 🌐 Descripción
@@ -18,7 +29,7 @@
 ## 🔧 Instalación
 
 ```bash
-git clone git@github.com:Kobayashi82/Webserv.git
+git clone https://github.com/tu-usuario/webserv.git
 cd webserv
 make
 ```
@@ -30,7 +41,7 @@ make
 - **Modo background**: `./webserv &` ejecuta Webserv en segundo plano.
 - **Archivo de configuración personalizado**: `./webserv path/to/config.cfg` utiliza un archivo de configuración específico.
 
-Si no se especifica un archivo de configuración, se utiliza el archivo `default.cfg`. Si este no existe, se creará automáticamente.
+Si no se especifica un archivo de configuración, se utiliza el archivo `default.cfg` en el directorio `bin`. Si este no existe, se creará automáticamente.
 
 ## ⚙️ Archivo de configuración
 
@@ -117,3 +128,17 @@ El proyecto sigue una organización estructurada:
 - **Análisis y generación** de solicitudes y respuestas HTTP/1.1
 - **Medidas de seguridad** contra solicitudes maliciosas
 - **Sistema de caché de archivos** para mejorar el rendimiento
+
+## 📄 Licencia
+
+Este proyecto está licenciado bajo la WTFPL – [Do What the Fuck You Want to Public License](http://www.wtfpl.net/about/).
+
+---
+
+<div align="center">
+
+**🌐 Desarrollado como parte del curriculum de 42 School 🌐**
+
+*"Because real men write their own web servers"*
+
+</div>
