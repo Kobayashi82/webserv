@@ -9,6 +9,8 @@
 
 </div>
 
+![Logo](./doc/Webserv.png)
+
 # Webserv 1.0
 
 ## 🌐 Descripción
