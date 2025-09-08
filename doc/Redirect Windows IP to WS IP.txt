@@ -1,0 +1,2 @@
+netsh interface portproxy add v4tov4 listenport=4242 listenaddress=192.168.1.150 connectport=4242 connectaddress=172.31.191.101
+netsh advfirewall firewall add rule name="WSL Port 4242" dir=in action=allow protocol=TCP localport=4242
