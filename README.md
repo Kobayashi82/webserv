@@ -65,7 +65,7 @@ http {
     server {
         listen 8081;
         listen 127.0.0.0/24:8085;
-        server_name Default
+        server_name Default;
         
         root www/html/;
         index index.php index.html;
